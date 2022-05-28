@@ -1,6 +1,6 @@
 use fush::{
     lang::{Expr, ExprVar, Ident, Var},
-    value::{eval, fn_, Scalar, Value},
+    value::{eval, func_call, Scalar, Value},
 };
 
 fn my_fun(x: Scalar<f32>, y: Scalar<f32>) -> Scalar<f32> {
@@ -26,7 +26,7 @@ fn my_fun(x: Scalar<f32>, y: Scalar<f32>) -> Scalar<f32> {
         })
     });
 
-    fn_("my_fun", vec![var_x, var_y], args, {
+    func_call("my_fun", vec![var_x, var_y], args, {
         let z = eval(x * y);
         let w = eval(y + x + 1.0);
 

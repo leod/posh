@@ -118,7 +118,7 @@ where
     }
 }
 
-pub fn fn_<V>(
+pub fn func_call<V>(
     name: impl Into<String>,
     params: Vec<lang::Var>,
     args: Vec<lang::Expr>,
