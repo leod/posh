@@ -139,9 +139,7 @@ where
     V::from_expr(expr)
 }
 
-pub fn store<V>(
-    init: V,
-) -> V
+pub fn eval<V>(init: V) -> V
 where
     V: Value,
 {
@@ -150,12 +148,10 @@ where
         ty: V::Type::ty(),
     };
 
-    Value::from_expr(lang::Expr::Var(
-        lang::ExprVar {
-            var,
-            init: Some(Box::new(init.expr())),
-        }
-    ))
+    Value::from_expr(lang::Expr::Var(lang::ExprVar {
+        var,
+        init: Some(Box::new(init.expr())),
+    }))
 }
 
 #[macro_export]
