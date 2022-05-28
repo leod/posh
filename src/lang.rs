@@ -13,9 +13,9 @@ pub struct Ident {
 }
 
 impl Ident {
-    pub fn new(name: String) -> Self {
+    pub fn new(name: impl Into<String>) -> Self {
         Self {
-            name,
+            name: name.into(),
             uuid: Uuid::new_v4(),
         }
     }
@@ -28,13 +28,37 @@ pub struct Var {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Function {
+pub enum Func {
     BuiltIn(String),
     UserDefined {
         name: Ident,
         params: Vec<Var>,
-        result: Expr,
+        result: Box<Expr>,
     },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Lit {
+    pub value: String,
+    pub ty: Type,
+}
+
+impl From<u32> for Lit {
+    fn from(x: u32) -> Self {
+        Self {
+            value: x.to_string(),
+            ty: Type::U32,
+        }
+    }
+}
+
+impl From<f32> for Lit {
+    fn from(x: f32) -> Self {
+        Self {
+            value: x.to_string(),
+            ty: Type::F32,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -48,13 +72,15 @@ pub enum Expr {
     Binary(ExprBinary),
     If(ExprIf),
     Var(ExprVar),
+    Call(ExprCall),
+    Lit(ExprLit),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExprBinary {
-    pub left: Box<ExprBinary>,
+    pub left: Box<Expr>,
     pub op: BinOp,
-    pub right: Box<ExprBinary>,
+    pub right: Box<Expr>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -67,6 +93,16 @@ pub struct ExprIf {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExprVar {
     pub var: Var,
-    pub init: Box<Expr>,
+    pub init: Option<Box<Expr>>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExprCall {
+    pub func: Func,
+    pub args: Vec<Expr>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExprLit {
+    pub lit: Lit,
+}
