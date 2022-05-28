@@ -1,5 +1,5 @@
 use fush::{
-    cond, eval,
+    cond, eq, eval,
     lang::{Expr, ExprVar, Ident, Var},
     value::{func_call, Value as _},
     Scalar,
@@ -32,7 +32,7 @@ fn my_fun(x: Scalar<f32>, y: Scalar<f32>) -> Scalar<f32> {
         let z = eval(x * y);
         let w = eval(y + x + 1.0);
 
-        cond(true, z * 2.0, w * z)
+        cond(eq(z, w) * eq(z, 1.0), z * 2.0, 1.0)
     })
 }
 

@@ -5,7 +5,9 @@ use std::{
 
 use crate::{
     expr_reg::{self, ExprId},
-    lang::{self, Expr, Type},
+    lang::{
+        BinOp, Expr, ExprBinary, ExprCall, ExprCond, ExprLit, ExprVar, Func, Ident, Lit, Type, Var,
+    },
 };
 
 pub trait ValueType {
@@ -26,7 +28,7 @@ pub trait Value: Clone + Sized {
         Self::from_expr_id(expr_reg::put(expr))
     }
 
-    fn expr(&self) -> lang::Expr {
+    fn expr(&self) -> Expr {
         expr_reg::get(self.expr_id())
     }
 
@@ -35,31 +37,47 @@ pub trait Value: Clone + Sized {
     }
 }
 
-pub trait ScalarType: Clone + ValueType + Into<lang::Lit> {}
+pub trait ScalarType: Clone + ValueType + Into<Lit> {}
+
+pub trait NumericType: ScalarType {}
 
 impl ValueType for bool {
-    fn ty() -> lang::Type {
-        lang::Type::U32
+    fn ty() -> Type {
+        Type::U32
     }
 }
-
 impl ValueType for u32 {
-    fn ty() -> lang::Type {
-        lang::Type::U32
+    fn ty() -> Type {
+        Type::U32
     }
 }
-
 impl ValueType for f32 {
-    fn ty() -> lang::Type {
-        lang::Type::F32
+    fn ty() -> Type {
+        Type::F32
     }
 }
 
 impl ScalarType for bool {}
-
 impl ScalarType for u32 {}
-
 impl ScalarType for f32 {}
+
+impl NumericType for u32 {}
+impl NumericType for f32 {}
+
+impl<T> Value for T
+where
+    T: ScalarType,
+{
+    type Type = T;
+
+    fn from_expr_id(_: ExprId) -> Self {
+        unimplemented!();
+    }
+
+    fn expr_id(&self) -> ExprId {
+        Scalar::from(self.clone()).expr_id
+    }
+}
 
 #[derive(Debug, Copy, Clone)]
 pub struct Scalar<T> {
@@ -90,59 +108,104 @@ where
     T: ScalarType,
 {
     fn from(x: T) -> Self {
-        Self::from_expr(lang::Expr::Lit(lang::ExprLit { lit: x.into() }))
+        Self::from_expr(Expr::Lit(ExprLit { lit: x.into() }))
     }
 }
 
 impl<T, Rhs> Add<Rhs> for Scalar<T>
 where
-    T: ScalarType,
+    T: NumericType,
     Rhs: Into<Scalar<T>>,
 {
     type Output = Scalar<T>;
 
     fn add(self, rhs: Rhs) -> Scalar<T> {
-        Scalar::from_expr(lang::Expr::Binary(lang::ExprBinary {
-            left: Box::new(self.expr().clone()),
-            op: lang::BinOp::Add,
-            right: Box::new(rhs.into().expr().clone()),
-        }))
+        let left = Box::new(self.expr().clone());
+        let right = Box::new(rhs.into().expr().clone());
+
+        let expr = Expr::Binary(ExprBinary {
+            left,
+            op: BinOp::Add,
+            right,
+        });
+
+        Scalar::from_expr(expr)
     }
 }
 
 impl<T, Rhs> Mul<Rhs> for Scalar<T>
 where
-    T: ScalarType,
+    T: NumericType,
     Rhs: Into<Scalar<T>>,
 {
     type Output = Scalar<T>;
 
     fn mul(self, rhs: Rhs) -> Scalar<T> {
-        Scalar::from_expr(lang::Expr::Binary(lang::ExprBinary {
-            left: Box::new(self.expr().clone()),
-            op: lang::BinOp::Mul,
-            right: Box::new(rhs.into().expr().clone()),
-        }))
+        let left = Box::new(self.expr().clone());
+        let right = Box::new(rhs.into().expr().clone());
+
+        let expr = Expr::Binary(ExprBinary {
+            left,
+            op: BinOp::Mul,
+            right,
+        });
+
+        Scalar::from_expr(expr)
     }
 }
 
-pub fn func_call<V>(
-    name: impl Into<String>,
-    params: Vec<lang::Var>,
-    args: Vec<lang::Expr>,
-    result: V,
-) -> V
+impl<Rhs> Mul<Rhs> for Scalar<bool>
+where
+    Rhs: Into<Scalar<bool>>,
+{
+    type Output = Scalar<bool>;
+
+    fn mul(self, rhs: Rhs) -> Scalar<bool> {
+        let left = Box::new(self.expr().clone());
+        let right = Box::new(rhs.into().expr().clone());
+
+        let expr = Expr::Binary(ExprBinary {
+            left,
+            op: BinOp::And,
+            right,
+        });
+
+        Scalar::from_expr(expr)
+    }
+}
+
+impl<Rhs> Add<Rhs> for Scalar<bool>
+where
+    Rhs: Into<Scalar<bool>>,
+{
+    type Output = Scalar<bool>;
+
+    fn add(self, rhs: Rhs) -> Scalar<bool> {
+        let left = Box::new(self.expr().clone());
+        let right = Box::new(rhs.into().expr().clone());
+
+        let expr = Expr::Binary(ExprBinary {
+            left,
+            op: BinOp::Or,
+            right,
+        });
+
+        Scalar::from_expr(expr)
+    }
+}
+
+pub fn func_call<V>(name: impl Into<String>, params: Vec<Var>, args: Vec<Expr>, result: V) -> V
 where
     V: Value,
 {
     assert!(params.len() == args.len());
 
-    let func = lang::Func::UserDefined {
-        name: lang::Ident::new(name),
+    let func = Func::UserDefined {
+        name: Ident::new(name),
         params,
         result: Box::new(result.expr().clone()),
     };
-    let expr = lang::Expr::Call(lang::ExprCall { func, args });
+    let expr = Expr::Call(ExprCall { func, args });
 
     V::from_expr(expr)
 }
@@ -151,34 +214,51 @@ pub fn eval<V>(init: V) -> V
 where
     V: Value,
 {
-    let var = lang::Var {
-        ident: lang::Ident::new("var"),
+    let var = Var {
+        ident: Ident::new("var"),
         ty: V::Type::ty(),
     };
 
     let init = Some(Box::new(init.expr()));
 
-    let expr = lang::Expr::Var(lang::ExprVar { var, init });
+    let expr = Expr::Var(ExprVar { var, init });
 
     Value::from_expr(expr)
 }
 
-pub fn cond<B, V>(cond: B, true_value: V, false_value: V) -> V
+pub fn eq<U, V, T>(a: U, b: V) -> Scalar<bool>
+where
+    U: Value<Type = T>,
+    V: Value<Type = T>,
+{
+    let left = Box::new(a.expr());
+    let right = Box::new(b.expr());
+
+    let expr = Expr::Binary(ExprBinary {
+        left,
+        op: BinOp::Eq,
+        right,
+    });
+
+    Scalar::from_expr(expr)
+}
+
+pub fn cond<B, V>(cond: B, true_value: impl Into<V>, false_value: impl Into<V>) -> V
 where
     B: Into<Scalar<bool>>,
     V: Value,
 {
     let cond = Box::new(cond.into().expr());
-    let true_expr = Box::new(true_value.expr());
-    let false_expr = Box::new(false_value.expr());
+    let true_expr = Box::new(true_value.into().expr());
+    let false_expr = Box::new(false_value.into().expr());
 
-    let expr = lang::Expr::Cond(lang::ExprCond {
+    let expr = Expr::Cond(ExprCond {
         cond,
         true_expr,
         false_expr,
     });
 
-    Value::from_expr(expr)
+    V::from_expr(expr)
 }
 
 #[macro_export]

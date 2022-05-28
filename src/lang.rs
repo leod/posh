@@ -75,6 +75,9 @@ impl From<f32> for Lit {
 pub enum BinOp {
     Add,
     Mul,
+    Eq,
+    And,
+    Or,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
