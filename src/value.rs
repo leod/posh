@@ -139,11 +139,30 @@ where
     V::from_expr(expr)
 }
 
+pub fn store<V>(
+    init: V,
+) -> V
+where
+    V: Value,
+{
+    let var = lang::Var {
+        ident: lang::Ident::new("var"),
+        ty: V::Type::ty(),
+    };
+
+    Value::from_expr(lang::Expr::Var(
+        lang::ExprVar {
+            var,
+            init: Some(Box::new(init.expr())),
+        }
+    ))
+}
+
 #[macro_export]
 macro_rules! let_ {
     { $var:ident = $init:expr } => {
         let init = $init;
-        let $var = init.map_expr(|expr| $crate::lang::Expr::Var(
+        let $var = $init.map_expr(|expr| $crate::lang::Expr::Var(
             $crate::lang::ExprVar {
                 var: $crate::lang::Var {
                     ident: $crate::lang::Ident::new(std::stringify!($var)),

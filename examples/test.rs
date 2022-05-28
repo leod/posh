@@ -1,14 +1,14 @@
 use fush::{
     lang::{Expr, ExprVar, Ident, Var},
     let_,
-    value::{fn_, Scalar, Value},
+    value::{fn_, store, Scalar, Value},
 };
 
 fn my_fun(x: Scalar<f32>, y: Scalar<f32>) -> Scalar<f32> {
     let args = vec![x.expr().clone(), y.expr().clone()];
     let var_x = Var {
         ident: Ident::new("x"),
-        ty: Value::ty(&x),
+        ty: x.ty(),
     };
     let var_y = Var {
         ident: Ident::new("y"),
@@ -20,27 +20,19 @@ fn my_fun(x: Scalar<f32>, y: Scalar<f32>) -> Scalar<f32> {
             init: None,
         })
     });
+    let y = y.map_expr(|_| {
+        Expr::Var(ExprVar {
+            var: var_y.clone(),
+            init: None,
+        })
+    });
 
-    fn_(
-        "my_fun",
-        vec![
-            Var {
-                ident: Ident::new("x"),
-                ty: Value::ty(&x),
-            },
-            Var {
-                ident: Ident::new("y"),
-                ty: y.ty(),
-            },
-        ],
-        args,
-        {
-            let_! {z = x * y};
-            let_! {w = y + x + 1.0};
+    fn_("my_fun", vec![var_x, var_y], args, {
+        let z = store(x * y);
+        let w = store(y + x + 1.0);
 
-            z * w
-        },
-    )
+        z * w
+    })
 }
 
 /*#[gloat]
