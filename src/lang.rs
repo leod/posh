@@ -2,6 +2,7 @@ pub use uuid::Uuid;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Type {
+    Bool,
     U32,
     F32,
 }
@@ -43,6 +44,15 @@ pub struct Lit {
     pub ty: Type,
 }
 
+impl From<bool> for Lit {
+    fn from(x: bool) -> Self {
+        Self {
+            value: x.to_string(),
+            ty: Type::Bool,
+        }
+    }
+}
+
 impl From<u32> for Lit {
     fn from(x: u32) -> Self {
         Self {
@@ -70,7 +80,7 @@ pub enum BinOp {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Expr {
     Binary(ExprBinary),
-    If(ExprIf),
+    Cond(ExprCond),
     Var(ExprVar),
     Call(ExprCall),
     Lit(ExprLit),
@@ -84,10 +94,10 @@ pub struct ExprBinary {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExprIf {
+pub struct ExprCond {
     pub cond: Box<Expr>,
-    pub then_branch: Box<Expr>,
-    pub else_branch: Box<Expr>,
+    pub true_expr: Box<Expr>,
+    pub false_expr: Box<Expr>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -5,24 +5,24 @@ use std::{
 
 use crate::{
     expr_reg::{self, ExprId},
-    lang,
+    lang::{self, Expr, Type},
 };
 
-pub trait Type {
-    fn ty() -> lang::Type;
+pub trait ValueType {
+    fn ty() -> Type;
 }
 
 pub trait Value: Clone + Sized {
-    type Type: Type;
+    type Type: ValueType;
 
     fn from_expr_id(expr_id: ExprId) -> Self;
     fn expr_id(&self) -> ExprId;
 
-    fn ty(&self) -> lang::Type {
+    fn ty(&self) -> Type {
         Self::Type::ty()
     }
 
-    fn from_expr(expr: lang::Expr) -> Self {
+    fn from_expr(expr: Expr) -> Self {
         Self::from_expr_id(expr_reg::put(expr))
     }
 
@@ -30,28 +30,36 @@ pub trait Value: Clone + Sized {
         expr_reg::get(self.expr_id())
     }
 
-    fn map_expr(self, f: impl FnOnce(lang::Expr) -> lang::Expr) -> Self {
+    fn map_expr(self, f: impl FnOnce(Expr) -> Expr) -> Self {
         Self::from_expr(f(self.expr()))
     }
 }
 
-pub trait IntegralType: Clone + Type + Into<lang::Lit> {}
+pub trait ScalarType: Clone + ValueType + Into<lang::Lit> {}
 
-impl Type for u32 {
+impl ValueType for bool {
     fn ty() -> lang::Type {
         lang::Type::U32
     }
 }
 
-impl Type for f32 {
+impl ValueType for u32 {
+    fn ty() -> lang::Type {
+        lang::Type::U32
+    }
+}
+
+impl ValueType for f32 {
     fn ty() -> lang::Type {
         lang::Type::F32
     }
 }
 
-impl IntegralType for u32 {}
+impl ScalarType for bool {}
 
-impl IntegralType for f32 {}
+impl ScalarType for u32 {}
+
+impl ScalarType for f32 {}
 
 #[derive(Debug, Copy, Clone)]
 pub struct Scalar<T> {
@@ -61,7 +69,7 @@ pub struct Scalar<T> {
 
 impl<T> Value for Scalar<T>
 where
-    T: IntegralType,
+    T: ScalarType,
 {
     type Type = T;
 
@@ -79,7 +87,7 @@ where
 
 impl<T> From<T> for Scalar<T>
 where
-    T: IntegralType,
+    T: ScalarType,
 {
     fn from(x: T) -> Self {
         Self::from_expr(lang::Expr::Lit(lang::ExprLit { lit: x.into() }))
@@ -88,7 +96,7 @@ where
 
 impl<T, Rhs> Add<Rhs> for Scalar<T>
 where
-    T: IntegralType,
+    T: ScalarType,
     Rhs: Into<Scalar<T>>,
 {
     type Output = Scalar<T>;
@@ -104,7 +112,7 @@ where
 
 impl<T, Rhs> Mul<Rhs> for Scalar<T>
 where
-    T: IntegralType,
+    T: ScalarType,
     Rhs: Into<Scalar<T>>,
 {
     type Output = Scalar<T>;
@@ -148,10 +156,29 @@ where
         ty: V::Type::ty(),
     };
 
-    Value::from_expr(lang::Expr::Var(lang::ExprVar {
-        var,
-        init: Some(Box::new(init.expr())),
-    }))
+    let init = Some(Box::new(init.expr()));
+
+    let expr = lang::Expr::Var(lang::ExprVar { var, init });
+
+    Value::from_expr(expr)
+}
+
+pub fn cond<B, V>(cond: B, true_value: V, false_value: V) -> V
+where
+    B: Into<Scalar<bool>>,
+    V: Value,
+{
+    let cond = Box::new(cond.into().expr());
+    let true_expr = Box::new(true_value.expr());
+    let false_expr = Box::new(false_value.expr());
+
+    let expr = lang::Expr::Cond(lang::ExprCond {
+        cond,
+        true_expr,
+        false_expr,
+    });
+
+    Value::from_expr(expr)
 }
 
 #[macro_export]
