@@ -3,12 +3,20 @@ name = "fush"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+macros = ["fush-macros"]
 
 [dependencies]
 glsl = "6.0"
 version = "1.1.0"
+fush-macros = { path = "macros", version = "*", optional = true }
+
+[dev-dependencies]
+fush = { version = "*", features = ["macros"], path = "." }
 
 [dependencies.uuid]
 version = "1.1.0"
 features = ["v4"]
+
+[workspace]
+members = ["macros"]

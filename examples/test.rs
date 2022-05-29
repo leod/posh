@@ -3,7 +3,7 @@ use fush::{
     lang::{Expr, ExprVar, Ident, Var},
     or,
     value::{func_call, Value as _},
-    Fush,
+    Fush, fush,
 };
 
 fn my_fun(x: Fush<f32>, y: Fush<f32>) -> Fush<f32> {
@@ -37,19 +37,18 @@ fn my_fun(x: Fush<f32>, y: Fush<f32>) -> Fush<f32> {
     })
 }
 
-/*
 #[fush]
 fn my_fun2(x: Fush<f32>, y: Fush<f32>) -> Fush<f32> {
-    let z = eval(x * y);
+    /*let z = eval(x * y);
     let w = eval(y + x + 1.0);
 
-    branch(and(z == w, z == 1.0), z * 2.0, 1.0)
+    branch(and(z == w, z == 1.0), z * 2.0, 1.0)*/
+    0.0.into()
 }
-*/
 
 fn main() {
-    let a = Fush::<f32>::from(2.0);
-    let b = Fush::<f32>::from(3.0);
+    let a = 2.0.into();
+    let b = 3.0.into();
 
     let result = my_fun(a, b);
     println!("{:#?}", result);
