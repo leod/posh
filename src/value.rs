@@ -115,6 +115,27 @@ where
     }
 }
 
+impl<T> Scalar<T>
+where
+    T: ScalarType,
+{
+    pub fn eq<V>(&self, rhs: V) -> Scalar<bool>
+    where
+        V: Value<Type = T>,
+    {
+        let left = Box::new(self.expr());
+        let right = Box::new(rhs.expr());
+
+        let expr = Expr::Binary(ExprBinary {
+            left,
+            op: BinOp::Eq,
+            right,
+        });
+
+        Scalar::from_expr(expr)
+    }
+}
+
 impl<T> From<T> for Scalar<T>
 where
     T: ScalarType,
@@ -166,44 +187,30 @@ where
     }
 }
 
-impl<Rhs> Mul<Rhs> for Scalar<bool>
-where
-    Rhs: Into<Scalar<bool>>,
-{
-    type Output = Scalar<bool>;
+pub fn and(lhs: impl Into<Scalar<bool>>, rhs: impl Into<Scalar<bool>>) -> Scalar<bool> {
+    let left = Box::new(lhs.into().expr().clone());
+    let right = Box::new(rhs.into().expr().clone());
 
-    fn mul(self, rhs: Rhs) -> Scalar<bool> {
-        let left = Box::new(self.expr().clone());
-        let right = Box::new(rhs.into().expr().clone());
+    let expr = Expr::Binary(ExprBinary {
+        left,
+        op: BinOp::And,
+        right,
+    });
 
-        let expr = Expr::Binary(ExprBinary {
-            left,
-            op: BinOp::And,
-            right,
-        });
-
-        Scalar::from_expr(expr)
-    }
+    Scalar::from_expr(expr)
 }
 
-impl<Rhs> Add<Rhs> for Scalar<bool>
-where
-    Rhs: Into<Scalar<bool>>,
-{
-    type Output = Scalar<bool>;
+pub fn or(lhs: impl Into<Scalar<bool>>, rhs: impl Into<Scalar<bool>>) -> Scalar<bool> {
+    let left = Box::new(lhs.into().expr().clone());
+    let right = Box::new(rhs.into().expr().clone());
 
-    fn add(self, rhs: Rhs) -> Scalar<bool> {
-        let left = Box::new(self.expr().clone());
-        let right = Box::new(rhs.into().expr().clone());
+    let expr = Expr::Binary(ExprBinary {
+        left,
+        op: BinOp::Or,
+        right,
+    });
 
-        let expr = Expr::Binary(ExprBinary {
-            left,
-            op: BinOp::Or,
-            right,
-        });
-
-        Scalar::from_expr(expr)
-    }
+    Scalar::from_expr(expr)
 }
 
 pub fn func_call<V>(name: impl Into<String>, params: Vec<Var>, args: Vec<Expr>, result: V) -> V
@@ -238,24 +245,7 @@ where
     Value::from_expr(expr)
 }
 
-pub fn eq<U, V, T>(a: U, b: V) -> Scalar<bool>
-where
-    U: Value<Type = T>,
-    V: Value<Type = T>,
-{
-    let left = Box::new(a.expr());
-    let right = Box::new(b.expr());
-
-    let expr = Expr::Binary(ExprBinary {
-        left,
-        op: BinOp::Eq,
-        right,
-    });
-
-    Scalar::from_expr(expr)
-}
-
-pub fn cond<B, V>(cond: B, true_value: impl Into<V>, false_value: impl Into<V>) -> V
+pub fn branch<B, V>(cond: B, true_value: impl Into<V>, false_value: impl Into<V>) -> V
 where
     B: Into<Scalar<bool>>,
     V: Value,

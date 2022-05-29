@@ -1,6 +1,7 @@
 use fush::{
-    cond, eq, eval,
+    and, branch, eval,
     lang::{Expr, ExprVar, Ident, Var},
+    or,
     value::{func_call, Value as _},
     Fush,
 };
@@ -32,21 +33,19 @@ fn my_fun(x: Fush<f32>, y: Fush<f32>) -> Fush<f32> {
         let z = eval(x * y);
         let w = eval(y + x + 1.0);
 
-        cond(eq(z, w) * eq(z, 1.0), z * 2.0, 1.0)
+        branch(and(z.eq(w), z.eq(1.0)), z * 2.0, 1.0)
     })
 }
 
-/*#[gloat]
-fn my_fun(x: Scalar<f32>, y: Scalar<f32>) -> Scalar<f32> {
-    let_! {z = x / y};
-    let_! {w: Scalar<f32> = y + x + 1};
+/*
+#[fush]
+fn my_fun2(x: Fush<f32>, y: Fush<f32>) -> Fush<f32> {
+    let z = eval(x * y);
+    let w = eval(y + x + 1.0);
 
-    if_(
-        z < w,
-        3.0,
-        w + z,
-    )
-}*/
+    branch(and(z == w, z == 1.0), z * 2.0, 1.0)
+}
+*/
 
 fn main() {
     let a = Fush::<f32>::from(2.0);
