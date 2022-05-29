@@ -11,8 +11,12 @@ use crate::{
 };
 
 pub trait ValueType {
+    type Value;
+
     fn ty() -> Type;
 }
+
+pub type Fush<T> = <T as ValueType>::Value;
 
 pub trait Value: Clone + Sized {
     type Type: ValueType;
@@ -42,16 +46,24 @@ pub trait ScalarType: Clone + ValueType + Into<Lit> {}
 pub trait NumericType: ScalarType {}
 
 impl ValueType for bool {
+    type Value = Scalar<bool>;
+
     fn ty() -> Type {
         Type::U32
     }
 }
+
 impl ValueType for u32 {
+    type Value = Scalar<u32>;
+
     fn ty() -> Type {
         Type::U32
     }
 }
+
 impl ValueType for f32 {
+    type Value = Scalar<f32>;
+
     fn ty() -> Type {
         Type::F32
     }

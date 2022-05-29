@@ -2,10 +2,10 @@ use fush::{
     cond, eq, eval,
     lang::{Expr, ExprVar, Ident, Var},
     value::{func_call, Value as _},
-    Scalar,
+    Fush,
 };
 
-fn my_fun(x: Scalar<f32>, y: Scalar<f32>) -> Scalar<f32> {
+fn my_fun(x: Fush<f32>, y: Fush<f32>) -> Fush<f32> {
     let args = vec![x.expr().clone(), y.expr().clone()];
     let var_x = Var {
         ident: Ident::new("x"),
@@ -49,8 +49,8 @@ fn my_fun(x: Scalar<f32>, y: Scalar<f32>) -> Scalar<f32> {
 }*/
 
 fn main() {
-    let a = Scalar::from(2.0);
-    let b = Scalar::from(3.0);
+    let a = Fush::<f32>::from(2.0);
+    let b = Fush::<f32>::from(3.0);
 
     let result = my_fun(a, b);
     println!("{:#?}", result);
