@@ -157,8 +157,8 @@ where
     type Output = Scalar<T>;
 
     fn add(self, rhs: Rhs) -> Scalar<T> {
-        let left = Box::new(self.expr().clone());
-        let right = Box::new(rhs.into().expr().clone());
+        let left = Box::new(self.expr());
+        let right = Box::new(rhs.into().expr());
 
         let expr = Expr::Binary(ExprBinary {
             left,
@@ -178,8 +178,8 @@ where
     type Output = Scalar<T>;
 
     fn mul(self, rhs: Rhs) -> Scalar<T> {
-        let left = Box::new(self.expr().clone());
-        let right = Box::new(rhs.into().expr().clone());
+        let left = Box::new(self.expr());
+        let right = Box::new(rhs.into().expr());
 
         let expr = Expr::Binary(ExprBinary {
             left,
@@ -192,8 +192,8 @@ where
 }
 
 pub fn and(lhs: impl Into<Scalar<bool>>, rhs: impl Into<Scalar<bool>>) -> Scalar<bool> {
-    let left = Box::new(lhs.into().expr().clone());
-    let right = Box::new(rhs.into().expr().clone());
+    let left = Box::new(lhs.into().expr());
+    let right = Box::new(rhs.into().expr());
 
     let expr = Expr::Binary(ExprBinary {
         left,
@@ -205,8 +205,8 @@ pub fn and(lhs: impl Into<Scalar<bool>>, rhs: impl Into<Scalar<bool>>) -> Scalar
 }
 
 pub fn or(lhs: impl Into<Scalar<bool>>, rhs: impl Into<Scalar<bool>>) -> Scalar<bool> {
-    let left = Box::new(lhs.into().expr().clone());
-    let right = Box::new(rhs.into().expr().clone());
+    let left = Box::new(lhs.into().expr());
+    let right = Box::new(rhs.into().expr());
 
     let expr = Expr::Binary(ExprBinary {
         left,
@@ -226,7 +226,7 @@ where
     let func = Func::UserDefined {
         name: Ident::new(name),
         params,
-        result: Box::new(result.expr().clone()),
+        result: Box::new(result.expr()),
     };
     let expr = Expr::Call(ExprCall { func, args });
 
