@@ -97,6 +97,10 @@ pub struct Scalar<T> {
     expr_id: ExprId,
 }
 
+pub type Bool = Scalar<bool>;
+pub type U32 = Scalar<u32>;
+pub type F32 = Scalar<f32>;
+
 impl<T> Value for Scalar<T>
 where
     T: ScalarType,
@@ -213,7 +217,7 @@ pub fn or(lhs: impl Into<Scalar<bool>>, rhs: impl Into<Scalar<bool>>) -> Scalar<
     Scalar::from_expr(expr)
 }
 
-pub fn func_call<V>(name: impl Into<String>, params: Vec<Var>, args: Vec<Expr>, result: V) -> V
+pub fn func_call<V>(name: impl Into<String>, params: Vec<Var>, result: V, args: Vec<Expr>) -> V
 where
     V: Value,
 {
@@ -229,7 +233,7 @@ where
     V::from_expr(expr)
 }
 
-pub fn eval<V>(init: V) -> V
+pub fn var<V>(init: V) -> V
 where
     V: Value,
 {
