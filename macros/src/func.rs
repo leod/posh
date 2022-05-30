@@ -45,8 +45,9 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
 
             #(
                 let #input_idents =
-                    #input_idents.map_expr(
-                        |_| ::fsl::lang::Expr::Var(::fsl::lang::ExprVar {
+                    ::fsl::value::Value::with_expr(
+                        &#input_idents,
+                        ::fsl::lang::Expr::Var(::fsl::lang::ExprVar {
                             var: ::fsl::lang::Var {
                                 ident: ::fsl::lang::Ident::new(stringify!(#input_idents)),
                                 ty: ::fsl::value::Value::ty(&#input_idents),

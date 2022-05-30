@@ -37,8 +37,8 @@ pub trait Value: Clone + Sized {
         expr_reg::get(self.expr_id())
     }
 
-    fn map_expr(self, f: impl FnOnce(Expr) -> Expr) -> Self {
-        Self::from_expr(f(self.expr()))
+    fn with_expr(&self, expr: Expr) -> Self {
+        Self::from_expr(expr)
     }
 }
 
