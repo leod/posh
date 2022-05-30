@@ -119,3 +119,22 @@ pub struct ExprCall {
 pub struct ExprLit {
     pub lit: Lit,
 }
+
+/*
+impl Expr {
+    pub fn ty(&self) -> Type {
+        match self {
+            Expr::Binary(expr) => {
+                assert!(expr.left.ty() == expr.right.ty());
+                expr.left.ty()
+            }
+            Expr::Cond(expr) => {
+                assert!(expr)
+            }
+            Expr::Var(_) => todo!(),
+            Expr::Call(_) => todo!(),
+            Expr::Lit(_) => todo!(),
+        }
+    }
+}
+*/
