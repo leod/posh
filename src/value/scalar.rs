@@ -3,12 +3,9 @@ use std::{
     ops::{Add, Mul},
 };
 
-use crate::{
-    expr_reg::ExprId,
-    lang::{BinOp, Expr, ExprLit, Lit, Type},
-};
+use crate::lang::{BinOp, Expr, ExprLit, Lit, Type};
 
-use super::{binary, Value, ValueType};
+use super::{binary, expr_reg::ExprId, Value, ValueType};
 
 pub trait ScalarValueType: Copy + Clone + ValueType + Into<Lit> {}
 

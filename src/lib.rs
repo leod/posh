@@ -1,4 +1,3 @@
-pub(crate) mod expr_reg;
 pub mod lang;
 pub mod prelude;
 pub mod value;

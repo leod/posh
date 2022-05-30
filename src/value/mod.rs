@@ -1,15 +1,15 @@
+pub(crate) mod expr_reg;
 mod primitives;
 mod scalar;
 
-use crate::{
-    expr_reg::{self, ExprId},
-    lang::{Expr, Type},
-};
+use crate::lang::{Expr, Type};
 
 pub use primitives::{and, branch, func_call, or, var};
 pub use scalar::{Bool, Scalar, ScalarValueType, F32, U32};
 
 pub(crate) use primitives::binary;
+
+use expr_reg::ExprId;
 
 pub trait ValueType {
     type Value;
