@@ -66,6 +66,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                     ),*
                 ],
                 {
+                    use ::fsl::prelude::*;
                     #func_body
                 },
                 #args_ident,
