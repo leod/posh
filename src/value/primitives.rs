@@ -24,7 +24,7 @@ where
         left,
         op,
         right,
-        ty: R::Type::ty(),
+        ty: <R::Type as ValueType>::ty(),
     });
 
     R::from_expr(expr)
