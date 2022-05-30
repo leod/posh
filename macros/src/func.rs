@@ -51,8 +51,8 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                             var: ::fsl::lang::Var {
                                 ident: ::fsl::lang::Ident::new(stringify!(#input_idents)),
                                 ty: ::fsl::value::Value::ty(&#input_idents),
+                                init: None,
                             },
-                            init: None,
                         }),
                     );
             )*
@@ -64,6 +64,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                         ::fsl::lang::Var {
                             ident: ::fsl::lang::Ident::new(stringify!(#input_idents)),
                             ty: ::fsl::value::Value::ty(&#input_idents),
+                            init: None,
                         }
                     ),*
                 ],

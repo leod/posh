@@ -1,4 +1,4 @@
-use fsl::fsl;
+use fsl::{fsl, lang::Func, Value};
 
 #[fsl]
 fn foo(x: fsl::F32, y: fsl::F32) -> fsl::F32 {
@@ -21,5 +21,11 @@ fn main() {
     let a = 2.0;
 
     let result = bar(a);
-    println!("{:#?}", result);
+    //println!("{:#?}", result);
+
+    if let fsl::lang::Expr::Call(expr) = result.expr() {
+        if let fsl::lang::Func::UserDefined(func) = expr.func {
+            println!("{}", fsl::lang::show::show_user_defined_funcs(&func));
+        }
+    }
 }

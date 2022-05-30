@@ -1,3 +1,5 @@
+pub mod show;
+
 pub use uuid::Uuid;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -26,16 +28,25 @@ impl Ident {
 pub struct Var {
     pub ident: Ident,
     pub ty: Type,
+    pub init: Option<Box<Expr>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Func {
-    BuiltIn(String),
-    UserDefined {
-        name: Ident,
-        params: Vec<Var>,
-        result: Box<Expr>,
-    },
+    BuiltIn(FuncBuiltIn),
+    UserDefined(FuncUserDefined),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct FuncBuiltIn {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct FuncUserDefined {
+    pub ident: Ident,
+    pub params: Vec<Var>,
+    pub result: Box<Expr>,
 }
 
 impl Func {
@@ -44,12 +55,21 @@ impl Func {
 
         match self {
             BuiltIn(_) => unimplemented!(),
-            UserDefined { result, .. } => result.ty(),
+            UserDefined(FuncUserDefined { result, .. }) => result.ty(),
+        }
+    }
+
+    pub fn name(&self) -> &str {
+        use Func::*;
+
+        match self {
+            BuiltIn(FuncBuiltIn { name }) => name,
+            UserDefined(FuncUserDefined { ident, .. }) => &ident.name,
         }
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Lit {
     pub value: String,
     pub ty: Type,
@@ -82,7 +102,7 @@ impl From<f32> for Lit {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum BinOp {
     Add,
     Mul,
@@ -91,7 +111,7 @@ pub enum BinOp {
     Or,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Expr {
     Binary(ExprBinary),
     Ternary(ExprTernary),
@@ -100,7 +120,7 @@ pub enum Expr {
     Lit(ExprLit),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ExprBinary {
     pub left: Box<Expr>,
     pub op: BinOp,
@@ -108,26 +128,25 @@ pub struct ExprBinary {
     pub ty: Type,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ExprTernary {
     pub cond: Box<Expr>,
     pub true_expr: Box<Expr>,
     pub false_expr: Box<Expr>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ExprVar {
     pub var: Var,
-    pub init: Option<Box<Expr>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ExprCall {
     pub func: Func,
     pub args: Vec<Expr>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ExprLit {
     pub lit: Lit,
 }

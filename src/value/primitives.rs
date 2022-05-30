@@ -1,5 +1,7 @@
 use crate::{
-    lang::{BinOp, Expr, ExprBinary, ExprCall, ExprTernary, ExprVar, Func, Ident, Var},
+    lang::{
+        BinOp, Expr, ExprBinary, ExprCall, ExprTernary, ExprVar, Func, FuncUserDefined, Ident, Var,
+    },
     Bool,
 };
 
@@ -29,11 +31,11 @@ where
 }
 
 pub fn and(left: impl IntoValue<Value = Bool>, right: impl IntoValue<Value = Bool>) -> Bool {
-    binary(left, BinOp::Add, right)
+    binary(left, BinOp::And, right)
 }
 
 pub fn or(left: impl IntoValue<Value = Bool>, right: impl IntoValue<Value = Bool>) -> Bool {
-    binary(left, BinOp::Add, right)
+    binary(left, BinOp::Or, right)
 }
 
 pub fn func_call<V>(name: impl Into<String>, params: Vec<Var>, result: V, args: Vec<Expr>) -> V
@@ -42,11 +44,11 @@ where
 {
     assert!(params.len() == args.len());
 
-    let func = Func::UserDefined {
-        name: Ident::new(name),
+    let func = Func::UserDefined(FuncUserDefined {
+        ident: Ident::new(name),
         params,
         result: Box::new(result.expr()),
-    };
+    });
     let expr = Expr::Call(ExprCall { func, args });
 
     V::from_expr(expr)
@@ -56,26 +58,30 @@ pub fn var<V>(init: V) -> V
 where
     V: Value,
 {
+    let init = Some(Box::new(init.expr()));
+
     let var = Var {
         ident: Ident::new("var"),
         ty: V::Type::ty(),
+        init,
     };
 
-    let init = Some(Box::new(init.expr()));
-
-    let expr = Expr::Var(ExprVar { var, init });
+    let expr = Expr::Var(ExprVar { var });
 
     Value::from_expr(expr)
 }
 
-pub fn ternary<B, V>(cond: B, true_value: impl Into<V>, false_value: impl Into<V>) -> V
+pub fn ternary<V>(
+    cond: impl IntoValue<Value = Bool>,
+    true_value: impl IntoValue<Value = V>,
+    false_value: impl IntoValue<Value = V>,
+) -> V
 where
-    B: Into<Scalar<bool>>,
     V: Value,
 {
-    let cond = Box::new(cond.into().expr());
-    let true_expr = Box::new(true_value.into().expr());
-    let false_expr = Box::new(false_value.into().expr());
+    let cond = Box::new(cond.into_value().expr());
+    let true_expr = Box::new(true_value.into_value().expr());
+    let false_expr = Box::new(false_value.into_value().expr());
 
     let expr = Expr::Ternary(ExprTernary {
         cond,
