@@ -94,7 +94,7 @@ pub enum BinOp {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Expr {
     Binary(ExprBinary),
-    Cond(ExprCond),
+    Ternary(ExprTernary),
     Var(ExprVar),
     Call(ExprCall),
     Lit(ExprLit),
@@ -109,7 +109,7 @@ pub struct ExprBinary {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ExprCond {
+pub struct ExprTernary {
     pub cond: Box<Expr>,
     pub true_expr: Box<Expr>,
     pub false_expr: Box<Expr>,
@@ -138,7 +138,7 @@ impl Expr {
 
         match self {
             Binary(expr) => expr.ty.clone(),
-            Cond(expr) => {
+            Ternary(expr) => {
                 assert!(expr.true_expr.ty() == expr.false_expr.ty());
                 expr.true_expr.ty()
             }

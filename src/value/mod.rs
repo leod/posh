@@ -4,7 +4,7 @@ mod scalar;
 
 use crate::lang::{Expr, Type};
 
-pub use primitives::{and, branch, func_call, or, var};
+pub use primitives::{and, func_call, or, ternary, var};
 pub use scalar::{Bool, Scalar, ScalarValueType, F32, U32};
 
 pub(crate) use primitives::binary;

@@ -1,4 +1,4 @@
-use crate::lang::{BinOp, Expr, ExprBinary, ExprCall, ExprCond, ExprVar, Func, Ident, Var};
+use crate::lang::{BinOp, Expr, ExprBinary, ExprCall, ExprTernary, ExprVar, Func, Ident, Var};
 
 use super::{Scalar, Value, ValueType};
 
@@ -61,7 +61,7 @@ where
     Value::from_expr(expr)
 }
 
-pub fn branch<B, V>(cond: B, true_value: impl Into<V>, false_value: impl Into<V>) -> V
+pub fn ternary<B, V>(cond: B, true_value: impl Into<V>, false_value: impl Into<V>) -> V
 where
     B: Into<Scalar<bool>>,
     V: Value,
@@ -70,7 +70,7 @@ where
     let true_expr = Box::new(true_value.into().expr());
     let false_expr = Box::new(false_value.into().expr());
 
-    let expr = Expr::Cond(ExprCond {
+    let expr = Expr::Ternary(ExprTernary {
         cond,
         true_expr,
         false_expr,
