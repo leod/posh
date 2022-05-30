@@ -41,3 +41,9 @@ pub trait Value: Clone + Sized {
         Self::from_expr(f(self.expr()))
     }
 }
+
+pub trait IntoValue {
+    type Value: Value;
+
+    fn into_value(self) -> Self::Value;
+}

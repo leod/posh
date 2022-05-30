@@ -1,15 +1,22 @@
-use crate::lang::{BinOp, Expr, ExprBinary, ExprCall, ExprTernary, ExprVar, Func, Ident, Var};
+use crate::{
+    lang::{BinOp, Expr, ExprBinary, ExprCall, ExprTernary, ExprVar, Func, Ident, Var},
+    Bool,
+};
 
-use super::{Scalar, Value, ValueType};
+use super::{IntoValue, Scalar, Value, ValueType};
 
-pub(crate) fn binary<U, V, R>(left: U, op: BinOp, right: V) -> R
+pub(crate) fn binary<U, V, R>(
+    left: impl IntoValue<Value = U>,
+    op: BinOp,
+    right: impl IntoValue<Value = V>,
+) -> R
 where
     U: Value,
     V: Value,
     R: Value,
 {
-    let left = Box::new(left.expr());
-    let right = Box::new(right.expr());
+    let left = Box::new(left.into_value().expr());
+    let right = Box::new(right.into_value().expr());
 
     let expr = Expr::Binary(ExprBinary {
         left,
@@ -21,12 +28,12 @@ where
     R::from_expr(expr)
 }
 
-pub fn and(left: impl Into<Scalar<bool>>, right: impl Into<Scalar<bool>>) -> Scalar<bool> {
-    binary(left.into(), BinOp::Add, right.into())
+pub fn and(left: impl IntoValue<Value = Bool>, right: impl IntoValue<Value = Bool>) -> Bool {
+    binary(left, BinOp::Add, right)
 }
 
-pub fn or(left: impl Into<Scalar<bool>>, right: impl Into<Scalar<bool>>) -> Scalar<bool> {
-    binary(left.into(), BinOp::Or, right.into())
+pub fn or(left: impl IntoValue<Value = Bool>, right: impl IntoValue<Value = Bool>) -> Bool {
+    binary(left, BinOp::Add, right)
 }
 
 pub fn func_call<V>(name: impl Into<String>, params: Vec<Var>, result: V, args: Vec<Expr>) -> V

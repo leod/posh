@@ -8,7 +8,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
     for input in item.sig.inputs.iter_mut() {
         if let FnArg::Typed(input) = input {
             let input_ty = &input.ty;
-            input.ty = parse_quote! { impl Into<#input_ty> };
+            input.ty = parse_quote! { impl ::fsl::value::IntoValue<Value = #input_ty> };
 
             match &mut *input.pat {
                 Pat::Ident(ident) => {
@@ -34,25 +34,26 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
             use ::fsl::value::Value as _;
 
             #(
-                let #input_idents = #input_idents.into();
+                let #input_idents = ::fsl::value::IntoValue::into_value(#input_idents);
             )*
 
             let #args_ident = vec![
                 #(
-                    #input_idents.expr().clone()
+                    ::fsl::value::Value::expr(&#input_idents).clone()
                 ),*
             ];
 
             #(
-                let #input_idents = #input_idents.map_expr(|_| {
-                    ::fsl::lang::Expr::Var(::fsl::lang::ExprVar {
-                        var: ::fsl::lang::Var {
-                            ident: ::fsl::lang::Ident::new(stringify!(#input_idents)),
-                            ty: #input_idents.ty(),
-                        },
-                        init: None,
-                    })
-                });
+                let #input_idents =
+                    #input_idents.map_expr(
+                        |_| ::fsl::lang::Expr::Var(::fsl::lang::ExprVar {
+                            var: ::fsl::lang::Var {
+                                ident: ::fsl::lang::Ident::new(stringify!(#input_idents)),
+                                ty: ::fsl::value::Value::ty(&#input_idents),
+                            },
+                            init: None,
+                        }),
+                    );
             )*
 
             ::fsl::value::func_call(
@@ -61,7 +62,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                     #(
                         ::fsl::lang::Var {
                             ident: ::fsl::lang::Ident::new(stringify!(#input_idents)),
-                            ty: #input_idents.ty(),
+                            ty: ::fsl::value::Value::ty(&#input_idents),
                         }
                     ),*
                 ],

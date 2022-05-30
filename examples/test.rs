@@ -7,6 +7,8 @@ fn foo(x: fsl::F32, y: fsl::F32) -> fsl::F32 {
 
     ternary(and(z.eq(w), z.eq(1.0)), z * 2.0, 1.0)
 
+    //2.0.into()
+
     //fsl::branch(bool!(z == w && z == 1.0), z * 2.0, 1.0)
 }
 

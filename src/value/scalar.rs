@@ -5,26 +5,11 @@ use std::{
 
 use crate::lang::{BinOp, Expr, ExprLit, Lit, Type};
 
-use super::{binary, expr_reg::ExprId, Value, ValueType};
+use super::{binary, expr_reg::ExprId, IntoValue, Value, ValueType};
 
 pub trait ScalarValueType: Copy + Clone + ValueType + Into<Lit> {}
 
 pub trait NumericValueType: ScalarValueType {}
-
-impl<T> Value for T
-where
-    T: ScalarValueType,
-{
-    type Type = T;
-
-    fn from_expr_id(_: ExprId) -> Self {
-        unimplemented!();
-    }
-
-    fn expr_id(&self) -> ExprId {
-        Scalar::new(*self).expr_id
-    }
-}
 
 #[derive(Debug, Copy, Clone)]
 pub struct Scalar<T> {
@@ -58,7 +43,7 @@ where
         Self::from_expr(Expr::Lit(ExprLit { lit: x.into() }))
     }
 
-    pub fn eq<V>(&self, right: V) -> Bool
+    pub fn eq<V>(&self, right: impl IntoValue<Value = V>) -> Bool
     where
         V: Value<Type = T>,
     {
@@ -78,24 +63,46 @@ where
 impl<T, Rhs> Add<Rhs> for Scalar<T>
 where
     T: NumericValueType,
-    Rhs: Into<Scalar<T>>,
+    Rhs: IntoValue<Value = Scalar<T>>,
 {
     type Output = Scalar<T>;
 
     fn add(self, right: Rhs) -> Self::Output {
-        binary(self, BinOp::Add, right.into())
+        binary(self, BinOp::Add, right)
     }
 }
 
 impl<T, Rhs> Mul<Rhs> for Scalar<T>
 where
     T: NumericValueType,
-    Rhs: Into<Scalar<T>>,
+    Rhs: IntoValue<Value = Scalar<T>>,
 {
     type Output = Scalar<T>;
 
     fn mul(self, right: Rhs) -> Self::Output {
-        binary(self, BinOp::Mul, right.into())
+        binary(self, BinOp::Mul, right)
+    }
+}
+
+impl<T> IntoValue for T
+where
+    T: ScalarValueType,
+{
+    type Value = Scalar<T>;
+
+    fn into_value(self) -> Self::Value {
+        Scalar::new(self)
+    }
+}
+
+impl<T> IntoValue for Scalar<T>
+where
+    T: ScalarValueType,
+{
+    type Value = Self;
+
+    fn into_value(self) -> Self::Value {
+        self
     }
 }
 
