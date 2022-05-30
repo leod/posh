@@ -1,6 +1,6 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 
-use super::{BinOp, Expr, ExprCall, ExprVar, Func, FuncUserDefined, Ident, Type, Var};
+use super::{BinOp, Expr, ExprCall, ExprVar, Func, FuncUserDefined, Type, Var};
 
 pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<FuncUserDefined>) {
     match expr {
@@ -148,7 +148,7 @@ pub fn show_expr(expr: &Expr) -> String {
         ),
         Expr::Var(expr) => expr.var.ident.to_string(),
         Expr::Call(expr) => {
-            let args: Vec<_> = expr.args.iter().map(|arg| show_expr(arg)).collect();
+            let args: Vec<_> = expr.args.iter().map(show_expr).collect();
             format!("{}({})", expr.func.name(), args.join(", "),)
         }
         Expr::Lit(expr) => expr.lit.value.clone(),

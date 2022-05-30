@@ -1,4 +1,4 @@
-use fsl::{fsl, lang::Func, Value};
+use fsl::{fsl, Value};
 
 #[fsl]
 fn foo(x: fsl::F32, y: fsl::F32) -> fsl::F32 {
@@ -6,10 +6,6 @@ fn foo(x: fsl::F32, y: fsl::F32) -> fsl::F32 {
     let w = var(y + x + 1.0);
 
     ternary(and(z.eq(w), z.eq(1.0)), z * 2.0, 1.0)
-
-    //2.0.into()
-
-    //fsl::branch(bool!(z == w && z == 1.0), z * 2.0, 1.0)
 }
 
 #[fsl]

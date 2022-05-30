@@ -5,7 +5,7 @@ use crate::{
     Bool,
 };
 
-use super::{IntoValue, Scalar, Value, ValueType};
+use super::{IntoValue, Value, ValueType};
 
 pub(crate) fn binary<U, V, R>(
     left: impl IntoValue<Value = U>,
