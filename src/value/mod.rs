@@ -9,6 +9,8 @@ use crate::{
 pub use primitives::{and, branch, func_call, or, var};
 pub use scalar::{Bool, Scalar, ScalarValueType, F32, U32};
 
+pub(crate) use primitives::binary;
+
 pub trait ValueType {
     type Value;
 

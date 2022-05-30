@@ -5,12 +5,12 @@ use std::{
 
 use crate::{
     expr_reg::ExprId,
-    lang::{BinOp, Expr, ExprBinary, ExprLit, Lit, Type},
+    lang::{BinOp, Expr, ExprLit, Lit, Type},
 };
 
-use super::{Value, ValueType};
+use super::{binary, Value, ValueType};
 
-pub trait ScalarValueType: Clone + ValueType + Into<Lit> {}
+pub trait ScalarValueType: Copy + Clone + ValueType + Into<Lit> {}
 
 pub trait NumericValueType: ScalarValueType {}
 
@@ -25,7 +25,7 @@ where
     }
 
     fn expr_id(&self) -> ExprId {
-        Scalar::from(self.clone()).expr_id
+        Scalar::new(*self).expr_id
     }
 }
 
@@ -57,20 +57,15 @@ impl<T> Scalar<T>
 where
     T: ScalarValueType,
 {
-    pub fn eq<V>(&self, rhs: V) -> Scalar<bool>
+    pub fn new(x: T) -> Self {
+        Self::from_expr(Expr::Lit(ExprLit { lit: x.into() }))
+    }
+
+    pub fn eq<V>(&self, right: V) -> Bool
     where
         V: Value<Type = T>,
     {
-        let left = Box::new(self.expr());
-        let right = Box::new(rhs.expr());
-
-        let expr = Expr::Binary(ExprBinary {
-            left,
-            op: BinOp::Eq,
-            right,
-        });
-
-        Scalar::from_expr(expr)
+        binary(*self, BinOp::Eq, right)
     }
 }
 
@@ -79,7 +74,7 @@ where
     T: ScalarValueType,
 {
     fn from(x: T) -> Self {
-        Self::from_expr(Expr::Lit(ExprLit { lit: x.into() }))
+        Self::new(x)
     }
 }
 
@@ -90,17 +85,8 @@ where
 {
     type Output = Scalar<T>;
 
-    fn add(self, rhs: Rhs) -> Self::Output {
-        let left = Box::new(self.expr());
-        let right = Box::new(rhs.into().expr());
-
-        let expr = Expr::Binary(ExprBinary {
-            left,
-            op: BinOp::Add,
-            right,
-        });
-
-        Scalar::from_expr(expr)
+    fn add(self, right: Rhs) -> Self::Output {
+        binary(self, BinOp::Add, right.into())
     }
 }
 
@@ -111,17 +97,8 @@ where
 {
     type Output = Scalar<T>;
 
-    fn mul(self, rhs: Rhs) -> Self::Output {
-        let left = Box::new(self.expr());
-        let right = Box::new(rhs.into().expr());
-
-        let expr = Expr::Binary(ExprBinary {
-            left,
-            op: BinOp::Mul,
-            right,
-        });
-
-        Scalar::from_expr(expr)
+    fn mul(self, right: Rhs) -> Self::Output {
+        binary(self, BinOp::Mul, right.into())
     }
 }
 
@@ -156,6 +133,6 @@ impl ScalarValueType for f32 {}
 impl NumericValueType for u32 {}
 impl NumericValueType for f32 {}
 
-pub type Bool = Scalar<bool>;
-pub type U32 = Scalar<u32>;
-pub type F32 = Scalar<f32>;
+pub type Bool = <bool as ValueType>::Value;
+pub type U32 = <u32 as ValueType>::Value;
+pub type F32 = <f32 as ValueType>::Value;

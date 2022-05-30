@@ -38,6 +38,17 @@ pub enum Func {
     },
 }
 
+impl Func {
+    pub fn ty(&self) -> Type {
+        use Func::*;
+
+        match self {
+            BuiltIn(_) => unimplemented!(),
+            UserDefined { result, .. } => result.ty(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Lit {
     pub value: String,
@@ -94,6 +105,7 @@ pub struct ExprBinary {
     pub left: Box<Expr>,
     pub op: BinOp,
     pub right: Box<Expr>,
+    pub ty: Type,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -120,21 +132,19 @@ pub struct ExprLit {
     pub lit: Lit,
 }
 
-/*
 impl Expr {
     pub fn ty(&self) -> Type {
+        use Expr::*;
+
         match self {
-            Expr::Binary(expr) => {
-                assert!(expr.left.ty() == expr.right.ty());
-                expr.left.ty()
+            Binary(expr) => expr.ty.clone(),
+            Cond(expr) => {
+                assert!(expr.true_expr.ty() == expr.false_expr.ty());
+                expr.true_expr.ty()
             }
-            Expr::Cond(expr) => {
-                assert!(expr)
-            }
-            Expr::Var(_) => todo!(),
-            Expr::Call(_) => todo!(),
-            Expr::Lit(_) => todo!(),
+            Var(expr) => expr.var.ty.clone(),
+            Call(expr) => expr.func.ty(),
+            Lit(expr) => expr.lit.ty.clone(),
         }
     }
 }
-*/
