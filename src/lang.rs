@@ -24,6 +24,12 @@ impl Ident {
     }
 }
 
+impl ToString for Ident {
+    fn to_string(&self) -> String {
+        format!("{}_{}", self.name, &self.uuid.simple().to_string()[0..8])
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Var {
     pub ident: Ident,

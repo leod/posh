@@ -79,7 +79,7 @@ pub fn show_user_defined_func(func: &FuncUserDefined) -> String {
     let params: Vec<_> = func
         .params
         .iter()
-        .map(|param| format!("{}: {}", param.ident.name, show_type(&param.ty)))
+        .map(|param| format!("{}: {}", param.ident.to_string(), show_type(&param.ty)))
         .collect();
 
     let mut vars = BTreeSet::new();
@@ -91,7 +91,7 @@ pub fn show_user_defined_func(func: &FuncUserDefined) -> String {
         .map(|var| {
             format!(
                 "    let {}: {} = {};",
-                var.ident.name,
+                var.ident.to_string(),
                 show_type(&var.ty),
                 show_expr(var.init.as_ref().unwrap())
             )
@@ -146,7 +146,7 @@ pub fn show_expr(expr: &Expr) -> String {
             show_expr(&*expr.true_expr),
             show_expr(&*expr.false_expr),
         ),
-        Expr::Var(expr) => expr.var.ident.name.clone(),
+        Expr::Var(expr) => expr.var.ident.to_string(),
         Expr::Call(expr) => {
             let args: Vec<_> = expr.args.iter().map(|arg| show_expr(arg)).collect();
             format!("{}({})", expr.func.name(), args.join(", "),)
