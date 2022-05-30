@@ -1,18 +1,18 @@
 [package]
-name = "fush"
+name = "fsl"
 version = "0.1.0"
 edition = "2021"
 
 [features]
-macros = ["fush-macros"]
+macros = ["fsl-macros"]
 
 [dependencies]
 glsl = "6.0"
 version = "1.1.0"
-fush-macros = { path = "macros", version = "*", optional = true }
+fsl-macros = { path = "macros", version = "*", optional = true }
 
 [dev-dependencies]
-fush = { version = "*", features = ["macros"], path = "." }
+fsl = { version = "*", features = ["macros"], path = "." }
 
 [dependencies.uuid]
 version = "1.1.0"

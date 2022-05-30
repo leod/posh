@@ -1,5 +1,5 @@
 [package]
-name = "fush-macros"
+name = "fsl-macros"
 version = "0.1.0"
 edition = "2021"
 

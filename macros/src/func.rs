@@ -17,21 +17,21 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                 _ => {
                     return Err(Error::new_spanned(
                         &input.pat,
-                        "fush: Only identifiers are allowed as function argument patterns",
+                        "fsl: Only identifiers are allowed as function argument patterns",
                     ));
                 }
             }
         }
     }
 
-    let args_ident = quote! { __fush_func_args };
+    let args_ident = quote! { __fsl_func_args };
 
     let func_ident = item.sig.ident.clone();
     let func_body = item.block.clone();
 
     item.block = parse_quote! {
         {
-            use ::fush::value::Value as _;
+            use ::fsl::value::Value as _;
 
             #(
                 let #input_idents = #input_idents.into();
@@ -45,9 +45,9 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
 
             #(
                 let #input_idents = #input_idents.map_expr(|_| {
-                    ::fush::lang::Expr::Var(::fush::lang::ExprVar {
-                        var: ::fush::lang::Var {
-                            ident: ::fush::lang::Ident::new(stringify!(#input_idents)),
+                    ::fsl::lang::Expr::Var(::fsl::lang::ExprVar {
+                        var: ::fsl::lang::Var {
+                            ident: ::fsl::lang::Ident::new(stringify!(#input_idents)),
                             ty: #input_idents.ty(),
                         },
                         init: None,
@@ -55,12 +55,12 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                 });
             )*
 
-            ::fush::value::func_call(
+            ::fsl::value::func_call(
                 stringify!(#func_ident),
                 vec![
                     #(
-                        ::fush::lang::Var {
-                            ident: ::fush::lang::Ident::new(stringify!(#input_idents)),
+                        ::fsl::lang::Var {
+                            ident: ::fsl::lang::Ident::new(stringify!(#input_idents)),
                             ty: #input_idents.ty(),
                         }
                     ),*

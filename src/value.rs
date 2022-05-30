@@ -282,3 +282,8 @@ macro_rules! let_ {
         ));
     }
 }
+
+#[macro_export]
+macro_rules! bool {
+    { $x:tt } => { $x }
+}
