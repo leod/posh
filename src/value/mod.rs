@@ -15,7 +15,7 @@ pub trait ValueType {
     fn ty() -> Type;
 }
 
-pub type Fush<T> = <T as ValueType>::Value;
+pub type Fsl<T> = <T as ValueType>::Value;
 
 pub trait Value: Clone + Sized {
     type Type: ValueType;
