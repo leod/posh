@@ -13,6 +13,7 @@ pub trait ScalarValueType: Copy + Clone + ValueType + Into<Lit> {
 
 pub trait NumericValueType: ScalarValueType {}
 
+#[must_use]
 #[derive(Debug, Copy, Clone)]
 pub struct Scalar<T> {
     _phantom: PhantomData<T>,

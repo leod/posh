@@ -18,6 +18,7 @@ impl<T: ScalarValueType> ValueType for [T; 3] {
     }
 }
 
+#[must_use]
 #[derive(Debug, Copy, Clone)]
 pub struct Vec3<T> {
     trace: Trace,
