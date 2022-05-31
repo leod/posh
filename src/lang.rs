@@ -3,10 +3,16 @@ pub mod show;
 pub use uuid::Uuid;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum Type {
+pub enum ScalarType {
     Bool,
     U32,
     F32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Type {
+    Scalar(ScalarType),
+    Vec3(ScalarType),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -46,6 +52,7 @@ pub enum Func {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FuncBuiltIn {
     pub name: String,
+    pub ty: Type,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -60,7 +67,7 @@ impl Func {
         use Func::*;
 
         match self {
-            BuiltIn(_) => unimplemented!(),
+            BuiltIn(FuncBuiltIn { ty, .. }) => ty.clone(),
             UserDefined(FuncUserDefined { result, .. }) => result.ty(),
         }
     }
@@ -69,7 +76,7 @@ impl Func {
         use Func::*;
 
         match self {
-            BuiltIn(FuncBuiltIn { name }) => name,
+            BuiltIn(FuncBuiltIn { name, .. }) => name,
             UserDefined(FuncUserDefined { ident, .. }) => &ident.name,
         }
     }
@@ -85,7 +92,7 @@ impl From<bool> for Lit {
     fn from(x: bool) -> Self {
         Self {
             value: x.to_string(),
-            ty: Type::Bool,
+            ty: Type::Scalar(ScalarType::Bool),
         }
     }
 }
@@ -94,7 +101,7 @@ impl From<u32> for Lit {
     fn from(x: u32) -> Self {
         Self {
             value: x.to_string(),
-            ty: Type::U32,
+            ty: Type::Scalar(ScalarType::U32),
         }
     }
 }
@@ -103,7 +110,7 @@ impl From<f32> for Lit {
     fn from(x: f32) -> Self {
         Self {
             value: x.to_string(),
-            ty: Type::F32,
+            ty: Type::Scalar(ScalarType::F32),
         }
     }
 }
@@ -111,7 +118,9 @@ impl From<f32> for Lit {
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum BinOp {
     Add,
+    Sub,
     Mul,
+    Div,
     Eq,
     And,
     Or,
@@ -124,6 +133,7 @@ pub enum Expr {
     Var(ExprVar),
     Call(ExprCall),
     Lit(ExprLit),
+    Field(ExprField),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -157,6 +167,13 @@ pub struct ExprLit {
     pub lit: Lit,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ExprField {
+    pub base: Box<Expr>,
+    pub member: String,
+    pub ty: Type,
+}
+
 impl Expr {
     pub fn ty(&self) -> Type {
         use Expr::*;
@@ -170,6 +187,7 @@ impl Expr {
             Var(expr) => expr.var.ty.clone(),
             Call(expr) => expr.func.ty(),
             Lit(expr) => expr.lit.ty.clone(),
+            Field(expr) => expr.ty.clone(),
         }
     }
 }

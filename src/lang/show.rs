@@ -1,17 +1,24 @@
 use std::collections::BTreeSet;
 
-use super::{BinOp, Expr, ExprCall, ExprVar, Func, FuncUserDefined, Type, Var};
+use super::{
+    BinOp, Expr, ExprBinary, ExprCall, ExprField, ExprTernary, ExprVar, Func, FuncUserDefined,
+    ScalarType, Type, Var,
+};
 
 pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<FuncUserDefined>) {
     match expr {
-        Expr::Binary(expr) => {
-            collect_funcs(&*expr.left, funcs);
-            collect_funcs(&*expr.right, funcs);
+        Expr::Binary(ExprBinary { left, right, .. }) => {
+            collect_funcs(&*left, funcs);
+            collect_funcs(&*right, funcs);
         }
-        Expr::Ternary(expr) => {
-            collect_funcs(&*expr.cond, funcs);
-            collect_funcs(&*expr.true_expr, funcs);
-            collect_funcs(&*expr.false_expr, funcs);
+        Expr::Ternary(ExprTernary {
+            cond,
+            true_expr,
+            false_expr,
+        }) => {
+            collect_funcs(&*cond, funcs);
+            collect_funcs(&*true_expr, funcs);
+            collect_funcs(&*false_expr, funcs);
         }
         Expr::Var(ExprVar {
             var: Var {
@@ -33,19 +40,26 @@ pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<FuncUserDefined>) {
             }
         }
         Expr::Lit(_) => (),
+        Expr::Field(ExprField { base, .. }) => {
+            collect_funcs(&*base, funcs);
+        }
     }
 }
 
 pub fn collect_vars(expr: &Expr, vars: &mut BTreeSet<Var>) {
     match expr {
-        Expr::Binary(expr) => {
-            collect_vars(&*expr.left, vars);
-            collect_vars(&*expr.right, vars);
+        Expr::Binary(ExprBinary { left, right, .. }) => {
+            collect_vars(&*left, vars);
+            collect_vars(&*right, vars);
         }
-        Expr::Ternary(expr) => {
-            collect_vars(&*expr.cond, vars);
-            collect_vars(&*expr.true_expr, vars);
-            collect_vars(&*expr.false_expr, vars);
+        Expr::Ternary(ExprTernary {
+            cond,
+            true_expr,
+            false_expr,
+        }) => {
+            collect_vars(&*cond, vars);
+            collect_vars(&*true_expr, vars);
+            collect_vars(&*false_expr, vars);
         }
         Expr::Var(ExprVar {
             var: var @ Var {
@@ -64,14 +78,33 @@ pub fn collect_vars(expr: &Expr, vars: &mut BTreeSet<Var>) {
             }
         }
         Expr::Lit(_) => (),
+        Expr::Field(ExprField { base, .. }) => {
+            collect_vars(&*base, vars);
+        }
+    }
+}
+
+fn show_scalar_type(ty: &ScalarType) -> String {
+    use ScalarType::*;
+
+    match ty {
+        Bool => "bool".to_string(),
+        U32 => "u32".to_string(),
+        F32 => "f32".to_string(),
     }
 }
 
 fn show_type(ty: &Type) -> String {
+    use ScalarType::*;
+    use Type::*;
+
     match ty {
-        Type::Bool => "bool".to_string(),
-        Type::U32 => "u32".to_string(),
-        Type::F32 => "f32".to_string(),
+        Scalar(ty) => show_scalar_type(ty),
+        Vec3(ty) => match ty {
+            Bool => "bvec3".to_string(),
+            U32 => "uvec3".to_string(),
+            F32 => "vec3".to_string(),
+        },
     }
 }
 
@@ -125,7 +158,9 @@ pub fn show_user_defined_funcs(func: &FuncUserDefined) -> String {
 pub fn show_bin_op(op: BinOp) -> String {
     match op {
         BinOp::Add => "+".into(),
+        BinOp::Sub => "-".into(),
         BinOp::Mul => "*".into(),
+        BinOp::Div => "/".into(),
         BinOp::Eq => "==".into(),
         BinOp::And => "&&".into(),
         BinOp::Or => "||".into(),
@@ -152,5 +187,9 @@ pub fn show_expr(expr: &Expr) -> String {
             format!("{}({})", expr.func.name(), args.join(", "),)
         }
         Expr::Lit(expr) => expr.lit.value.clone(),
+        Expr::Field(expr) => {
+            let base = show_expr(&*expr.base);
+            format!("({}).{}", base, expr.member)
+        }
     }
 }

@@ -1,11 +1,12 @@
 use crate::{
     lang::{
-        BinOp, Expr, ExprBinary, ExprCall, ExprTernary, ExprVar, Func, FuncUserDefined, Ident, Var,
+        BinOp, Expr, ExprBinary, ExprCall, ExprField, ExprTernary, ExprVar, Func, FuncBuiltIn,
+        FuncUserDefined, Ident, Var,
     },
     Bool,
 };
 
-use super::{IntoValue, Value, ValueType};
+use super::{IntoValue, Trace, Value, ValueType};
 
 pub(crate) fn binary<U, V, R>(
     left: impl IntoValue<Value = U>,
@@ -25,6 +26,64 @@ where
         op,
         right,
         ty: <R::Type as ValueType>::ty(),
+    });
+
+    R::from_expr(expr)
+}
+
+pub(crate) fn field<R>(base: Trace, member: &str) -> R
+where
+    R: Value,
+{
+    let expr = Expr::Field(ExprField {
+        base: Box::new(base.expr()),
+        member: member.into(),
+        ty: <R::Type as ValueType>::ty(),
+    });
+
+    R::from_expr(expr)
+}
+
+pub(crate) fn builtin1<U, R>(name: &str, x: impl IntoValue<Value = U>) -> R
+where
+    U: Value,
+    R: Value,
+{
+    let func = Func::BuiltIn(FuncBuiltIn {
+        name: name.into(),
+        ty: <R::Type as ValueType>::ty(),
+    });
+    let expr = Expr::Call(ExprCall {
+        func,
+        args: vec![x.into_value().expr()],
+    });
+
+    R::from_expr(expr)
+}
+
+pub(crate) fn builtin3<U, V, W, R>(
+    name: &str,
+    x: impl IntoValue<Value = U>,
+    y: impl IntoValue<Value = V>,
+    z: impl IntoValue<Value = W>,
+) -> R
+where
+    U: Value,
+    V: Value,
+    W: Value,
+    R: Value,
+{
+    let func = Func::BuiltIn(FuncBuiltIn {
+        name: name.into(),
+        ty: <R::Type as ValueType>::ty(),
+    });
+    let expr = Expr::Call(ExprCall {
+        func,
+        args: vec![
+            x.into_value().expr(),
+            y.into_value().expr(),
+            z.into_value().expr(),
+        ],
     });
 
     R::from_expr(expr)

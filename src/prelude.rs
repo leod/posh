@@ -1,2 +1,1 @@
-pub use crate::value::Value as _;
-pub use crate::{and, or, ternary, var, Bool, Fsl, U32};
+pub use crate::value::{and, or, ternary, var, vec3, Bool, Fsl, Value as _, Vec3, F32, U32};

@@ -10,13 +10,18 @@ fn foo(x: fsl::F32, y: fsl::F32) -> fsl::F32 {
 
 #[fsl]
 fn bar(x: fsl::F32) -> fsl::F32 {
-    foo(x, x * 2.0) + 5.0
+    ternary(x.eq(5.0), 1.0, -1.0)
+}
+
+#[fsl]
+fn baz() -> fsl::Vec3<f32> {
+    let dings = var(vec3(foo(1.0, 2.0), bar(42.0), -1.0));
+    let thing = var(vec3(dings.z, dings.x * 3.0, dings.y));
+    thing * (dings.normalize() / 5.0)
 }
 
 fn main() {
-    let a = 2.0;
-
-    let result = bar(a);
+    let result = baz();
     //println!("{:#?}", result);
 
     if let fsl::lang::Expr::Call(expr) = result.expr() {

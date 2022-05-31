@@ -1,20 +1,22 @@
 use std::{
     marker::PhantomData,
-    ops::{Add, Mul},
+    ops::{Add, Div, Mul, Sub},
 };
 
-use crate::lang::{BinOp, Expr, ExprLit, Lit, Type};
+use crate::lang::{BinOp, Expr, ExprLit, Lit, ScalarType, Type};
 
-use super::{binary, expr_reg::ExprId, IntoValue, Value, ValueType};
+use super::{binary, IntoValue, Trace, Value, ValueType};
 
-pub trait ScalarValueType: Copy + Clone + ValueType + Into<Lit> {}
+pub trait ScalarValueType: Copy + Clone + ValueType + Into<Lit> {
+    fn scalar_ty() -> ScalarType;
+}
 
 pub trait NumericValueType: ScalarValueType {}
 
 #[derive(Debug, Copy, Clone)]
 pub struct Scalar<T> {
     _phantom: PhantomData<T>,
-    expr_id: ExprId,
+    trace: Trace,
 }
 
 impl<T> Value for Scalar<T>
@@ -23,15 +25,17 @@ where
 {
     type Type = T;
 
-    fn from_expr_id(expr_id: ExprId) -> Self {
+    fn from_trace(trace: Trace) -> Self {
+        assert!(trace.expr().ty() == Self::Type::ty());
+
         Scalar {
             _phantom: PhantomData,
-            expr_id,
+            trace,
         }
     }
 
-    fn expr_id(&self) -> ExprId {
-        self.expr_id
+    fn trace(&self) -> Trace {
+        self.trace
     }
 }
 
@@ -65,10 +69,22 @@ where
     T: NumericValueType,
     Rhs: IntoValue<Value = Scalar<T>>,
 {
-    type Output = Scalar<T>;
+    type Output = Self;
 
     fn add(self, right: Rhs) -> Self::Output {
         binary(self, BinOp::Add, right)
+    }
+}
+
+impl<T, Rhs> Sub<Rhs> for Scalar<T>
+where
+    T: NumericValueType,
+    Rhs: IntoValue<Value = Scalar<T>>,
+{
+    type Output = Self;
+
+    fn sub(self, right: Rhs) -> Self::Output {
+        binary(self, BinOp::Sub, right)
     }
 }
 
@@ -77,10 +93,22 @@ where
     T: NumericValueType,
     Rhs: IntoValue<Value = Scalar<T>>,
 {
-    type Output = Scalar<T>;
+    type Output = Self;
 
     fn mul(self, right: Rhs) -> Self::Output {
         binary(self, BinOp::Mul, right)
+    }
+}
+
+impl<T, Rhs> Div<Rhs> for Scalar<T>
+where
+    T: NumericValueType,
+    Rhs: IntoValue<Value = Scalar<T>>,
+{
+    type Output = Self;
+
+    fn div(self, right: Rhs) -> Self::Output {
+        binary(self, BinOp::Div, right)
     }
 }
 
@@ -110,7 +138,7 @@ impl ValueType for bool {
     type Value = Scalar<bool>;
 
     fn ty() -> Type {
-        Type::U32
+        Type::Scalar(ScalarType::Bool)
     }
 }
 
@@ -118,7 +146,7 @@ impl ValueType for u32 {
     type Value = Scalar<u32>;
 
     fn ty() -> Type {
-        Type::U32
+        Type::Scalar(ScalarType::U32)
     }
 }
 
@@ -126,13 +154,27 @@ impl ValueType for f32 {
     type Value = Scalar<f32>;
 
     fn ty() -> Type {
-        Type::F32
+        Type::Scalar(ScalarType::F32)
     }
 }
 
-impl ScalarValueType for bool {}
-impl ScalarValueType for u32 {}
-impl ScalarValueType for f32 {}
+impl ScalarValueType for bool {
+    fn scalar_ty() -> ScalarType {
+        ScalarType::Bool
+    }
+}
+
+impl ScalarValueType for u32 {
+    fn scalar_ty() -> ScalarType {
+        ScalarType::U32
+    }
+}
+
+impl ScalarValueType for f32 {
+    fn scalar_ty() -> ScalarType {
+        ScalarType::F32
+    }
+}
 
 impl NumericValueType for u32 {}
 impl NumericValueType for f32 {}
