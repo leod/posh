@@ -143,6 +143,14 @@ impl ValueType for bool {
     }
 }
 
+impl ValueType for i32 {
+    type Value = Scalar<i32>;
+
+    fn ty() -> Type {
+        Type::Scalar(ScalarType::I32)
+    }
+}
+
 impl ValueType for u32 {
     type Value = Scalar<u32>;
 
@@ -165,6 +173,12 @@ impl ScalarValueType for bool {
     }
 }
 
+impl ScalarValueType for i32 {
+    fn scalar_ty() -> ScalarType {
+        ScalarType::I32
+    }
+}
+
 impl ScalarValueType for u32 {
     fn scalar_ty() -> ScalarType {
         ScalarType::U32
@@ -177,9 +191,11 @@ impl ScalarValueType for f32 {
     }
 }
 
+impl NumericValueType for i32 {}
 impl NumericValueType for u32 {}
 impl NumericValueType for f32 {}
 
 pub type Bool = <bool as ValueType>::Value;
+pub type I32 = <i32 as ValueType>::Value;
 pub type U32 = <u32 as ValueType>::Value;
 pub type F32 = <f32 as ValueType>::Value;

@@ -2,9 +2,10 @@ pub mod show;
 
 pub use uuid::Uuid;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ScalarType {
     Bool,
+    I32,
     U32,
     F32,
 }
@@ -93,6 +94,15 @@ impl From<bool> for Lit {
         Self {
             value: x.to_string(),
             ty: Type::Scalar(ScalarType::Bool),
+        }
+    }
+}
+
+impl From<i32> for Lit {
+    fn from(x: i32) -> Self {
+        Self {
+            value: x.to_string(),
+            ty: Type::Scalar(ScalarType::I32),
         }
     }
 }

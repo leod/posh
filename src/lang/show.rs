@@ -84,27 +84,34 @@ pub fn collect_vars(expr: &Expr, vars: &mut BTreeSet<Var>) {
     }
 }
 
-fn show_scalar_type(ty: &ScalarType) -> String {
+fn show_scalar_type(ty: ScalarType) -> String {
     use ScalarType::*;
 
     match ty {
         Bool => "bool".to_string(),
+        I32 => "i32".to_string(),
         U32 => "u32".to_string(),
         F32 => "f32".to_string(),
     }
 }
 
-fn show_type(ty: &Type) -> String {
+fn scalar_type_prefix(ty: ScalarType) -> String {
     use ScalarType::*;
+
+    match ty {
+        Bool => "b".to_string(),
+        I32 => "i".to_string(),
+        U32 => "u".to_string(),
+        F32 => "".to_string(),
+    }
+}
+
+fn show_type(ty: &Type) -> String {
     use Type::*;
 
     match ty {
-        Scalar(ty) => show_scalar_type(ty),
-        Vec3(ty) => match ty {
-            Bool => "bvec3".to_string(),
-            U32 => "uvec3".to_string(),
-            F32 => "vec3".to_string(),
-        },
+        Scalar(ty) => show_scalar_type(*ty),
+        Vec3(ty) => format!("{}vec3", scalar_type_prefix(*ty)),
     }
 }
 
