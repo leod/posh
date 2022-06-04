@@ -1,13 +1,15 @@
 pub(crate) mod expr_reg;
+mod funcs;
 mod primitives;
 mod scalar;
 mod vec;
 
 use crate::lang::{Expr, Type};
 
+pub use funcs::GenValue;
 pub use primitives::{and, func_call, or, ternary, var};
 pub use scalar::{Bool, Scalar, ScalarValueType, F32, U32};
-pub use vec::{vec3, GenValue, Vec3};
+pub use vec::{vec3, Vec3};
 
 pub(crate) use primitives::{binary, builtin1, builtin2, builtin3};
 
