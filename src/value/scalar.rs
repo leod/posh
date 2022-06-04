@@ -75,7 +75,7 @@ where
     }
 }
 
-macro_rules! impl_op {
+macro_rules! impl_binary_op {
     ($fn:ident, $op:ident) => {
         impl<T, Rhs> std::ops::$op<Rhs> for Scalar<T>
         where
@@ -91,10 +91,10 @@ macro_rules! impl_op {
     };
 }
 
-impl_op!(add, Add);
-impl_op!(sub, Sub);
-impl_op!(mul, Mul);
-impl_op!(div, Div);
+impl_binary_op!(add, Add);
+impl_binary_op!(sub, Sub);
+impl_binary_op!(mul, Mul);
+impl_binary_op!(div, Div);
 
 macro_rules! impl_scalar {
     ($ty:ty, $name:ident) => {

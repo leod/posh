@@ -1,4 +1,4 @@
-use std::ops::{Add, Mul};
+use std::ops::{Add, Div, Mul, Sub};
 
 use crate::{
     lang::{BinOp, Type},
@@ -46,52 +46,6 @@ impl<T: ScalarValueType> Value for Vec3<T> {
     }
 }
 
-impl<T> Add<Vec3<T>> for Vec3<T>
-where
-    T: NumericValueType,
-{
-    type Output = Self;
-
-    fn add(self, right: Self) -> Self::Output {
-        binary(self, BinOp::Add, right)
-    }
-}
-
-impl<T> Mul<Vec3<T>> for Vec3<T>
-where
-    T: NumericValueType,
-{
-    type Output = Self;
-
-    fn mul(self, right: Self) -> Self::Output {
-        binary(self, BinOp::Mul, right)
-    }
-}
-
-impl<T, Rhs> Add<Rhs> for Vec3<T>
-where
-    T: NumericValueType,
-    Rhs: IntoValue<Value = Scalar<T>>,
-{
-    type Output = Self;
-
-    fn add(self, right: Rhs) -> Self::Output {
-        binary(self, BinOp::Add, right)
-    }
-}
-
-impl<T, Rhs> Mul<Rhs> for Vec3<T>
-where
-    T: NumericValueType,
-    Rhs: IntoValue<Value = Scalar<T>>,
-{
-    type Output = Self;
-
-    fn mul(self, right: Rhs) -> Self::Output {
-        binary(self, BinOp::Mul, right)
-    }
-}
-
 impl<T> IntoValue for Vec3<T>
 where
     T: ScalarValueType,
@@ -102,6 +56,88 @@ where
         self
     }
 }
+
+macro_rules! impl_symmetric_binary_op {
+    ($ty:ident, $fn:ident, $op:ident) => {
+        impl<T> $op<$ty<T>> for $ty<T>
+        where
+            T: NumericValueType,
+        {
+            type Output = Self;
+
+            fn $fn(self, right: Self) -> Self::Output {
+                binary(self, BinOp::$op, right)
+            }
+        }
+    };
+}
+
+macro_rules! impl_scalar_binary_op {
+    ($ty:ident, $fn:ident, $op:ident) => {
+        impl<T, Rhs> $op<Rhs> for $ty<T>
+        where
+            T: NumericValueType,
+            Rhs: IntoValue<Value = Scalar<T>>,
+        {
+            type Output = Self;
+
+            fn $fn(self, right: Rhs) -> Self::Output {
+                binary(self, BinOp::Add, right)
+            }
+        }
+
+        impl<T> $op<$ty<T>> for Scalar<T>
+        where
+            T: NumericValueType,
+        {
+            type Output = $ty<T>;
+
+            fn $fn(self, right: $ty<T>) -> Self::Output {
+                binary(self, BinOp::Add, right)
+            }
+        }
+
+        impl $op<$ty<Self>> for f32 {
+            type Output = $ty<Self>;
+
+            fn $fn(self, right: $ty<Self>) -> Self::Output {
+                binary(self.into_value(), BinOp::Add, right)
+            }
+        }
+
+        impl $op<$ty<Self>> for i32 {
+            type Output = $ty<Self>;
+
+            fn $fn(self, right: $ty<Self>) -> Self::Output {
+                binary(self.into_value(), BinOp::Add, right)
+            }
+        }
+
+        impl $op<$ty<Self>> for u32 {
+            type Output = $ty<Self>;
+
+            fn $fn(self, right: $ty<Self>) -> Self::Output {
+                binary(self.into_value(), BinOp::Add, right)
+            }
+        }
+    };
+}
+
+macro_rules! impl_ops {
+    ($ty:ident) => {
+        impl_symmetric_binary_op!($ty, add, Add);
+        impl_symmetric_binary_op!($ty, sub, Sub);
+        impl_symmetric_binary_op!($ty, mul, Mul);
+        impl_symmetric_binary_op!($ty, div, Div);
+
+        impl_scalar_binary_op!($ty, add, Add);
+        impl_scalar_binary_op!($ty, sub, Sub);
+        impl_scalar_binary_op!($ty, mul, Mul);
+        impl_scalar_binary_op!($ty, div, Div);
+    };
+}
+
+impl_ops!(Vec3);
 
 impl Vec3<f32> {
     pub fn normalize(self) -> F32 {
