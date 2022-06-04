@@ -1,4 +1,7 @@
-use std::marker::PhantomData;
+use std::{
+    marker::PhantomData,
+    ops::{Add, Div, Mul, Sub},
+};
 
 use crate::lang::{BinOp, Expr, ExprLit, Lit, ScalarType, Type};
 
@@ -53,31 +56,9 @@ where
     }
 }
 
-impl<T> IntoValue for T
-where
-    T: ScalarValueType,
-{
-    type Value = Scalar<T>;
-
-    fn into_value(self) -> Self::Value {
-        Scalar::new(self)
-    }
-}
-
-impl<T> IntoValue for Scalar<T>
-where
-    T: ScalarValueType,
-{
-    type Value = Self;
-
-    fn into_value(self) -> Self::Value {
-        self
-    }
-}
-
 macro_rules! impl_binary_op {
     ($fn:ident, $op:ident) => {
-        impl<T, Rhs> std::ops::$op<Rhs> for Scalar<T>
+        impl<T, Rhs> $op<Rhs> for Scalar<T>
         where
             T: NumericValueType,
             Rhs: IntoValue<Value = Scalar<T>>,
@@ -85,6 +66,30 @@ macro_rules! impl_binary_op {
             type Output = Self;
 
             fn $fn(self, right: Rhs) -> Self::Output {
+                binary(self, BinOp::$op, right)
+            }
+        }
+
+        impl $op<Scalar<Self>> for f32 {
+            type Output = Scalar<Self>;
+
+            fn $fn(self, right: Scalar<Self>) -> Self::Output {
+                binary(self, BinOp::$op, right)
+            }
+        }
+
+        impl $op<Scalar<Self>> for i32 {
+            type Output = Scalar<Self>;
+
+            fn $fn(self, right: Scalar<Self>) -> Self::Output {
+                binary(self, BinOp::$op, right)
+            }
+        }
+
+        impl $op<Scalar<Self>> for u32 {
+            type Output = Scalar<Self>;
+
+            fn $fn(self, right: Scalar<Self>) -> Self::Output {
                 binary(self, BinOp::$op, right)
             }
         }
@@ -109,6 +114,14 @@ macro_rules! impl_scalar {
         impl ScalarValueType for $ty {
             fn scalar_ty() -> ScalarType {
                 ScalarType::$name
+            }
+        }
+
+        impl IntoValue for $ty {
+            type Value = Scalar<$ty>;
+
+            fn into_value(self) -> Self::Value {
+                Scalar::new(self)
             }
         }
 

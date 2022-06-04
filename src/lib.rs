@@ -4,7 +4,7 @@ pub mod value;
 
 pub use prelude::*;
 
-pub use value::{IntoValue, Value};
+pub use value::{GenValue, IntoValue, Value};
 
 #[cfg(feature = "macros")]
 pub use fsl_macros::fsl;

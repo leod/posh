@@ -46,17 +46,6 @@ impl<T: ScalarValueType> Value for Vec3<T> {
     }
 }
 
-impl<T> IntoValue for Vec3<T>
-where
-    T: ScalarValueType,
-{
-    type Value = Self;
-
-    fn into_value(self) -> Self::Value {
-        self
-    }
-}
-
 macro_rules! impl_symmetric_binary_op {
     ($ty:ident, $fn:ident, $op:ident) => {
         impl<T> $op<$ty<T>> for $ty<T>
@@ -82,7 +71,7 @@ macro_rules! impl_scalar_binary_op {
             type Output = Self;
 
             fn $fn(self, right: Rhs) -> Self::Output {
-                binary(self, BinOp::Add, right)
+                binary(self, BinOp::$op, right)
             }
         }
 
@@ -93,7 +82,7 @@ macro_rules! impl_scalar_binary_op {
             type Output = $ty<T>;
 
             fn $fn(self, right: $ty<T>) -> Self::Output {
-                binary(self, BinOp::Add, right)
+                binary(self, BinOp::$op, right)
             }
         }
 
@@ -101,7 +90,7 @@ macro_rules! impl_scalar_binary_op {
             type Output = $ty<Self>;
 
             fn $fn(self, right: $ty<Self>) -> Self::Output {
-                binary(self.into_value(), BinOp::Add, right)
+                binary(self, BinOp::$op, right)
             }
         }
 
@@ -109,7 +98,7 @@ macro_rules! impl_scalar_binary_op {
             type Output = $ty<Self>;
 
             fn $fn(self, right: $ty<Self>) -> Self::Output {
-                binary(self.into_value(), BinOp::Add, right)
+                binary(self, BinOp::$op, right)
             }
         }
 
@@ -117,7 +106,7 @@ macro_rules! impl_scalar_binary_op {
             type Output = $ty<Self>;
 
             fn $fn(self, right: $ty<Self>) -> Self::Output {
-                binary(self.into_value(), BinOp::Add, right)
+                binary(self, BinOp::$op, right)
             }
         }
     };
@@ -139,11 +128,14 @@ macro_rules! impl_ops {
 
 impl_ops!(Vec3);
 
-impl Vec3<f32> {
-    pub fn normalize(self) -> F32 {
+pub trait GenValue: Value + Sized {
+    fn normalize(self) -> Self {
         builtin1("normalize", self)
     }
 }
+
+impl GenValue for F32 {}
+impl GenValue for Vec3<f32> {}
 
 pub fn vec3<T: ScalarValueType>(
     x: impl IntoValue<Value = Scalar<T>>,

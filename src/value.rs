@@ -7,7 +7,7 @@ use crate::lang::{Expr, Type};
 
 pub use primitives::{and, func_call, or, ternary, var};
 pub use scalar::{Bool, Scalar, ScalarValueType, F32, U32};
-pub use vec::{vec3, Vec3};
+pub use vec::{vec3, GenValue, Vec3};
 
 pub(crate) use primitives::{binary, builtin1, builtin3};
 
@@ -57,6 +57,14 @@ pub trait IntoValue {
     type Value: Value;
 
     fn into_value(self) -> Self::Value;
+}
+
+impl<V: Value> IntoValue for V {
+    type Value = Self;
+
+    fn into_value(self) -> Self::Value {
+        self
+    }
 }
 
 impl Trace {
