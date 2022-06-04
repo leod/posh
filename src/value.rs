@@ -39,6 +39,7 @@ pub trait Value: Clone + Sized {
     fn ty(&self) -> Type {
         Self::Type::ty()
     }
+
     fn expr(&self) -> Expr {
         self.trace().expr()
     }

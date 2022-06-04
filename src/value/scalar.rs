@@ -1,7 +1,4 @@
-use std::{
-    marker::PhantomData,
-    ops::{Add, Div, Mul, Sub},
-};
+use std::marker::PhantomData;
 
 use crate::lang::{BinOp, Expr, ExprLit, Lit, ScalarType, Type};
 
@@ -56,63 +53,6 @@ where
     }
 }
 
-impl<T> From<T> for Scalar<T>
-where
-    T: ScalarValueType,
-{
-    fn from(x: T) -> Self {
-        Self::new(x)
-    }
-}
-
-impl<T, Rhs> Add<Rhs> for Scalar<T>
-where
-    T: NumericValueType,
-    Rhs: IntoValue<Value = Scalar<T>>,
-{
-    type Output = Self;
-
-    fn add(self, right: Rhs) -> Self::Output {
-        binary(self, BinOp::Add, right)
-    }
-}
-
-impl<T, Rhs> Sub<Rhs> for Scalar<T>
-where
-    T: NumericValueType,
-    Rhs: IntoValue<Value = Scalar<T>>,
-{
-    type Output = Self;
-
-    fn sub(self, right: Rhs) -> Self::Output {
-        binary(self, BinOp::Sub, right)
-    }
-}
-
-impl<T, Rhs> Mul<Rhs> for Scalar<T>
-where
-    T: NumericValueType,
-    Rhs: IntoValue<Value = Scalar<T>>,
-{
-    type Output = Self;
-
-    fn mul(self, right: Rhs) -> Self::Output {
-        binary(self, BinOp::Mul, right)
-    }
-}
-
-impl<T, Rhs> Div<Rhs> for Scalar<T>
-where
-    T: NumericValueType,
-    Rhs: IntoValue<Value = Scalar<T>>,
-{
-    type Output = Self;
-
-    fn div(self, right: Rhs) -> Self::Output {
-        binary(self, BinOp::Div, right)
-    }
-}
-
 impl<T> IntoValue for T
 where
     T: ScalarValueType,
@@ -135,67 +75,52 @@ where
     }
 }
 
-impl ValueType for bool {
-    type Value = Scalar<bool>;
+macro_rules! impl_op {
+    ($fn:ident, $op:ident) => {
+        impl<T, Rhs> std::ops::$op<Rhs> for Scalar<T>
+        where
+            T: NumericValueType,
+            Rhs: IntoValue<Value = Scalar<T>>,
+        {
+            type Output = Self;
 
-    fn ty() -> Type {
-        Type::Scalar(ScalarType::Bool)
-    }
+            fn $fn(self, right: Rhs) -> Self::Output {
+                binary(self, BinOp::$op, right)
+            }
+        }
+    };
 }
 
-impl ValueType for i32 {
-    type Value = Scalar<i32>;
+impl_op!(add, Add);
+impl_op!(sub, Sub);
+impl_op!(mul, Mul);
+impl_op!(div, Div);
 
-    fn ty() -> Type {
-        Type::Scalar(ScalarType::I32)
-    }
+macro_rules! impl_scalar {
+    ($ty:ty, $name:ident) => {
+        impl ValueType for $ty {
+            type Value = Scalar<$ty>;
+
+            fn ty() -> Type {
+                Type::Scalar(ScalarType::$name)
+            }
+        }
+
+        impl ScalarValueType for $ty {
+            fn scalar_ty() -> ScalarType {
+                ScalarType::$name
+            }
+        }
+
+        pub type $name = Scalar<$ty>;
+    };
 }
 
-impl ValueType for u32 {
-    type Value = Scalar<u32>;
+impl_scalar!(f32, F32);
+impl_scalar!(i32, I32);
+impl_scalar!(u32, U32);
+impl_scalar!(bool, Bool);
 
-    fn ty() -> Type {
-        Type::Scalar(ScalarType::U32)
-    }
-}
-
-impl ValueType for f32 {
-    type Value = Scalar<f32>;
-
-    fn ty() -> Type {
-        Type::Scalar(ScalarType::F32)
-    }
-}
-
-impl ScalarValueType for bool {
-    fn scalar_ty() -> ScalarType {
-        ScalarType::Bool
-    }
-}
-
-impl ScalarValueType for i32 {
-    fn scalar_ty() -> ScalarType {
-        ScalarType::I32
-    }
-}
-
-impl ScalarValueType for u32 {
-    fn scalar_ty() -> ScalarType {
-        ScalarType::U32
-    }
-}
-
-impl ScalarValueType for f32 {
-    fn scalar_ty() -> ScalarType {
-        ScalarType::F32
-    }
-}
-
+impl NumericValueType for f32 {}
 impl NumericValueType for i32 {}
 impl NumericValueType for u32 {}
-impl NumericValueType for f32 {}
-
-pub type Bool = <bool as ValueType>::Value;
-pub type I32 = <i32 as ValueType>::Value;
-pub type U32 = <u32 as ValueType>::Value;
-pub type F32 = <f32 as ValueType>::Value;
