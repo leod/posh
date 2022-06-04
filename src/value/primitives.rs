@@ -61,6 +61,28 @@ where
     R::from_expr(expr)
 }
 
+pub(crate) fn builtin2<U, V, R>(
+    name: &str,
+    x: impl IntoValue<Value = U>,
+    y: impl IntoValue<Value = V>,
+) -> R
+where
+    U: Value,
+    V: Value,
+    R: Value,
+{
+    let func = Func::BuiltIn(FuncBuiltIn {
+        name: name.into(),
+        ty: <R::Type as ValueType>::ty(),
+    });
+    let expr = Expr::Call(ExprCall {
+        func,
+        args: vec![x.into_value().expr(), y.into_value().expr()],
+    });
+
+    R::from_expr(expr)
+}
+
 pub(crate) fn builtin3<U, V, W, R>(
     name: &str,
     x: impl IntoValue<Value = U>,

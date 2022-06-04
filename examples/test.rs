@@ -10,7 +10,7 @@ fn foo(x: fsl::F32, y: fsl::F32) -> fsl::F32 {
 
 #[fsl]
 fn bar(x: fsl::F32) -> fsl::F32 {
-    ternary(x.eq(5.0), 1.0, -1.0)
+    ternary(x.eq(5.0), x.atan2(2.0), -1.0)
 }
 
 #[fsl]

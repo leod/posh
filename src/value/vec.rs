@@ -7,7 +7,8 @@ use crate::{
 };
 
 use super::{
-    binary, builtin1, builtin3, scalar::NumericValueType, Scalar, ScalarValueType, Trace, ValueType,
+    binary, builtin1, builtin2, builtin3, scalar::NumericValueType, Scalar, ScalarValueType, Trace,
+    ValueType,
 };
 
 impl<T: ScalarValueType> ValueType for [T; 3] {
@@ -131,6 +132,61 @@ impl_ops!(Vec3);
 pub trait GenValue: Value + Sized {
     fn normalize(self) -> Self {
         builtin1("normalize", self)
+    }
+
+    fn sin(self) -> Self {
+        builtin1("sin", self)
+    }
+
+    fn cos(self) -> Self {
+        builtin1("cos", self)
+    }
+
+    fn tan(self) -> Self {
+        builtin1("tan", self)
+    }
+
+    fn asin(self) -> Self {
+        builtin1("asin", self)
+    }
+
+    fn acos(self) -> Self {
+        builtin1("acos", self)
+    }
+
+    fn atan2<V>(self, x: impl IntoValue<Value = V>) -> Self
+    where
+        V: Value<Type = Self::Type>,
+    {
+        builtin2("atan", self, x)
+    }
+
+    fn atan(self) -> Self {
+        builtin1("atan", self)
+    }
+
+    fn sinh(self) -> Self {
+        builtin1("sinh", self)
+    }
+
+    fn cosh(self) -> Self {
+        builtin1("cosh", self)
+    }
+
+    fn tanh(self) -> Self {
+        builtin1("tanh", self)
+    }
+
+    fn asinh(self) -> Self {
+        builtin1("asinh", self)
+    }
+
+    fn acosh(self) -> Self {
+        builtin1("acosh", self)
+    }
+
+    fn atanh(self) -> Self {
+        builtin1("atanh", self)
     }
 }
 
