@@ -7,4 +7,4 @@ pub use prelude::*;
 pub use value::{GenValue, IntoValue, Value};
 
 #[cfg(feature = "macros")]
-pub use fsl_macros::fsl;
+pub use posh_macros::posh;

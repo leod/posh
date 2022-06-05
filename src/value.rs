@@ -21,7 +21,7 @@ pub trait ValueType {
     fn ty() -> Type;
 }
 
-pub type Fsl<T> = <T as ValueType>::Value;
+pub type Posh<T> = <T as ValueType>::Value;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Trace {
