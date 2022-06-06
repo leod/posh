@@ -4,7 +4,7 @@ mod primitives;
 mod scalar;
 mod vec;
 
-use crate::lang::{Expr, Type};
+use crate::lang::{Expr, Type, TypeBuiltIn};
 
 pub use funcs::GenValue;
 pub use primitives::{and, func_call, or, ternary, var};
@@ -19,6 +19,10 @@ pub trait ValueType {
     type Value;
 
     fn ty() -> Type;
+}
+
+pub trait BuiltInValueType: ValueType {
+    fn built_in_ty() -> TypeBuiltIn;
 }
 
 pub type Posh<T> = <T as ValueType>::Value;
@@ -55,10 +59,22 @@ pub trait Value: Clone + Sized {
     }
 }
 
+pub trait BuiltInValue: Value {
+    type BuiltInType: BuiltInValueType;
+}
+
 pub trait IntoValue {
     type Value: Value;
 
     fn into_value(self) -> Self::Value;
+}
+
+impl<T, V> BuiltInValue for V
+where
+    T: BuiltInValueType,
+    V: Value<Type = T>,
+{
+    type BuiltInType = T;
 }
 
 impl<V: Value> IntoValue for V {

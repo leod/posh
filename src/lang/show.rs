@@ -1,24 +1,20 @@
 use std::collections::BTreeSet;
 
 use super::{
-    BinOp, Expr, ExprBinary, ExprCall, ExprField, ExprTernary, ExprVar, Func, FuncUserDefined,
-    ScalarType, Type, TypeBuiltIn, Var,
+    BinOp, Expr, ExprBinary, ExprBuiltInVar, ExprCall, ExprField, ExprTernary, ExprVar, Func,
+    FuncUserDefined, ScalarType, Type, TypeBuiltIn, Var,
 };
 
 pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<FuncUserDefined>) {
     match expr {
-        Expr::Binary(ExprBinary { left, right, .. }) => {
-            collect_funcs(&*left, funcs);
-            collect_funcs(&*right, funcs);
+        Expr::Binary(expr) => {
+            collect_funcs(&*expr.left, funcs);
+            collect_funcs(&*expr.right, funcs);
         }
-        Expr::Ternary(ExprTernary {
-            cond,
-            true_expr,
-            false_expr,
-        }) => {
-            collect_funcs(&*cond, funcs);
-            collect_funcs(&*true_expr, funcs);
-            collect_funcs(&*false_expr, funcs);
+        Expr::Ternary(expr) => {
+            collect_funcs(&*expr.cond, funcs);
+            collect_funcs(&*expr.true_expr, funcs);
+            collect_funcs(&*expr.false_expr, funcs);
         }
         Expr::Var(ExprVar {
             var: Var {
@@ -30,36 +26,33 @@ pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<FuncUserDefined>) {
         Expr::Var(ExprVar {
             var: Var { init: None, .. },
         }) => (),
-        Expr::Call(ExprCall { func, args }) => {
-            if let Func::UserDefined(func) = func {
+        Expr::Call(expr) => {
+            if let Func::UserDefined(func) = &expr.func {
                 funcs.insert(func.clone());
                 collect_funcs(&*func.result, funcs);
             }
-            for arg in args {
+            for arg in &expr.args {
                 collect_funcs(arg, funcs);
             }
         }
         Expr::Lit(_) => (),
-        Expr::Field(ExprField { base, .. }) => {
-            collect_funcs(&*base, funcs);
+        Expr::Field(expr) => {
+            collect_funcs(&*expr.base, funcs);
         }
+        Expr::BuiltInVar(expr) => (),
     }
 }
 
 pub fn collect_vars(expr: &Expr, vars: &mut BTreeSet<Var>) {
     match expr {
-        Expr::Binary(ExprBinary { left, right, .. }) => {
-            collect_vars(&*left, vars);
-            collect_vars(&*right, vars);
+        Expr::Binary(expr) => {
+            collect_vars(&*expr.left, vars);
+            collect_vars(&*expr.right, vars);
         }
-        Expr::Ternary(ExprTernary {
-            cond,
-            true_expr,
-            false_expr,
-        }) => {
-            collect_vars(&*cond, vars);
-            collect_vars(&*true_expr, vars);
-            collect_vars(&*false_expr, vars);
+        Expr::Ternary(expr) => {
+            collect_vars(&*expr.cond, vars);
+            collect_vars(&*expr.true_expr, vars);
+            collect_vars(&*expr.false_expr, vars);
         }
         Expr::Var(ExprVar {
             var: var @ Var {
@@ -78,9 +71,10 @@ pub fn collect_vars(expr: &Expr, vars: &mut BTreeSet<Var>) {
             }
         }
         Expr::Lit(_) => (),
-        Expr::Field(ExprField { base, .. }) => {
-            collect_vars(&*base, vars);
+        Expr::Field(expr) => {
+            collect_vars(&*expr.base, vars);
         }
+        Expr::BuiltInVar(_) => (),
     }
 }
 
@@ -184,28 +178,31 @@ pub fn show_bin_op(op: BinOp) -> String {
 }
 
 pub fn show_expr(expr: &Expr) -> String {
+    use Expr::*;
+
     match expr {
-        Expr::Binary(expr) => format!(
+        Binary(expr) => format!(
             "({}) {} ({})",
             show_expr(&*expr.left),
             show_bin_op(expr.op),
             show_expr(&*expr.right)
         ),
-        Expr::Ternary(expr) => format!(
+        Ternary(expr) => format!(
             "if {} {{ {} }} else {{ {} }}",
             show_expr(&*expr.cond),
             show_expr(&*expr.true_expr),
             show_expr(&*expr.false_expr),
         ),
-        Expr::Var(expr) => expr.var.ident.to_string(),
-        Expr::Call(expr) => {
+        Var(expr) => expr.var.ident.to_string(),
+        Call(expr) => {
             let args: Vec<_> = expr.args.iter().map(show_expr).collect();
             format!("{}({})", expr.func.name(), args.join(", "),)
         }
-        Expr::Lit(expr) => expr.lit.value.clone(),
-        Expr::Field(expr) => {
+        Lit(expr) => expr.lit.value.clone(),
+        Field(expr) => {
             let base = show_expr(&*expr.base);
             format!("({}).{}", base, expr.member)
         }
+        BuiltInVar(expr) => expr.name.to_string(),
     }
 }

@@ -150,6 +150,7 @@ pub enum Expr {
     Call(ExprCall),
     Lit(ExprLit),
     Field(ExprField),
+    BuiltInVar(ExprBuiltInVar),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -190,6 +191,12 @@ pub struct ExprField {
     pub ty: Type,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ExprBuiltInVar {
+    pub name: String,
+    pub ty: TypeBuiltIn,
+}
+
 impl Expr {
     pub fn ty(&self) -> Type {
         use Expr::*;
@@ -204,6 +211,7 @@ impl Expr {
             Call(expr) => expr.func.ty(),
             Lit(expr) => expr.lit.ty.clone(),
             Field(expr) => expr.ty.clone(),
+            BuiltInVar(expr) => Type::BuiltIn(expr.ty.clone()),
         }
     }
 }

@@ -5,9 +5,9 @@ use std::{
 
 use crate::lang::{BinOp, Expr, ExprLit, Lit, ScalarType, Type, TypeBuiltIn};
 
-use super::{binary, IntoValue, Trace, Value, ValueType};
+use super::{binary, BuiltInValueType, IntoValue, Trace, Value, ValueType};
 
-pub trait ScalarValueType: Copy + Clone + ValueType + Into<Lit> {
+pub trait ScalarValueType: BuiltInValueType + Copy + Into<Lit> {
     fn scalar_ty() -> ScalarType;
 }
 
@@ -107,7 +107,13 @@ macro_rules! impl_scalar {
             type Value = Scalar<$ty>;
 
             fn ty() -> Type {
-                Type::BuiltIn(TypeBuiltIn::Scalar(ScalarType::$name))
+                Type::BuiltIn(Self::built_in_ty())
+            }
+        }
+
+        impl BuiltInValueType for $ty {
+            fn built_in_ty() -> TypeBuiltIn {
+                TypeBuiltIn::Scalar(Self::scalar_ty())
             }
         }
 
