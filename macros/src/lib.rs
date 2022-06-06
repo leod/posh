@@ -15,7 +15,7 @@ pub fn posh(_args: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_derive(Struct)]
-pub fn Struct(input: TokenStream) -> TokenStream {
+pub fn derive_struct(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match struct_type::derive(input) {
         Ok(ts) => ts,

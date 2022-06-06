@@ -1,5 +1,3 @@
-#![feature(generic_associated_types)]
-
 pub mod lang;
 pub mod prelude;
 pub mod shader;
@@ -9,6 +7,13 @@ pub use uuid;
 
 pub use prelude::*;
 
+pub use shader::{
+    shader, Fragment, FragmentIn, FragmentOut, ParamSet, ParamSets, Shader, Varying, Vertex,
+    VertexIn, VertexOut, VertexSet,
+};
 pub use value::{GenValue, IntoValue, Struct, Type, Value};
 
 pub use posh_macros::{posh, Struct};
+
+// This is here so that our macros can refer to `posh` even when we use them inside this crate.
+extern crate self as posh;

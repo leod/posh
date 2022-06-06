@@ -39,14 +39,14 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
         #[must_use]
         #[derive(Debug, Clone, Copy)]
         #[allow(non_camel_case_types)]
-        #vis struct #posh_name {
+        #vis struct #posh_name #ty_generics #where_clause {
             #(
                 #field_vis #field_idents: ::posh::Val<#field_tys>
             ),*
         }
 
-        impl ::posh::Value for #posh_name {
-            type Type = #name;
+        impl #impl_generics ::posh::Value for #posh_name #ty_generics #where_clause {
+            type Type = #name #ty_generics;
 
             fn from_trace(trace: ::posh::value::Trace) -> Self {
                 Self {
@@ -63,7 +63,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
 
                 let args = vec![
                     #(
-                        self.#field_idents.expr()
+                        ::posh::Value::expr(&self.#field_idents)
                     ),*
                 ];
 
@@ -79,7 +79,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
         }
 
         impl #impl_generics #type_trait_path for #name #ty_generics #where_clause {
-            type Value = #posh_name;
+            type Value = #posh_name #ty_generics;
 
             fn ty() -> ::posh::lang::Ty {
                 ::posh::lang::Ty::Struct(<#name as ::posh::Struct>::struct_ty())
@@ -106,8 +106,8 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             }
         }
 
-        impl ::posh::IntoValue for #name {
-            type Value = #posh_name;
+        impl #impl_generics ::posh::IntoValue for #name #ty_generics #where_clause {
+            type Value = #posh_name #ty_generics;
 
             fn into_value(self) -> Self::Value {
                 let func = ::posh::lang::Func::Struct(::posh::lang::StructFunc {
@@ -116,7 +116,9 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
 
                 let args = vec![
                     #(
-                        <#field_tys as ::posh::IntoValue>::into_value(self.#field_idents).expr()
+                        ::posh::Value::expr(
+                            &<#field_tys as ::posh::IntoValue>::into_value(self.#field_idents),
+                        )
                     ),*
                 ];
 

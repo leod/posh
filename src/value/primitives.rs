@@ -180,7 +180,7 @@ where
 
     let var = VarExpr {
         ident: Ident::new("var"),
-        ty: V::Type::ty(),
+        ty: <V::Type as Type>::ty(),
         init,
     };
 

@@ -16,7 +16,7 @@ pub(crate) use primitives::{binary, builtin1, builtin2, builtin3};
 use expr_reg::ExprId;
 
 pub trait Type {
-    type Value;
+    type Value: Value;
 
     fn ty() -> Ty;
 }
@@ -36,7 +36,7 @@ pub struct Trace {
     expr_id: ExprId,
 }
 
-pub trait Value: Clone + Sized {
+pub trait Value: Copy + Sized {
     type Type: Type;
 
     fn from_trace(trace: Trace) -> Self;

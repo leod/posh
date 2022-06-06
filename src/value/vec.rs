@@ -50,7 +50,7 @@ impl<T: ScalarType> Value for Vec3<T> {
     type Type = [T; 3];
 
     fn from_trace(trace: Trace) -> Self {
-        assert!(trace.expr().ty() == Self::Type::ty());
+        assert!(trace.expr().ty() == <Self::Type as Type>::ty());
 
         Self {
             trace,
@@ -62,6 +62,14 @@ impl<T: ScalarType> Value for Vec3<T> {
 
     fn expr(&self) -> Expr {
         self.trace.expr()
+    }
+}
+
+impl<T: ScalarType> IntoValue for [T; 3] {
+    type Value = Vec3<T>;
+
+    fn into_value(self) -> Self::Value {
+        vec3(self[0], self[1], self[2])
     }
 }
 
@@ -79,7 +87,7 @@ impl<T: ScalarType> Value for Vec4<T> {
     type Type = [T; 4];
 
     fn from_trace(trace: Trace) -> Self {
-        assert!(trace.expr().ty() == Self::Type::ty());
+        assert!(trace.expr().ty() == <Self::Type as Type>::ty());
 
         Self {
             trace,

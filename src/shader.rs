@@ -1,94 +1,64 @@
 use std::marker::PhantomData;
 
 use crate::{
-    lang::{BuiltInTy, BuiltInVarExpr, CallExpr, Expr, Func, Ty, UserDefinedFunc},
+    lang::{BuiltInTy, BuiltInVarExpr, CallExpr, Expr, Func, Ident, Ty, UserDefinedFunc, VarExpr},
     value::{BuiltIn, BuiltInValue},
-    Value, Vec4, F32, I32,
+    Struct, Type, Val, Value, Vec3, Vec4, F32, I32,
 };
 
 pub trait Param {}
 
-pub trait ParamSet {
-    fn fields() -> Vec<(String, Ty)>;
-    fn func_arg() -> Self;
-}
+pub trait ParamSet: Struct {}
 
-pub trait ParamSets {
-    fn fields() -> Vec<Vec<(String, Ty)>>;
-    fn func_arg() -> Self;
-}
+pub trait ParamSets: Struct {}
 
-impl<P: ParamSet> ParamSets for P {
-    fn fields() -> Vec<Vec<(String, Ty)>> {
-        vec![P::fields()]
-    }
+impl<P: ParamSet> ParamSets for P {}
 
-    fn func_arg() -> Self {
-        P::func_arg()
-    }
-}
+pub trait Vertex: Struct {}
 
-pub trait Vertex: Value {
-    fn fields() -> Vec<(String, BuiltInTy)>;
-    fn func_arg() -> Self;
-}
+pub trait VertexSet: Struct {}
 
-/*impl Vertex for () {
-    fn fields() -> Vec<(String, TypeBuiltIn)> {
-        Vec::new()
-    }
-}*/
+impl<V: Vertex> VertexSet for V {}
 
-pub trait VertexSet: Value {
-    fn fields() -> Vec<Vec<(String, BuiltInTy)>>;
-    fn func_arg() -> Self;
-}
+pub trait Varying: Struct {}
 
-impl<V: Vertex> VertexSet for V {
-    fn fields() -> Vec<Vec<(String, BuiltInTy)>> {
-        vec![V::fields()]
-    }
+pub trait Fragment: Struct {}
 
-    fn func_arg() -> Self {
-        V::func_arg()
-    }
-}
-
-pub trait Varying: Value {
-    fn fields() -> Vec<(String, BuiltInTy)>;
-    fn func_arg() -> Self;
-}
-
-//impl Varying for () {}
-
-pub trait Fragment: Value {
-    fn fields() -> Vec<(String, BuiltInTy)>;
-}
-
+#[derive(Clone, Copy)]
 pub struct VertexIn<V: VertexSet> {
-    pub vertex: V,
+    pub vertex: Val<V>,
     pub vertex_id: I32,
     pub instance_id: I32,
 }
 
 pub struct VertexOut<W: Varying> {
-    pub position: Vec4<f32>,
-    pub varying: W,
+    pub position: Vec3<f32>,
+    pub varying: Val<W>,
 }
 
 pub struct FragmentIn<W: Varying> {
-    pub varying: W,
+    pub varying: Val<W>,
     pub frag_coord: Vec4<f32>,
 }
 
 pub struct FragmentOut<R: Fragment> {
-    pub fragment: R,
+    pub fragment: Val<R>,
     pub frag_depth: Option<F32>,
 }
 
+pub struct VertexFunc {
+    pub position: Expr,
+    pub varying: Expr,
+}
+
+pub struct FragmentFunc {
+    pub fragment: Expr,
+    pub frag_depth: Option<Expr>,
+}
+
 pub struct Shader<P, V, R> {
-    vertex: UserDefinedFunc,
-    fragment: UserDefinedFunc,
+    vertex: VertexFunc,
+    fragment: FragmentFunc,
     _phantom: PhantomData<(P, V, R)>,
 }
 
@@ -109,8 +79,18 @@ fn builtin_var<V: BuiltInValue>(name: &'static str) -> V {
     }))
 }
 
+fn func_arg<V: Value>(name: &'static str) -> V {
+    let expr = Expr::Var(VarExpr {
+        ident: Ident::new(name),
+        ty: <V::Type as Type>::ty(),
+        init: None,
+    });
+
+    V::from_expr(expr)
+}
+
 impl<R: Fragment> FragmentOut<R> {
-    pub fn new(fragment: R) -> Self {
+    pub fn new(fragment: Val<R>) -> Self {
         Self {
             fragment,
             frag_depth: None,
@@ -119,7 +99,7 @@ impl<R: Fragment> FragmentOut<R> {
 }
 
 impl<V: VertexSet> VertexIn<V> {
-    pub fn new(vertex: V) -> Self {
+    pub fn new(vertex: Val<V>) -> Self {
         Self {
             vertex,
             vertex_id: builtin_var("gl_VertexID"),
@@ -128,12 +108,12 @@ impl<V: VertexSet> VertexIn<V> {
     }
 
     pub fn func_arg() -> Self {
-        Self::new(V::func_arg())
+        Self::new(func_arg("input"))
     }
 }
 
 impl<W: Varying> FragmentIn<W> {
-    pub fn new(varying: W) -> Self {
+    pub fn new(varying: Val<W>) -> Self {
         Self {
             varying,
             frag_coord: builtin_var("gl_FragCoord"),
@@ -141,7 +121,7 @@ impl<W: Varying> FragmentIn<W> {
     }
 
     pub fn func_arg() -> Self {
-        Self::new(W::func_arg())
+        Self::new(func_arg("input"))
     }
 }
 
@@ -154,28 +134,38 @@ where
     pub fn new<W, VS, FS>(vertex_stage: VS, fragment_stage: FS) -> Self
     where
         W: Varying,
-        VS: FnOnce(P, VertexIn<V>) -> VertexOut<W>,
-        FS: FnOnce(P, FragmentIn<W>) -> FragmentOut<R>,
+        VS: FnOnce(Val<P>, VertexIn<V>) -> VertexOut<W>,
+        FS: FnOnce(Val<P>, FragmentIn<W>) -> FragmentOut<R>,
     {
-        let vertex_out = vertex_stage(P::func_arg(), VertexIn::func_arg());
-        let fragment_out = fragment_stage(P::func_arg(), FragmentIn::func_arg());
+        let vertex_out = vertex_stage(func_arg("params"), VertexIn::func_arg());
+        let fragment_out = fragment_stage(func_arg("params"), FragmentIn::func_arg());
 
-        unimplemented!()
-        /*Self {
-            vertex: Self::stage_func(vertex_out),
-            fragment: Self::stage_func(fragment_out),
-        }*/
-    }
+        let vertex = VertexFunc {
+            position: vertex_out.position.expr(),
+            varying: vertex_out.varying.expr(),
+        };
 
-    fn stage_func<X: Value>(value: X) -> UserDefinedFunc {
-        if let Expr::Call(CallExpr {
-            func: Func::UserDefined(func),
-            args: _,
-        }) = value.expr()
-        {
-            func
-        } else {
-            panic!("Expected shader stage to be #[posh]");
+        let fragment = FragmentFunc {
+            fragment: fragment_out.fragment.expr(),
+            frag_depth: fragment_out.frag_depth.map(|v| v.expr()),
+        };
+
+        Self {
+            vertex,
+            fragment,
+            _phantom: PhantomData,
         }
     }
+}
+
+pub fn shader<P, V, R, W, VS, FS>(vertex_stage: VS, fragment_stage: FS) -> Shader<P, V, R>
+where
+    P: ParamSets,
+    V: VertexSet,
+    R: Fragment,
+    W: Varying,
+    VS: FnOnce(Val<P>, VertexIn<V>) -> VertexOut<W>,
+    FS: FnOnce(Val<P>, FragmentIn<W>) -> FragmentOut<R>,
+{
+    Shader::<P, V, R>::new(vertex_stage, fragment_stage)
 }

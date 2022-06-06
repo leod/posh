@@ -7,7 +7,7 @@ use crate::lang::{BinaryOp, BuiltInTy, Expr, Literal, LiteralExpr, ScalarTy, Ty}
 
 use super::{binary, BuiltIn, IntoValue, Trace, Type, Value};
 
-pub trait ScalarType: BuiltIn + Copy + Into<Literal> {
+pub trait ScalarType: BuiltIn + Copy + Into<Literal> + IntoValue<Value = Scalar<Self>> {
     fn scalar_ty() -> ScalarTy;
 }
 
@@ -27,7 +27,7 @@ where
     type Type = T;
 
     fn from_trace(trace: Trace) -> Self {
-        assert!(trace.expr().ty() == Self::Type::ty());
+        assert!(trace.expr().ty() == <Self::Type as Type>::ty());
 
         Scalar {
             _phantom: PhantomData,
