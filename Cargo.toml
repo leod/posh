@@ -3,16 +3,13 @@ name = "posh"
 version = "0.1.0"
 edition = "2021"
 
-[features]
-macros = ["posh-macros"]
-
 [dependencies]
 glsl = "6.0"
 version = "1.1.0"
-posh-macros = { path = "macros", version = "*", optional = true }
+posh-macros = { path = "macros", version = "*" }
 
 [dev-dependencies]
-posh = { version = "*", features = ["macros"], path = "." }
+posh = { version = "*", path = "." }
 
 [dependencies.uuid]
 version = "1.1.0"

@@ -11,6 +11,11 @@ pub enum ScalarType {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Type {
+    BuiltIn(TypeBuiltIn),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum TypeBuiltIn {
     Scalar(ScalarType),
     Vec3(ScalarType),
@@ -18,8 +23,9 @@ pub enum TypeBuiltIn {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum Type {
-    BuiltIn(TypeBuiltIn),
+pub struct TypeStruct {
+    pub ident: Ident,
+    pub fields: Vec<(String, Type)>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

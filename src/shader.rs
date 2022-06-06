@@ -175,7 +175,7 @@ where
         {
             func
         } else {
-            panic!("Expected given shader stage to be #[posh]");
+            panic!("Expected shader stage to be #[posh]");
         }
     }
 }
