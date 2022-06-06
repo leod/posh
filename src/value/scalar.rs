@@ -3,11 +3,11 @@ use std::{
     ops::{Add, Div, Mul, Sub},
 };
 
-use crate::lang::{BinaryOp, BuiltInTy, Expr, Lit, LitExpr, ScalarTy, Ty};
+use crate::lang::{BinaryOp, BuiltInTy, Expr, Literal, LiteralExpr, ScalarTy, Ty};
 
 use super::{binary, BuiltInType, IntoValue, Trace, Type, Value};
 
-pub trait ScalarType: BuiltInType + Copy + Into<Lit> {
+pub trait ScalarType: BuiltInType + Copy + Into<Literal> {
     fn scalar_ty() -> ScalarTy;
 }
 
@@ -45,7 +45,7 @@ where
     T: ScalarType,
 {
     pub fn new(x: T) -> Self {
-        Self::from_expr(Expr::Lit(LitExpr { lit: x.into() }))
+        Self::from_expr(Expr::Literal(LiteralExpr { literal: x.into() }))
     }
 
     pub fn eq<V>(&self, right: impl IntoValue<Value = V>) -> Bool

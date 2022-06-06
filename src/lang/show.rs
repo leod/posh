@@ -35,7 +35,7 @@ pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<UserDefinedFunc>) {
                 collect_funcs(arg, funcs);
             }
         }
-        Expr::Lit(_) => (),
+        Expr::Literal(_) => (),
         Expr::Field(expr) => {
             collect_funcs(&*expr.base, funcs);
         }
@@ -70,7 +70,7 @@ pub fn collect_vars(expr: &Expr, vars: &mut BTreeSet<Var>) {
                 collect_vars(arg, vars);
             }
         }
-        Expr::Lit(_) => (),
+        Expr::Literal(_) => (),
         Expr::Field(expr) => {
             collect_vars(&*expr.base, vars);
         }
@@ -203,7 +203,7 @@ pub fn show_expr(expr: &Expr) -> String {
             let args: Vec<_> = expr.args.iter().map(show_expr).collect();
             format!("{}({})", expr.func.name(), args.join(", "),)
         }
-        Lit(expr) => expr.lit.value.clone(),
+        Literal(expr) => expr.literal.value.clone(),
         Field(expr) => {
             let base = show_expr(&*expr.base);
             format!("({}).{}", base, expr.member)

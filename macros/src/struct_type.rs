@@ -38,6 +38,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
     Ok(quote! {
         #[must_use]
         #[derive(Debug, Clone, Copy)]
+        #[allow(non_camel_case_types)]
         #vis struct #posh_name {
             trace: ::posh::value::Trace,
             #(
@@ -87,6 +88,29 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                     ident,
                     fields,
                 }
+            }
+        }
+
+        impl ::posh::IntoValue for #name {
+            type Value = #posh_name;
+
+            fn into_value(self) -> Self::Value {
+                let func = ::posh::lang::Func::Struct(::posh::lang::StructFunc {
+                    ty: <#name as ::posh::StructType>::struct_ty(),
+                });
+
+                let args = vec![
+                    #(
+                        <#field_tys as ::posh::IntoValue>::into_value(self.#field_idents).expr()
+                    ),*
+                ];
+
+                let expr = ::posh::lang::Expr::Call(::posh::lang::CallExpr {
+                    func,
+                    args,
+                });
+
+                <#posh_name as ::posh::Value>::from_expr(expr)
             }
         }
     })

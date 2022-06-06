@@ -61,6 +61,7 @@ pub struct Var {
 pub enum Func {
     BuiltIn(BuiltInFunc),
     UserDefined(UserDefinedFunc),
+    Struct(StructFunc),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -76,6 +77,11 @@ pub struct UserDefinedFunc {
     pub result: Box<Expr>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct StructFunc {
+    pub ty: StructTy,
+}
+
 impl Func {
     pub fn ty(&self) -> Ty {
         use Func::*;
@@ -83,6 +89,7 @@ impl Func {
         match self {
             BuiltIn(BuiltInFunc { ty, .. }) => ty.clone(),
             UserDefined(UserDefinedFunc { result, .. }) => result.ty(),
+            Struct(StructFunc { ty }) => Ty::Struct(ty.clone()),
         }
     }
 
@@ -92,17 +99,18 @@ impl Func {
         match self {
             BuiltIn(BuiltInFunc { name, .. }) => name,
             UserDefined(UserDefinedFunc { ident, .. }) => &ident.name,
+            Struct(StructFunc { ty, .. }) => &ty.ident.name,
         }
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Lit {
+pub struct Literal {
     pub value: String,
     pub ty: Ty,
 }
 
-impl From<bool> for Lit {
+impl From<bool> for Literal {
     fn from(x: bool) -> Self {
         Self {
             value: x.to_string(),
@@ -111,7 +119,7 @@ impl From<bool> for Lit {
     }
 }
 
-impl From<i32> for Lit {
+impl From<i32> for Literal {
     fn from(x: i32) -> Self {
         Self {
             value: x.to_string(),
@@ -120,7 +128,7 @@ impl From<i32> for Lit {
     }
 }
 
-impl From<u32> for Lit {
+impl From<u32> for Literal {
     fn from(x: u32) -> Self {
         Self {
             value: x.to_string(),
@@ -129,7 +137,7 @@ impl From<u32> for Lit {
     }
 }
 
-impl From<f32> for Lit {
+impl From<f32> for Literal {
     fn from(x: f32) -> Self {
         Self {
             value: x.to_string(),
@@ -155,7 +163,7 @@ pub enum Expr {
     Ternary(TernaryExpr),
     Var(VarExpr),
     Call(CallExpr),
-    Lit(LitExpr),
+    Literal(LiteralExpr),
     Field(FieldExpr),
     BuiltInVar(BuiltInVarExpr),
 }
@@ -187,8 +195,8 @@ pub struct CallExpr {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct LitExpr {
-    pub lit: Lit,
+pub struct LiteralExpr {
+    pub literal: Literal,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -216,7 +224,7 @@ impl Expr {
             }
             Var(expr) => expr.var.ty.clone(),
             Call(expr) => expr.func.ty(),
-            Lit(expr) => expr.lit.ty.clone(),
+            Literal(expr) => expr.literal.ty.clone(),
             Field(expr) => expr.ty.clone(),
             BuiltInVar(expr) => Ty::BuiltIn(expr.ty.clone()),
         }
