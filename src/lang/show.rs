@@ -39,7 +39,7 @@ pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<UserDefinedFunc>) {
         Expr::Field(expr) => {
             collect_funcs(&*expr.base, funcs);
         }
-        Expr::BuiltInVar(expr) => (),
+        Expr::BuiltInVar(_) => (),
     }
 }
 

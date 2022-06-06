@@ -1,4 +1,4 @@
-use proc_macro2::{Literal, TokenStream as TokenStream2};
+use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use syn::{parse_quote, Data, DataStruct, DeriveInput, Error, Fields, Ident, Path, Result};
 use uuid::Uuid;
@@ -33,7 +33,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
     let field_tys: Vec<_> = fields.iter().map(|field| &field.ty).collect();
     let field_vis: Vec<_> = fields.iter().map(|field| &field.vis).collect();
 
-    let posh_name = Ident::new(&format!("__posh_{}", name.to_string()), name.span());
+    let posh_name = Ident::new(&format!("__posh_{}", name), name.span());
 
     Ok(quote! {
         #[must_use]
