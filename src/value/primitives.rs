@@ -1,12 +1,49 @@
+use std::collections::BTreeSet;
+
 use crate::{
     lang::{
-        BinaryExpr, BinaryOp, BuiltInFunc, CallExpr, Expr, FieldExpr, Func, Ident, TernaryExpr,
+        BinaryExpr, BinaryOp, BuiltInFunc, CallExpr, Expr, FieldExpr, Func, Ident, TernaryExpr, Ty,
         UserDefinedFunc, VarExpr,
     },
     Bool,
 };
 
 use super::{IntoValue, Trace, Type, Value};
+
+pub fn common_field_base(exprs: &[Expr]) -> Option<Expr> {
+    exprs.first().and_then(|first_expr| {
+        if let Expr::Field(first_field_expr) = first_expr {
+            let mut fields = BTreeSet::new();
+
+            for expr in exprs {
+                if let Expr::Field(field_expr) = expr {
+                    if field_expr.base != first_field_expr.base {
+                        return None;
+                    }
+
+                    fields.insert(field_expr.member.clone());
+                } else {
+                    return None;
+                }
+            }
+
+            if let Ty::Struct(ty) = first_field_expr.base.ty() {
+                let needed_fields: BTreeSet<_> =
+                    ty.fields.iter().map(|(name, _)| name.clone()).collect();
+
+                if needed_fields == fields {
+                    Some(*first_field_expr.base.clone())
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    })
+}
 
 pub(crate) fn binary<U, V, R>(
     left: impl IntoValue<Value = U>,

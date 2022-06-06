@@ -1,7 +1,7 @@
 use std::ops::{Add, Div, Mul, Sub};
 
 use crate::{
-    lang::{BinaryOp, BuiltInTy, Ty},
+    lang::{BinaryOp, BuiltInTy, Expr, Ty},
     IntoValue, Value,
 };
 
@@ -60,8 +60,8 @@ impl<T: ScalarType> Value for Vec3<T> {
         }
     }
 
-    fn trace(&self) -> Trace {
-        self.trace
+    fn expr(&self) -> Expr {
+        self.trace.expr()
     }
 }
 
@@ -90,8 +90,8 @@ impl<T: ScalarType> Value for Vec4<T> {
         }
     }
 
-    fn trace(&self) -> Trace {
-        self.trace
+    fn expr(&self) -> Expr {
+        self.trace.expr()
     }
 }
 

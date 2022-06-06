@@ -7,7 +7,7 @@ mod vec;
 use crate::lang::{BuiltInTy, Expr, StructTy, Ty};
 
 pub use funcs::GenValue;
-pub use primitives::{and, field, func_call, or, ternary, var};
+pub use primitives::{and, common_field_base, field, func_call, or, ternary, var};
 pub use scalar::{Bool, Scalar, ScalarType, F32, I32, U32};
 pub use vec::{vec3, Vec3, Vec4};
 
@@ -40,7 +40,8 @@ pub trait Value: Clone + Sized {
     type Type: Type;
 
     fn from_trace(trace: Trace) -> Self;
-    fn trace(&self) -> Trace;
+
+    fn expr(&self) -> Expr;
 
     fn from_expr(expr: Expr) -> Self {
         Self::from_trace(Trace::new(expr))
@@ -48,10 +49,6 @@ pub trait Value: Clone + Sized {
 
     fn ty(&self) -> Ty {
         Self::Type::ty()
-    }
-
-    fn expr(&self) -> Expr {
-        self.trace().expr()
     }
 
     fn with_trace(&self, trace: Trace) -> Self {

@@ -40,7 +40,6 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
         #[derive(Debug, Clone, Copy)]
         #[allow(non_camel_case_types)]
         #vis struct #posh_name {
-            trace: ::posh::value::Trace,
             #(
                 #field_vis #field_idents: ::posh::Posh<#field_tys>
             ),*
@@ -51,15 +50,31 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
 
             fn from_trace(trace: ::posh::value::Trace) -> Self {
                 Self {
-                    trace,
                     #(
                         #field_idents: ::posh::value::field(trace, #field_name_strs)
                     ),*
                 }
             }
 
-            fn trace(&self) -> ::posh::value::Trace {
-                self.trace
+            fn expr(&self) -> ::posh::lang::Expr {
+                let func = ::posh::lang::Func::Struct(::posh::lang::StructFunc {
+                    ty: <#name as ::posh::StructType>::struct_ty(),
+                });
+
+                let args = vec![
+                    #(
+                        self.#field_idents.expr()
+                    ),*
+                ];
+
+                if let Some(common_base) = ::posh::value::common_field_base(&args) {
+                    common_base
+                } else {
+                    ::posh::lang::Expr::Call(::posh::lang::CallExpr {
+                        func,
+                        args,
+                    })
+                }
             }
         }
 

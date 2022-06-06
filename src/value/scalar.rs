@@ -35,8 +35,8 @@ where
         }
     }
 
-    fn trace(&self) -> Trace {
-        self.trace
+    fn expr(&self) -> Expr {
+        self.trace.expr()
     }
 }
 

@@ -16,13 +16,11 @@ pub struct Vertex {
 
 #[posh]
 fn vertex(vertex: Posh<Vertex>) -> Posh<Vertex> {
-    Vertex {
-        pos: 3,
-        time: 2.0,
-        helper: Default::default(),
-        helper2: Default::default(),
+    Posh::<Vertex> {
+        pos: 3 * vertex.pos,
+        time: 2.0.into_value(),
+        ..vertex
     }
-    .into_value()
 }
 
 pub fn main() {
@@ -33,7 +31,7 @@ pub fn main() {
         helper2: Default::default(),
     };
 
-    println!("{:#?}", vertex1.into_value().expr());
+    //println!("{:#?}", vertex1.into_value().expr());
 
     let vertex2: Vertex = Vertex {
         pos: 3,
@@ -43,7 +41,7 @@ pub fn main() {
     };
 
     let result = vertex(vertex2);
-    //println!("{:#?}", result);
+    println!("{:#?}", result);
 
     if let posh::lang::Expr::Call(expr) = result.expr() {
         if let posh::lang::Func::UserDefined(func) = expr.func {
