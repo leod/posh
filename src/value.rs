@@ -1,4 +1,3 @@
-mod domain;
 pub(crate) mod expr_reg;
 mod funcs;
 mod primitives;
@@ -7,7 +6,6 @@ mod vec;
 
 use crate::lang::{BuiltInTy, Expr, StructTy, Ty};
 
-pub use domain::{Domain, PoshD, RustD};
 pub use funcs::GenValue;
 pub use primitives::{and, field, func_call, or, ternary, var};
 pub use scalar::{Bool, Scalar, ScalarType, F32, I32, U32};

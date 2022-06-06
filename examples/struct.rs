@@ -1,4 +1,4 @@
-use posh::{posh, IntoValue as _, Posh, Value, StructType};
+use posh::{posh, IntoValue as _, Posh, StructType, Value};
 
 #[derive(StructType, Default)]
 pub struct Helper {
