@@ -10,7 +10,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
             let input_ty = &input.ty;
             input.ty = parse_quote! { impl ::posh::value::IntoValue<Value = #input_ty> };
 
-            match &mut *input.pat {
+            match &*input.pat {
                 Pat::Ident(ident) => {
                     input_idents.push(ident.ident.clone());
                 }
@@ -31,21 +31,21 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
 
     item.block = parse_quote! {
         {
-            use ::posh::value::Value as _;
+            use ::posh::Value as _;
 
             #(
-                let #input_idents = ::posh::value::IntoValue::into_value(#input_idents);
+                let #input_idents = ::posh::IntoValue::into_value(#input_idents);
             )*
 
             let #args_ident = vec![
                 #(
-                    ::posh::value::Value::expr(&#input_idents).clone()
+                    ::posh::Value::expr(&#input_idents).clone()
                 ),*
             ];
 
             #(
                 let #input_idents =
-                    ::posh::value::Value::with_expr(
+                    ::posh::Value::with_expr(
                         &#input_idents,
                         ::posh::lang::Expr::Var(::posh::lang::VarExpr {
                             var: ::posh::lang::Var {

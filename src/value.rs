@@ -9,7 +9,7 @@ use crate::lang::{BuiltInTy, Expr, StructTy, Ty};
 
 pub use domain::{Domain, PoshD, RustD};
 pub use funcs::GenValue;
-pub use primitives::{and, func_call, or, ternary, var};
+pub use primitives::{and, field, func_call, or, ternary, var};
 pub use scalar::{Bool, Scalar, ScalarType, F32, I32, U32};
 pub use vec::{vec3, Vec3, Vec4};
 

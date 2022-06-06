@@ -5,8 +5,10 @@ pub mod prelude;
 pub mod shader;
 pub mod value;
 
+pub use uuid;
+
 pub use prelude::*;
 
-pub use value::{GenValue, IntoValue, Value};
+pub use value::{GenValue, IntoValue, StructType, Type, Value};
 
-pub use posh_macros::posh;
+pub use posh_macros::{posh, StructType};

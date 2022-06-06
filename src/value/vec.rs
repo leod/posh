@@ -2,11 +2,12 @@ use std::ops::{Add, Div, Mul, Sub};
 
 use crate::{
     lang::{BinaryOp, BuiltInTy, Ty},
-    value::primitives::field,
     IntoValue, Value,
 };
 
-use super::{binary, builtin3, scalar::NumericType, BuiltInType, Scalar, ScalarType, Trace, Type};
+use super::{
+    binary, builtin3, field, scalar::NumericType, BuiltInType, Scalar, ScalarType, Trace, Type,
+};
 
 impl<T: ScalarType> Type for [T; 3] {
     type Value = Vec3<T>;
@@ -65,7 +66,7 @@ impl<T: ScalarType> Value for Vec3<T> {
 }
 
 #[must_use]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Vec4<T> {
     trace: Trace,
     pub x: Scalar<T>,

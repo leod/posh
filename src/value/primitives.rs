@@ -31,7 +31,7 @@ where
     R::from_expr(expr)
 }
 
-pub(crate) fn field<R>(base: Trace, member: &str) -> R
+pub fn field<R>(base: Trace, member: &str) -> R
 where
     R: Value,
 {
