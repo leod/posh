@@ -1,16 +1,16 @@
 use crate::{
     lang::{
-        BinOp, Expr, ExprBinary, ExprCall, ExprField, ExprTernary, ExprVar, Func, FuncBuiltIn,
-        FuncUserDefined, Ident, Var,
+        BinaryExpr, BinaryOp, BuiltInFunc, CallExpr, Expr, FieldExpr, Func, Ident, TernaryExpr,
+        UserDefinedFunc, Var, VarExpr,
     },
     Bool,
 };
 
-use super::{IntoValue, Trace, Value, ValueType};
+use super::{IntoValue, Trace, Type, Value};
 
 pub(crate) fn binary<U, V, R>(
     left: impl IntoValue<Value = U>,
-    op: BinOp,
+    op: BinaryOp,
     right: impl IntoValue<Value = V>,
 ) -> R
 where
@@ -21,11 +21,11 @@ where
     let left = Box::new(left.into_value().expr());
     let right = Box::new(right.into_value().expr());
 
-    let expr = Expr::Binary(ExprBinary {
+    let expr = Expr::Binary(BinaryExpr {
         left,
         op,
         right,
-        ty: <R::Type as ValueType>::ty(),
+        ty: <R::Type as Type>::ty(),
     });
 
     R::from_expr(expr)
@@ -35,10 +35,10 @@ pub(crate) fn field<R>(base: Trace, member: &str) -> R
 where
     R: Value,
 {
-    let expr = Expr::Field(ExprField {
+    let expr = Expr::Field(FieldExpr {
         base: Box::new(base.expr()),
         member: member.into(),
-        ty: <R::Type as ValueType>::ty(),
+        ty: <R::Type as Type>::ty(),
     });
 
     R::from_expr(expr)
@@ -49,11 +49,11 @@ where
     U: Value,
     R: Value,
 {
-    let func = Func::BuiltIn(FuncBuiltIn {
+    let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Type as ValueType>::ty(),
+        ty: <R::Type as Type>::ty(),
     });
-    let expr = Expr::Call(ExprCall {
+    let expr = Expr::Call(CallExpr {
         func,
         args: vec![x.into_value().expr()],
     });
@@ -71,11 +71,11 @@ where
     V: Value,
     R: Value,
 {
-    let func = Func::BuiltIn(FuncBuiltIn {
+    let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Type as ValueType>::ty(),
+        ty: <R::Type as Type>::ty(),
     });
-    let expr = Expr::Call(ExprCall {
+    let expr = Expr::Call(CallExpr {
         func,
         args: vec![x.into_value().expr(), y.into_value().expr()],
     });
@@ -95,11 +95,11 @@ where
     W: Value,
     R: Value,
 {
-    let func = Func::BuiltIn(FuncBuiltIn {
+    let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Type as ValueType>::ty(),
+        ty: <R::Type as Type>::ty(),
     });
-    let expr = Expr::Call(ExprCall {
+    let expr = Expr::Call(CallExpr {
         func,
         args: vec![
             x.into_value().expr(),
@@ -112,11 +112,11 @@ where
 }
 
 pub fn and(left: impl IntoValue<Value = Bool>, right: impl IntoValue<Value = Bool>) -> Bool {
-    binary(left, BinOp::And, right)
+    binary(left, BinaryOp::And, right)
 }
 
 pub fn or(left: impl IntoValue<Value = Bool>, right: impl IntoValue<Value = Bool>) -> Bool {
-    binary(left, BinOp::Or, right)
+    binary(left, BinaryOp::Or, right)
 }
 
 pub fn func_call<V>(name: impl Into<String>, params: Vec<Var>, result: V, args: Vec<Expr>) -> V
@@ -125,12 +125,12 @@ where
 {
     assert!(params.len() == args.len());
 
-    let func = Func::UserDefined(FuncUserDefined {
+    let func = Func::UserDefined(UserDefinedFunc {
         ident: Ident::new(name),
         params,
         result: Box::new(result.expr()),
     });
-    let expr = Expr::Call(ExprCall { func, args });
+    let expr = Expr::Call(CallExpr { func, args });
 
     V::from_expr(expr)
 }
@@ -147,7 +147,7 @@ where
         init,
     };
 
-    let expr = Expr::Var(ExprVar { var });
+    let expr = Expr::Var(VarExpr { var });
 
     Value::from_expr(expr)
 }
@@ -164,7 +164,7 @@ where
     let true_expr = Box::new(true_value.into_value().expr());
     let false_expr = Box::new(false_value.into_value().expr());
 
-    let expr = Expr::Ternary(ExprTernary {
+    let expr = Expr::Ternary(TernaryExpr {
         cond,
         true_expr,
         false_expr,

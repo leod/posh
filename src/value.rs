@@ -1,35 +1,37 @@
+mod domain;
 pub(crate) mod expr_reg;
 mod funcs;
 mod primitives;
 mod scalar;
 mod vec;
 
-use crate::lang::{Expr, Type, TypeBuiltIn, TypeStruct};
+use crate::lang::{BuiltInTy, Expr, StructTy, Ty};
 
+pub use domain::{Domain, PoshD, RustD};
 pub use funcs::GenValue;
 pub use primitives::{and, func_call, or, ternary, var};
-pub use scalar::{Bool, Scalar, ScalarValueType, F32, I32, U32};
+pub use scalar::{Bool, Scalar, ScalarType, F32, I32, U32};
 pub use vec::{vec3, Vec3, Vec4};
 
 pub(crate) use primitives::{binary, builtin1, builtin2, builtin3};
 
 use expr_reg::ExprId;
 
-pub trait ValueType {
+pub trait Type {
     type Value;
 
-    fn ty() -> Type;
+    fn ty() -> Ty;
 }
 
-pub trait BuiltInValueType: ValueType {
-    fn built_in_ty() -> TypeBuiltIn;
+pub trait BuiltInType: Type {
+    fn built_in_ty() -> BuiltInTy;
 }
 
-pub trait StructValueType: ValueType {
-    fn struct_ty() -> TypeStruct;
+pub trait StructType: Type {
+    fn struct_ty() -> StructTy;
 }
 
-pub type Posh<T> = <T as ValueType>::Value;
+pub type Posh<T> = <T as Type>::Value;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Trace {
@@ -37,7 +39,7 @@ pub struct Trace {
 }
 
 pub trait Value: Clone + Sized {
-    type Type: ValueType;
+    type Type: Type;
 
     fn from_trace(trace: Trace) -> Self;
     fn trace(&self) -> Trace;
@@ -46,7 +48,7 @@ pub trait Value: Clone + Sized {
         Self::from_trace(Trace::new(expr))
     }
 
-    fn ty(&self) -> Type {
+    fn ty(&self) -> Ty {
         Self::Type::ty()
     }
 
@@ -64,11 +66,11 @@ pub trait Value: Clone + Sized {
 }
 
 pub trait BuiltInValue: Value {
-    type BuiltInType: BuiltInValueType;
+    type BuiltInType: BuiltInType;
 }
 
 pub trait StructValue: Value {
-    type StructType: StructValueType;
+    type StructType: StructType;
 
     fn fields(&self) -> Vec<Expr>;
 }
@@ -81,7 +83,7 @@ pub trait IntoValue {
 
 impl<T, V> BuiltInValue for V
 where
-    T: BuiltInValueType,
+    T: BuiltInType,
     V: Value<Type = T>,
 {
     type BuiltInType = T;

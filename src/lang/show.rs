@@ -1,11 +1,11 @@
 use std::collections::BTreeSet;
 
 use super::{
-    BinOp, Expr, ExprBinary, ExprBuiltInVar, ExprCall, ExprField, ExprTernary, ExprVar, Func,
-    FuncUserDefined, ScalarType, Type, TypeBuiltIn, Var,
+    BinaryOp, BuiltInTy, CallExpr, Expr, Func, ScalarTy, StructTy, Ty, UserDefinedFunc, Var,
+    VarExpr,
 };
 
-pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<FuncUserDefined>) {
+pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<UserDefinedFunc>) {
     match expr {
         Expr::Binary(expr) => {
             collect_funcs(&*expr.left, funcs);
@@ -16,14 +16,14 @@ pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<FuncUserDefined>) {
             collect_funcs(&*expr.true_expr, funcs);
             collect_funcs(&*expr.false_expr, funcs);
         }
-        Expr::Var(ExprVar {
+        Expr::Var(VarExpr {
             var: Var {
                 init: Some(init), ..
             },
         }) => {
             collect_funcs(init, funcs);
         }
-        Expr::Var(ExprVar {
+        Expr::Var(VarExpr {
             var: Var { init: None, .. },
         }) => (),
         Expr::Call(expr) => {
@@ -54,7 +54,7 @@ pub fn collect_vars(expr: &Expr, vars: &mut BTreeSet<Var>) {
             collect_vars(&*expr.true_expr, vars);
             collect_vars(&*expr.false_expr, vars);
         }
-        Expr::Var(ExprVar {
+        Expr::Var(VarExpr {
             var: var @ Var {
                 init: Some(init), ..
             },
@@ -62,10 +62,10 @@ pub fn collect_vars(expr: &Expr, vars: &mut BTreeSet<Var>) {
             vars.insert(var.clone());
             collect_vars(init, vars);
         }
-        Expr::Var(ExprVar {
+        Expr::Var(VarExpr {
             var: Var { init: None, .. },
         }) => (),
-        Expr::Call(ExprCall { args, .. }) => {
+        Expr::Call(CallExpr { args, .. }) => {
             for arg in args {
                 collect_vars(arg, vars);
             }
@@ -78,8 +78,8 @@ pub fn collect_vars(expr: &Expr, vars: &mut BTreeSet<Var>) {
     }
 }
 
-fn show_scalar_type(ty: ScalarType) -> String {
-    use ScalarType::*;
+fn show_scalar_ty(ty: ScalarTy) -> String {
+    use ScalarTy::*;
 
     match ty {
         Bool => "bool".to_string(),
@@ -89,8 +89,8 @@ fn show_scalar_type(ty: ScalarType) -> String {
     }
 }
 
-fn scalar_type_prefix(ty: ScalarType) -> String {
-    use ScalarType::*;
+fn scalar_type_prefix(ty: ScalarTy) -> String {
+    use ScalarTy::*;
 
     match ty {
         Bool => "b".to_string(),
@@ -100,29 +100,34 @@ fn scalar_type_prefix(ty: ScalarType) -> String {
     }
 }
 
-fn show_type_built_in(ty: &TypeBuiltIn) -> String {
-    use TypeBuiltIn::*;
+fn show_built_in_ty(ty: &BuiltInTy) -> String {
+    use BuiltInTy::*;
 
     match ty {
-        Scalar(ty) => show_scalar_type(*ty),
+        Scalar(ty) => show_scalar_ty(*ty),
         Vec3(ty) => format!("{}vec3", scalar_type_prefix(*ty)),
         Vec4(ty) => format!("{}vec4", scalar_type_prefix(*ty)),
     }
 }
 
-fn show_type(ty: &Type) -> String {
-    use Type::*;
+fn show_struct_ty(ty: &StructTy) -> String {
+    ty.ident.to_string()
+}
+
+fn show_ty(ty: &Ty) -> String {
+    use Ty::*;
 
     match ty {
-        BuiltIn(ty) => show_type_built_in(ty),
+        BuiltIn(ty) => show_built_in_ty(ty),
+        Struct(ty) => show_struct_ty(ty),
     }
 }
 
-pub fn show_user_defined_func(func: &FuncUserDefined) -> String {
+pub fn show_user_defined_func(func: &UserDefinedFunc) -> String {
     let params: Vec<_> = func
         .params
         .iter()
-        .map(|param| format!("{}: {}", param.ident.to_string(), show_type(&param.ty)))
+        .map(|param| format!("{}: {}", param.ident.to_string(), show_ty(&param.ty)))
         .collect();
 
     let mut vars = BTreeSet::new();
@@ -135,7 +140,7 @@ pub fn show_user_defined_func(func: &FuncUserDefined) -> String {
             format!(
                 "    let {}: {} = {};",
                 var.ident.to_string(),
-                show_type(&var.ty),
+                show_ty(&var.ty),
                 show_expr(var.init.as_ref().unwrap())
             )
         })
@@ -145,13 +150,13 @@ pub fn show_user_defined_func(func: &FuncUserDefined) -> String {
         "fn {}({}) -> {} {{\n{}\n    {}\n}}",
         func.ident.name,
         params.join(", "),
-        show_type(&func.result.ty()),
+        show_ty(&func.result.ty()),
         lets.join("\n"),
         show_expr(&func.result),
     )
 }
 
-pub fn show_user_defined_funcs(func: &FuncUserDefined) -> String {
+pub fn show_user_defined_funcs(func: &UserDefinedFunc) -> String {
     let mut funcs = BTreeSet::new();
     collect_funcs(&*func.result, &mut funcs);
 
@@ -165,15 +170,15 @@ pub fn show_user_defined_funcs(func: &FuncUserDefined) -> String {
         .join("\n\n")
 }
 
-pub fn show_bin_op(op: BinOp) -> String {
+pub fn show_binary_op(op: BinaryOp) -> String {
     match op {
-        BinOp::Add => "+".into(),
-        BinOp::Sub => "-".into(),
-        BinOp::Mul => "*".into(),
-        BinOp::Div => "/".into(),
-        BinOp::Eq => "==".into(),
-        BinOp::And => "&&".into(),
-        BinOp::Or => "||".into(),
+        BinaryOp::Add => "+".into(),
+        BinaryOp::Sub => "-".into(),
+        BinaryOp::Mul => "*".into(),
+        BinaryOp::Div => "/".into(),
+        BinaryOp::Eq => "==".into(),
+        BinaryOp::And => "&&".into(),
+        BinaryOp::Or => "||".into(),
     }
 }
 
@@ -184,7 +189,7 @@ pub fn show_expr(expr: &Expr) -> String {
         Binary(expr) => format!(
             "({}) {} ({})",
             show_expr(&*expr.left),
-            show_bin_op(expr.op),
+            show_binary_op(expr.op),
             show_expr(&*expr.right)
         ),
         Ternary(expr) => format!(

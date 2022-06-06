@@ -47,7 +47,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                 let #input_idents =
                     ::posh::value::Value::with_expr(
                         &#input_idents,
-                        ::posh::lang::Expr::Var(::posh::lang::ExprVar {
+                        ::posh::lang::Expr::Var(::posh::lang::VarExpr {
                             var: ::posh::lang::Var {
                                 ident: ::posh::lang::Ident::new(stringify!(#input_idents)),
                                 ty: ::posh::value::Value::ty(&#input_idents),

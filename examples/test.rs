@@ -3,9 +3,9 @@ use posh::{posh, Value, Vec3, F32};
 #[posh]
 fn foo(x: F32, y: F32) -> F32 {
     let z = var(x * y);
-    let w = var(y + x + 1.0);
+    let w = var(1.0 + y + x + 1.0);
 
-    ternary(and(z.eq(w), z.eq(1.0)), z * 2.0, 1.0)
+    ternary(and(z.eq(w), z.eq(1.0)), 3.0 * z * 2.0, 1.0)
 }
 
 #[posh]

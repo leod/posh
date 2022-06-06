@@ -1,3 +1,5 @@
+#![feature(generic_associated_types)]
+
 pub mod lang;
 pub mod prelude;
 pub mod shader;

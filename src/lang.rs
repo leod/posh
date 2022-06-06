@@ -3,7 +3,7 @@ pub mod show;
 pub use uuid::Uuid;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum ScalarType {
+pub enum ScalarTy {
     F32,
     I32,
     U32,
@@ -11,21 +11,22 @@ pub enum ScalarType {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum Type {
-    BuiltIn(TypeBuiltIn),
+pub enum Ty {
+    BuiltIn(BuiltInTy),
+    Struct(StructTy),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum TypeBuiltIn {
-    Scalar(ScalarType),
-    Vec3(ScalarType),
-    Vec4(ScalarType),
+pub enum BuiltInTy {
+    Scalar(ScalarTy),
+    Vec3(ScalarTy),
+    Vec4(ScalarTy),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct TypeStruct {
+pub struct StructTy {
     pub ident: Ident,
-    pub fields: Vec<(String, Type)>,
+    pub fields: Vec<(String, Ty)>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -52,36 +53,36 @@ impl ToString for Ident {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Var {
     pub ident: Ident,
-    pub ty: Type,
+    pub ty: Ty,
     pub init: Option<Box<Expr>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Func {
-    BuiltIn(FuncBuiltIn),
-    UserDefined(FuncUserDefined),
+    BuiltIn(BuiltInFunc),
+    UserDefined(UserDefinedFunc),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct FuncBuiltIn {
+pub struct BuiltInFunc {
     pub name: String,
-    pub ty: Type,
+    pub ty: Ty,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct FuncUserDefined {
+pub struct UserDefinedFunc {
     pub ident: Ident,
     pub params: Vec<Var>,
     pub result: Box<Expr>,
 }
 
 impl Func {
-    pub fn ty(&self) -> Type {
+    pub fn ty(&self) -> Ty {
         use Func::*;
 
         match self {
-            BuiltIn(FuncBuiltIn { ty, .. }) => ty.clone(),
-            UserDefined(FuncUserDefined { result, .. }) => result.ty(),
+            BuiltIn(BuiltInFunc { ty, .. }) => ty.clone(),
+            UserDefined(UserDefinedFunc { result, .. }) => result.ty(),
         }
     }
 
@@ -89,8 +90,8 @@ impl Func {
         use Func::*;
 
         match self {
-            BuiltIn(FuncBuiltIn { name, .. }) => name,
-            UserDefined(FuncUserDefined { ident, .. }) => &ident.name,
+            BuiltIn(BuiltInFunc { name, .. }) => name,
+            UserDefined(UserDefinedFunc { ident, .. }) => &ident.name,
         }
     }
 }
@@ -98,14 +99,14 @@ impl Func {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Lit {
     pub value: String,
-    pub ty: Type,
+    pub ty: Ty,
 }
 
 impl From<bool> for Lit {
     fn from(x: bool) -> Self {
         Self {
             value: x.to_string(),
-            ty: Type::BuiltIn(TypeBuiltIn::Scalar(ScalarType::Bool)),
+            ty: Ty::BuiltIn(BuiltInTy::Scalar(ScalarTy::Bool)),
         }
     }
 }
@@ -114,7 +115,7 @@ impl From<i32> for Lit {
     fn from(x: i32) -> Self {
         Self {
             value: x.to_string(),
-            ty: Type::BuiltIn(TypeBuiltIn::Scalar(ScalarType::I32)),
+            ty: Ty::BuiltIn(BuiltInTy::Scalar(ScalarTy::I32)),
         }
     }
 }
@@ -123,7 +124,7 @@ impl From<u32> for Lit {
     fn from(x: u32) -> Self {
         Self {
             value: x.to_string(),
-            ty: Type::BuiltIn(TypeBuiltIn::Scalar(ScalarType::U32)),
+            ty: Ty::BuiltIn(BuiltInTy::Scalar(ScalarTy::U32)),
         }
     }
 }
@@ -132,13 +133,13 @@ impl From<f32> for Lit {
     fn from(x: f32) -> Self {
         Self {
             value: x.to_string(),
-            ty: Type::BuiltIn(TypeBuiltIn::Scalar(ScalarType::F32)),
+            ty: Ty::BuiltIn(BuiltInTy::Scalar(ScalarTy::F32)),
         }
     }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum BinOp {
+pub enum BinaryOp {
     Add,
     Sub,
     Mul,
@@ -150,61 +151,61 @@ pub enum BinOp {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Expr {
-    Binary(ExprBinary),
-    Ternary(ExprTernary),
-    Var(ExprVar),
-    Call(ExprCall),
-    Lit(ExprLit),
-    Field(ExprField),
-    BuiltInVar(ExprBuiltInVar),
+    Binary(BinaryExpr),
+    Ternary(TernaryExpr),
+    Var(VarExpr),
+    Call(CallExpr),
+    Lit(LitExpr),
+    Field(FieldExpr),
+    BuiltInVar(BuiltInVarExpr),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct ExprBinary {
+pub struct BinaryExpr {
     pub left: Box<Expr>,
-    pub op: BinOp,
+    pub op: BinaryOp,
     pub right: Box<Expr>,
-    pub ty: Type,
+    pub ty: Ty,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct ExprTernary {
+pub struct TernaryExpr {
     pub cond: Box<Expr>,
     pub true_expr: Box<Expr>,
     pub false_expr: Box<Expr>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct ExprVar {
+pub struct VarExpr {
     pub var: Var,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct ExprCall {
+pub struct CallExpr {
     pub func: Func,
     pub args: Vec<Expr>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct ExprLit {
+pub struct LitExpr {
     pub lit: Lit,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct ExprField {
+pub struct FieldExpr {
     pub base: Box<Expr>,
     pub member: String,
-    pub ty: Type,
+    pub ty: Ty,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct ExprBuiltInVar {
+pub struct BuiltInVarExpr {
     pub name: String,
-    pub ty: TypeBuiltIn,
+    pub ty: BuiltInTy,
 }
 
 impl Expr {
-    pub fn ty(&self) -> Type {
+    pub fn ty(&self) -> Ty {
         use Expr::*;
 
         match self {
@@ -217,7 +218,7 @@ impl Expr {
             Call(expr) => expr.func.ty(),
             Lit(expr) => expr.lit.ty.clone(),
             Field(expr) => expr.ty.clone(),
-            BuiltInVar(expr) => Type::BuiltIn(expr.ty.clone()),
+            BuiltInVar(expr) => Ty::BuiltIn(expr.ty.clone()),
         }
     }
 }

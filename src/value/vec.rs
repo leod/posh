@@ -1,41 +1,38 @@
 use std::ops::{Add, Div, Mul, Sub};
 
 use crate::{
-    lang::{BinOp, Type, TypeBuiltIn},
+    lang::{BinaryOp, BuiltInTy, Ty},
     value::primitives::field,
     IntoValue, Value,
 };
 
-use super::{
-    binary, builtin3, scalar::NumericValueType, BuiltInValueType, Scalar, ScalarValueType, Trace,
-    ValueType,
-};
+use super::{binary, builtin3, scalar::NumericType, BuiltInType, Scalar, ScalarType, Trace, Type};
 
-impl<T: ScalarValueType> ValueType for [T; 3] {
+impl<T: ScalarType> Type for [T; 3] {
     type Value = Vec3<T>;
 
-    fn ty() -> Type {
-        Type::BuiltIn(Self::built_in_ty())
+    fn ty() -> Ty {
+        Ty::BuiltIn(Self::built_in_ty())
     }
 }
 
-impl<T: ScalarValueType> ValueType for [T; 4] {
+impl<T: ScalarType> Type for [T; 4] {
     type Value = Vec4<T>;
 
-    fn ty() -> Type {
-        Type::BuiltIn(Self::built_in_ty())
+    fn ty() -> Ty {
+        Ty::BuiltIn(Self::built_in_ty())
     }
 }
 
-impl<T: ScalarValueType> BuiltInValueType for [T; 3] {
-    fn built_in_ty() -> TypeBuiltIn {
-        TypeBuiltIn::Vec3(T::scalar_ty())
+impl<T: ScalarType> BuiltInType for [T; 3] {
+    fn built_in_ty() -> BuiltInTy {
+        BuiltInTy::Vec3(T::scalar_ty())
     }
 }
 
-impl<T: ScalarValueType> BuiltInValueType for [T; 4] {
-    fn built_in_ty() -> TypeBuiltIn {
-        TypeBuiltIn::Vec4(T::scalar_ty())
+impl<T: ScalarType> BuiltInType for [T; 4] {
+    fn built_in_ty() -> BuiltInTy {
+        BuiltInTy::Vec4(T::scalar_ty())
     }
 }
 
@@ -48,7 +45,7 @@ pub struct Vec3<T> {
     pub z: Scalar<T>,
 }
 
-impl<T: ScalarValueType> Value for Vec3<T> {
+impl<T: ScalarType> Value for Vec3<T> {
     type Type = [T; 3];
 
     fn from_trace(trace: Trace) -> Self {
@@ -77,7 +74,7 @@ pub struct Vec4<T> {
     pub w: Scalar<T>,
 }
 
-impl<T: ScalarValueType> Value for Vec4<T> {
+impl<T: ScalarType> Value for Vec4<T> {
     type Type = [T; 4];
 
     fn from_trace(trace: Trace) -> Self {
@@ -101,12 +98,12 @@ macro_rules! impl_symmetric_binary_op {
     ($ty:ident, $fn:ident, $op:ident) => {
         impl<T> $op<$ty<T>> for $ty<T>
         where
-            T: NumericValueType,
+            T: NumericType,
         {
             type Output = Self;
 
             fn $fn(self, right: Self) -> Self::Output {
-                binary(self, BinOp::$op, right)
+                binary(self, BinaryOp::$op, right)
             }
         }
     };
@@ -116,24 +113,24 @@ macro_rules! impl_scalar_binary_op {
     ($ty:ident, $fn:ident, $op:ident) => {
         impl<T, Rhs> $op<Rhs> for $ty<T>
         where
-            T: NumericValueType,
+            T: NumericType,
             Rhs: IntoValue<Value = Scalar<T>>,
         {
             type Output = Self;
 
             fn $fn(self, right: Rhs) -> Self::Output {
-                binary(self, BinOp::$op, right)
+                binary(self, BinaryOp::$op, right)
             }
         }
 
         impl<T> $op<$ty<T>> for Scalar<T>
         where
-            T: NumericValueType,
+            T: NumericType,
         {
             type Output = $ty<T>;
 
             fn $fn(self, right: $ty<T>) -> Self::Output {
-                binary(self, BinOp::$op, right)
+                binary(self, BinaryOp::$op, right)
             }
         }
 
@@ -141,7 +138,7 @@ macro_rules! impl_scalar_binary_op {
             type Output = $ty<Self>;
 
             fn $fn(self, right: $ty<Self>) -> Self::Output {
-                binary(self, BinOp::$op, right)
+                binary(self, BinaryOp::$op, right)
             }
         }
 
@@ -149,7 +146,7 @@ macro_rules! impl_scalar_binary_op {
             type Output = $ty<Self>;
 
             fn $fn(self, right: $ty<Self>) -> Self::Output {
-                binary(self, BinOp::$op, right)
+                binary(self, BinaryOp::$op, right)
             }
         }
 
@@ -157,7 +154,7 @@ macro_rules! impl_scalar_binary_op {
             type Output = $ty<Self>;
 
             fn $fn(self, right: $ty<Self>) -> Self::Output {
-                binary(self, BinOp::$op, right)
+                binary(self, BinaryOp::$op, right)
             }
         }
     };
@@ -179,7 +176,7 @@ macro_rules! impl_ops {
 
 impl_ops!(Vec3);
 
-pub fn vec3<T: ScalarValueType>(
+pub fn vec3<T: ScalarType>(
     x: impl IntoValue<Value = Scalar<T>>,
     y: impl IntoValue<Value = Scalar<T>>,
     z: impl IntoValue<Value = Scalar<T>>,

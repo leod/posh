@@ -1,25 +1,25 @@
 use std::marker::PhantomData;
 
 use crate::{
-    lang::{Expr, ExprBuiltInVar, ExprCall, Func, FuncUserDefined, Type, TypeBuiltIn},
-    value::{BuiltInValue, BuiltInValueType},
+    lang::{BuiltInTy, BuiltInVarExpr, CallExpr, Expr, Func, Ty, UserDefinedFunc},
+    value::{BuiltInType, BuiltInValue},
     Value, Vec4, F32, I32,
 };
 
 pub trait Param {}
 
 pub trait ParamSet {
-    fn fields() -> Vec<(String, Type)>;
+    fn fields() -> Vec<(String, Ty)>;
     fn func_arg() -> Self;
 }
 
 pub trait ParamSets {
-    fn fields() -> Vec<Vec<(String, Type)>>;
+    fn fields() -> Vec<Vec<(String, Ty)>>;
     fn func_arg() -> Self;
 }
 
 impl<P: ParamSet> ParamSets for P {
-    fn fields() -> Vec<Vec<(String, Type)>> {
+    fn fields() -> Vec<Vec<(String, Ty)>> {
         vec![P::fields()]
     }
 
@@ -29,7 +29,7 @@ impl<P: ParamSet> ParamSets for P {
 }
 
 pub trait Vertex: Value {
-    fn fields() -> Vec<(String, TypeBuiltIn)>;
+    fn fields() -> Vec<(String, BuiltInTy)>;
     fn func_arg() -> Self;
 }
 
@@ -40,12 +40,12 @@ pub trait Vertex: Value {
 }*/
 
 pub trait VertexSet: Value {
-    fn fields() -> Vec<Vec<(String, TypeBuiltIn)>>;
+    fn fields() -> Vec<Vec<(String, BuiltInTy)>>;
     fn func_arg() -> Self;
 }
 
 impl<V: Vertex> VertexSet for V {
-    fn fields() -> Vec<Vec<(String, TypeBuiltIn)>> {
+    fn fields() -> Vec<Vec<(String, BuiltInTy)>> {
         vec![V::fields()]
     }
 
@@ -55,14 +55,14 @@ impl<V: Vertex> VertexSet for V {
 }
 
 pub trait Varying: Value {
-    fn fields() -> Vec<(String, TypeBuiltIn)>;
+    fn fields() -> Vec<(String, BuiltInTy)>;
     fn func_arg() -> Self;
 }
 
 //impl Varying for () {}
 
 pub trait Fragment: Value {
-    fn fields() -> Vec<(String, TypeBuiltIn)>;
+    fn fields() -> Vec<(String, BuiltInTy)>;
 }
 
 pub struct VertexIn<V: VertexSet> {
@@ -87,8 +87,8 @@ pub struct FragmentOut<R: Fragment> {
 }
 
 pub struct Shader<P, V, R> {
-    vertex: FuncUserDefined,
-    fragment: FuncUserDefined,
+    vertex: UserDefinedFunc,
+    fragment: UserDefinedFunc,
     _phantom: PhantomData<(P, V, R)>,
 }
 
@@ -103,7 +103,7 @@ pub struct Shader<P, V, R> {
 }*/
 
 fn builtin_var<V: BuiltInValue>(name: &'static str) -> V {
-    V::from_expr(Expr::BuiltInVar(ExprBuiltInVar {
+    V::from_expr(Expr::BuiltInVar(BuiltInVarExpr {
         name: name.to_string(),
         ty: V::BuiltInType::built_in_ty(),
     }))
@@ -167,8 +167,8 @@ where
         }*/
     }
 
-    fn stage_func<X: Value>(value: X) -> FuncUserDefined {
-        if let Expr::Call(ExprCall {
+    fn stage_func<X: Value>(value: X) -> UserDefinedFunc {
+        if let Expr::Call(CallExpr {
             func: Func::UserDefined(func),
             args: _,
         }) = value.expr()
