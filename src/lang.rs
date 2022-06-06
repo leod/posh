@@ -11,9 +11,15 @@ pub enum ScalarType {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum Type {
+pub enum TypeBuiltIn {
     Scalar(ScalarType),
     Vec3(ScalarType),
+    Vec4(ScalarType),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Type {
+    BuiltIn(TypeBuiltIn),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -93,7 +99,7 @@ impl From<bool> for Lit {
     fn from(x: bool) -> Self {
         Self {
             value: x.to_string(),
-            ty: Type::Scalar(ScalarType::Bool),
+            ty: Type::BuiltIn(TypeBuiltIn::Scalar(ScalarType::Bool)),
         }
     }
 }
@@ -102,7 +108,7 @@ impl From<i32> for Lit {
     fn from(x: i32) -> Self {
         Self {
             value: x.to_string(),
-            ty: Type::Scalar(ScalarType::I32),
+            ty: Type::BuiltIn(TypeBuiltIn::Scalar(ScalarType::I32)),
         }
     }
 }
@@ -111,7 +117,7 @@ impl From<u32> for Lit {
     fn from(x: u32) -> Self {
         Self {
             value: x.to_string(),
-            ty: Type::Scalar(ScalarType::U32),
+            ty: Type::BuiltIn(TypeBuiltIn::Scalar(ScalarType::U32)),
         }
     }
 }
@@ -120,7 +126,7 @@ impl From<f32> for Lit {
     fn from(x: f32) -> Self {
         Self {
             value: x.to_string(),
-            ty: Type::Scalar(ScalarType::F32),
+            ty: Type::BuiltIn(TypeBuiltIn::Scalar(ScalarType::F32)),
         }
     }
 }

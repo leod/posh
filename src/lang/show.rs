@@ -2,7 +2,7 @@ use std::collections::BTreeSet;
 
 use super::{
     BinOp, Expr, ExprBinary, ExprCall, ExprField, ExprTernary, ExprVar, Func, FuncUserDefined,
-    ScalarType, Type, Var,
+    ScalarType, Type, Var, TypeBuiltIn,
 };
 
 pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<FuncUserDefined>) {
@@ -106,12 +106,21 @@ fn scalar_type_prefix(ty: ScalarType) -> String {
     }
 }
 
-fn show_type(ty: &Type) -> String {
-    use Type::*;
+fn show_type_built_in(ty: &TypeBuiltIn) -> String {
+    use TypeBuiltIn::*;
 
     match ty {
         Scalar(ty) => show_scalar_type(*ty),
         Vec3(ty) => format!("{}vec3", scalar_type_prefix(*ty)),
+        Vec4(ty) => format!("{}vec4", scalar_type_prefix(*ty)),
+    }
+}
+
+fn show_type(ty: &Type) -> String {
+    use Type::*;
+
+    match ty {
+        BuiltIn(ty) => show_type_built_in(ty),
     }
 }
 

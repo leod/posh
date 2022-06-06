@@ -3,7 +3,7 @@ use std::{
     ops::{Add, Div, Mul, Sub},
 };
 
-use crate::lang::{BinOp, Expr, ExprLit, Lit, ScalarType, Type};
+use crate::lang::{BinOp, Expr, ExprLit, Lit, ScalarType, Type, TypeBuiltIn};
 
 use super::{binary, IntoValue, Trace, Value, ValueType};
 
@@ -107,7 +107,7 @@ macro_rules! impl_scalar {
             type Value = Scalar<$ty>;
 
             fn ty() -> Type {
-                Type::Scalar(ScalarType::$name)
+                Type::BuiltIn(TypeBuiltIn::Scalar(ScalarType::$name))
             }
         }
 

@@ -1,7 +1,7 @@
 use std::ops::{Add, Div, Mul, Sub};
 
 use crate::{
-    lang::{BinOp, Type},
+    lang::{BinOp, Type, TypeBuiltIn},
     value::primitives::field,
     IntoValue, Value,
 };
@@ -14,7 +14,15 @@ impl<T: ScalarValueType> ValueType for [T; 3] {
     type Value = Vec3<T>;
 
     fn ty() -> Type {
-        Type::Vec3(T::scalar_ty())
+        Type::BuiltIn(TypeBuiltIn::Vec3(T::scalar_ty()))
+    }
+}
+
+impl<T: ScalarValueType> ValueType for [T; 4] {
+    type Value = Vec4<T>;
+
+    fn ty() -> Type {
+        Type::BuiltIn(TypeBuiltIn::Vec4(T::scalar_ty()))
     }
 }
 
@@ -38,6 +46,36 @@ impl<T: ScalarValueType> Value for Vec3<T> {
             x: field(trace, "x"),
             y: field(trace, "y"),
             z: field(trace, "z"),
+        }
+    }
+
+    fn trace(&self) -> Trace {
+        self.trace
+    }
+}
+
+#[must_use]
+#[derive(Debug, Copy, Clone)]
+pub struct Vec4<T> {
+    trace: Trace,
+    pub x: Scalar<T>,
+    pub y: Scalar<T>,
+    pub z: Scalar<T>,
+    pub w: Scalar<T>,
+}
+
+impl<T: ScalarValueType> Value for Vec4<T> {
+    type Type = [T; 4];
+
+    fn from_trace(trace: Trace) -> Self {
+        assert!(trace.expr().ty() == Self::Type::ty());
+
+        Self {
+            trace,
+            x: field(trace, "x"),
+            y: field(trace, "y"),
+            z: field(trace, "z"),
+            w: field(trace, "w"),
         }
     }
 
