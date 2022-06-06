@@ -4,6 +4,48 @@ use super::{
     BinaryOp, BuiltInTy, CallExpr, Expr, Func, ScalarTy, StructTy, Ty, UserDefinedFunc, VarExpr,
 };
 
+pub fn collect_structs(expr: &Expr, structs: &mut BTreeSet<StructTy>) {
+    use Expr::*;
+
+    if let Ty::Struct(ref ty) = expr.ty() {
+        structs.insert(ty.clone());
+    }
+
+    match expr {
+        Binary(expr) => {
+            collect_structs(&*expr.left, structs);
+            collect_structs(&*expr.right, structs);
+        }
+        Ternary(expr) => {
+            collect_structs(&*expr.cond, structs);
+            collect_structs(&*expr.true_expr, structs);
+            collect_structs(&*expr.false_expr, structs);
+        }
+        Var(expr) => {
+            if let Some(ref init) = expr.init {
+                collect_structs(init, structs);
+            }
+        }
+        Call(expr) => {
+            if let Func::UserDefined(func) = &expr.func {
+                for param in func.params.iter() {
+                    collect_structs(&Expr::Var(param.clone()), structs);
+                }
+                collect_structs(&*func.result, structs);
+            }
+
+            for arg in &expr.args {
+                collect_structs(arg, structs);
+            }
+        }
+        Literal(_) => (),
+        Field(expr) => {
+            collect_structs(&*expr.base, structs);
+        }
+        BuiltInVar(_) => (),
+    }
+}
+
 pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<UserDefinedFunc>) {
     use Expr::*;
 
@@ -120,6 +162,20 @@ fn show_ty(ty: &Ty) -> String {
     }
 }
 
+fn show_struct_def(ty: &StructTy) -> String {
+    let fields: Vec<_> = ty
+        .fields
+        .iter()
+        .map(|(name, ty)| format!("    {}: {}", name, show_ty(ty)))
+        .collect();
+
+    format!(
+        "struct {}\n{{\n{}\n}};\n",
+        ty.ident.to_string(),
+        fields.join("\n")
+    )
+}
+
 pub fn show_user_defined_func(func: &UserDefinedFunc) -> String {
     let params: Vec<_> = func
         .params
@@ -156,15 +212,34 @@ pub fn show_user_defined_func(func: &UserDefinedFunc) -> String {
 pub fn show_user_defined_funcs(func: &UserDefinedFunc) -> String {
     let mut funcs = BTreeSet::new();
     collect_funcs(&*func.result, &mut funcs);
-
     funcs.insert(func.clone());
     // TODO: Sort funcs by dependencies.
 
-    funcs
+    let mut structs = BTreeSet::new();
+    for func in funcs.iter() {
+        collect_structs(
+            &Expr::Call(CallExpr {
+                func: Func::UserDefined(func.clone()),
+                args: Vec::new(),
+            }),
+            &mut structs,
+        );
+    }
+    // TODO: Sort structs by dependencies
+
+    let struct_defs = structs
+        .iter()
+        .map(show_struct_def)
+        .collect::<Vec<_>>()
+        .join("\n\n");
+
+    let func_defs = funcs
         .iter()
         .map(show_user_defined_func)
         .collect::<Vec<_>>()
-        .join("\n\n")
+        .join("\n\n");
+
+    format!("{}{}", struct_defs, func_defs)
 }
 
 pub fn show_binary_op(op: BinaryOp) -> String {
