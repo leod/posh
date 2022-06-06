@@ -1,7 +1,7 @@
-use posh::{posh, Value};
+use posh::{posh, Value, Vec3, F32};
 
 #[posh]
-fn foo(x: posh::F32, y: posh::F32) -> posh::F32 {
+fn foo(x: F32, y: F32) -> F32 {
     let z = var(x * y);
     let w = var(y + x + 1.0);
 
@@ -9,12 +9,12 @@ fn foo(x: posh::F32, y: posh::F32) -> posh::F32 {
 }
 
 #[posh]
-fn bar(x: posh::F32) -> posh::F32 {
+fn bar(x: F32) -> F32 {
     ternary(x.eq(5.0), x.atan2(2.0), -1.0)
 }
 
 #[posh]
-fn baz() -> posh::Vec3<f32> {
+fn baz() -> Vec3<f32> {
     let dings = var(vec3(foo(1.0, 2.0), bar(42.0), -1.0));
     let thing = var(vec3(dings.z, dings.x * 3.0, dings.y));
     thing * (dings.normalize() / 5.0)

@@ -1,29 +1,36 @@
 use std::marker::PhantomData;
 
 use crate::{
-    lang::{Expr, ExprBuiltInVar, Type, TypeBuiltIn},
+    lang::{Expr, ExprBuiltInVar, ExprCall, Func, FuncUserDefined, Type, TypeBuiltIn},
     value::{BuiltInValue, BuiltInValueType},
-    Posh, Value, Vec4, F32, I32,
+    Value, Vec4, F32, I32,
 };
 
 pub trait Param {}
 
 pub trait ParamSet {
     fn fields() -> Vec<(String, Type)>;
+    fn func_arg() -> Self;
 }
 
 pub trait ParamSets {
     fn fields() -> Vec<Vec<(String, Type)>>;
+    fn func_arg() -> Self;
 }
 
 impl<P: ParamSet> ParamSets for P {
     fn fields() -> Vec<Vec<(String, Type)>> {
         vec![P::fields()]
     }
+
+    fn func_arg() -> Self {
+        P::func_arg()
+    }
 }
 
 pub trait Vertex: Value {
     fn fields() -> Vec<(String, TypeBuiltIn)>;
+    fn func_arg() -> Self;
 }
 
 /*impl Vertex for () {
@@ -32,12 +39,24 @@ pub trait Vertex: Value {
     }
 }*/
 
-pub trait VertexSet: Value {}
+pub trait VertexSet: Value {
+    fn fields() -> Vec<Vec<(String, TypeBuiltIn)>>;
+    fn func_arg() -> Self;
+}
 
-impl<V: Vertex> VertexSet for V {}
+impl<V: Vertex> VertexSet for V {
+    fn fields() -> Vec<Vec<(String, TypeBuiltIn)>> {
+        vec![V::fields()]
+    }
+
+    fn func_arg() -> Self {
+        V::func_arg()
+    }
+}
 
 pub trait Varying: Value {
     fn fields() -> Vec<(String, TypeBuiltIn)>;
+    fn func_arg() -> Self;
 }
 
 //impl Varying for () {}
@@ -68,6 +87,8 @@ pub struct FragmentOut<R: Fragment> {
 }
 
 pub struct Shader<P, V, R> {
+    vertex: FuncUserDefined,
+    fragment: FuncUserDefined,
     _phantom: PhantomData<(P, V, R)>,
 }
 
@@ -105,6 +126,23 @@ impl<V: VertexSet> VertexIn<V> {
             instance_id: builtin_var("gl_InstanceID"),
         }
     }
+
+    pub fn func_arg() -> Self {
+        Self::new(V::func_arg())
+    }
+}
+
+impl<W: Varying> FragmentIn<W> {
+    pub fn new(varying: W) -> Self {
+        Self {
+            varying,
+            frag_coord: builtin_var("gl_FragCoord"),
+        }
+    }
+
+    pub fn func_arg() -> Self {
+        Self::new(W::func_arg())
+    }
 }
 
 impl<P, V, R> Shader<P, V, R>
@@ -113,19 +151,31 @@ where
     V: VertexSet,
     R: Fragment,
 {
-    pub fn new<W, VS, FS>(vertex_stage: VS, fragment_stage: FS)
+    pub fn new<W, VS, FS>(vertex_stage: VS, fragment_stage: FS) -> Self
     where
         W: Varying,
         VS: FnOnce(P, VertexIn<V>) -> VertexOut<W>,
         FS: FnOnce(P, FragmentIn<W>) -> FragmentOut<R>,
     {
+        let vertex_out = vertex_stage(P::func_arg(), VertexIn::func_arg());
+        let fragment_out = fragment_stage(P::func_arg(), FragmentIn::func_arg());
+
+        unimplemented!()
+        /*Self {
+            vertex: Self::stage_func(vertex_out),
+            fragment: Self::stage_func(fragment_out),
+        }*/
     }
 
-    fn stage_expr<X, Y, S>(stage: S) -> Expr
-    where
-        Y: Value,
-        S: FnOnce(P, X) -> Y,
-    {
-        unimplemented!()
+    fn stage_func<X: Value>(value: X) -> FuncUserDefined {
+        if let Expr::Call(ExprCall {
+            func: Func::UserDefined(func),
+            args: _,
+        }) = value.expr()
+        {
+            func
+        } else {
+            panic!("Expected given shader stage to be #[posh]");
+        }
     }
 }
