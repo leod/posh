@@ -1,12 +1,12 @@
-use posh::{posh, IntoValue as _, Posh, StructType, Value};
+use posh::{posh, IntoValue as _, Val, Value};
 
-#[derive(StructType, Default)]
+#[derive(posh::Struct, Default)]
 pub struct Helper {
     x: i32,
     y: i32,
 }
 
-#[derive(StructType)]
+#[derive(posh::Struct)]
 pub struct Vertex {
     pos: i32,
     time: f32,
@@ -15,8 +15,8 @@ pub struct Vertex {
 }
 
 #[posh]
-fn vertex(vertex: Posh<Vertex>) -> Posh<Vertex> {
-    Posh::<Vertex> {
+fn vertex(vertex: Val<Vertex>) -> Val<Vertex> {
+    Val::<Vertex> {
         pos: 3 * vertex.pos,
         time: 2.0.into_value(),
         ..vertex
@@ -41,7 +41,7 @@ pub fn main() {
     };
 
     let result = vertex(vertex2);
-    println!("{:#?}", result);
+    println!("{:#?}", result.expr());
 
     if let posh::lang::Expr::Call(expr) = result.expr() {
         if let posh::lang::Func::UserDefined(func) = expr.func {

@@ -1,5 +1,7 @@
 pub mod show;
 
+use std::rc::Rc;
+
 pub use uuid::Uuid;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -67,7 +69,7 @@ pub struct BuiltInFunc {
 pub struct UserDefinedFunc {
     pub ident: Ident,
     pub params: Vec<VarExpr>,
-    pub result: Box<Expr>,
+    pub result: Rc<Expr>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -163,24 +165,24 @@ pub enum Expr {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct BinaryExpr {
-    pub left: Box<Expr>,
+    pub left: Rc<Expr>,
     pub op: BinaryOp,
-    pub right: Box<Expr>,
+    pub right: Rc<Expr>,
     pub ty: Ty,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct TernaryExpr {
-    pub cond: Box<Expr>,
-    pub true_expr: Box<Expr>,
-    pub false_expr: Box<Expr>,
+    pub cond: Rc<Expr>,
+    pub true_expr: Rc<Expr>,
+    pub false_expr: Rc<Expr>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct VarExpr {
     pub ident: Ident,
     pub ty: Ty,
-    pub init: Option<Box<Expr>>,
+    pub init: Option<Rc<Expr>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -196,7 +198,7 @@ pub struct LiteralExpr {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FieldExpr {
-    pub base: Box<Expr>,
+    pub base: Rc<Expr>,
     pub member: String,
     pub ty: Ty,
 }

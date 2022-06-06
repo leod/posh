@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::{collections::BTreeSet, rc::Rc};
 
 use crate::{
     lang::{
@@ -32,7 +32,7 @@ pub fn common_field_base(exprs: &[Expr]) -> Option<Expr> {
                     ty.fields.iter().map(|(name, _)| name.clone()).collect();
 
                 if needed_fields == fields {
-                    Some(*first_field_expr.base.clone())
+                    Some((*first_field_expr.base).clone())
                 } else {
                     None
                 }
@@ -55,8 +55,8 @@ where
     V: Value,
     R: Value,
 {
-    let left = Box::new(left.into_value().expr());
-    let right = Box::new(right.into_value().expr());
+    let left = Rc::new(left.into_value().expr());
+    let right = Rc::new(right.into_value().expr());
 
     let expr = Expr::Binary(BinaryExpr {
         left,
@@ -73,7 +73,7 @@ where
     R: Value,
 {
     let expr = Expr::Field(FieldExpr {
-        base: Box::new(base.expr()),
+        base: Rc::new(base.expr()),
         member: member.into(),
         ty: <R::Type as Type>::ty(),
     });
@@ -165,7 +165,7 @@ where
     let func = Func::UserDefined(UserDefinedFunc {
         ident: Ident::new(name),
         params,
-        result: Box::new(result.expr()),
+        result: Rc::new(result.expr()),
     });
     let expr = Expr::Call(CallExpr { func, args });
 
@@ -176,7 +176,7 @@ pub fn var<V>(init: V) -> V
 where
     V: Value,
 {
-    let init = Some(Box::new(init.expr()));
+    let init = Some(Rc::new(init.expr()));
 
     let var = VarExpr {
         ident: Ident::new("var"),
@@ -197,9 +197,9 @@ pub fn ternary<V>(
 where
     V: Value,
 {
-    let cond = Box::new(cond.into_value().expr());
-    let true_expr = Box::new(true_value.into_value().expr());
-    let false_expr = Box::new(false_value.into_value().expr());
+    let cond = Rc::new(cond.into_value().expr());
+    let true_expr = Rc::new(true_value.into_value().expr());
+    let false_expr = Rc::new(false_value.into_value().expr());
 
     let expr = Expr::Ternary(TernaryExpr {
         cond,
@@ -220,7 +220,7 @@ macro_rules! let_ {
                     ident: $crate::lang::Ident::new(std::stringify!($var)),
                     ty: Value::ty(&init),
                 },
-                init: Some(Box::new(expr)),
+                init: Some(Rc::new(expr)),
             },
         ));
     }

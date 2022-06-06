@@ -6,7 +6,7 @@ use crate::{
 };
 
 use super::{
-    binary, builtin3, field, scalar::NumericType, BuiltInType, Scalar, ScalarType, Trace, Type,
+    binary, builtin3, field, scalar::NumericType, BuiltIn, Scalar, ScalarType, Trace, Type,
 };
 
 impl<T: ScalarType> Type for [T; 3] {
@@ -25,13 +25,13 @@ impl<T: ScalarType> Type for [T; 4] {
     }
 }
 
-impl<T: ScalarType> BuiltInType for [T; 3] {
+impl<T: ScalarType> BuiltIn for [T; 3] {
     fn built_in_ty() -> BuiltInTy {
         BuiltInTy::Vec3(T::scalar_ty())
     }
 }
 
-impl<T: ScalarType> BuiltInType for [T; 4] {
+impl<T: ScalarType> BuiltIn for [T; 4] {
     fn built_in_ty() -> BuiltInTy {
         BuiltInTy::Vec4(T::scalar_ty())
     }

@@ -16,7 +16,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
     };
 
     let type_trait_path: Path = parse_quote!(::posh::value::Type);
-    let struct_type_trait_path: Path = parse_quote!(::posh::value::StructType);
+    let struct_trait_path: Path = parse_quote!(::posh::value::Struct);
 
     let name = input.ident;
     let vis = input.vis;
@@ -41,7 +41,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
         #[allow(non_camel_case_types)]
         #vis struct #posh_name {
             #(
-                #field_vis #field_idents: ::posh::Posh<#field_tys>
+                #field_vis #field_idents: ::posh::Val<#field_tys>
             ),*
         }
 
@@ -58,7 +58,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
 
             fn expr(&self) -> ::posh::lang::Expr {
                 let func = ::posh::lang::Func::Struct(::posh::lang::StructFunc {
-                    ty: <#name as ::posh::StructType>::struct_ty(),
+                    ty: <#name as ::posh::Struct>::struct_ty(),
                 });
 
                 let args = vec![
@@ -82,11 +82,11 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             type Value = #posh_name;
 
             fn ty() -> ::posh::lang::Ty {
-                ::posh::lang::Ty::Struct(<#name as ::posh::StructType>::struct_ty())
+                ::posh::lang::Ty::Struct(<#name as ::posh::Struct>::struct_ty())
             }
         }
 
-        impl #impl_generics #struct_type_trait_path for #name #ty_generics #where_clause {
+        impl #impl_generics #struct_trait_path for #name #ty_generics #where_clause {
             fn struct_ty() -> ::posh::lang::StructTy {
                 let ident = ::posh::lang::Ident {
                     name: #name_str.to_string(),
@@ -111,7 +111,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
 
             fn into_value(self) -> Self::Value {
                 let func = ::posh::lang::Func::Struct(::posh::lang::StructFunc {
-                    ty: <#name as ::posh::StructType>::struct_ty(),
+                    ty: <#name as ::posh::Struct>::struct_ty(),
                 });
 
                 let args = vec![

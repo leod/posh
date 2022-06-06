@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::{
     lang::{BuiltInTy, BuiltInVarExpr, CallExpr, Expr, Func, Ty, UserDefinedFunc},
-    value::{BuiltInType, BuiltInValue},
+    value::{BuiltIn, BuiltInValue},
     Value, Vec4, F32, I32,
 };
 

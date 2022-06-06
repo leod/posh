@@ -9,6 +9,6 @@ pub use uuid;
 
 pub use prelude::*;
 
-pub use value::{GenValue, IntoValue, StructType, Type, Value};
+pub use value::{GenValue, IntoValue, Struct, Type, Value};
 
-pub use posh_macros::{posh, StructType};
+pub use posh_macros::{posh, Struct};

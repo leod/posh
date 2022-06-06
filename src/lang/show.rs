@@ -183,7 +183,7 @@ fn show_struct_def(ty: &StructTy) -> String {
         .collect();
 
     format!(
-        "struct {}\n{{\n{}\n}};\n",
+        "struct {}\n{{\n{}\n}};",
         ty.ident.to_string(),
         fields.join("\n")
     )
@@ -252,7 +252,7 @@ pub fn show_user_defined_funcs(func: &UserDefinedFunc) -> String {
         .collect::<Vec<_>>()
         .join("\n\n");
 
-    format!("{}{}", struct_defs, func_defs)
+    format!("{}\n\n{}", struct_defs, func_defs)
 }
 
 pub fn show_binary_op(op: BinaryOp) -> String {

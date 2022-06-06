@@ -21,15 +21,15 @@ pub trait Type {
     fn ty() -> Ty;
 }
 
-pub trait BuiltInType: Type {
+pub trait BuiltIn: Type {
     fn built_in_ty() -> BuiltInTy;
 }
 
-pub trait StructType: Type {
+pub trait Struct: Type {
     fn struct_ty() -> StructTy;
 }
 
-pub type Posh<T> = <T as Type>::Value;
+pub type Val<T> = <T as Type>::Value;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Trace {
@@ -61,11 +61,11 @@ pub trait Value: Clone + Sized {
 }
 
 pub trait BuiltInValue: Value {
-    type BuiltInType: BuiltInType;
+    type BuiltInType: BuiltIn;
 }
 
 pub trait StructValue: Value {
-    type StructType: StructType;
+    type StructType: Struct;
 
     fn fields(&self) -> Vec<Expr>;
 }
@@ -78,7 +78,7 @@ pub trait IntoValue {
 
 impl<T, V> BuiltInValue for V
 where
-    T: BuiltInType,
+    T: BuiltIn,
     V: Value<Type = T>,
 {
     type BuiltInType = T;
