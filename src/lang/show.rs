@@ -1,32 +1,29 @@
 use std::collections::BTreeSet;
 
 use super::{
-    BinaryOp, BuiltInTy, CallExpr, Expr, Func, ScalarTy, StructTy, Ty, UserDefinedFunc, Var,
-    VarExpr,
+    BinaryOp, BuiltInTy, CallExpr, Expr, Func, ScalarTy, StructTy, Ty, UserDefinedFunc, VarExpr,
 };
 
 pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<UserDefinedFunc>) {
+    use Expr::*;
+
     match expr {
-        Expr::Binary(expr) => {
+        Binary(expr) => {
             collect_funcs(&*expr.left, funcs);
             collect_funcs(&*expr.right, funcs);
         }
-        Expr::Ternary(expr) => {
+        Ternary(expr) => {
             collect_funcs(&*expr.cond, funcs);
             collect_funcs(&*expr.true_expr, funcs);
             collect_funcs(&*expr.false_expr, funcs);
         }
-        Expr::Var(VarExpr {
-            var: Var {
-                init: Some(init), ..
-            },
+        Var(VarExpr {
+            init: Some(init), ..
         }) => {
             collect_funcs(init, funcs);
         }
-        Expr::Var(VarExpr {
-            var: Var { init: None, .. },
-        }) => (),
-        Expr::Call(expr) => {
+        Var(VarExpr { init: None, .. }) => (),
+        Call(expr) => {
             if let Func::UserDefined(func) = &expr.func {
                 funcs.insert(func.clone());
                 collect_funcs(&*func.result, funcs);
@@ -35,46 +32,46 @@ pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<UserDefinedFunc>) {
                 collect_funcs(arg, funcs);
             }
         }
-        Expr::Literal(_) => (),
-        Expr::Field(expr) => {
+        Literal(_) => (),
+        Field(expr) => {
             collect_funcs(&*expr.base, funcs);
         }
-        Expr::BuiltInVar(_) => (),
+        BuiltInVar(_) => (),
     }
 }
 
-pub fn collect_vars(expr: &Expr, vars: &mut BTreeSet<Var>) {
+pub fn collect_vars(expr: &Expr, vars: &mut BTreeSet<VarExpr>) {
+    use Expr::*;
+
     match expr {
-        Expr::Binary(expr) => {
+        Binary(expr) => {
             collect_vars(&*expr.left, vars);
             collect_vars(&*expr.right, vars);
         }
-        Expr::Ternary(expr) => {
+        Ternary(expr) => {
             collect_vars(&*expr.cond, vars);
             collect_vars(&*expr.true_expr, vars);
             collect_vars(&*expr.false_expr, vars);
         }
-        Expr::Var(VarExpr {
-            var: var @ Var {
+        Var(
+            var @ VarExpr {
                 init: Some(init), ..
             },
-        }) => {
+        ) => {
             vars.insert(var.clone());
             collect_vars(init, vars);
         }
-        Expr::Var(VarExpr {
-            var: Var { init: None, .. },
-        }) => (),
-        Expr::Call(CallExpr { args, .. }) => {
+        Var(VarExpr { init: None, .. }) => (),
+        Call(CallExpr { args, .. }) => {
             for arg in args {
                 collect_vars(arg, vars);
             }
         }
-        Expr::Literal(_) => (),
-        Expr::Field(expr) => {
+        Literal(_) => (),
+        Field(expr) => {
             collect_vars(&*expr.base, vars);
         }
-        Expr::BuiltInVar(_) => (),
+        BuiltInVar(_) => (),
     }
 }
 
@@ -171,14 +168,16 @@ pub fn show_user_defined_funcs(func: &UserDefinedFunc) -> String {
 }
 
 pub fn show_binary_op(op: BinaryOp) -> String {
+    use BinaryOp::*;
+
     match op {
-        BinaryOp::Add => "+".into(),
-        BinaryOp::Sub => "-".into(),
-        BinaryOp::Mul => "*".into(),
-        BinaryOp::Div => "/".into(),
-        BinaryOp::Eq => "==".into(),
-        BinaryOp::And => "&&".into(),
-        BinaryOp::Or => "||".into(),
+        Add => "+".into(),
+        Sub => "-".into(),
+        Mul => "*".into(),
+        Div => "/".into(),
+        Eq => "==".into(),
+        And => "&&".into(),
+        Or => "||".into(),
     }
 }
 
@@ -198,7 +197,7 @@ pub fn show_expr(expr: &Expr) -> String {
             show_expr(&*expr.true_expr),
             show_expr(&*expr.false_expr),
         ),
-        Var(expr) => expr.var.ident.to_string(),
+        Var(expr) => expr.ident.to_string(),
         Call(expr) => {
             let args: Vec<_> = expr.args.iter().map(show_expr).collect();
             format!("{}({})", expr.func.name(), args.join(", "),)

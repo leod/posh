@@ -51,13 +51,6 @@ impl ToString for Ident {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Var {
-    pub ident: Ident,
-    pub ty: Ty,
-    pub init: Option<Box<Expr>>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Func {
     BuiltIn(BuiltInFunc),
     UserDefined(UserDefinedFunc),
@@ -73,7 +66,7 @@ pub struct BuiltInFunc {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct UserDefinedFunc {
     pub ident: Ident,
-    pub params: Vec<Var>,
+    pub params: Vec<VarExpr>,
     pub result: Box<Expr>,
 }
 
@@ -185,7 +178,9 @@ pub struct TernaryExpr {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct VarExpr {
-    pub var: Var,
+    pub ident: Ident,
+    pub ty: Ty,
+    pub init: Option<Box<Expr>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -222,7 +217,7 @@ impl Expr {
                 assert!(expr.true_expr.ty() == expr.false_expr.ty());
                 expr.true_expr.ty()
             }
-            Var(expr) => expr.var.ty.clone(),
+            Var(expr) => expr.ty.clone(),
             Call(expr) => expr.func.ty(),
             Literal(expr) => expr.literal.ty.clone(),
             Field(expr) => expr.ty.clone(),

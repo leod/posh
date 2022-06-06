@@ -1,7 +1,7 @@
 use crate::{
     lang::{
         BinaryExpr, BinaryOp, BuiltInFunc, CallExpr, Expr, FieldExpr, Func, Ident, TernaryExpr,
-        UserDefinedFunc, Var, VarExpr,
+        UserDefinedFunc, VarExpr,
     },
     Bool,
 };
@@ -119,7 +119,7 @@ pub fn or(left: impl IntoValue<Value = Bool>, right: impl IntoValue<Value = Bool
     binary(left, BinaryOp::Or, right)
 }
 
-pub fn func_call<V>(name: impl Into<String>, params: Vec<Var>, result: V, args: Vec<Expr>) -> V
+pub fn func_call<V>(name: impl Into<String>, params: Vec<VarExpr>, result: V, args: Vec<Expr>) -> V
 where
     V: Value,
 {
@@ -141,13 +141,13 @@ where
 {
     let init = Some(Box::new(init.expr()));
 
-    let var = Var {
+    let var = VarExpr {
         ident: Ident::new("var"),
         ty: V::Type::ty(),
         init,
     };
 
-    let expr = Expr::Var(VarExpr { var });
+    let expr = Expr::Var(var);
 
     Value::from_expr(expr)
 }
