@@ -1,4 +1,7 @@
-use crate::{Vec4, I32, F32, Value, lang::{Type, TypeBuiltIn}};
+use crate::{
+    lang::{Type, TypeBuiltIn},
+    Value, Vec4, F32, I32,
+};
 
 pub trait Param {}
 
@@ -73,6 +76,13 @@ pub struct FragmentOut<F: Fragment> {
 
 impl<F: Fragment> FragmentOut<F> {
     pub fn new(fragment: F) -> Self {
-        Self { fragment, frag_depth: None }
+        Self {
+            fragment,
+            frag_depth: None,
+        }
     }
 }
+
+pub type VertexShader<P: ParamSets, U: VertexSet, V: Varying> = fn(P, VertexIn<U>) -> VertexOut<V>;
+pub type FragmentShader<P: ParamSets, V: Varying, F: Fragment> =
+    fn(P, FragmentIn<V>) -> FragmentOut<F>;

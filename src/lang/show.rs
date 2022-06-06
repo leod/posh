@@ -2,7 +2,7 @@ use std::collections::BTreeSet;
 
 use super::{
     BinOp, Expr, ExprBinary, ExprCall, ExprField, ExprTernary, ExprVar, Func, FuncUserDefined,
-    ScalarType, Type, Var, TypeBuiltIn,
+    ScalarType, Type, TypeBuiltIn, Var,
 };
 
 pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<FuncUserDefined>) {
