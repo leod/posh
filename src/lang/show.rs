@@ -1,5 +1,7 @@
 use std::collections::BTreeSet;
 
+use crate::lang::Ident;
+
 use super::{
     BinaryOp, BuiltInTy, CallExpr, Expr, Func, ScalarTy, StructTy, Ty, UserDefinedFunc, VarExpr,
 };
@@ -9,6 +11,17 @@ pub fn collect_structs(expr: &Expr, structs: &mut BTreeSet<StructTy>) {
 
     if let Ty::Struct(ref ty) = expr.ty() {
         structs.insert(ty.clone());
+
+        for (name, ty) in ty.fields.iter() {
+            collect_structs(
+                &Expr::Var(VarExpr {
+                    ident: Ident::new(name),
+                    ty: ty.clone(),
+                    init: None,
+                }),
+                structs,
+            );
+        }
     }
 
     match expr {
