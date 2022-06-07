@@ -21,9 +21,11 @@ pub trait Type {
     fn ty() -> Ty;
 }
 
-pub trait Transparent {
+pub trait Transparent: Type {
     #[doc(hidden)]
     fn transparent();
+
+    fn into_value(self) -> Self::Value;
 }
 
 pub trait BuiltIn: Type {
@@ -34,7 +36,7 @@ pub trait Struct: Type {
     fn struct_ty() -> StructTy;
 }
 
-pub type Val<T> = <T as Type>::Value;
+pub type Val<T> = <T as IntoValue>::Value;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Trace {

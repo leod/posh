@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use crate::{
     lang::{BuiltInTy, BuiltInVarExpr, CallExpr, Expr, Func, Ident, Ty, UserDefinedFunc, VarExpr},
     value::{BuiltIn, BuiltInValue},
-    Struct, Type, Val, Value, Vec3, Vec4, F32, I32,
+    Struct, Transparent, Type, Val, Value, Vec3, Vec4, F32, I32,
 };
 
 pub trait Descriptor {
@@ -29,15 +29,15 @@ where
     }
 }
 
-pub trait Vertex: Struct {}
+pub trait Vertex: Struct + Transparent {}
 
-pub trait VertexSet: Struct {}
+pub trait VertexSet: Struct + Transparent {}
 
 impl<V: Vertex> VertexSet for V {}
 
-pub trait Varying: Struct {}
+pub trait Varying: Struct + Transparent {}
 
-pub trait Fragment: Struct {}
+pub trait Fragment: Struct + Transparent {}
 
 #[derive(Clone, Copy)]
 pub struct VertIn<V: VertexSet> {
