@@ -15,12 +15,11 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
         )),
     };
 
-    let type_trait_path: Path = parse_quote!(::posh::value::Type);
-    let struct_trait_path: Path = parse_quote!(::posh::value::Struct);
-
     let name = input.ident;
     let vis = input.vis;
     let name_str = name.to_string();
+
+    // FIXME: Using UUIDs in proc macros might break incremental compilation.
     let uuid_str = Uuid::new_v4().to_string();
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
@@ -78,7 +77,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             }
         }
 
-        impl #impl_generics #type_trait_path for #name #ty_generics #where_clause {
+        impl #impl_generics ::posh::Type for #name #ty_generics #where_clause {
             type Value = #posh_name #ty_generics;
 
             fn ty() -> ::posh::lang::Ty {
@@ -86,7 +85,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             }
         }
 
-        impl #impl_generics #struct_trait_path for #name #ty_generics #where_clause {
+        impl #impl_generics ::posh::Struct for #name #ty_generics #where_clause {
             fn struct_ty() -> ::posh::lang::StructTy {
                 let ident = ::posh::lang::Ident {
                     name: #name_str.to_string(),

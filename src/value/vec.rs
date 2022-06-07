@@ -6,7 +6,8 @@ use crate::{
 };
 
 use super::{
-    binary, builtin3, field, scalar::NumericType, BuiltIn, Scalar, ScalarType, Trace, Type,
+    binary, builtin3, field, scalar::NumericType, BuiltIn, Scalar, ScalarType, Trace, Transparent,
+    Type,
 };
 
 impl<T: ScalarType> Type for [T; 3] {
@@ -17,12 +18,20 @@ impl<T: ScalarType> Type for [T; 3] {
     }
 }
 
+impl<T: ScalarType> Transparent for [T; 3] {
+    fn transparent() {}
+}
+
 impl<T: ScalarType> Type for [T; 4] {
     type Value = Vec4<T>;
 
     fn ty() -> Ty {
         Ty::BuiltIn(Self::built_in_ty())
     }
+}
+
+impl<T: ScalarType> Transparent for [T; 4] {
+    fn transparent() {}
 }
 
 impl<T: ScalarType> BuiltIn for [T; 3] {

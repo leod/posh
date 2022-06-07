@@ -1,4 +1,4 @@
-use posh::{shader, FragIn, FragOut, Shader, Struct, Val, VertIn, VertOut};
+use posh::{shader, FragIn, FragOut, Shader, Struct, Transparent, Val, VertIn, VertOut};
 
 #[derive(Struct)]
 struct ModelToClip {
@@ -6,7 +6,7 @@ struct ModelToClip {
     view_to_clip: [f32; 3],
 }
 
-#[derive(posh::Struct)]
+#[derive(Struct)]
 struct ParamSet {
     modelview: [f32; 3],
 }
@@ -20,7 +20,7 @@ impl posh::Descriptor for  {
 }
 */
 
-#[derive(posh::Struct)]
+#[derive(Struct)]
 struct Vertex {
     position: [f32; 3],
     normal: [f32; 3],
@@ -29,7 +29,7 @@ struct Vertex {
 
 impl posh::Vertex for Vertex {}
 
-#[derive(posh::Struct)]
+#[derive(Struct)]
 struct Varying {
     color: [f32; 3],
     normal: [f32; 3],
@@ -37,7 +37,7 @@ struct Varying {
 
 impl posh::Varying for Varying {}
 
-#[derive(posh::Struct)]
+#[derive(Struct, Transparent)]
 struct Fragment {
     color: [f32; 3],
     normal: [f32; 3],

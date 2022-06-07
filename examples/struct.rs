@@ -1,12 +1,12 @@
-use posh::{posh, IntoValue as _, Val, Value};
+use posh::{posh, IntoValue as _, Struct, Val, Value};
 
-#[derive(posh::Struct, Default)]
+#[derive(Struct, Default)]
 pub struct Helper {
     x: i32,
     y: i32,
 }
 
-#[derive(posh::Struct)]
+#[derive(Struct)]
 pub struct Vertex {
     pos: i32,
     time: f32,

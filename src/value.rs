@@ -21,6 +21,11 @@ pub trait Type {
     fn ty() -> Ty;
 }
 
+pub trait Transparent {
+    #[doc(hidden)]
+    fn transparent();
+}
+
 pub trait BuiltIn: Type {
     fn built_in_ty() -> BuiltInTy;
 }

@@ -8,8 +8,9 @@ use crate::{
     Bool,
 };
 
-use super::{IntoValue, Trace, Type, Value};
+use super::{IntoValue, Trace, Transparent, Type, Value};
 
+#[doc(hidden)]
 pub fn common_field_base(exprs: &[Expr]) -> Option<Expr> {
     exprs.first().and_then(|first_expr| {
         if let Expr::Field(first_field_expr) = first_expr {
@@ -175,6 +176,7 @@ where
 pub fn var<V>(init: V) -> V
 where
     V: Value,
+    V::Type: Transparent,
 {
     let init = Some(Rc::new(init.expr()));
 
@@ -196,6 +198,7 @@ pub fn ternary<V>(
 ) -> V
 where
     V: Value,
+    V::Type: Transparent,
 {
     let cond = Rc::new(cond.into_value().expr());
     let true_expr = Rc::new(true_value.into_value().expr());

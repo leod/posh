@@ -5,7 +5,7 @@ use std::{
 
 use crate::lang::{BinaryOp, BuiltInTy, Expr, Literal, LiteralExpr, ScalarTy, Ty};
 
-use super::{binary, BuiltIn, IntoValue, Trace, Type, Value};
+use super::{binary, BuiltIn, IntoValue, Trace, Transparent, Type, Value};
 
 pub trait ScalarType: BuiltIn + Copy + Into<Literal> + IntoValue<Value = Scalar<Self>> {
     fn scalar_ty() -> ScalarTy;
@@ -49,6 +49,13 @@ where
     fn ty() -> Ty {
         Ty::BuiltIn(Self::built_in_ty())
     }
+}
+
+impl<T> Transparent for T
+where
+    T: ScalarType,
+{
+    fn transparent() {}
 }
 
 impl<T> Scalar<T>
