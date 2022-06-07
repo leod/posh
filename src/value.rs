@@ -16,7 +16,7 @@ pub(crate) use primitives::{binary, builtin1, builtin2, builtin3};
 use expr_reg::ExprId;
 
 pub trait Type {
-    type Value: Value;
+    type Value: Value<Type = Self>;
 
     fn ty() -> Ty;
 }
