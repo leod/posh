@@ -1,4 +1,4 @@
-use posh::{shader, FragmentIn, FragmentOut, Shader, Val, VertexIn, VertexOut};
+use posh::{shader, FragIn, FragOut, Shader, Val, VertIn, VertOut};
 
 #[derive(posh::Struct)]
 struct ParamSet {
@@ -32,10 +32,10 @@ struct Fragment {
 
 impl posh::Fragment for Fragment {}
 
-fn vertex(params: Val<ParamSet>, input: VertexIn<Vertex>) -> VertexOut<Varying> {
+fn vertex(params: Val<ParamSet>, input: VertIn<Vertex>) -> VertOut<Varying> {
     use posh::prelude::*;
 
-    VertexOut {
+    VertOut {
         position: params.modelview * input.vertex.position,
         varying: Val::<Varying> {
             color: vec3(255.0, 0.0, 0.0),
@@ -44,7 +44,7 @@ fn vertex(params: Val<ParamSet>, input: VertexIn<Vertex>) -> VertexOut<Varying> 
     }
 }
 
-fn fragment(params: Val<ParamSet>, input: FragmentIn<Varying>) -> FragmentOut<Fragment> {
+fn fragment(params: Val<ParamSet>, input: FragIn<Varying>) -> FragOut<Fragment> {
     use posh::prelude::*;
 
     let fragment = var(Val::<Fragment> {
@@ -52,7 +52,7 @@ fn fragment(params: Val<ParamSet>, input: FragmentIn<Varying>) -> FragmentOut<Fr
         normal: input.varying.normal,
     });
 
-    FragmentOut::new(fragment)
+    FragOut::new(fragment)
 }
 
 fn main() {

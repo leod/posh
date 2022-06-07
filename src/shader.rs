@@ -25,23 +25,23 @@ pub trait Varying: Struct {}
 pub trait Fragment: Struct {}
 
 #[derive(Clone, Copy)]
-pub struct VertexIn<V: VertexSet> {
+pub struct VertIn<V: VertexSet> {
     pub vertex: Val<V>,
     pub vertex_id: I32,
     pub instance_id: I32,
 }
 
-pub struct VertexOut<W: Varying> {
+pub struct VertOut<W: Varying> {
     pub position: Vec3<f32>,
     pub varying: Val<W>,
 }
 
-pub struct FragmentIn<W: Varying> {
+pub struct FragIn<W: Varying> {
     pub varying: Val<W>,
     pub frag_coord: Vec4<f32>,
 }
 
-pub struct FragmentOut<R: Fragment> {
+pub struct FragOut<R: Fragment> {
     pub fragment: Val<R>,
     pub frag_depth: Option<F32>,
 }
@@ -89,7 +89,7 @@ fn func_arg<V: Value>(name: &'static str) -> V {
     V::from_expr(expr)
 }
 
-impl<R: Fragment> FragmentOut<R> {
+impl<R: Fragment> FragOut<R> {
     pub fn new(fragment: Val<R>) -> Self {
         Self {
             fragment,
@@ -98,7 +98,7 @@ impl<R: Fragment> FragmentOut<R> {
     }
 }
 
-impl<V: VertexSet> VertexIn<V> {
+impl<V: VertexSet> VertIn<V> {
     pub fn new(vertex: Val<V>) -> Self {
         Self {
             vertex,
@@ -112,7 +112,7 @@ impl<V: VertexSet> VertexIn<V> {
     }
 }
 
-impl<W: Varying> FragmentIn<W> {
+impl<W: Varying> FragIn<W> {
     pub fn new(varying: Val<W>) -> Self {
         Self {
             varying,
@@ -134,11 +134,11 @@ where
     pub fn new<W, VS, FS>(vertex_stage: VS, fragment_stage: FS) -> Self
     where
         W: Varying,
-        VS: FnOnce(Val<P>, VertexIn<V>) -> VertexOut<W>,
-        FS: FnOnce(Val<P>, FragmentIn<W>) -> FragmentOut<R>,
+        VS: FnOnce(Val<P>, VertIn<V>) -> VertOut<W>,
+        FS: FnOnce(Val<P>, FragIn<W>) -> FragOut<R>,
     {
-        let vertex_out = vertex_stage(func_arg("params"), VertexIn::func_arg());
-        let fragment_out = fragment_stage(func_arg("params"), FragmentIn::func_arg());
+        let vertex_out = vertex_stage(func_arg("params"), VertIn::func_arg());
+        let fragment_out = fragment_stage(func_arg("params"), FragIn::func_arg());
 
         let vertex = VertexFunc {
             position: vertex_out.position.expr(),
@@ -164,8 +164,8 @@ where
     V: VertexSet,
     R: Fragment,
     W: Varying,
-    VS: FnOnce(Val<P>, VertexIn<V>) -> VertexOut<W>,
-    FS: FnOnce(Val<P>, FragmentIn<W>) -> FragmentOut<R>,
+    VS: FnOnce(Val<P>, VertIn<V>) -> VertOut<W>,
+    FS: FnOnce(Val<P>, FragIn<W>) -> FragOut<R>,
 {
     Shader::<P, V, R>::new(vertex_stage, fragment_stage)
 }
