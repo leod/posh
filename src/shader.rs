@@ -6,13 +6,28 @@ use crate::{
     Struct, Type, Val, Value, Vec3, Vec4, F32, I32,
 };
 
-pub trait Param {}
+pub trait Descriptor {
+    type Param;
 
-pub trait ParamSet: Struct {}
+    fn func_arg(name: String) -> Self;
+}
 
-pub trait ParamSets: Struct {}
+pub trait DescriptorSet {
+    type Param;
 
-impl<P: ParamSet> ParamSets for P {}
+    fn func_arg(name: String) -> Self;
+}
+
+impl<D> DescriptorSet for D
+where
+    D: Descriptor + Struct,
+{
+    type Param = <D as Type>::Value;
+
+    fn func_arg(name: String) -> Self {
+        todo!()
+    }
+}
 
 pub trait Vertex: Struct {}
 
@@ -125,20 +140,21 @@ impl<W: Varying> FragIn<W> {
     }
 }
 
-impl<P, V, R> Shader<P, V, R>
+impl<D, V, R> Shader<D, V, R>
 where
-    P: ParamSets,
+    D: DescriptorSet,
     V: VertexSet,
     R: Fragment,
 {
     pub fn new<W, VS, FS>(vertex_stage: VS, fragment_stage: FS) -> Self
     where
         W: Varying,
-        VS: FnOnce(Val<P>, VertIn<V>) -> VertOut<W>,
-        FS: FnOnce(Val<P>, FragIn<W>) -> FragOut<R>,
+        VS: FnOnce(D, VertIn<V>) -> VertOut<W>,
+        FS: FnOnce(D, FragIn<W>) -> FragOut<R>,
     {
-        let vertex_out = vertex_stage(func_arg("params"), VertIn::func_arg());
-        let fragment_out = fragment_stage(func_arg("params"), FragIn::func_arg());
+        let params = || D::func_arg("params".to_string());
+        let vertex_out = vertex_stage(params(), VertIn::func_arg());
+        let fragment_out = fragment_stage(params(), FragIn::func_arg());
 
         let vertex = VertexFunc {
             position: vertex_out.position.expr(),
@@ -158,6 +174,7 @@ where
     }
 }
 
+/*
 pub fn shader<P, V, R, W, VS, FS>(vertex_stage: VS, fragment_stage: FS) -> Shader<P, V, R>
 where
     P: ParamSets,
@@ -169,3 +186,4 @@ where
 {
     Shader::<P, V, R>::new(vertex_stage, fragment_stage)
 }
+*/
