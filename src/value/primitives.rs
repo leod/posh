@@ -82,7 +82,7 @@ where
     R::from_expr(expr)
 }
 
-pub(crate) fn builtin1<U, R>(name: &str, x: impl IntoValue<Value = U>) -> R
+pub(crate) fn builtin1<U, R>(name: &str, u: impl IntoValue<Value = U>) -> R
 where
     U: Value,
     R: Value,
@@ -93,7 +93,7 @@ where
     });
     let expr = Expr::Call(CallExpr {
         func,
-        args: vec![x.into_value().expr()],
+        args: vec![u.into_value().expr()],
     });
 
     R::from_expr(expr)
@@ -101,8 +101,8 @@ where
 
 pub(crate) fn builtin2<U, V, R>(
     name: &str,
-    x: impl IntoValue<Value = U>,
-    y: impl IntoValue<Value = V>,
+    u: impl IntoValue<Value = U>,
+    v: impl IntoValue<Value = V>,
 ) -> R
 where
     U: Value,
@@ -115,7 +115,7 @@ where
     });
     let expr = Expr::Call(CallExpr {
         func,
-        args: vec![x.into_value().expr(), y.into_value().expr()],
+        args: vec![u.into_value().expr(), v.into_value().expr()],
     });
 
     R::from_expr(expr)
@@ -123,9 +123,9 @@ where
 
 pub(crate) fn builtin3<U, V, W, R>(
     name: &str,
-    x: impl IntoValue<Value = U>,
-    y: impl IntoValue<Value = V>,
-    z: impl IntoValue<Value = W>,
+    u: impl IntoValue<Value = U>,
+    v: impl IntoValue<Value = V>,
+    w: impl IntoValue<Value = W>,
 ) -> R
 where
     U: Value,
@@ -140,9 +140,40 @@ where
     let expr = Expr::Call(CallExpr {
         func,
         args: vec![
+            u.into_value().expr(),
+            v.into_value().expr(),
+            w.into_value().expr(),
+        ],
+    });
+
+    R::from_expr(expr)
+}
+
+pub(crate) fn builtin4<U, V, W, X, R>(
+    name: &str,
+    u: impl IntoValue<Value = U>,
+    v: impl IntoValue<Value = V>,
+    w: impl IntoValue<Value = W>,
+    x: impl IntoValue<Value = X>,
+) -> R
+where
+    U: Value,
+    V: Value,
+    W: Value,
+    X: Value,
+    R: Value,
+{
+    let func = Func::BuiltIn(BuiltInFunc {
+        name: name.into(),
+        ty: <R::Type as Type>::ty(),
+    });
+    let expr = Expr::Call(CallExpr {
+        func,
+        args: vec![
+            u.into_value().expr(),
+            v.into_value().expr(),
+            w.into_value().expr(),
             x.into_value().expr(),
-            y.into_value().expr(),
-            z.into_value().expr(),
         ],
     });
 

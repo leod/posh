@@ -11,21 +11,17 @@ pub use primitives::{and, common_field_base, field, func_call, or, ternary, var}
 pub use scalar::{Bool, Scalar, ScalarType, F32, I32, U32};
 pub use vec::{vec3, Vec3, Vec4};
 
-pub(crate) use primitives::{binary, builtin1, builtin2, builtin3};
+pub(crate) use primitives::{binary, builtin1, builtin2, builtin3, builtin4};
 
 use expr_reg::ExprId;
 
 pub trait Type {
-    type Value: Value<Type = Self>;
-
     fn ty() -> Ty;
 }
 
-pub trait Transparent: Type {
+pub trait Transparent: Type + IntoValue {
     #[doc(hidden)]
     fn transparent();
-
-    fn into_value(self) -> Self::Value;
 }
 
 pub trait BuiltIn: Type {

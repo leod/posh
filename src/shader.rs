@@ -7,14 +7,10 @@ use crate::{
 };
 
 pub trait Descriptor {
-    type Param;
-
     fn func_arg(name: String) -> Self;
 }
 
 pub trait DescriptorSet {
-    type Param;
-
     fn func_arg(name: String) -> Self;
 }
 
@@ -22,8 +18,6 @@ impl<D> DescriptorSet for D
 where
     D: Descriptor + Struct,
 {
-    type Param = <D as Type>::Value;
-
     fn func_arg(name: String) -> Self {
         todo!()
     }

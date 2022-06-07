@@ -44,8 +44,6 @@ impl<T> Type for T
 where
     T: ScalarType,
 {
-    type Value = Scalar<T>;
-
     fn ty() -> Ty {
         Ty::BuiltIn(Self::built_in_ty())
     }

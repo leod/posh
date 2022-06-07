@@ -6,13 +6,11 @@ use crate::{
 };
 
 use super::{
-    binary, builtin3, field, scalar::NumericType, BuiltIn, Scalar, ScalarType, Trace, Transparent,
-    Type,
+    binary, builtin3, builtin4, field, scalar::NumericType, BuiltIn, Scalar, ScalarType, Trace,
+    Transparent, Type,
 };
 
 impl<T: ScalarType> Type for [T; 3] {
-    type Value = Vec3<T>;
-
     fn ty() -> Ty {
         Ty::BuiltIn(Self::built_in_ty())
     }
@@ -23,8 +21,6 @@ impl<T: ScalarType> Transparent for [T; 3] {
 }
 
 impl<T: ScalarType> Type for [T; 4] {
-    type Value = Vec4<T>;
-
     fn ty() -> Ty {
         Ty::BuiltIn(Self::built_in_ty())
     }
@@ -79,6 +75,14 @@ impl<T: ScalarType> IntoValue for [T; 3] {
 
     fn into_value(self) -> Self::Value {
         vec3(self[0], self[1], self[2])
+    }
+}
+
+impl<T: ScalarType> IntoValue for [T; 4] {
+    type Value = Vec3<T>;
+
+    fn into_value(self) -> Self::Value {
+        vec4(self[0], self[1], self[2], self[3])
     }
 }
 
@@ -200,4 +204,13 @@ pub fn vec3<T: ScalarType>(
     z: impl IntoValue<Value = Scalar<T>>,
 ) -> Vec3<T> {
     builtin3("vec3", x, y, z)
+}
+
+pub fn vec4<T: ScalarType>(
+    x: impl IntoValue<Value = Scalar<T>>,
+    y: impl IntoValue<Value = Scalar<T>>,
+    z: impl IntoValue<Value = Scalar<T>>,
+    w: impl IntoValue<Value = Scalar<T>>,
+) -> Vec3<T> {
+    builtin4("vec4", x, y, z, w)
 }

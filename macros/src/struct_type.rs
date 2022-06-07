@@ -78,8 +78,6 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
         }
 
         impl #impl_generics ::posh::Type for #name #ty_generics #where_clause {
-            type Value = #posh_name #ty_generics;
-
             fn ty() -> ::posh::lang::Ty {
                 ::posh::lang::Ty::Struct(<#name as ::posh::Struct>::struct_ty())
             }
