@@ -40,6 +40,17 @@ where
     }
 }
 
+impl<T> Type for T
+where
+    T: ScalarType,
+{
+    type Value = Scalar<T>;
+
+    fn ty() -> Ty {
+        Ty::BuiltIn(Self::built_in_ty())
+    }
+}
+
 impl<T> Scalar<T>
 where
     T: ScalarType,
@@ -103,14 +114,6 @@ impl_binary_op!(div, Div);
 
 macro_rules! impl_scalar {
     ($ty:ty, $name:ident) => {
-        impl Type for $ty {
-            type Value = Scalar<$ty>;
-
-            fn ty() -> Ty {
-                Ty::BuiltIn(Self::built_in_ty())
-            }
-        }
-
         impl BuiltIn for $ty {
             fn built_in_ty() -> BuiltInTy {
                 BuiltInTy::Scalar(Self::scalar_ty())
