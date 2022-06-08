@@ -57,11 +57,11 @@ pub struct FragOut<R: FragmentOutputs> {
 
 pub struct VertexFunc {
     pub position: Expr,
-    pub varying: Expr,
+    pub outputs: Expr,
 }
 
 pub struct FragmentFunc {
-    pub fragment: Expr,
+    pub outputs: Expr,
     pub frag_depth: Option<Expr>,
 }
 
@@ -155,11 +155,11 @@ where
 
         let vertex = VertexFunc {
             position: vertex_out.position.expr(),
-            varying: vertex_out.varying.expr(),
+            outputs: vertex_out.varying.expr(),
         };
 
         let fragment = FragmentFunc {
-            fragment: fragment_out.fragment.expr(),
+            outputs: fragment_out.fragment.expr(),
             frag_depth: fragment_out.frag_depth.map(|v| v.expr()),
         };
 
