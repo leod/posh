@@ -40,6 +40,10 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
 
                 #(
                     sa::assert_impl_all!(#input_tys: ::posh::Value);
+                    sa::assert_impl_all!(
+                        <#input_tys as ::posh::Value>::Type:
+                        ::posh::value::FuncArg,
+                    );
                 )*
             };
 

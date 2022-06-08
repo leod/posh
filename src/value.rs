@@ -28,6 +28,8 @@ pub trait BuiltIn: Type {
     fn built_in_ty() -> BuiltInTy;
 }
 
+pub trait FuncArg: Type {}
+
 pub trait Struct: Type {
     fn struct_ty() -> StructTy;
 }
@@ -78,6 +80,8 @@ pub trait IntoValue {
 
     fn into_value(self) -> Self::Value;
 }
+
+impl<T: Transparent> FuncArg for T {}
 
 impl<T, V> BuiltInValue for V
 where
