@@ -1,7 +1,9 @@
-use posh::{posh, Sampler2d, Value, Vec3, Vec4, F32};
+use posh::{posh, IntoValue, Sampler2d, Value, Vec3, Vec4, F32};
 
-#[posh]
+//#[posh]
 fn foo(x: F32, y: F32) -> F32 {
+    use posh::prelude::*;
+
     let z = var(x * y);
     let w = var(1.0 + y + x + 1.0);
 
@@ -17,15 +19,21 @@ fn bar(x: F32) -> F32 {
 #[posh]
 fn texture_thing(sampler: Sampler2d) -> Vec4<f32> {
     let c = var(sampler.load(vec3(1.0, 2.0, 3.0)));
-    sampler.load(vec3(c.z, 2.0 * c.y, -1.0))
+    sampler.load(vec3(
+        c.z,
+        2.0 * c.y,
+        foo(1.0f32.into_value(), 2.0f32.into_value()),
+    ))
 }
 
+/*
 #[posh]
 fn baz() -> Vec3<f32> {
     let dings = var(vec3(foo(1.0, 2.0), bar(42.0), -1.0));
     let thing = var(vec3(dings.z, dings.x * 3.0, dings.y));
     thing * (dings.normalize() / 5.0)
 }
+*/
 
 fn main() {
     let sampler = Sampler2d::func_arg("test"); // hack
