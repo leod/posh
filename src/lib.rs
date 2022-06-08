@@ -3,6 +3,7 @@ pub mod prelude;
 pub mod shader;
 pub mod value;
 
+pub use static_assertions;
 pub use uuid;
 
 pub use prelude::*;

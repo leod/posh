@@ -10,7 +10,8 @@ fn foo(x: F32, y: F32) -> F32 {
 
 #[posh]
 fn bar(x: F32) -> F32 {
-    ternary(x.eq(5.0), x.atan2(2.0), -1.0)
+    //ternary(x.eq(5.0), x.atan2(2.0), -1.0)
+    5.0
 }
 
 #[posh]

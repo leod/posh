@@ -4,15 +4,17 @@ use syn::{parse_quote, Error, FnArg, ItemFn, Pat, Result};
 
 pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
     let mut input_idents = Vec::new();
+    let mut input_tys = Vec::new();
 
     for input in item.sig.inputs.iter_mut() {
         if let FnArg::Typed(input) = input {
-            let input_ty = &input.ty;
-            input.ty = parse_quote! { impl ::posh::value::IntoValue<Value = #input_ty> };
-
             match &*input.pat {
                 Pat::Ident(ident) => {
                     input_idents.push(ident.ident.clone());
+                    input_tys.push(input.ty.clone());
+
+                    let input_ty = &input.ty;
+                    input.ty = parse_quote! { impl ::posh::value::IntoValue<Value = #input_ty> };
                 }
                 _ => {
                     return Err(Error::new_spanned(
@@ -32,6 +34,14 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
     item.block = parse_quote! {
         {
             use ::posh::Value as _;
+
+            const _: fn() = || {
+                use ::posh::static_assertions as sa;
+
+                #(
+                    sa::assert_impl_all!(#input_tys: ::posh::Value);
+                )*
+            };
 
             #(
                 let #input_idents = ::posh::IntoValue::into_value(#input_idents);
@@ -68,7 +78,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                 ],
                 {
                     use ::posh::prelude::*;
-                    #func_body
+                    ::posh::IntoValue::into_value(#func_body)
                 },
                 #args_ident,
             )
