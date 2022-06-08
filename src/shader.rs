@@ -31,7 +31,7 @@ impl<V: Vertex> VertexAttributes for V {}
 
 pub trait VertexOutputs: Struct + Transparent {}
 
-pub trait Fragment: Struct + Transparent {}
+pub trait FragmentOutputs: Struct + Transparent {}
 
 #[derive(Clone, Copy)]
 pub struct VertIn<V: VertexAttributes> {
@@ -50,7 +50,7 @@ pub struct FragIn<W: VertexOutputs> {
     pub frag_coord: Vec4<f32>,
 }
 
-pub struct FragOut<R: Fragment> {
+pub struct FragOut<R: FragmentOutputs> {
     pub fragment: Val<R>,
     pub frag_depth: Option<F32>,
 }
@@ -98,7 +98,7 @@ fn func_arg<V: Value>(name: &'static str) -> V {
     V::from_expr(expr)
 }
 
-impl<R: Fragment> FragOut<R> {
+impl<R: FragmentOutputs> FragOut<R> {
     pub fn new(fragment: Val<R>) -> Self {
         Self {
             fragment,
@@ -138,14 +138,14 @@ impl<D, V, R> Shader<D, V, R>
 where
     D: DescriptorSet,
     V: VertexAttributes,
-    R: Fragment,
+    R: FragmentOutputs,
 {
     pub fn new<W, VS, FS>(vertex_stage: VS, fragment_stage: FS) -> Self
     where
         D: DescriptorSet,
         V: VertexAttributes,
         W: VertexOutputs,
-        R: Fragment,
+        R: FragmentOutputs,
         VS: FnOnce(D, VertIn<V>) -> VertOut<W>,
         FS: FnOnce(D, FragIn<W>) -> FragOut<R>,
     {

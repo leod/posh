@@ -43,7 +43,7 @@ struct Fragment {
     normal: [f32; 3],
 }
 
-impl posh::Fragment for Fragment {}
+impl posh::FragmentOutputs for Fragment {}
 
 /*
 fn vertex(params: ParamSet, input: VertIn<Vertex>) -> VertOut<Varying> {
