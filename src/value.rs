@@ -1,6 +1,7 @@
 pub(crate) mod expr_reg;
 mod funcs;
 mod primitives;
+mod sampler;
 mod scalar;
 mod vec;
 
@@ -8,6 +9,7 @@ use crate::lang::{BuiltInTy, Expr, StructTy, Ty};
 
 pub use funcs::GenValue;
 pub use primitives::{and, common_field_base, field, func_call, or, ternary, var};
+pub use sampler::Sampler2d;
 pub use scalar::{Bool, Scalar, ScalarType, F32, I32, U32};
 pub use vec::{vec3, Vec3, Vec4};
 
@@ -19,22 +21,24 @@ pub trait Type {
     fn ty() -> Ty;
 }
 
+pub trait HasValue {
+    type Value: Value;
+}
+
 pub trait Transparent: Type + IntoValue {
     #[doc(hidden)]
     fn transparent();
 }
 
-pub trait BuiltIn: Type {
+pub trait BuiltIn: Type + HasValue + IntoValue {
     fn built_in_ty() -> BuiltInTy;
 }
 
-pub trait FuncArg: Type {}
+pub trait FuncArg: Type + HasValue {}
 
-pub trait Struct: Type {
+pub trait Struct: Type + HasValue {
     fn struct_ty() -> StructTy;
 }
-
-pub type Val<T> = <T as IntoValue>::Value;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Trace {
@@ -75,11 +79,11 @@ pub trait StructValue: Value {
     fn fields(&self) -> Vec<Expr>;
 }
 
-pub trait IntoValue {
-    type Value: Value;
-
+pub trait IntoValue: HasValue {
     fn into_value(self) -> Self::Value;
 }
+
+pub type Val<T> = <T as HasValue>::Value;
 
 impl<T: Transparent> FuncArg for T {}
 
@@ -91,9 +95,11 @@ where
     type BuiltInType = T;
 }
 
-impl<V: Value> IntoValue for V {
+impl<V: Value> HasValue for V {
     type Value = Self;
+}
 
+impl<V: Value> IntoValue for V {
     fn into_value(self) -> Self::Value {
         self
     }

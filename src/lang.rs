@@ -23,6 +23,7 @@ pub enum BuiltInTy {
     Scalar(ScalarTy),
     Vec3(ScalarTy),
     Vec4(ScalarTy),
+    Sampler2d,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

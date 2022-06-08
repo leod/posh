@@ -10,15 +10,15 @@ pub trait Descriptor {
     fn func_arg(name: String) -> Self;
 }
 
-pub trait DescriptorSet {
-    fn func_arg(name: String) -> Self;
+pub trait DescriptorSet: Struct {
+    fn func_arg(name: String) -> Val<Self>;
 }
 
 impl<D> DescriptorSet for D
 where
     D: Descriptor + Struct,
 {
-    fn func_arg(name: String) -> Self {
+    fn func_arg(name: String) -> Val<Self> {
         todo!()
     }
 }
@@ -146,8 +146,8 @@ where
         V: VertexAttributes,
         W: VertexOutputs,
         R: FragmentOutputs,
-        VS: FnOnce(D, VertIn<V>) -> VertOut<W>,
-        FS: FnOnce(D, FragIn<W>) -> FragOut<R>,
+        VS: FnOnce(Val<D>, VertIn<V>) -> VertOut<W>,
+        FS: FnOnce(Val<D>, FragIn<W>) -> FragOut<R>,
     {
         let params = || D::func_arg("params".to_string());
         let vertex_out = vertex_stage(params(), VertIn::func_arg());

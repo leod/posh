@@ -103,9 +103,11 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             }
         }
 
-        impl #impl_generics ::posh::IntoValue for #name #ty_generics #where_clause {
+        impl #impl_generics ::posh::value::HasValue for #name #ty_generics #where_clause {
             type Value = #posh_name #ty_generics;
+        }
 
+        impl #impl_generics ::posh::IntoValue for #name #ty_generics #where_clause {
             fn into_value(self) -> Self::Value {
                 let func = ::posh::lang::Func::Struct(::posh::lang::StructFunc {
                     ty: <#name as ::posh::Struct>::struct_ty(),

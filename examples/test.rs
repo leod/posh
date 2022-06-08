@@ -1,4 +1,4 @@
-use posh::{posh, Value, Vec3, F32};
+use posh::{posh, Sampler2d, Value, Vec3, Vec4, F32};
 
 #[posh]
 fn foo(x: F32, y: F32) -> F32 {
@@ -15,6 +15,12 @@ fn bar(x: F32) -> F32 {
 }
 
 #[posh]
+fn texture_thing(sampler: Sampler2d) -> Vec4<f32> {
+    let c = var(sampler.load(vec3(1.0, 2.0, 3.0)));
+    sampler.load(vec3(c.z, 2.0 * c.y, -1.0))
+}
+
+#[posh]
 fn baz() -> Vec3<f32> {
     let dings = var(vec3(foo(1.0, 2.0), bar(42.0), -1.0));
     let thing = var(vec3(dings.z, dings.x * 3.0, dings.y));
@@ -22,7 +28,10 @@ fn baz() -> Vec3<f32> {
 }
 
 fn main() {
-    let result = baz();
+    let sampler = Sampler2d::func_arg("test"); // hack
+    let result = texture_thing(sampler);
+
+    //let result = baz();
     //println!("{:#?}", result);
 
     if let posh::lang::Expr::Call(expr) = result.expr() {

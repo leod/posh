@@ -12,7 +12,7 @@ pub use shader::{
     DescriptorSet, FragIn, FragOut, FragmentOutputs, Shader, VertIn, VertOut, Vertex,
     VertexAttributes, VertexOutputs,
 };
-pub use value::{GenValue, IntoValue, Struct, Transparent, Type, Value};
+pub use value::{GenValue, IntoValue, Sampler2d, Struct, Transparent, Type, Value};
 
 pub use posh_macros::{posh, Struct, Transparent};
 

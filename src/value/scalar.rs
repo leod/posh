@@ -5,7 +5,7 @@ use std::{
 
 use crate::lang::{BinaryOp, BuiltInTy, Expr, Literal, LiteralExpr, ScalarTy, Ty};
 
-use super::{binary, BuiltIn, IntoValue, Trace, Transparent, Type, Value};
+use super::{binary, BuiltIn, HasValue, IntoValue, Trace, Transparent, Type, Value};
 
 pub trait ScalarType: BuiltIn + Copy + Into<Literal> + IntoValue<Value = Scalar<Self>> {
     fn scalar_ty() -> ScalarTy;
@@ -131,9 +131,11 @@ macro_rules! impl_scalar {
             }
         }
 
-        impl IntoValue for $ty {
+        impl HasValue for $ty {
             type Value = Scalar<$ty>;
+        }
 
+        impl IntoValue for $ty {
             fn into_value(self) -> Self::Value {
                 Scalar::new(self)
             }

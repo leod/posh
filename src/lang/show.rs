@@ -159,6 +159,7 @@ fn show_built_in_ty(ty: &BuiltInTy) -> String {
         Scalar(ty) => show_scalar_ty(*ty),
         Vec3(ty) => format!("{}vec3", scalar_type_prefix(*ty)),
         Vec4(ty) => format!("{}vec4", scalar_type_prefix(*ty)),
+        Sampler2d => "sampler2D".to_string(),
     }
 }
 
