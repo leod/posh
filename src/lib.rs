@@ -9,7 +9,8 @@ pub use uuid;
 pub use prelude::*;
 
 pub use shader::{
-    DescriptorSet, FragIn, FragOut, Fragment, Shader, Varying, VertIn, VertOut, Vertex, VertexSet,
+    DescriptorSet, FragIn, FragOut, Fragment, Shader, VertIn, VertOut, Vertex, VertexAttributes,
+    VertexOutputs,
 };
 pub use value::{GenValue, IntoValue, Struct, Transparent, Type, Value};
 

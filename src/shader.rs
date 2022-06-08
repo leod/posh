@@ -25,27 +25,27 @@ where
 
 pub trait Vertex: Struct + Transparent {}
 
-pub trait VertexSet: Struct + Transparent {}
+pub trait VertexAttributes: Struct + Transparent {}
 
-impl<V: Vertex> VertexSet for V {}
+impl<V: Vertex> VertexAttributes for V {}
 
-pub trait Varying: Struct + Transparent {}
+pub trait VertexOutputs: Struct + Transparent {}
 
 pub trait Fragment: Struct + Transparent {}
 
 #[derive(Clone, Copy)]
-pub struct VertIn<V: VertexSet> {
+pub struct VertIn<V: VertexAttributes> {
     pub vertex: Val<V>,
     pub vertex_id: I32,
     pub instance_id: I32,
 }
 
-pub struct VertOut<W: Varying> {
+pub struct VertOut<W: VertexOutputs> {
     pub position: Vec3<f32>,
     pub varying: Val<W>,
 }
 
-pub struct FragIn<W: Varying> {
+pub struct FragIn<W: VertexOutputs> {
     pub varying: Val<W>,
     pub frag_coord: Vec4<f32>,
 }
@@ -107,7 +107,7 @@ impl<R: Fragment> FragOut<R> {
     }
 }
 
-impl<V: VertexSet> VertIn<V> {
+impl<V: VertexAttributes> VertIn<V> {
     pub fn new(vertex: Val<V>) -> Self {
         Self {
             vertex,
@@ -121,7 +121,7 @@ impl<V: VertexSet> VertIn<V> {
     }
 }
 
-impl<W: Varying> FragIn<W> {
+impl<W: VertexOutputs> FragIn<W> {
     pub fn new(varying: Val<W>) -> Self {
         Self {
             varying,
@@ -137,12 +137,15 @@ impl<W: Varying> FragIn<W> {
 impl<D, V, R> Shader<D, V, R>
 where
     D: DescriptorSet,
-    V: VertexSet,
+    V: VertexAttributes,
     R: Fragment,
 {
     pub fn new<W, VS, FS>(vertex_stage: VS, fragment_stage: FS) -> Self
     where
-        W: Varying,
+        D: DescriptorSet,
+        V: VertexAttributes,
+        W: VertexOutputs,
+        R: Fragment,
         VS: FnOnce(D, VertIn<V>) -> VertOut<W>,
         FS: FnOnce(D, FragIn<W>) -> FragOut<R>,
     {

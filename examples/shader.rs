@@ -35,7 +35,7 @@ struct Varying {
     normal: [f32; 3],
 }
 
-impl posh::Varying for Varying {}
+impl posh::VertexOutputs for Varying {}
 
 #[derive(Struct, Transparent)]
 struct Fragment {
