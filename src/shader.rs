@@ -2,14 +2,15 @@ use std::marker::PhantomData;
 
 use crate::{
     lang::{CallExpr, Expr, Func, Ident, Ty, UserDefinedFunc, VarExpr},
-    Struct, Type, Posh, Value, Vec3, Vec4, F32, I32,
+    value::{Lift, TransparentValue},
+    Posh, Struct, Type, Value, Vec3, Vec4, F32, I32,
 };
 
-pub trait Descriptor {
-    fn func_arg(name: String) -> Self;
+pub trait Descriptor: Lift {
+    fn func_arg(name: String) -> Posh<Self>;
 }
 
-pub trait DescriptorSet: Struct {
+pub trait DescriptorSet: Lift {
     fn func_arg(name: String) -> Posh<Self>;
 }
 
@@ -18,7 +19,7 @@ where
     D: Descriptor + Struct,
 {
     fn func_arg(name: String) -> Posh<Self> {
-        todo!()
+        <Self as Descriptor>::func_arg(name)
     }
 }
 
@@ -80,18 +81,8 @@ pub struct Shader<P, V, R> {
     }
 }*/
 
-fn builtin_var<V>(name: &'static str) -> V {
-    todo!()
-}
-
-fn func_arg<V: Value>(name: &'static str) -> V {
-    let expr = Expr::Var(VarExpr {
-        ident: Ident::new(name),
-        ty: <V::Type as Type>::ty(),
-        init: None,
-    });
-
-    V::from_expr(expr)
+fn builtin_var<V: Value>(name: &'static str) -> V {
+    V::from_ident(Ident::new(name))
 }
 
 impl<R: FragmentOutputs> FragOut<R> {
@@ -113,7 +104,7 @@ impl<V: VertexAttributes> VertIn<V> {
     }
 
     pub fn func_arg() -> Self {
-        Self::new(func_arg("input"))
+        Self::new(Posh::<V>::from_ident(Ident::new("input")))
     }
 }
 
@@ -126,7 +117,7 @@ impl<W: VertexOutputs> FragIn<W> {
     }
 
     pub fn func_arg() -> Self {
-        Self::new(func_arg("input"))
+        Self::new(Posh::<W>::from_ident(Ident::new("input")))
     }
 }
 

@@ -11,6 +11,7 @@ pub use funcs::GenValue;
 pub use primitives::{common_field_base, field, func_def_and_call, var};
 pub use sampler::Sampler2;
 pub use scalar::{Bool, Scalar, ScalarType, F32, I32, U32};
+use type_equals::TypeEquals;
 pub use vec::{vec3, Vec3, Vec4};
 
 pub(crate) use primitives::{binary, builtin1, builtin2, builtin3, builtin4};
@@ -22,10 +23,12 @@ pub trait Type {
 }
 
 pub trait Lift {
-    type Posh;
+    type Posh: Copy;
 }
 
-pub trait Struct: Type + Lift {
+pub trait Struct: Type + Lift<Posh = <Self as Struct>::Posh> {
+    type Posh: TransparentValue;
+
     fn struct_ty() -> StructTy;
 }
 

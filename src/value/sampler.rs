@@ -1,5 +1,5 @@
 use crate::{
-    lang::{BuiltInTy, BuiltInVarExpr, Expr, Ident, Ty},
+    lang::{BuiltInTy, Expr, Ident, Ty},
     Type, Value, Vec3, Vec4,
 };
 

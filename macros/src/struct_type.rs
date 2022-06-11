@@ -9,10 +9,12 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             fields: Fields::Named(fields),
             ..
         }) => &fields.named,
-        _ => return Err(Error::new_spanned(
-            input.ident,
-            "derive(StructValueType) does not support tuple structs, unit structs, enums, or unions",
-        )),
+        _ => {
+            return Err(Error::new_spanned(
+                input.ident,
+                "derive(Struct) does not support tuple structs, unit structs, enums, or unions",
+            ))
+        }
     };
 
     let name = input.ident;
@@ -32,7 +34,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
     let field_tys: Vec<_> = fields.iter().map(|field| &field.ty).collect();
     let field_vis: Vec<_> = fields.iter().map(|field| &field.vis).collect();
 
-    let posh_name = Ident::new(&format!("__posh_{}", name), name.span());
+    let posh_name = Ident::new(&format!("_Posh{}", name), name.span());
 
     Ok(quote! {
         #[must_use]
@@ -40,19 +42,27 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
         #[allow(non_camel_case_types)]
         #vis struct #posh_name #ty_generics #where_clause {
             #(
-                #field_vis #field_idents: ::posh::Val<#field_tys>
+                #field_vis #field_idents: ::posh::Posh<#field_tys>
             ),*
+        }
+
+        impl #impl_generics ::posh::Type for #name #ty_generics #where_clause {
+            fn ty() -> ::posh::lang::Ty {
+                ::posh::lang::Ty::Struct(<#name as ::posh::Struct>::struct_ty())
+            }
+        }
+
+        impl #impl_generics ::posh::value::Lift for #name #ty_generics #where_clause {
+            type Posh = #posh_name #ty_generics;
         }
 
         impl #impl_generics ::posh::Value for #posh_name #ty_generics #where_clause {
             type Type = #name #ty_generics;
 
-            fn from_trace(trace: ::posh::value::Trace) -> Self {
-                Self {
-                    #(
-                        #field_idents: ::posh::value::field(trace, #field_name_strs)
-                    ),*
-                }
+            fn from_ident(ident: ::posh::lang::Ident) -> Self {
+                <Self as ::posh::value::TransparentValue>::from_trace(
+                    ::posh::value::Trace::from_ident::<Self>(ident),
+                )
             }
 
             fn expr(&self) -> ::posh::lang::Expr {
@@ -77,13 +87,21 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             }
         }
 
-        impl #impl_generics ::posh::Type for #name #ty_generics #where_clause {
-            fn ty() -> ::posh::lang::Ty {
-                ::posh::lang::Ty::Struct(<#name as ::posh::Struct>::struct_ty())
+        impl #impl_generics ::posh::value::TransparentValue for #posh_name #ty_generics
+        #where_clause
+        {
+            fn from_trace(trace: ::posh::value::Trace) -> Self {
+                Self {
+                    #(
+                        #field_idents: ::posh::value::field(trace, #field_name_strs)
+                    ),*
+                }
             }
         }
 
         impl #impl_generics ::posh::Struct for #name #ty_generics #where_clause {
+            type Posh = #posh_name #ty_generics;
+
             fn struct_ty() -> ::posh::lang::StructTy {
                 let ident = ::posh::lang::Ident {
                     name: #name_str.to_string(),
@@ -103,12 +121,8 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             }
         }
 
-        impl #impl_generics ::posh::value::HasValue for #name #ty_generics #where_clause {
-            type Value = #posh_name #ty_generics;
-        }
-
-        impl #impl_generics ::posh::IntoValue for #name #ty_generics #where_clause {
-            fn into_value(self) -> Self::Value {
+        impl #impl_generics ::posh::IntoPosh for #name #ty_generics #where_clause {
+            fn into_posh(self) -> Self::Posh {
                 let func = ::posh::lang::Func::Struct(::posh::lang::StructFunc {
                     ty: <#name as ::posh::Struct>::struct_ty(),
                 });
@@ -116,7 +130,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                 let args = vec![
                     #(
                         ::posh::Value::expr(
-                            &<#field_tys as ::posh::IntoValue>::into_value(self.#field_idents),
+                            &<#field_tys as ::posh::IntoPosh>::into_posh(self.#field_idents)
                         )
                     ),*
                 ];
@@ -126,7 +140,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                     args,
                 });
 
-                <#posh_name as ::posh::Value>::from_expr(expr)
+                <#posh_name as ::posh::value::TransparentValue>::from_expr(expr)
             }
         }
     })
