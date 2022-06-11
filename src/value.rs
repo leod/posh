@@ -25,11 +25,7 @@ pub trait Lift {
     type Posh;
 }
 
-pub trait Fields: Lift {
-    fn fields() -> Vec<(String, Ty)>;
-}
-
-pub trait Struct: Type + Fields {
+pub trait Struct: Type + Lift {
     fn struct_ty() -> StructTy;
 }
 
@@ -39,7 +35,7 @@ pub struct Trace {
 }
 
 pub trait Value: Copy + Sized {
-    type Type: Type;
+    type Type: Type + Lift;
 
     #[doc(hidden)]
     fn from_ident(ident: Ident) -> Self;

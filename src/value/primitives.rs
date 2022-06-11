@@ -7,18 +7,18 @@ use crate::lang::{
 
 use super::{IntoPosh, Trace, TransparentValue, Type, Value};
 
-pub fn var<V: TransparentValue>(init: V) -> V {
+pub fn var<R: TransparentValue>(init: R) -> R {
     let init = Some(Rc::new(init.expr()));
 
     let var = VarExpr {
         ident: Ident::new("var"),
-        ty: <V::Type as Type>::ty(),
+        ty: <R::Type as Type>::ty(),
         init,
     };
 
     let expr = Expr::Var(var);
 
-    V::from_expr(expr)
+    R::from_expr(expr)
 }
 
 #[doc(hidden)]
@@ -72,14 +72,14 @@ where
 }
 
 #[doc(hidden)]
-pub fn func_def_and_call<V>(
+pub fn func_def_and_call<R>(
     name: impl Into<String>,
     params: Vec<VarExpr>,
-    result: V,
+    result: R,
     args: Vec<Expr>,
-) -> V
+) -> R
 where
-    V: TransparentValue,
+    R: TransparentValue,
 {
     assert!(params.len() == args.len());
 
@@ -90,7 +90,7 @@ where
     });
     let expr = Expr::Call(CallExpr { func, args });
 
-    V::from_expr(expr)
+    R::from_expr(expr)
 }
 
 pub(crate) fn binary<U, V, R>(

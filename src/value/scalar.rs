@@ -10,7 +10,7 @@ use crate::lang::{
 
 use super::{binary, IntoPosh, Lift, Trace, TransparentValue, Type, Value};
 
-pub trait ScalarType: Copy + Into<Literal> + IntoPosh<Posh = Scalar<Self>> {
+pub trait ScalarType: Type + Copy + Into<Literal> + IntoPosh<Posh = Scalar<Self>> {
     fn scalar_ty() -> ScalarTy;
 }
 
