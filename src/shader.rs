@@ -1,9 +1,8 @@
 use std::marker::PhantomData;
 
 use crate::{
-    lang::{BuiltInTy, BuiltInVarExpr, CallExpr, Expr, Func, Ident, Ty, UserDefinedFunc, VarExpr},
-    value::{BuiltIn, BuiltInValue},
-    Struct, Transparent, Type, Val, Value, Vec3, Vec4, F32, I32,
+    lang::{CallExpr, Expr, Func, Ident, Ty, UserDefinedFunc, VarExpr},
+    Struct, Type, Posh, Value, Vec3, Vec4, F32, I32,
 };
 
 pub trait Descriptor {
@@ -11,47 +10,47 @@ pub trait Descriptor {
 }
 
 pub trait DescriptorSet: Struct {
-    fn func_arg(name: String) -> Val<Self>;
+    fn func_arg(name: String) -> Posh<Self>;
 }
 
 impl<D> DescriptorSet for D
 where
     D: Descriptor + Struct,
 {
-    fn func_arg(name: String) -> Val<Self> {
+    fn func_arg(name: String) -> Posh<Self> {
         todo!()
     }
 }
 
-pub trait Vertex: Struct + Transparent {}
+pub trait Vertex: Struct {}
 
-pub trait VertexAttributes: Struct + Transparent {}
+pub trait VertexAttributes: Struct {}
 
 impl<V: Vertex> VertexAttributes for V {}
 
-pub trait VertexOutputs: Struct + Transparent {}
+pub trait VertexOutputs: Struct {}
 
-pub trait FragmentOutputs: Struct + Transparent {}
+pub trait FragmentOutputs: Struct {}
 
 #[derive(Clone, Copy)]
 pub struct VertIn<V: VertexAttributes> {
-    pub vertex: Val<V>,
+    pub vertex: Posh<V>,
     pub vertex_id: I32,
     pub instance_id: I32,
 }
 
 pub struct VertOut<W: VertexOutputs> {
     pub position: Vec3<f32>,
-    pub varying: Val<W>,
+    pub varying: Posh<W>,
 }
 
 pub struct FragIn<W: VertexOutputs> {
-    pub varying: Val<W>,
+    pub varying: Posh<W>,
     pub frag_coord: Vec4<f32>,
 }
 
 pub struct FragOut<R: FragmentOutputs> {
-    pub fragment: Val<R>,
+    pub fragment: Posh<R>,
     pub frag_depth: Option<F32>,
 }
 
@@ -81,11 +80,8 @@ pub struct Shader<P, V, R> {
     }
 }*/
 
-fn builtin_var<V: BuiltInValue>(name: &'static str) -> V {
-    V::from_expr(Expr::BuiltInVar(BuiltInVarExpr {
-        name: name.to_string(),
-        ty: V::BuiltInType::built_in_ty(),
-    }))
+fn builtin_var<V>(name: &'static str) -> V {
+    todo!()
 }
 
 fn func_arg<V: Value>(name: &'static str) -> V {
@@ -99,7 +95,7 @@ fn func_arg<V: Value>(name: &'static str) -> V {
 }
 
 impl<R: FragmentOutputs> FragOut<R> {
-    pub fn new(fragment: Val<R>) -> Self {
+    pub fn new(fragment: Posh<R>) -> Self {
         Self {
             fragment,
             frag_depth: None,
@@ -108,7 +104,7 @@ impl<R: FragmentOutputs> FragOut<R> {
 }
 
 impl<V: VertexAttributes> VertIn<V> {
-    pub fn new(vertex: Val<V>) -> Self {
+    pub fn new(vertex: Posh<V>) -> Self {
         Self {
             vertex,
             vertex_id: builtin_var("gl_VertexID"),
@@ -122,7 +118,7 @@ impl<V: VertexAttributes> VertIn<V> {
 }
 
 impl<W: VertexOutputs> FragIn<W> {
-    pub fn new(varying: Val<W>) -> Self {
+    pub fn new(varying: Posh<W>) -> Self {
         Self {
             varying,
             frag_coord: builtin_var("gl_FragCoord"),
@@ -146,8 +142,8 @@ where
         V: VertexAttributes,
         W: VertexOutputs,
         R: FragmentOutputs,
-        VS: FnOnce(Val<D>, VertIn<V>) -> VertOut<W>,
-        FS: FnOnce(Val<D>, FragIn<W>) -> FragOut<R>,
+        VS: FnOnce(Posh<D>, VertIn<V>) -> VertOut<W>,
+        FS: FnOnce(Posh<D>, FragIn<W>) -> FragOut<R>,
     {
         let params = || D::func_arg("params".to_string());
         let vertex_out = vertex_stage(params(), VertIn::func_arg());

@@ -1,4 +1,4 @@
-use posh::{posh, IntoValue as _, Struct, Transparent, Val, Value};
+use posh::{posh, IntoValue as _, Posh, Struct, Transparent, Value};
 
 #[derive(Struct, Default, Transparent)]
 pub struct Helper {
@@ -15,8 +15,8 @@ pub struct Vertex {
 }
 
 #[posh]
-fn vertex(vertex: Val<Vertex>) -> Val<Vertex> {
-    Val::<Vertex> {
+fn vertex(vertex: Posh<Vertex>) -> Posh<Vertex> {
+    Posh::<Vertex> {
         pos: 3 * vertex.pos,
         time: 2.0.into_value(),
         ..vertex

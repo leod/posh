@@ -1,4 +1,4 @@
-use posh::{shader, FragIn, FragOut, Shader, Struct, Transparent, Val, VertIn, VertOut};
+use posh::{shader, FragIn, FragOut, Posh, Shader, Struct, Transparent, VertIn, VertOut};
 
 #[derive(Struct)]
 struct ModelToClip {
@@ -62,7 +62,7 @@ fn vertex(params: ParamSet, input: VertIn<Vertex>) -> VertOut<Varying> {
 fn fragment(params: ParamSet, input: FragIn<Varying>) -> FragOut<Fragment> {
     use posh::prelude::*;
 
-    let fragment = var(Val::<Fragment> {
+    let fragment = var(Posh::<Fragment> {
         color: input.varying.color,
         normal: input.varying.normal,
     });

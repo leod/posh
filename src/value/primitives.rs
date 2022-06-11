@@ -5,13 +5,9 @@ use crate::lang::{
     VarExpr,
 };
 
-use super::{IntoValue, Trace, Transparent, Type, Value};
+use super::{IntoPosh, Trace, TransparentValue, Type, Value};
 
-pub fn var<V>(init: V) -> V
-where
-    V: Value,
-    V::Type: Transparent,
-{
+pub fn var<V: TransparentValue>(init: V) -> V {
     let init = Some(Rc::new(init.expr()));
 
     let var = VarExpr {
@@ -22,7 +18,7 @@ where
 
     let expr = Expr::Var(var);
 
-    Value::from_expr(expr)
+    V::from_expr(expr)
 }
 
 #[doc(hidden)]
@@ -64,7 +60,7 @@ pub fn common_field_base(exprs: &[Expr]) -> Option<Expr> {
 #[doc(hidden)]
 pub fn field<R>(base: Trace, member: &str) -> R
 where
-    R: Value,
+    R: TransparentValue,
 {
     let expr = Expr::Field(FieldExpr {
         base: Rc::new(base.expr()),
@@ -76,9 +72,14 @@ where
 }
 
 #[doc(hidden)]
-pub fn func_call<V>(name: impl Into<String>, params: Vec<VarExpr>, result: V, args: Vec<Expr>) -> V
+pub fn func_def_and_call<V>(
+    name: impl Into<String>,
+    params: Vec<VarExpr>,
+    result: V,
+    args: Vec<Expr>,
+) -> V
 where
-    V: Value,
+    V: TransparentValue,
 {
     assert!(params.len() == args.len());
 
@@ -93,17 +94,17 @@ where
 }
 
 pub(crate) fn binary<U, V, R>(
-    left: impl IntoValue<Value = U>,
+    left: impl IntoPosh<Posh = U>,
     op: BinaryOp,
-    right: impl IntoValue<Value = V>,
+    right: impl IntoPosh<Posh = V>,
 ) -> R
 where
     U: Value,
     V: Value,
-    R: Value,
+    R: TransparentValue,
 {
-    let left = Rc::new(left.into_value().expr());
-    let right = Rc::new(right.into_value().expr());
+    let left = Rc::new(left.into_posh().expr());
+    let right = Rc::new(right.into_posh().expr());
 
     let expr = Expr::Binary(BinaryExpr {
         left,
@@ -115,10 +116,10 @@ where
     R::from_expr(expr)
 }
 
-pub(crate) fn builtin1<U, R>(name: &str, u: impl IntoValue<Value = U>) -> R
+pub(crate) fn builtin1<U, R>(name: &str, u: impl IntoPosh<Posh = U>) -> R
 where
     U: Value,
-    R: Value,
+    R: TransparentValue,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
@@ -126,7 +127,7 @@ where
     });
     let expr = Expr::Call(CallExpr {
         func,
-        args: vec![u.into_value().expr()],
+        args: vec![u.into_posh().expr()],
     });
 
     R::from_expr(expr)
@@ -134,13 +135,13 @@ where
 
 pub(crate) fn builtin2<U, V, R>(
     name: &str,
-    u: impl IntoValue<Value = U>,
-    v: impl IntoValue<Value = V>,
+    u: impl IntoPosh<Posh = U>,
+    v: impl IntoPosh<Posh = V>,
 ) -> R
 where
     U: Value,
     V: Value,
-    R: Value,
+    R: TransparentValue,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
@@ -148,7 +149,7 @@ where
     });
     let expr = Expr::Call(CallExpr {
         func,
-        args: vec![u.into_value().expr(), v.into_value().expr()],
+        args: vec![u.into_posh().expr(), v.into_posh().expr()],
     });
 
     R::from_expr(expr)
@@ -156,15 +157,15 @@ where
 
 pub(crate) fn builtin3<U, V, W, R>(
     name: &str,
-    u: impl IntoValue<Value = U>,
-    v: impl IntoValue<Value = V>,
-    w: impl IntoValue<Value = W>,
+    u: impl IntoPosh<Posh = U>,
+    v: impl IntoPosh<Posh = V>,
+    w: impl IntoPosh<Posh = W>,
 ) -> R
 where
     U: Value,
     V: Value,
     W: Value,
-    R: Value,
+    R: TransparentValue,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
@@ -173,9 +174,9 @@ where
     let expr = Expr::Call(CallExpr {
         func,
         args: vec![
-            u.into_value().expr(),
-            v.into_value().expr(),
-            w.into_value().expr(),
+            u.into_posh().expr(),
+            v.into_posh().expr(),
+            w.into_posh().expr(),
         ],
     });
 
@@ -184,17 +185,17 @@ where
 
 pub(crate) fn builtin4<U, V, W, X, R>(
     name: &str,
-    u: impl IntoValue<Value = U>,
-    v: impl IntoValue<Value = V>,
-    w: impl IntoValue<Value = W>,
-    x: impl IntoValue<Value = X>,
+    u: impl IntoPosh<Posh = U>,
+    v: impl IntoPosh<Posh = V>,
+    w: impl IntoPosh<Posh = W>,
+    x: impl IntoPosh<Posh = X>,
 ) -> R
 where
     U: Value,
     V: Value,
     W: Value,
     X: Value,
-    R: Value,
+    R: TransparentValue,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
@@ -203,10 +204,10 @@ where
     let expr = Expr::Call(CallExpr {
         func,
         args: vec![
-            u.into_value().expr(),
-            v.into_value().expr(),
-            w.into_value().expr(),
-            x.into_value().expr(),
+            u.into_posh().expr(),
+            v.into_posh().expr(),
+            w.into_posh().expr(),
+            x.into_posh().expr(),
         ],
     });
 

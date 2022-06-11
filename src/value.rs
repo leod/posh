@@ -5,11 +5,11 @@ mod sampler;
 mod scalar;
 mod vec;
 
-use crate::lang::{BuiltInTy, Expr, StructTy, Ty};
+use crate::lang::{Expr, Ident, StructTy, Ty, VarExpr};
 
 pub use funcs::GenValue;
-pub use primitives::{common_field_base, field, func_call, var};
-pub use sampler::Sampler2d;
+pub use primitives::{common_field_base, field, func_def_and_call, var};
+pub use sampler::Sampler2;
 pub use scalar::{Bool, Scalar, ScalarType, F32, I32, U32};
 pub use vec::{vec3, Vec3, Vec4};
 
@@ -21,22 +21,15 @@ pub trait Type {
     fn ty() -> Ty;
 }
 
-pub trait HasValue {
-    type Value: Value;
+pub trait Lift {
+    type Posh;
 }
 
-pub trait Transparent: Type + IntoValue {
-    #[doc(hidden)]
-    fn transparent();
+pub trait Fields: Lift {
+    fn fields() -> Vec<(String, Ty)>;
 }
 
-pub trait BuiltIn: Type + HasValue + IntoValue {
-    fn built_in_ty() -> BuiltInTy;
-}
-
-pub trait FuncArg: Type + HasValue {}
-
-pub trait Struct: Type + HasValue {
+pub trait Struct: Type + Fields {
     fn struct_ty() -> StructTy;
 }
 
@@ -48,16 +41,21 @@ pub struct Trace {
 pub trait Value: Copy + Sized {
     type Type: Type;
 
-    fn from_trace(trace: Trace) -> Self;
+    #[doc(hidden)]
+    fn from_ident(ident: Ident) -> Self;
 
     fn expr(&self) -> Expr;
 
-    fn from_expr(expr: Expr) -> Self {
-        Self::from_trace(Trace::new(expr))
-    }
-
     fn ty(&self) -> Ty {
         Self::Type::ty()
+    }
+}
+
+pub trait TransparentValue: Value {
+    fn from_trace(trace: Trace) -> Self;
+
+    fn from_expr(expr: Expr) -> Self {
+        Self::from_trace(Trace::new(expr))
     }
 
     fn with_trace(&self, trace: Trace) -> Self {
@@ -69,38 +67,22 @@ pub trait Value: Copy + Sized {
     }
 }
 
-pub trait BuiltInValue: Value {
-    type BuiltInType: BuiltIn;
+pub trait FuncArg: Value {}
+
+pub trait IntoPosh: Lift {
+    fn into_posh(self) -> Self::Posh;
 }
 
-pub trait StructValue: Value {
-    type StructType: Struct;
+pub type Posh<T> = <T as Lift>::Posh;
 
-    fn fields(&self) -> Vec<Expr>;
+impl<V: TransparentValue> FuncArg for V {}
+
+impl<V: Value> Lift for V {
+    type Posh = Self;
 }
 
-pub trait IntoValue: HasValue {
-    fn into_value(self) -> Self::Value;
-}
-
-pub type Val<T> = <T as HasValue>::Value;
-
-impl<T: Transparent> FuncArg for T {}
-
-impl<T, V> BuiltInValue for V
-where
-    T: BuiltIn,
-    V: Value<Type = T>,
-{
-    type BuiltInType = T;
-}
-
-impl<V: Value> HasValue for V {
-    type Value = Self;
-}
-
-impl<V: Value> IntoValue for V {
-    fn into_value(self) -> Self::Value {
+impl<V: Value> IntoPosh for V {
+    fn into_posh(self) -> Self {
         self
     }
 }
@@ -110,6 +92,14 @@ impl Trace {
         Self {
             expr_id: expr_reg::put(expr),
         }
+    }
+
+    pub fn from_ident<R: Value>(ident: Ident) -> Self {
+        Self::new(Expr::Var(VarExpr {
+            ident,
+            ty: <R::Type as Type>::ty(),
+            init: None,
+        }))
     }
 
     pub fn expr(&self) -> Expr {

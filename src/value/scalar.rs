@@ -4,15 +4,26 @@ use std::{
     rc::Rc,
 };
 
-use crate::lang::{BinaryOp, BuiltInTy, Expr, Literal, LiteralExpr, ScalarTy, TernaryExpr, Ty};
+use crate::lang::{
+    BinaryOp, BuiltInTy, Expr, Ident, Literal, LiteralExpr, ScalarTy, TernaryExpr, Ty,
+};
 
-use super::{binary, BuiltIn, HasValue, IntoValue, Trace, Transparent, Type, Value};
+use super::{binary, IntoPosh, Lift, Trace, TransparentValue, Type, Value};
 
-pub trait ScalarType: BuiltIn + Copy + Into<Literal> + IntoValue<Value = Scalar<Self>> {
+pub trait ScalarType: Copy + Into<Literal> + IntoPosh<Posh = Scalar<Self>> {
     fn scalar_ty() -> ScalarTy;
 }
 
 pub trait NumericType: ScalarType {}
+
+impl<T> Type for T
+where
+    T: ScalarType,
+{
+    fn ty() -> Ty {
+        Ty::BuiltIn(BuiltInTy::Scalar(T::scalar_ty()))
+    }
+}
 
 #[must_use]
 #[derive(Debug, Copy, Clone)]
@@ -27,6 +38,19 @@ where
 {
     type Type = T;
 
+    fn from_ident(ident: Ident) -> Self {
+        Self::from_trace(Trace::from_ident::<Self>(ident))
+    }
+
+    fn expr(&self) -> Expr {
+        self.trace.expr()
+    }
+}
+
+impl<T> TransparentValue for Scalar<T>
+where
+    T: ScalarType,
+{
     fn from_trace(trace: Trace) -> Self {
         assert!(trace.expr().ty() == <Self::Type as Type>::ty());
 
@@ -35,26 +59,6 @@ where
             trace,
         }
     }
-
-    fn expr(&self) -> Expr {
-        self.trace.expr()
-    }
-}
-
-impl<T> Type for T
-where
-    T: ScalarType,
-{
-    fn ty() -> Ty {
-        Ty::BuiltIn(Self::built_in_ty())
-    }
-}
-
-impl<T> Transparent for T
-where
-    T: ScalarType,
-{
-    fn transparent() {}
 }
 
 impl<T> Scalar<T>
@@ -65,7 +69,7 @@ where
         Self::from_expr(Expr::Literal(LiteralExpr { literal: x.into() }))
     }
 
-    pub fn eq<V>(&self, right: impl IntoValue<Value = V>) -> Bool
+    pub fn eq<V>(&self, right: impl IntoPosh<Posh = V>) -> Bool
     where
         V: Value<Type = T>,
     {
@@ -74,26 +78,22 @@ where
 }
 
 impl Bool {
-    pub fn and(self, right: impl IntoValue<Value = Bool>) -> Bool {
+    pub fn and(self, right: impl IntoPosh<Posh = Bool>) -> Bool {
         binary(self, BinaryOp::And, right)
     }
 
-    pub fn or(self, right: impl IntoValue<Value = Bool>) -> Bool {
+    pub fn or(self, right: impl IntoPosh<Posh = Bool>) -> Bool {
         binary(self, BinaryOp::And, right)
     }
 
-    pub fn ternary<V>(
+    pub fn ternary<V: TransparentValue>(
         self,
-        true_value: impl IntoValue<Value = V>,
-        false_value: impl IntoValue<Value = V>,
-    ) -> V
-    where
-        V: Value,
-        V::Type: Transparent,
-    {
+        true_value: impl IntoPosh<Posh = V>,
+        false_value: impl IntoPosh<Posh = V>,
+    ) -> V {
         let cond = Rc::new(self.expr());
-        let true_expr = Rc::new(true_value.into_value().expr());
-        let false_expr = Rc::new(false_value.into_value().expr());
+        let true_expr = Rc::new(true_value.into_posh().expr());
+        let false_expr = Rc::new(false_value.into_posh().expr());
 
         let expr = Expr::Ternary(TernaryExpr {
             cond,
@@ -110,7 +110,7 @@ macro_rules! impl_binary_op {
         impl<T, Rhs> $op<Rhs> for Scalar<T>
         where
             T: NumericType,
-            Rhs: IntoValue<Value = Scalar<T>>,
+            Rhs: IntoPosh<Posh = Scalar<T>>,
         {
             type Output = Self;
 
@@ -152,24 +152,18 @@ impl_binary_op!(div, Div);
 
 macro_rules! impl_scalar {
     ($ty:ty, $name:ident) => {
-        impl BuiltIn for $ty {
-            fn built_in_ty() -> BuiltInTy {
-                BuiltInTy::Scalar(Self::scalar_ty())
-            }
-        }
-
         impl ScalarType for $ty {
             fn scalar_ty() -> ScalarTy {
                 ScalarTy::$name
             }
         }
 
-        impl HasValue for $ty {
-            type Value = Scalar<$ty>;
+        impl Lift for $ty {
+            type Posh = Scalar<$ty>;
         }
 
-        impl IntoValue for $ty {
-            fn into_value(self) -> Self::Value {
+        impl IntoPosh for $ty {
+            fn into_posh(self) -> Self::Posh {
                 Scalar::new(self)
             }
         }

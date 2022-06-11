@@ -1,6 +1,6 @@
+mod fields;
 mod func;
 mod struct_type;
-mod transparent;
 
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput, ItemFn};
@@ -25,10 +25,10 @@ pub fn derive_struct(input: TokenStream) -> TokenStream {
     .into()
 }
 
-#[proc_macro_derive(Transparent)]
-pub fn derive_transparent(input: TokenStream) -> TokenStream {
+#[proc_macro_derive(Fields)]
+pub fn derive_fields(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    match transparent::derive(input) {
+    match fields::derive(input) {
         Ok(ts) => ts,
         Err(e) => e.to_compile_error(),
     }

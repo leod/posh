@@ -1,24 +1,24 @@
 use crate::{
-    lang::{BuiltInTy, BuiltInVarExpr, Expr, Ty},
+    lang::{BuiltInTy, BuiltInVarExpr, Expr, Ident, Ty},
     Type, Value, Vec3, Vec4,
 };
 
-use super::{builtin2, BuiltIn, FuncArg, Trace};
+use super::{builtin2, FuncArg, Trace};
 
 #[derive(Debug, Copy, Clone)]
-pub struct Sampler2d(Trace);
+pub struct Sampler2(Trace);
 
-impl Type for Sampler2d {
+impl Type for Sampler2 {
     fn ty() -> Ty {
-        Ty::BuiltIn(Self::built_in_ty())
+        Ty::BuiltIn(BuiltInTy::Sampler2)
     }
 }
 
-impl Value for Sampler2d {
+impl Value for Sampler2 {
     type Type = Self;
 
-    fn from_trace(trace: Trace) -> Self {
-        Sampler2d(trace)
+    fn from_ident(ident: Ident) -> Self {
+        Sampler2(Trace::from_ident::<Self>(ident))
     }
 
     fn expr(&self) -> Expr {
@@ -26,23 +26,9 @@ impl Value for Sampler2d {
     }
 }
 
-impl FuncArg for Sampler2d {}
+impl FuncArg for Sampler2 {}
 
-impl BuiltIn for Sampler2d {
-    fn built_in_ty() -> BuiltInTy {
-        BuiltInTy::Sampler2d
-    }
-}
-
-impl Sampler2d {
-    // FIXME: This is just for testing
-    pub fn func_arg(name: &'static str) -> Self {
-        Self::from_expr(Expr::BuiltInVar(BuiltInVarExpr {
-            name: name.to_string(),
-            ty: Self::built_in_ty(),
-        }))
-    }
-
+impl Sampler2 {
     pub fn load(self, tex_coord: Vec3<f32>) -> Vec4<f32> {
         builtin2("texture", self, tex_coord)
     }

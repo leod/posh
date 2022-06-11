@@ -14,7 +14,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                     input_tys.push(input.ty.clone());
 
                     let input_ty = &input.ty;
-                    input.ty = parse_quote! { impl ::posh::value::IntoValue<Value = #input_ty> };
+                    input.ty = parse_quote! { impl ::posh::IntoPosh<Posh = #input_ty> };
                 }
                 _ => {
                     return Err(Error::new_spanned(
@@ -39,16 +39,12 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                 use ::posh::static_assertions as sa;
 
                 #(
-                    sa::assert_impl_all!(#input_tys: ::posh::Value);
-                    sa::assert_impl_all!(
-                        <#input_tys as ::posh::Value>::Type:
-                        ::posh::value::FuncArg,
-                    );
+                    sa::assert_impl_all!(#input_tys: ::posh::value::FuncArg);
                 )*
             };
 
             #(
-                let #input_idents = ::posh::IntoValue::into_value(#input_idents);
+                let #input_idents = ::posh::IntoPosh::into_posh(#input_idents);
             )*
 
             let #args_ident = vec![
@@ -59,30 +55,24 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
 
             #(
                 let #input_idents =
-                    ::posh::Value::with_expr(
-                        &#input_idents,
-                        ::posh::lang::Expr::Var(::posh::lang::VarExpr {
-                            ident: ::posh::lang::Ident::new(stringify!(#input_idents)),
-                            ty: ::posh::value::Value::ty(&#input_idents),
-                            init: None,
-                        }),
+                    <#input_tys as ::posh::Value>::from_ident(
+                        ::posh::lang::Ident::new(stringify!(#input_idents)),
                     );
             )*
 
-            ::posh::value::func_call(
+            ::posh::value::func_def_and_call(
                 stringify!(#func_ident),
                 vec![
                     #(
-                        ::posh::lang::VarExpr {
-                            ident: ::posh::lang::Ident::new(stringify!(#input_idents)),
-                            ty: ::posh::value::Value::ty(&#input_idents),
-                            init: None,
+                        match ::posh::Value::expr(&#input_idents) {
+                            ::posh::lang::Expr::Var(var) => var,
+                            _ => unreachable!(),
                         }
                     ),*
                 ],
                 {
                     //use ::posh::prelude::*;
-                    ::posh::IntoValue::into_value(#func_body)
+                    ::posh::IntoPosh::into_posh(#func_body)
                 },
                 #args_ident,
             )
