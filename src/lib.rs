@@ -8,10 +8,10 @@ pub use uuid;
 
 pub use prelude::*;
 
-/*pub use shader::{
-    DescriptorSet, FragIn, FragOut, FragmentOutputs, Shader, VertIn, VertOut, Vertex,
+pub use shader::{
+    Descriptor, DescriptorSet, FragIn, FragOut, FragmentOutputs, Shader, VertIn, VertOut, Vertex,
     VertexAttributes, VertexOutputs,
-};*/
+};
 pub use value::{GenValue, IntoPosh, Sampler2, Struct, Type, Value};
 
 pub use posh_macros::{posh, Struct};

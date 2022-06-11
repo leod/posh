@@ -1,4 +1,4 @@
-use posh::{shader, FragIn, FragOut, Posh, Shader, Struct, Transparent, VertIn, VertOut};
+use posh::{vec3, FragIn, FragOut, Posh, Shader, Struct, VertIn, VertOut};
 
 #[derive(Struct)]
 struct ModelToClip {
@@ -11,14 +11,11 @@ struct ParamSet {
     modelview: [f32; 3],
 }
 
-/*
-impl posh::Descriptor for  {
-    type Param =
-    fn func_arg(_name: String) -> Self {
+impl posh::Descriptor for ParamSet {
+    fn func_arg() -> Posh<Self> {
         todo!()
     }
 }
-*/
 
 #[derive(Struct)]
 struct Vertex {
@@ -37,7 +34,7 @@ struct Varying {
 
 impl posh::VertexOutputs for Varying {}
 
-#[derive(Struct, Transparent)]
+#[derive(Struct)]
 struct Fragment {
     color: [f32; 3],
     normal: [f32; 3],
@@ -45,21 +42,17 @@ struct Fragment {
 
 impl posh::FragmentOutputs for Fragment {}
 
-/*
-fn vertex(params: ParamSet, input: VertIn<Vertex>) -> VertOut<Varying> {
-    use posh::prelude::*;
-
+fn vertex(params: Posh<ParamSet>, input: VertIn<Vertex>) -> VertOut<Varying> {
     VertOut {
         position: params.modelview * input.vertex.position,
-        varying: Val::<Varying> {
+        varying: Posh::<Varying> {
             color: vec3(255.0, 0.0, 0.0),
             normal: params.modelview * input.vertex.normal,
         },
     }
 }
-*/
 
-fn fragment(params: ParamSet, input: FragIn<Varying>) -> FragOut<Fragment> {
+fn fragment(params: Posh<ParamSet>, input: FragIn<Varying>) -> FragOut<Fragment> {
     use posh::prelude::*;
 
     let fragment = var(Posh::<Fragment> {
@@ -70,6 +63,12 @@ fn fragment(params: ParamSet, input: FragIn<Varying>) -> FragOut<Fragment> {
     FragOut::new(fragment)
 }
 
+struct MyShader {
+    shader: Shader<ParamSet, Vertex, Fragment>,
+}
+
 fn main() {
-    //let shader = Shader::new(vertex, fragment);
+    let my_shader = MyShader {
+        shader: Shader::new(vertex, fragment),
+    };
 }

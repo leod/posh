@@ -1,25 +1,25 @@
 use std::marker::PhantomData;
 
 use crate::{
-    lang::{CallExpr, Expr, Func, Ident, Ty, UserDefinedFunc, VarExpr},
-    value::{Lift, TransparentValue},
-    Posh, Struct, Type, Value, Vec3, Vec4, F32, I32,
+    lang::{Expr, Ident},
+    value::Lift,
+    Posh, Struct, Value, Vec3, Vec4, F32, I32,
 };
 
 pub trait Descriptor: Lift {
-    fn func_arg(name: String) -> Posh<Self>;
+    fn func_arg() -> Posh<Self>;
 }
 
 pub trait DescriptorSet: Lift {
-    fn func_arg(name: String) -> Posh<Self>;
+    fn func_arg() -> Posh<Self>;
 }
 
 impl<D> DescriptorSet for D
 where
     D: Descriptor + Struct,
 {
-    fn func_arg(name: String) -> Posh<Self> {
-        <Self as Descriptor>::func_arg(name)
+    fn func_arg() -> Posh<Self> {
+        <Self as Descriptor>::func_arg()
     }
 }
 
@@ -129,14 +129,11 @@ where
 {
     pub fn new<W, VS, FS>(vertex_stage: VS, fragment_stage: FS) -> Self
     where
-        D: DescriptorSet,
-        V: VertexAttributes,
         W: VertexOutputs,
-        R: FragmentOutputs,
         VS: FnOnce(Posh<D>, VertIn<V>) -> VertOut<W>,
         FS: FnOnce(Posh<D>, FragIn<W>) -> FragOut<R>,
     {
-        let params = || D::func_arg("params".to_string());
+        let params = || D::func_arg();
         let vertex_out = vertex_stage(params(), VertIn::func_arg());
         let fragment_out = fragment_stage(params(), FragIn::func_arg());
 
@@ -157,17 +154,3 @@ where
         }
     }
 }
-
-/*
-pub fn shader<P, V, R, W, VS, FS>(vertex_stage: VS, fragment_stage: FS) -> Shader<P, V, R>
-where
-    P: ParamSets,
-    V: VertexSet,
-    R: Fragment,
-    W: Varying,
-    VS: FnOnce(Val<P>, VertIn<V>) -> VertOut<W>,
-    FS: FnOnce(Val<P>, FragIn<W>) -> FragOut<R>,
-{
-    Shader::<P, V, R>::new(vertex_stage, fragment_stage)
-}
-*/
