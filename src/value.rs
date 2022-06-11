@@ -11,7 +11,6 @@ pub use funcs::GenValue;
 pub use primitives::{common_field_base, field, func_def_and_call, var};
 pub use sampler::Sampler2;
 pub use scalar::{Bool, Scalar, ScalarType, F32, I32, U32};
-use type_equals::TypeEquals;
 pub use vec::{vec3, Vec3, Vec4};
 
 pub(crate) use primitives::{binary, builtin1, builtin2, builtin3, builtin4};

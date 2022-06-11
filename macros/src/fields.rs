@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use syn::{parse_quote, Data, DataStruct, DeriveInput, Error, Fields, Ident, Path, Result};
+use syn::{Data, DataStruct, DeriveInput, Error, Fields, Ident, Result};
 use uuid::Uuid;
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
