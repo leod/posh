@@ -81,7 +81,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                     ),*
                 ],
                 {
-                    use ::posh::prelude::*;
+                    //use ::posh::prelude::*;
                     ::posh::IntoValue::into_value(#func_body)
                 },
                 #args_ident,

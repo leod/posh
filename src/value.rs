@@ -8,7 +8,7 @@ mod vec;
 use crate::lang::{BuiltInTy, Expr, StructTy, Ty};
 
 pub use funcs::GenValue;
-pub use primitives::{and, common_field_base, field, func_call, or, ternary, var};
+pub use primitives::{common_field_base, field, func_call, var};
 pub use sampler::Sampler2d;
 pub use scalar::{Bool, Scalar, ScalarType, F32, I32, U32};
 pub use vec::{vec3, Vec3, Vec4};

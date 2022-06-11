@@ -1,9 +1,10 @@
 use std::{
     marker::PhantomData,
     ops::{Add, Div, Mul, Sub},
+    rc::Rc,
 };
 
-use crate::lang::{BinaryOp, BuiltInTy, Expr, Literal, LiteralExpr, ScalarTy, Ty};
+use crate::lang::{BinaryOp, BuiltInTy, Expr, Literal, LiteralExpr, ScalarTy, TernaryExpr, Ty};
 
 use super::{binary, BuiltIn, HasValue, IntoValue, Trace, Transparent, Type, Value};
 
@@ -69,6 +70,38 @@ where
         V: Value<Type = T>,
     {
         binary(*self, BinaryOp::Eq, right)
+    }
+}
+
+impl Bool {
+    pub fn and(self, right: impl IntoValue<Value = Bool>) -> Bool {
+        binary(self, BinaryOp::And, right)
+    }
+
+    pub fn or(self, right: impl IntoValue<Value = Bool>) -> Bool {
+        binary(self, BinaryOp::And, right)
+    }
+
+    pub fn ternary<V>(
+        self,
+        true_value: impl IntoValue<Value = V>,
+        false_value: impl IntoValue<Value = V>,
+    ) -> V
+    where
+        V: Value,
+        V::Type: Transparent,
+    {
+        let cond = Rc::new(self.expr());
+        let true_expr = Rc::new(true_value.into_value().expr());
+        let false_expr = Rc::new(false_value.into_value().expr());
+
+        let expr = Expr::Ternary(TernaryExpr {
+            cond,
+            true_expr,
+            false_expr,
+        });
+
+        V::from_expr(expr)
     }
 }
 
