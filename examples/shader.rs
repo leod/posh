@@ -1,4 +1,4 @@
-use posh::{vec3, FragStageIn, FragStageOut, Posh, Shader, Struct, VertStageIn, VertStageOut};
+use posh::{var, vec3, FSIn, FSOut, Posh, Shader, Struct, VSIn, VSOut};
 
 #[derive(Struct)]
 struct ModelToClip {
@@ -42,8 +42,8 @@ struct Fragment {
 
 impl posh::FragmentOut for Fragment {}
 
-fn vertex(params: Posh<ParamSet>, input: VertStageIn<Vertex>) -> VertStageOut<Varying> {
-    VertStageOut {
+fn vertex(params: Posh<ParamSet>, input: VSIn<Vertex>) -> VSOut<Varying> {
+    VSOut {
         position: params.modelview * input.vertex.position,
         varying: Posh::<Varying> {
             color: vec3(255.0, 0.0, 0.0),
@@ -52,15 +52,13 @@ fn vertex(params: Posh<ParamSet>, input: VertStageIn<Vertex>) -> VertStageOut<Va
     }
 }
 
-fn fragment(_: Posh<ParamSet>, input: FragStageIn<Varying>) -> FragStageOut<Fragment> {
-    use posh::prelude::*;
-
+fn fragment(_: Posh<ParamSet>, input: FSIn<Varying>) -> FSOut<Fragment> {
     let fragment = var(Posh::<Fragment> {
         color: input.varying.color,
         normal: input.varying.normal,
     });
 
-    FragStageOut::new(fragment)
+    FSOut::new(fragment)
 }
 
 struct MyShader {

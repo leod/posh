@@ -34,23 +34,23 @@ pub trait VertexOut: Struct {}
 pub trait FragmentOut: Struct {}
 
 #[derive(Clone, Copy)]
-pub struct VertStageIn<V: VertexIn> {
+pub struct VSIn<V: VertexIn> {
     pub vertex: Posh<V>,
     pub vertex_id: I32,
     pub instance_id: I32,
 }
 
-pub struct VertStageOut<W: VertexOut> {
+pub struct VSOut<W: VertexOut> {
     pub position: Vec3<f32>,
     pub varying: Posh<W>,
 }
 
-pub struct FragStageIn<W: VertexOut> {
+pub struct FSIn<W: VertexOut> {
     pub varying: Posh<W>,
     pub frag_coord: Vec4<f32>,
 }
 
-pub struct FragStageOut<R: FragmentOut> {
+pub struct FSOut<R: FragmentOut> {
     pub fragment: Posh<R>,
     pub frag_depth: Option<F32>,
 }
@@ -85,7 +85,7 @@ fn builtin_var<V: Value>(name: &'static str) -> V {
     V::from_ident(Ident::new(name))
 }
 
-impl<R: FragmentOut> FragStageOut<R> {
+impl<R: FragmentOut> FSOut<R> {
     pub fn new(fragment: Posh<R>) -> Self {
         Self {
             fragment,
@@ -94,7 +94,7 @@ impl<R: FragmentOut> FragStageOut<R> {
     }
 }
 
-impl<V: VertexIn> VertStageIn<V> {
+impl<V: VertexIn> VSIn<V> {
     pub fn new(vertex: Posh<V>) -> Self {
         Self {
             vertex,
@@ -108,7 +108,7 @@ impl<V: VertexIn> VertStageIn<V> {
     }
 }
 
-impl<W: VertexOut> FragStageIn<W> {
+impl<W: VertexOut> FSIn<W> {
     pub fn new(varying: Posh<W>) -> Self {
         Self {
             varying,
@@ -130,11 +130,11 @@ where
     pub fn new<W, VS, FS>(vertex_stage: VS, fragment_stage: FS) -> Self
     where
         W: VertexOut,
-        VS: FnOnce(Posh<D>, VertStageIn<V>) -> VertStageOut<W>,
-        FS: FnOnce(Posh<D>, FragStageIn<W>) -> FragStageOut<R>,
+        VS: FnOnce(Posh<D>, VSIn<V>) -> VSOut<W>,
+        FS: FnOnce(Posh<D>, FSIn<W>) -> FSOut<R>,
     {
-        let vertex_out = vertex_stage(D::func_arg(), VertStageIn::func_arg());
-        let fragment_out = fragment_stage(D::func_arg(), FragStageIn::func_arg());
+        let vertex_out = vertex_stage(D::func_arg(), VSIn::func_arg());
+        let fragment_out = fragment_stage(D::func_arg(), FSIn::func_arg());
 
         let vertex = ErasedVertexFunc {
             position: vertex_out.position.expr(),

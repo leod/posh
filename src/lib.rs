@@ -9,8 +9,8 @@ pub use uuid;
 pub use prelude::*;
 
 pub use shader::{
-    Descriptor, DescriptorSet, FragStageIn, FragStageOut, FragmentOut, Shader, VertStageIn,
-    VertStageOut, Vertex, VertexIn, VertexOut,
+    Descriptor, DescriptorSet, FSIn, FSOut, FragmentOut, Shader, VSIn, VSOut, Vertex, VertexIn,
+    VertexOut,
 };
 pub use value::{GenValue, IntoPosh, Sampler2, Struct, Type, Value};
 

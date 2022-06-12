@@ -15,7 +15,7 @@ fn bar(x: F32) -> F32 {
 
 #[posh]
 fn texture_thing(sampler: Sampler2) -> Vec4<f32> {
-    let c = var(sampler.load(vec3(1.0, bar(2.0), 3.0)));
+    let c = var(sampler.load(vec3(1.0, 1.0, bar(3.0))));
     sampler.load(vec3(c.z, 2.0 * c.y, foo(1.0, 2.0)).normalize() / 5.0)
 }
 
