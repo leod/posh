@@ -9,13 +9,13 @@ fn foo(x: F32, y: F32) -> F32 {
 }
 
 #[posh]
-fn bar(x: F32) -> F32 {
+fn bar(#[posh(const)] foo: Bar, #[posh(const)] x: f32, x: F32) -> F32 {
     x.eq(5.0).ternary(x.atan2(2.0), -1.0)
 }
 
 #[posh]
 fn texture_thing(sampler: Sampler2) -> Vec4<f32> {
-    let c = var(sampler.load(vec3(1.0, bar(2.0), 3.0)));
+    let c = var(sampler.load(vec3(1.0, bar(Bar {}, 32.0, 2.0, 3.0))));
     sampler.load(vec3(c.z, 2.0 * c.y, foo(1.0, 2.0)).normalize() / 5.0)
 }
 
