@@ -55,14 +55,6 @@ pub trait TransparentValue: Value {
     fn from_expr(expr: Expr) -> Self {
         Self::from_trace(Trace::new(expr))
     }
-
-    fn with_trace(&self, trace: Trace) -> Self {
-        Self::from_trace(trace)
-    }
-
-    fn with_expr(&self, expr: Expr) -> Self {
-        Self::from_expr(expr)
-    }
 }
 
 pub trait FuncArg: Value {}

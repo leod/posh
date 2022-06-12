@@ -16,7 +16,7 @@ pub trait DescriptorSet: Lift {
 
 impl<D> DescriptorSet for D
 where
-    D: Descriptor + Struct,
+    D: Descriptor,
 {
     fn func_arg() -> Posh<Self> {
         <Self as Descriptor>::func_arg()
@@ -25,49 +25,49 @@ where
 
 pub trait Vertex: Struct {}
 
-pub trait VertexAttributes: Struct {}
+pub trait VertexIn: Struct {}
 
-impl<V: Vertex> VertexAttributes for V {}
+impl<V: Vertex> VertexIn for V {}
 
-pub trait VertexOutputs: Struct {}
+pub trait VertexOut: Struct {}
 
-pub trait FragmentOutputs: Struct {}
+pub trait FragmentOut: Struct {}
 
 #[derive(Clone, Copy)]
-pub struct VertIn<V: VertexAttributes> {
+pub struct VertStageIn<V: VertexIn> {
     pub vertex: Posh<V>,
     pub vertex_id: I32,
     pub instance_id: I32,
 }
 
-pub struct VertOut<W: VertexOutputs> {
+pub struct VertStageOut<W: VertexOut> {
     pub position: Vec3<f32>,
     pub varying: Posh<W>,
 }
 
-pub struct FragIn<W: VertexOutputs> {
+pub struct FragStageIn<W: VertexOut> {
     pub varying: Posh<W>,
     pub frag_coord: Vec4<f32>,
 }
 
-pub struct FragOut<R: FragmentOutputs> {
+pub struct FragStageOut<R: FragmentOut> {
     pub fragment: Posh<R>,
     pub frag_depth: Option<F32>,
 }
 
-pub struct VertexFunc {
+pub struct ErasedVertexFunc {
     pub position: Expr,
-    pub outputs: Expr,
+    pub varying: Expr,
 }
 
-pub struct FragmentFunc {
-    pub outputs: Expr,
+pub struct ErasedFragmentFunc {
+    pub fragment: Expr,
     pub frag_depth: Option<Expr>,
 }
 
 pub struct Shader<P, V, R> {
-    vertex: VertexFunc,
-    fragment: FragmentFunc,
+    vertex: ErasedVertexFunc,
+    fragment: ErasedFragmentFunc,
     _phantom: PhantomData<(P, V, R)>,
 }
 
@@ -85,7 +85,7 @@ fn builtin_var<V: Value>(name: &'static str) -> V {
     V::from_ident(Ident::new(name))
 }
 
-impl<R: FragmentOutputs> FragOut<R> {
+impl<R: FragmentOut> FragStageOut<R> {
     pub fn new(fragment: Posh<R>) -> Self {
         Self {
             fragment,
@@ -94,7 +94,7 @@ impl<R: FragmentOutputs> FragOut<R> {
     }
 }
 
-impl<V: VertexAttributes> VertIn<V> {
+impl<V: VertexIn> VertStageIn<V> {
     pub fn new(vertex: Posh<V>) -> Self {
         Self {
             vertex,
@@ -108,7 +108,7 @@ impl<V: VertexAttributes> VertIn<V> {
     }
 }
 
-impl<W: VertexOutputs> FragIn<W> {
+impl<W: VertexOut> FragStageIn<W> {
     pub fn new(varying: Posh<W>) -> Self {
         Self {
             varying,
@@ -124,26 +124,25 @@ impl<W: VertexOutputs> FragIn<W> {
 impl<D, V, R> Shader<D, V, R>
 where
     D: DescriptorSet,
-    V: VertexAttributes,
-    R: FragmentOutputs,
+    V: VertexIn,
+    R: FragmentOut,
 {
     pub fn new<W, VS, FS>(vertex_stage: VS, fragment_stage: FS) -> Self
     where
-        W: VertexOutputs,
-        VS: FnOnce(Posh<D>, VertIn<V>) -> VertOut<W>,
-        FS: FnOnce(Posh<D>, FragIn<W>) -> FragOut<R>,
+        W: VertexOut,
+        VS: FnOnce(Posh<D>, VertStageIn<V>) -> VertStageOut<W>,
+        FS: FnOnce(Posh<D>, FragStageIn<W>) -> FragStageOut<R>,
     {
-        let params = || D::func_arg();
-        let vertex_out = vertex_stage(params(), VertIn::func_arg());
-        let fragment_out = fragment_stage(params(), FragIn::func_arg());
+        let vertex_out = vertex_stage(D::func_arg(), VertStageIn::func_arg());
+        let fragment_out = fragment_stage(D::func_arg(), FragStageIn::func_arg());
 
-        let vertex = VertexFunc {
+        let vertex = ErasedVertexFunc {
             position: vertex_out.position.expr(),
-            outputs: vertex_out.varying.expr(),
+            varying: vertex_out.varying.expr(),
         };
 
-        let fragment = FragmentFunc {
-            outputs: fragment_out.fragment.expr(),
+        let fragment = ErasedFragmentFunc {
+            fragment: fragment_out.fragment.expr(),
             frag_depth: fragment_out.frag_depth.map(|v| v.expr()),
         };
 
