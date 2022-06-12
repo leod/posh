@@ -35,3 +35,13 @@ where
         todo!()
     }
 }
+
+impl<U, V> TransparentValue for (U, V)
+where
+    U: TransparentValue,
+    V: TransparentValue,
+{
+    fn from_trace(trace: super::Trace) -> Self {
+        todo!()
+    }
+}

@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::{
     lang::{Expr, Ident},
-    value::Lift,
+    value::{Lift, Transparent},
     Posh, Struct, Value, Vec3, Vec4, F32, I32,
 };
 
@@ -23,15 +23,17 @@ where
     }
 }
 
-pub trait Vertex: Struct {}
+pub trait Vertex: Transparent {}
 
-pub trait VertexIn: Struct {}
+pub trait VertexIn: Transparent {}
 
 impl<V: Vertex> VertexIn for V {}
 
-pub trait VertexOut: Struct {}
+impl<V1: Vertex, V2: Vertex> VertexIn for (V1, V2) {}
 
-pub trait FragmentOut: Struct {}
+pub trait VertexOut: Transparent {}
+
+pub trait FragmentOut: Transparent {}
 
 #[derive(Clone, Copy)]
 pub struct VSIn<V: VertexIn> {

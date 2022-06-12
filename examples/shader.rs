@@ -27,6 +27,13 @@ struct Vertex {
 impl posh::Vertex for Vertex {}
 
 #[derive(Struct)]
+struct Instance {
+    color: [f32; 3],
+}
+
+impl posh::Vertex for Instance {}
+
+#[derive(Struct)]
 struct Varying {
     color: [f32; 3],
     normal: [f32; 3],
@@ -52,6 +59,16 @@ fn vertex(params: Posh<ParamSet>, input: VSIn<Vertex>) -> VSOut<Varying> {
     }
 }
 
+fn vertex2(params: Posh<ParamSet>, input: VSIn<(Vertex, Instance)>) -> VSOut<Varying> {
+    VSOut {
+        position: params.modelview * input.vertex.0.position,
+        varying: Posh::<Varying> {
+            color: input.vertex.1.color,
+            normal: params.modelview * input.vertex.0.normal,
+        },
+    }
+}
+
 fn fragment(_: Posh<ParamSet>, input: FSIn<Varying>) -> FSOut<Fragment> {
     let fragment = var(Posh::<Fragment> {
         color: input.varying.color,
@@ -65,8 +82,16 @@ struct MyShader {
     shader: Shader<ParamSet, Vertex, Fragment>,
 }
 
+struct MyShader2 {
+    shader: Shader<ParamSet, (Vertex, Instance), Fragment>,
+}
+
 fn main() {
     let my_shader = MyShader {
         shader: Shader::new(vertex, fragment),
+    };
+
+    let my_shader2 = MyShader2 {
+        shader: Shader::new(vertex2, fragment),
     };
 }
