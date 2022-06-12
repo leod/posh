@@ -24,14 +24,24 @@ impl<T: ScalarType> Type for [T; 4] {
 
 #[must_use]
 #[derive(Debug, Copy, Clone)]
-pub struct Vec3<T> {
-    trace: Trace,
-    pub x: Scalar<T>,
-    pub y: Scalar<T>,
-    pub z: Scalar<T>,
+pub struct Vec3<'a, T> {
+    trace: Trace<'a>,
+    pub x: Scalar<'a, T>,
+    pub y: Scalar<'a, T>,
+    pub z: Scalar<'a, T>,
 }
 
-impl<T: ScalarType> Value for Vec3<T> {
+#[must_use]
+#[derive(Debug, Clone, Copy)]
+pub struct Vec4<'a, T> {
+    trace: Trace<'a>,
+    pub x: Scalar<'a, T>,
+    pub y: Scalar<'a, T>,
+    pub z: Scalar<'a, T>,
+    pub w: Scalar<'a, T>,
+}
+
+impl<'a, T: ScalarType> Value<'a> for Vec3<'a, T> {
     type Type = [T; 3];
 
     fn from_ident(ident: Ident) -> Self {
@@ -43,8 +53,8 @@ impl<T: ScalarType> Value for Vec3<T> {
     }
 }
 
-impl<T: ScalarType> TransparentValue for Vec3<T> {
-    fn from_trace(trace: Trace) -> Self {
+impl<'a, T: ScalarType> TransparentValue<'a> for Vec3<'a, T> {
+    fn from_trace(trace: Trace<'a>) -> Self {
         assert!(trace.expr().ty() == <Self::Type as Type>::ty());
 
         Self {
@@ -56,37 +66,27 @@ impl<T: ScalarType> TransparentValue for Vec3<T> {
     }
 }
 
-impl<T: ScalarType> Lift for [T; 3] {
-    type Posh = Vec3<T>;
+impl<'a, T: ScalarType> Lift<'a> for [T; 3] {
+    type Posh = Vec3<'a, T>;
 }
 
-impl<T: ScalarType> Lift for [T; 4] {
-    type Posh = Vec4<T>;
+impl<'a, T: ScalarType> Lift<'a> for [T; 4] {
+    type Posh = Vec4<'a, T>;
 }
 
-impl<T: ScalarType> IntoPosh for [T; 3] {
+impl<'a, T: ScalarType> IntoPosh<'a> for [T; 3] {
     fn into_posh(self) -> Self::Posh {
         vec3(self[0], self[1], self[2])
     }
 }
 
-impl<T: ScalarType> IntoPosh for [T; 4] {
+impl<'a, T: ScalarType> IntoPosh<'a> for [T; 4] {
     fn into_posh(self) -> Self::Posh {
         vec4(self[0], self[1], self[2], self[3])
     }
 }
 
-#[must_use]
-#[derive(Debug, Clone, Copy)]
-pub struct Vec4<T> {
-    trace: Trace,
-    pub x: Scalar<T>,
-    pub y: Scalar<T>,
-    pub z: Scalar<T>,
-    pub w: Scalar<T>,
-}
-
-impl<T: ScalarType> Value for Vec4<T> {
+impl<'a, T: ScalarType> Value<'a> for Vec4<'a, T> {
     type Type = [T; 4];
 
     fn from_ident(ident: Ident) -> Self {
@@ -98,8 +98,8 @@ impl<T: ScalarType> Value for Vec4<T> {
     }
 }
 
-impl<T: ScalarType> TransparentValue for Vec4<T> {
-    fn from_trace(trace: Trace) -> Self {
+impl<'a, T: ScalarType> TransparentValue<'a> for Vec4<'a, T> {
+    fn from_trace(trace: Trace<'a>) -> Self {
         assert!(trace.expr().ty() == <Self::Type as Type>::ty());
 
         Self {
@@ -114,7 +114,7 @@ impl<T: ScalarType> TransparentValue for Vec4<T> {
 
 macro_rules! impl_symmetric_binary_op {
     ($ty:ident, $fn:ident, $op:ident) => {
-        impl<T> $op<$ty<T>> for $ty<T>
+        impl<'a, T> $op<$ty<'a, T>> for $ty<'a, T>
         where
             T: NumericType,
         {
@@ -129,10 +129,10 @@ macro_rules! impl_symmetric_binary_op {
 
 macro_rules! impl_scalar_binary_op {
     ($ty:ident, $fn:ident, $op:ident) => {
-        impl<T, Rhs> $op<Rhs> for $ty<T>
+        impl<'a, T, Rhs> $op<Rhs> for $ty<'a, T>
         where
             T: NumericType,
-            Rhs: IntoPosh<Posh = Scalar<T>>,
+            Rhs: IntoPosh<'a, Posh = Scalar<'a, T>>,
         {
             type Output = Self;
 
@@ -141,37 +141,37 @@ macro_rules! impl_scalar_binary_op {
             }
         }
 
-        impl<T> $op<$ty<T>> for Scalar<T>
+        impl<'a, T> $op<$ty<'a, T>> for Scalar<'a, T>
         where
             T: NumericType,
         {
-            type Output = $ty<T>;
+            type Output = $ty<'a, T>;
 
-            fn $fn(self, right: $ty<T>) -> Self::Output {
+            fn $fn(self, right: $ty<'a, T>) -> Self::Output {
                 binary(self, BinaryOp::$op, right)
             }
         }
 
-        impl $op<$ty<Self>> for f32 {
-            type Output = $ty<Self>;
+        impl<'a> $op<$ty<'a, Self>> for f32 {
+            type Output = $ty<'a, Self>;
 
-            fn $fn(self, right: $ty<Self>) -> Self::Output {
+            fn $fn(self, right: $ty<'a, Self>) -> Self::Output {
                 binary(self, BinaryOp::$op, right)
             }
         }
 
-        impl $op<$ty<Self>> for i32 {
-            type Output = $ty<Self>;
+        impl<'a> $op<$ty<'a, Self>> for i32 {
+            type Output = $ty<'a, Self>;
 
-            fn $fn(self, right: $ty<Self>) -> Self::Output {
+            fn $fn(self, right: $ty<'a, Self>) -> Self::Output {
                 binary(self, BinaryOp::$op, right)
             }
         }
 
-        impl $op<$ty<Self>> for u32 {
-            type Output = $ty<Self>;
+        impl<'a> $op<$ty<'a, Self>> for u32 {
+            type Output = $ty<'a, Self>;
 
-            fn $fn(self, right: $ty<Self>) -> Self::Output {
+            fn $fn(self, right: $ty<'a, Self>) -> Self::Output {
                 binary(self, BinaryOp::$op, right)
             }
         }
@@ -194,19 +194,19 @@ macro_rules! impl_ops {
 
 impl_ops!(Vec3);
 
-pub fn vec3<T: ScalarType>(
-    x: impl IntoPosh<Posh = Scalar<T>>,
-    y: impl IntoPosh<Posh = Scalar<T>>,
-    z: impl IntoPosh<Posh = Scalar<T>>,
-) -> Vec3<T> {
+pub fn vec3<'a, T: ScalarType>(
+    x: impl IntoPosh<'a, Posh = Scalar<'a, T>>,
+    y: impl IntoPosh<'a, Posh = Scalar<'a, T>>,
+    z: impl IntoPosh<'a, Posh = Scalar<'a, T>>,
+) -> Vec3<'a, T> {
     builtin3("vec3", x, y, z)
 }
 
-pub fn vec4<T: ScalarType>(
-    x: impl IntoPosh<Posh = Scalar<T>>,
-    y: impl IntoPosh<Posh = Scalar<T>>,
-    z: impl IntoPosh<Posh = Scalar<T>>,
-    w: impl IntoPosh<Posh = Scalar<T>>,
-) -> Vec4<T> {
+pub fn vec4<'a, T: ScalarType>(
+    x: impl IntoPosh<'a, Posh = Scalar<'a, T>>,
+    y: impl IntoPosh<'a, Posh = Scalar<'a, T>>,
+    z: impl IntoPosh<'a, Posh = Scalar<'a, T>>,
+    w: impl IntoPosh<'a, Posh = Scalar<'a, T>>,
+) -> Vec4<'a, T> {
     builtin4("vec4", x, y, z, w)
 }

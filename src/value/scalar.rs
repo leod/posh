@@ -10,7 +10,9 @@ use crate::lang::{
 
 use super::{binary, IntoPosh, Lift, Trace, TransparentValue, Type, Value};
 
-pub trait ScalarType: Type + Copy + Into<Literal> + IntoPosh<Posh = Scalar<Self>> {
+pub trait ScalarType:
+    Type + Copy + Into<Literal> + for<'a> IntoPosh<'a, Posh = Scalar<'a, Self>>
+{
     fn scalar_ty() -> ScalarTy;
 }
 
@@ -27,12 +29,12 @@ where
 
 #[must_use]
 #[derive(Debug, Copy, Clone)]
-pub struct Scalar<T> {
+pub struct Scalar<'a, T> {
     _phantom: PhantomData<T>,
-    trace: Trace,
+    trace: Trace<'a>,
 }
 
-impl<T> Value for Scalar<T>
+impl<'a, T> Value<'a> for Scalar<'a, T>
 where
     T: ScalarType,
 {
@@ -47,11 +49,11 @@ where
     }
 }
 
-impl<T> TransparentValue for Scalar<T>
+impl<'a, T> TransparentValue<'a> for Scalar<'a, T>
 where
     T: ScalarType,
 {
-    fn from_trace(trace: Trace) -> Self {
+    fn from_trace(trace: Trace<'a>) -> Self {
         assert!(trace.expr().ty() == <Self::Type as Type>::ty());
 
         Scalar {
@@ -61,7 +63,7 @@ where
     }
 }
 
-impl<T> Scalar<T>
+impl<'a, T> Scalar<'a, T>
 where
     T: ScalarType,
 {
@@ -69,27 +71,27 @@ where
         Self::from_expr(Expr::Literal(LiteralExpr { literal: x.into() }))
     }
 
-    pub fn eq<V>(&self, right: impl IntoPosh<Posh = V>) -> Bool
+    pub fn eq<V>(&self, right: impl IntoPosh<'a, Posh = V>) -> Bool
     where
-        V: Value<Type = T>,
+        V: Value<'a, Type = T>,
     {
         binary(*self, BinaryOp::Eq, right)
     }
 }
 
-impl Bool {
-    pub fn and(self, right: impl IntoPosh<Posh = Bool>) -> Bool {
+impl<'a> Bool<'a> {
+    pub fn and(self, right: impl IntoPosh<'a, Posh = Bool<'a>>) -> Bool<'a> {
         binary(self, BinaryOp::And, right)
     }
 
-    pub fn or(self, right: impl IntoPosh<Posh = Bool>) -> Bool {
+    pub fn or(self, right: impl IntoPosh<'a, Posh = Bool<'a>>) -> Bool<'a> {
         binary(self, BinaryOp::And, right)
     }
 
-    pub fn ternary<V: TransparentValue>(
+    pub fn ternary<V: TransparentValue<'a>>(
         self,
-        true_value: impl IntoPosh<Posh = V>,
-        false_value: impl IntoPosh<Posh = V>,
+        true_value: impl IntoPosh<'a, Posh = V>,
+        false_value: impl IntoPosh<'a, Posh = V>,
     ) -> V {
         let cond = Rc::new(self.expr());
         let true_expr = Rc::new(true_value.into_posh().expr());
@@ -107,10 +109,10 @@ impl Bool {
 
 macro_rules! impl_binary_op {
     ($fn:ident, $op:ident) => {
-        impl<T, Rhs> $op<Rhs> for Scalar<T>
+        impl<'a, T, Rhs> $op<Rhs> for Scalar<'a, T>
         where
             T: NumericType,
-            Rhs: IntoPosh<Posh = Scalar<T>>,
+            Rhs: IntoPosh<'a, Posh = Scalar<'a, T>>,
         {
             type Output = Self;
 
@@ -119,26 +121,26 @@ macro_rules! impl_binary_op {
             }
         }
 
-        impl $op<Scalar<Self>> for f32 {
-            type Output = Scalar<Self>;
+        impl<'a> $op<Scalar<'a, Self>> for f32 {
+            type Output = Scalar<'a, Self>;
 
-            fn $fn(self, right: Scalar<Self>) -> Self::Output {
+            fn $fn(self, right: Scalar<'a, Self>) -> Self::Output {
                 binary(self, BinaryOp::$op, right)
             }
         }
 
-        impl $op<Scalar<Self>> for i32 {
-            type Output = Scalar<Self>;
+        impl<'a> $op<Scalar<'a, Self>> for i32 {
+            type Output = Scalar<'a, Self>;
 
-            fn $fn(self, right: Scalar<Self>) -> Self::Output {
+            fn $fn(self, right: Scalar<'a, Self>) -> Self::Output {
                 binary(self, BinaryOp::$op, right)
             }
         }
 
-        impl $op<Scalar<Self>> for u32 {
-            type Output = Scalar<Self>;
+        impl<'a> $op<Scalar<'a, Self>> for u32 {
+            type Output = Scalar<'a, Self>;
 
-            fn $fn(self, right: Scalar<Self>) -> Self::Output {
+            fn $fn(self, right: Scalar<'a, Self>) -> Self::Output {
                 binary(self, BinaryOp::$op, right)
             }
         }
@@ -158,17 +160,17 @@ macro_rules! impl_scalar {
             }
         }
 
-        impl Lift for $ty {
-            type Posh = Scalar<$ty>;
+        impl<'a> Lift<'a> for $ty {
+            type Posh = Scalar<'a, $ty>;
         }
 
-        impl IntoPosh for $ty {
+        impl<'a> IntoPosh<'a> for $ty {
             fn into_posh(self) -> Self::Posh {
                 Scalar::new(self)
             }
         }
 
-        pub type $name = Scalar<$ty>;
+        pub type $name<'a> = Scalar<'a, $ty>;
     };
 }
 

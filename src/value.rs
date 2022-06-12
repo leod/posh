@@ -5,6 +5,8 @@ mod sampler;
 mod scalar;
 mod vec;
 
+use std::marker::PhantomData;
+
 use crate::lang::{Expr, Ident, StructTy, Ty, VarExpr};
 
 pub use funcs::GenValue;
@@ -21,23 +23,24 @@ pub trait Type {
     fn ty() -> Ty;
 }
 
-pub trait Lift {
+pub trait Lift<'a> {
     type Posh: Copy;
 }
 
-pub trait Struct: Type + Lift<Posh = <Self as Struct>::Posh> {
-    type Posh: TransparentValue;
+pub trait Struct: Type + for<'a> Lift<'a, Posh = <Self as Struct>::Posh> {
+    type Posh: for<'a> TransparentValue<'a>;
 
     fn struct_ty() -> StructTy;
 }
 
 #[derive(Debug, Copy, Clone)]
-pub struct Trace {
+pub struct Trace<'a> {
     expr_id: ExprId,
+    _phantom: PhantomData<&'a ()>,
 }
 
-pub trait Value: Copy + Sized {
-    type Type: Type + Lift;
+pub trait Value<'a>: Copy + Sized {
+    type Type: Type + Lift<'a>;
 
     #[doc(hidden)]
     fn from_ident(ident: Ident) -> Self;
@@ -49,42 +52,43 @@ pub trait Value: Copy + Sized {
     }
 }
 
-pub trait TransparentValue: Value {
-    fn from_trace(trace: Trace) -> Self;
+pub trait TransparentValue<'a>: Value<'a> {
+    fn from_trace(trace: Trace<'a>) -> Self;
 
     fn from_expr(expr: Expr) -> Self {
         Self::from_trace(Trace::new(expr))
     }
 }
 
-pub trait FuncArg: Value {}
+pub trait FuncArg<'a>: Value<'a> {}
 
-pub trait IntoPosh: Lift {
+pub trait IntoPosh<'a>: Lift<'a> {
     fn into_posh(self) -> Self::Posh;
 }
 
-pub type Posh<T> = <T as Lift>::Posh;
+pub type Posh<'a, T> = <T as Lift<'a>>::Posh;
 
-impl<V: TransparentValue> FuncArg for V {}
+impl<'a, V: TransparentValue<'a>> FuncArg<'a> for V {}
 
-impl<V: Value> Lift for V {
+impl<'a, V: Value<'a>> Lift<'a> for V {
     type Posh = Self;
 }
 
-impl<V: Value> IntoPosh for V {
+impl<'a, V: Value<'a>> IntoPosh<'a> for V {
     fn into_posh(self) -> Self {
         self
     }
 }
 
-impl Trace {
+impl<'a> Trace<'a> {
     pub fn new(expr: Expr) -> Self {
         Self {
             expr_id: expr_reg::put(expr),
+            _phantom: PhantomData,
         }
     }
 
-    pub fn from_ident<R: Value>(ident: Ident) -> Self {
+    pub fn from_ident<R: Value<'a>>(ident: Ident) -> Self {
         Self::new(Expr::Var(VarExpr {
             ident,
             ty: <R::Type as Type>::ty(),

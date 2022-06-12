@@ -38,14 +38,14 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
             const _: fn() = || {
                 use ::posh::static_assertions as sa;
 
-                #(
-                    sa::assert_impl_all!(#input_tys: ::posh::value::FuncArg);
-                )*
+                /*#(
+                    sa::assert_impl_all!(#input_tys: for<'a> ::posh::value::FuncArg<'a>);
+                )**/
             };
 
-            #(
+            /*#(
                 let #input_idents = ::posh::IntoPosh::into_posh(#input_idents);
-            )*
+            )**/
 
             let #args_ident = vec![
                 #(

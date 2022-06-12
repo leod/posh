@@ -1,21 +1,20 @@
-use posh::{lang::Ident, posh, var, vec3, GenValue, Sampler2, Value, Vec4, F32};
+use posh::{lang::Ident, posh, value::Scalar, var, vec3, GenValue, Sampler2, Value, Vec4, F32};
 
-#[posh]
-fn foo(x: F32, y: F32) -> F32 {
+fn foo<'a>(x: F32<'a>, y: F32<'a>) -> F32<'a> {
     let z = var(x * y);
-    let w = var(1.0 + y + x + 1.0);
+    let w: F32 = var(1.0 + y + x + 1.0);
 
     z.eq(w).and(w.eq(1.0)).ternary(3.0 * z * 2.0, 1.0)
 }
 
 #[posh]
-fn bar(#[posh(const)] foo: Bar, #[posh(const)] x: f32, x: F32) -> F32 {
+fn bar<'a>(x: F32<'a>) -> F32<'a> {
     x.eq(5.0).ternary(x.atan2(2.0), -1.0)
 }
 
 #[posh]
-fn texture_thing(sampler: Sampler2) -> Vec4<f32> {
-    let c = var(sampler.load(vec3(1.0, bar(Bar {}, 32.0, 2.0, 3.0))));
+fn texture_thing<'a>(sampler: Sampler2<'a>) -> Vec4<'a, f32> {
+    let c = var(sampler.load(vec3(2.0, 1.0, bar(3.0))));
     sampler.load(vec3(c.z, 2.0 * c.y, foo(1.0, 2.0)).normalize() / 5.0)
 }
 

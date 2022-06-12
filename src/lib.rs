@@ -1,6 +1,6 @@
 pub mod lang;
 pub mod prelude;
-pub mod shader;
+//pub mod shader;
 pub mod value;
 
 pub use static_assertions;
@@ -8,10 +8,10 @@ pub use uuid;
 
 pub use prelude::*;
 
-pub use shader::{
+/*pub use shader::{
     Descriptor, DescriptorSet, FSIn, FSOut, FragmentOut, Shader, VSIn, VSOut, Vertex, VertexIn,
     VertexOut,
-};
+};*/
 pub use value::{GenValue, IntoPosh, Sampler2, Struct, Type, Value};
 
 pub use posh_macros::{posh, Struct};

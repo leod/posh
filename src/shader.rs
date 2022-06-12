@@ -7,11 +7,11 @@ use crate::{
 };
 
 pub trait Descriptor: Lift {
-    fn func_arg() -> Posh<Self>;
+    fn func_arg<'a>() -> Posh<'a, Self>;
 }
 
 pub trait DescriptorSet: Lift {
-    fn func_arg() -> Posh<Self>;
+    fn func_arg<'a>() -> Posh<'a, Self>;
 }
 
 impl<D> DescriptorSet for D

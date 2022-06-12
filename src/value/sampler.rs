@@ -6,15 +6,15 @@ use crate::{
 use super::{builtin2, FuncArg, Trace};
 
 #[derive(Debug, Copy, Clone)]
-pub struct Sampler2(Trace);
+pub struct Sampler2<'a>(Trace<'a>);
 
-impl Type for Sampler2 {
+impl<'a> Type for Sampler2<'a> {
     fn ty() -> Ty {
         Ty::BuiltIn(BuiltInTy::Sampler2)
     }
 }
 
-impl Value for Sampler2 {
+impl<'a> Value<'a> for Sampler2<'a> {
     type Type = Self;
 
     fn from_ident(ident: Ident) -> Self {
@@ -26,10 +26,10 @@ impl Value for Sampler2 {
     }
 }
 
-impl FuncArg for Sampler2 {}
+impl<'a> FuncArg<'a> for Sampler2<'a> {}
 
-impl Sampler2 {
-    pub fn load(self, tex_coord: Vec3<f32>) -> Vec4<f32> {
+impl<'a> Sampler2<'a> {
+    pub fn load(self, tex_coord: Vec3<'a, f32>) -> Vec4<'a, f32> {
         builtin2("texture", self, tex_coord)
     }
 }

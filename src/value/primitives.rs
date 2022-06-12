@@ -7,7 +7,7 @@ use crate::lang::{
 
 use super::{IntoPosh, Trace, TransparentValue, Type, Value};
 
-pub fn var<R: TransparentValue>(init: R) -> R {
+pub fn var<'a, R: TransparentValue<'a>>(init: R) -> R {
     let init = Some(Rc::new(init.expr()));
 
     let var = VarExpr {
@@ -58,9 +58,9 @@ pub fn common_field_base(exprs: &[Expr]) -> Option<Expr> {
 }
 
 #[doc(hidden)]
-pub fn field<R>(base: Trace, member: &str) -> R
+pub fn field<'a, R>(base: Trace<'a>, member: &str) -> R
 where
-    R: TransparentValue,
+    R: TransparentValue<'a>,
 {
     let expr = Expr::Field(FieldExpr {
         base: Rc::new(base.expr()),
@@ -72,14 +72,14 @@ where
 }
 
 #[doc(hidden)]
-pub fn func_def_and_call<R>(
+pub fn func_def_and_call<'a, R>(
     name: impl Into<String>,
     params: Vec<VarExpr>,
     result: R,
     args: Vec<Expr>,
 ) -> R
 where
-    R: TransparentValue,
+    R: TransparentValue<'a>,
 {
     assert!(params.len() == args.len());
 
@@ -93,15 +93,15 @@ where
     R::from_expr(expr)
 }
 
-pub(crate) fn binary<U, V, R>(
-    left: impl IntoPosh<Posh = U>,
+pub(crate) fn binary<'a, U, V, R>(
+    left: impl IntoPosh<'a, Posh = U>,
     op: BinaryOp,
-    right: impl IntoPosh<Posh = V>,
+    right: impl IntoPosh<'a, Posh = V>,
 ) -> R
 where
-    U: Value,
-    V: Value,
-    R: TransparentValue,
+    U: Value<'a>,
+    V: Value<'a>,
+    R: TransparentValue<'a>,
 {
     let left = Rc::new(left.into_posh().expr());
     let right = Rc::new(right.into_posh().expr());
@@ -116,10 +116,10 @@ where
     R::from_expr(expr)
 }
 
-pub(crate) fn builtin1<U, R>(name: &str, u: impl IntoPosh<Posh = U>) -> R
+pub(crate) fn builtin1<'a, U, R>(name: &str, u: impl IntoPosh<'a, Posh = U>) -> R
 where
-    U: Value,
-    R: TransparentValue,
+    U: Value<'a>,
+    R: TransparentValue<'a>,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
@@ -133,15 +133,15 @@ where
     R::from_expr(expr)
 }
 
-pub(crate) fn builtin2<U, V, R>(
+pub(crate) fn builtin2<'a, U, V, R>(
     name: &str,
-    u: impl IntoPosh<Posh = U>,
-    v: impl IntoPosh<Posh = V>,
+    u: impl IntoPosh<'a, Posh = U>,
+    v: impl IntoPosh<'a, Posh = V>,
 ) -> R
 where
-    U: Value,
-    V: Value,
-    R: TransparentValue,
+    U: Value<'a>,
+    V: Value<'a>,
+    R: TransparentValue<'a>,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
@@ -155,17 +155,17 @@ where
     R::from_expr(expr)
 }
 
-pub(crate) fn builtin3<U, V, W, R>(
+pub(crate) fn builtin3<'a, U, V, W, R>(
     name: &str,
-    u: impl IntoPosh<Posh = U>,
-    v: impl IntoPosh<Posh = V>,
-    w: impl IntoPosh<Posh = W>,
+    u: impl IntoPosh<'a, Posh = U>,
+    v: impl IntoPosh<'a, Posh = V>,
+    w: impl IntoPosh<'a, Posh = W>,
 ) -> R
 where
-    U: Value,
-    V: Value,
-    W: Value,
-    R: TransparentValue,
+    U: Value<'a>,
+    V: Value<'a>,
+    W: Value<'a>,
+    R: TransparentValue<'a>,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
@@ -183,19 +183,19 @@ where
     R::from_expr(expr)
 }
 
-pub(crate) fn builtin4<U, V, W, X, R>(
+pub(crate) fn builtin4<'a, U, V, W, X, R>(
     name: &str,
-    u: impl IntoPosh<Posh = U>,
-    v: impl IntoPosh<Posh = V>,
-    w: impl IntoPosh<Posh = W>,
-    x: impl IntoPosh<Posh = X>,
+    u: impl IntoPosh<'a, Posh = U>,
+    v: impl IntoPosh<'a, Posh = V>,
+    w: impl IntoPosh<'a, Posh = W>,
+    x: impl IntoPosh<'a, Posh = X>,
 ) -> R
 where
-    U: Value,
-    V: Value,
-    W: Value,
-    X: Value,
-    R: TransparentValue,
+    U: Value<'a>,
+    V: Value<'a>,
+    W: Value<'a>,
+    X: Value<'a>,
+    R: TransparentValue<'a>,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
