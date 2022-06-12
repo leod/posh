@@ -3,7 +3,7 @@ use crate::{
     Type, Value, Vec3, Vec4,
 };
 
-use super::{builtin2, FuncArg, Trace};
+use super::{builtin2, FuncArg, Lift, Trace};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Sampler2(Trace);
@@ -12,6 +12,10 @@ impl Type for Sampler2 {
     fn ty() -> Ty {
         Ty::BuiltIn(BuiltInTy::Sampler2)
     }
+}
+
+impl Lift for Sampler2 {
+    type Posh = Self;
 }
 
 impl Value for Sampler2 {

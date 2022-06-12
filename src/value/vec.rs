@@ -64,6 +64,14 @@ impl<T: ScalarType> Lift for [T; 4] {
     type Posh = Vec4<T>;
 }
 
+impl<T: ScalarType> Lift for Vec3<T> {
+    type Posh = Self;
+}
+
+impl<T: ScalarType> Lift for Vec4<T> {
+    type Posh = Self;
+}
+
 impl<T: ScalarType> IntoPosh for [T; 3] {
     fn into_posh(self) -> Self::Posh {
         vec3(self[0], self[1], self[2])

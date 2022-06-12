@@ -56,6 +56,10 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             type Posh = #posh_name #ty_generics;
         }
 
+        impl #impl_generics ::posh::value::Lift for #posh_name #ty_generics #where_clause {
+            type Posh = Self;
+        }
+
         impl #impl_generics ::posh::Value for #posh_name #ty_generics #where_clause {
             type Type = #name #ty_generics;
 
@@ -100,8 +104,6 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
         }
 
         impl #impl_generics ::posh::Struct for #name #ty_generics #where_clause {
-            type Posh = #posh_name #ty_generics;
-
             fn struct_ty() -> ::posh::lang::StructTy {
                 let ident = ::posh::lang::Ident {
                     name: #name_str.to_string(),

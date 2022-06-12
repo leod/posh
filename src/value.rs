@@ -3,6 +3,7 @@ mod funcs;
 mod primitives;
 mod sampler;
 mod scalar;
+mod tuple;
 mod vec;
 
 use crate::lang::{Expr, Ident, StructTy, Ty, VarExpr};
@@ -25,9 +26,19 @@ pub trait Lift {
     type Posh: Copy;
 }
 
-pub trait Struct: Type + Lift<Posh = <Self as Struct>::Posh> {
+pub trait Transparent: Type + Lift<Posh = <Self as Transparent>::Posh> {
     type Posh: TransparentValue;
+}
 
+impl<T> Transparent for T
+where
+    T: Type + Lift,
+    <T as Lift>::Posh: TransparentValue,
+{
+    type Posh = <Self as Lift>::Posh;
+}
+
+pub trait Struct: Transparent {
     fn struct_ty() -> StructTy;
 }
 
@@ -36,7 +47,7 @@ pub struct Trace {
     expr_id: ExprId,
 }
 
-pub trait Value: Copy + Sized {
+pub trait Value: Copy + Sized + Lift<Posh = Self> {
     type Type: Type + Lift;
 
     #[doc(hidden)]
@@ -67,11 +78,14 @@ pub type Posh<T> = <T as Lift>::Posh;
 
 impl<V: TransparentValue> FuncArg for V {}
 
-impl<V: Value> Lift for V {
+/*impl<V: Value> Lift for V {
     type Posh = Self;
-}
+}*/
 
-impl<V: Value> IntoPosh for V {
+impl<V> IntoPosh for V
+where
+    V: Lift<Posh = Self> + Value,
+{
     fn into_posh(self) -> Self {
         self
     }

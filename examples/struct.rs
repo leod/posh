@@ -1,6 +1,6 @@
 use posh::{lang::Ident, posh, IntoPosh as _, Posh, Struct, Value};
 
-#[derive(Struct, Default)]
+#[derive(Struct)]
 pub struct Helper {
     x: i32,
     y: i32,

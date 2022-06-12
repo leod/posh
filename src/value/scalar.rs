@@ -16,13 +16,14 @@ pub trait ScalarType: Type + Copy + Into<Literal> + IntoPosh<Posh = Scalar<Self>
 
 pub trait NumericType: ScalarType {}
 
-impl<T> Type for T
-where
-    T: ScalarType,
-{
+impl<T: ScalarType> Type for T {
     fn ty() -> Ty {
         Ty::BuiltIn(BuiltInTy::Scalar(T::scalar_ty()))
     }
+}
+
+impl<T: ScalarType> Lift for Scalar<T> {
+    type Posh = Self;
 }
 
 #[must_use]
