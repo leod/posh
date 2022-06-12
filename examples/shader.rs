@@ -62,7 +62,7 @@ fn fragment(_: Posh<ParamSet>, input: FSIn<Varying>) -> FSOut<Fragment> {
 }
 
 struct MyShader {
-    shader: Shader<ParamSet, Vertex, Fragment>,
+    shader: Shader<Posh<ParamSet>, Posh<Vertex>, Posh<Fragment>>,
 }
 
 fn main() {

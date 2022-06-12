@@ -2,26 +2,42 @@ use std::marker::PhantomData;
 
 use crate::{
     lang::{Expr, Ident},
-    value::Lift,
+    value::{Lift, TransparentValue},
     Posh, Struct, Value, Vec3, Vec4, F32, I32,
 };
 
-pub trait Descriptor: Lift {
-    fn func_arg() -> Posh<Self>;
+pub trait Descriptor: Lift<Posh = <Self as Descriptor>::Posh> {
+    type Posh: DescriptorPosh;
 }
 
-pub trait DescriptorSet: Lift {
-    fn func_arg() -> Posh<Self>;
+pub trait DescriptorPosh {
+    type Type: Descriptor;
+
+    #[doc(hidden)]
+    fn func_arg() -> Self;
 }
 
-impl<D> DescriptorSet for D
+pub trait DescriptorSet: Lift<Posh = <Self as DescriptorSet>::Posh> {
+    type Posh;
+}
+
+pub trait DescriptorSetPosh {
+    type Type: DescriptorSet;
+
+    #[doc(hidden)]
+    fn func_arg() -> Self;
+}
+
+/*impl<D> DescriptorSet for D
 where
     D: Descriptor,
 {
-    fn func_arg() -> Posh<Self> {
-        <Self as Descriptor>::func_arg()
+    type Posh = <Self as Descriptor>::Posh;
+
+    fn func_arg() -> Self {
+        <Self as DescriptorPosh>::func_arg()
     }
-}
+}*/
 
 pub trait Vertex: Struct {}
 
@@ -123,15 +139,18 @@ impl<W: VertexOut> FSIn<W> {
 
 impl<D, V, R> Shader<D, V, R>
 where
-    D: DescriptorSet,
-    V: VertexIn,
-    R: FragmentOut,
+    D: DescriptorSetPosh,
+    V: TransparentValue,
+    V::Type: VertexIn,
+    R: TransparentValue,
+    R::Type: FragmentOut,
 {
     pub fn new<W, VS, FS>(vertex_stage: VS, fragment_stage: FS) -> Self
     where
-        W: VertexOut,
-        VS: FnOnce(Posh<D>, VSIn<V>) -> VSOut<W>,
-        FS: FnOnce(Posh<D>, FSIn<W>) -> FSOut<R>,
+        W: TransparentValue,
+        W::Type: VertexOut,
+        VS: FnOnce(D, VSIn<V::Type>) -> VSOut<W::Type>,
+        FS: FnOnce(D, FSIn<W::Type>) -> FSOut<R::Type>,
     {
         let vertex_out = vertex_stage(D::func_arg(), VSIn::func_arg());
         let fragment_out = fragment_stage(D::func_arg(), FSIn::func_arg());

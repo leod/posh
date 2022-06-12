@@ -34,7 +34,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
     let field_tys: Vec<_> = fields.iter().map(|field| &field.ty).collect();
     let field_vis: Vec<_> = fields.iter().map(|field| &field.vis).collect();
 
-    let posh_name = Ident::new(&format!("_Posh{}", name), name.span());
+    let posh_name = Ident::new(&format!("__{}Posh", name), name.span());
 
     Ok(quote! {
         #[must_use]
