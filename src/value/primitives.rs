@@ -5,14 +5,14 @@ use crate::lang::{
     VarExpr,
 };
 
-use super::{IntoPosh, Trace, TransparentValue, Type, Value};
+use super::{Constructible, IntoPosh, Trace, Value};
 
-pub fn var<R: TransparentValue>(init: R) -> R {
+pub fn var<R: Constructible>(init: R) -> R {
     let init = Some(Rc::new(init.expr()));
 
     let var = VarExpr {
         ident: Ident::new("var"),
-        ty: <R::Type as Type>::ty(),
+        ty: <R::Posh as Value>::ty(),
         init,
     };
 
@@ -58,29 +58,23 @@ pub fn common_field_base(exprs: &[Expr]) -> Option<Expr> {
 }
 
 #[doc(hidden)]
-pub fn field<R>(base: Trace, member: &str) -> R
-where
-    R: TransparentValue,
-{
+pub fn field<R: Constructible>(base: Trace, member: &str) -> R {
     let expr = Expr::Field(FieldExpr {
         base: Rc::new(base.expr()),
         member: member.into(),
-        ty: <R::Type as Type>::ty(),
+        ty: <R::Posh as Value>::ty(),
     });
 
     R::from_expr(expr)
 }
 
 #[doc(hidden)]
-pub fn func_def_and_call<R>(
+pub fn func_def_and_call<R: Constructible>(
     name: impl Into<String>,
     params: Vec<VarExpr>,
     result: R,
     args: Vec<Expr>,
-) -> R
-where
-    R: TransparentValue,
-{
+) -> R {
     assert!(params.len() == args.len());
 
     let func = Func::UserDefined(UserDefinedFunc {
@@ -101,7 +95,7 @@ pub(crate) fn binary<U, V, R>(
 where
     U: Value,
     V: Value,
-    R: TransparentValue,
+    R: Constructible,
 {
     let left = Rc::new(left.into_posh().expr());
     let right = Rc::new(right.into_posh().expr());
@@ -110,7 +104,7 @@ where
         left,
         op,
         right,
-        ty: <R::Type as Type>::ty(),
+        ty: <R::Posh as Value>::ty(),
     });
 
     R::from_expr(expr)
@@ -119,11 +113,11 @@ where
 pub(crate) fn builtin1<U, R>(name: &str, u: impl IntoPosh<Posh = U>) -> R
 where
     U: Value,
-    R: TransparentValue,
+    R: Constructible,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Type as Type>::ty(),
+        ty: <R::Posh as Value>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
@@ -141,11 +135,11 @@ pub(crate) fn builtin2<U, V, R>(
 where
     U: Value,
     V: Value,
-    R: TransparentValue,
+    R: Constructible,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Type as Type>::ty(),
+        ty: <R::Posh as Value>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
@@ -165,11 +159,11 @@ where
     U: Value,
     V: Value,
     W: Value,
-    R: TransparentValue,
+    R: Constructible,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Type as Type>::ty(),
+        ty: <R::Posh as Value>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
@@ -195,11 +189,11 @@ where
     V: Value,
     W: Value,
     X: Value,
-    R: TransparentValue,
+    R: Constructible,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Type as Type>::ty(),
+        ty: <R::Posh as Value>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,

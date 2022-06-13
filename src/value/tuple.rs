@@ -1,16 +1,6 @@
-use crate::{Posh, Type, Value};
+use crate::{Posh, Value};
 
-use super::{Lift, TransparentValue};
-
-impl<U, V> Type for (U, V)
-where
-    U: Type,
-    V: Type,
-{
-    fn ty() -> crate::lang::Ty {
-        todo!()
-    }
-}
+use super::{Constructible, Lift};
 
 impl<U, V> Lift for (U, V)
 where
@@ -22,10 +12,12 @@ where
 
 impl<U, V> Value for (U, V)
 where
-    U: TransparentValue,
-    V: TransparentValue,
+    U: Constructible,
+    V: Constructible,
 {
-    type Type = (U::Type, V::Type);
+    fn ty() -> crate::lang::Ty {
+        todo!()
+    }
 
     fn from_ident(ident: crate::lang::Ident) -> Self {
         todo!()
@@ -36,10 +28,10 @@ where
     }
 }
 
-impl<U, V> TransparentValue for (U, V)
+impl<U, V> Constructible for (U, V)
 where
-    U: TransparentValue,
-    V: TransparentValue,
+    U: Constructible,
+    V: Constructible,
 {
     fn from_trace(trace: super::Trace) -> Self {
         todo!()

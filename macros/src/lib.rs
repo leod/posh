@@ -1,6 +1,5 @@
-mod fields;
 mod func;
-mod struct_type;
+mod into_posh;
 
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput, ItemFn};
@@ -15,20 +14,10 @@ pub fn posh(_args: TokenStream, input: TokenStream) -> TokenStream {
     .into()
 }
 
-#[proc_macro_derive(Struct)]
-pub fn derive_struct(input: TokenStream) -> TokenStream {
+#[proc_macro_derive(IntoPosh)]
+pub fn derive_into_posh(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    match struct_type::derive(input) {
-        Ok(ts) => ts,
-        Err(e) => e.to_compile_error(),
-    }
-    .into()
-}
-
-#[proc_macro_derive(Fields)]
-pub fn derive_fields(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    match fields::derive(input) {
+    match into_posh::derive(input) {
         Ok(ts) => ts,
         Err(e) => e.to_compile_error(),
     }

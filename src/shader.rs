@@ -2,57 +2,57 @@ use std::marker::PhantomData;
 
 use crate::{
     lang::{Expr, Ident},
-    value::{Lift, Transparent},
-    Posh, Struct, Value, Vec3, Vec4, F32, I32,
+    value::{Constructible, Lift},
+    Posh, Value, Vec3, Vec4, F32, I32,
 };
 
-pub trait Descriptor: Lift {
-    fn func_arg() -> Posh<Self>;
+pub trait Resource {
+    fn func_arg() -> Self;
 }
 
-pub trait DescriptorSet: Lift {
-    fn func_arg() -> Posh<Self>;
+pub trait Resources {
+    fn func_arg() -> Self;
 }
 
-impl<D> DescriptorSet for D
+impl<D> Resources for D
 where
-    D: Descriptor,
+    D: Resource,
 {
-    fn func_arg() -> Posh<Self> {
-        <Self as Descriptor>::func_arg()
+    fn func_arg() -> Self {
+        <Self as Resource>::func_arg()
     }
 }
 
-pub trait Vertex: Transparent {}
+pub trait Vertex: Constructible {}
 
-pub trait VertexIn: Transparent {}
+pub trait VertexIn: Constructible {}
 
 impl<V: Vertex> VertexIn for V {}
 
 impl<V1: Vertex, V2: Vertex> VertexIn for (V1, V2) {}
 
-pub trait VertexOut: Transparent {}
+pub trait VertexOut: Constructible {}
 
-pub trait FragmentOut: Transparent {}
+pub trait FragmentOut: Constructible {}
 
 #[derive(Clone, Copy)]
-pub struct VSIn<V: VertexIn> {
+pub struct VSIn<V: Lift> {
     pub vertex: Posh<V>,
     pub vertex_id: I32,
     pub instance_id: I32,
 }
 
-pub struct VSOut<W: VertexOut> {
+pub struct VSOut<W: Lift> {
     pub position: Vec3<f32>,
     pub varying: Posh<W>,
 }
 
-pub struct FSIn<W: VertexOut> {
+pub struct FSIn<W: Lift> {
     pub varying: Posh<W>,
     pub frag_coord: Vec4<f32>,
 }
 
-pub struct FSOut<R: FragmentOut> {
+pub struct FSOut<R: Lift> {
     pub fragment: Posh<R>,
     pub frag_depth: Option<F32>,
 }
@@ -87,16 +87,11 @@ fn builtin_var<V: Value>(name: &'static str) -> V {
     V::from_ident(Ident::new(name))
 }
 
-impl<R: FragmentOut> FSOut<R> {
-    pub fn new(fragment: Posh<R>) -> Self {
-        Self {
-            fragment,
-            frag_depth: None,
-        }
-    }
-}
-
-impl<V: VertexIn> VSIn<V> {
+impl<V> VSIn<V>
+where
+    V: Lift,
+    V::Posh: VertexIn,
+{
     pub fn new(vertex: Posh<V>) -> Self {
         Self {
             vertex,
@@ -110,7 +105,11 @@ impl<V: VertexIn> VSIn<V> {
     }
 }
 
-impl<W: VertexOut> FSIn<W> {
+impl<W> FSIn<W>
+where
+    W: Lift,
+    W::Posh: VertexOut,
+{
     pub fn new(varying: Posh<W>) -> Self {
         Self {
             varying,
@@ -123,20 +122,37 @@ impl<W: VertexOut> FSIn<W> {
     }
 }
 
-impl<D, V, R> Shader<D, V, R>
+impl<R> FSOut<R>
 where
-    D: DescriptorSet,
-    V: VertexIn,
-    R: FragmentOut,
+    R: Lift,
+    R::Posh: FragmentOut,
+{
+    pub fn new(fragment: Posh<R>) -> Self {
+        Self {
+            fragment,
+            frag_depth: None,
+        }
+    }
+}
+
+impl<R, V, F> Shader<R, V, F>
+where
+    R: Lift,
+    V: Lift,
+    F: Lift,
+    R::Posh: Resources,
+    V::Posh: VertexIn,
+    F::Posh: FragmentOut,
 {
     pub fn new<W, VS, FS>(vertex_stage: VS, fragment_stage: FS) -> Self
     where
-        W: VertexOut,
-        VS: FnOnce(Posh<D>, VSIn<V>) -> VSOut<W>,
-        FS: FnOnce(Posh<D>, FSIn<W>) -> FSOut<R>,
+        W: Lift,
+        W::Posh: VertexOut,
+        VS: FnOnce(Posh<R>, VSIn<V>) -> VSOut<W>,
+        FS: FnOnce(Posh<R>, FSIn<W>) -> FSOut<F>,
     {
-        let vertex_out = vertex_stage(D::func_arg(), VSIn::func_arg());
-        let fragment_out = fragment_stage(D::func_arg(), FSIn::func_arg());
+        let vertex_out = vertex_stage(R::Posh::func_arg(), VSIn::func_arg());
+        let fragment_out = fragment_stage(R::Posh::func_arg(), FSIn::func_arg());
 
         let vertex = ErasedVertexFunc {
             position: vertex_out.position.expr(),
