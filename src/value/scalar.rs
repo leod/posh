@@ -8,19 +8,13 @@ use crate::lang::{
     BinaryOp, BuiltInTy, Expr, Ident, Literal, LiteralExpr, ScalarTy, TernaryExpr, Ty,
 };
 
-use super::{binary, IntoPosh, Lift, Trace, TransparentValue, Type, Value};
+use super::{binary, Constructible, IntoPosh, Lift, Trace, Value};
 
-pub trait ScalarType: Type + Copy + Into<Literal> + IntoPosh<Posh = Scalar<Self>> {
+pub trait ScalarType: Copy + Into<Literal> + IntoPosh<Posh = Scalar<Self>> {
     fn scalar_ty() -> ScalarTy;
 }
 
 pub trait NumericType: ScalarType {}
-
-impl<T: ScalarType> Type for T {
-    fn ty() -> Ty {
-        Ty::BuiltIn(BuiltInTy::Scalar(T::scalar_ty()))
-    }
-}
 
 impl<T: ScalarType> Lift for Scalar<T> {
     type Posh = Self;
@@ -33,27 +27,23 @@ pub struct Scalar<T> {
     trace: Trace,
 }
 
-impl<T> Value for Scalar<T>
-where
-    T: ScalarType,
-{
-    type Type = T;
-
-    fn from_ident(ident: Ident) -> Self {
-        Self::from_trace(Trace::from_ident::<Self>(ident))
+impl<T: ScalarType> Value for Scalar<T> {
+    fn ty() -> Ty {
+        Ty::BuiltIn(BuiltInTy::Scalar(T::scalar_ty()))
     }
 
     fn expr(&self) -> Expr {
         self.trace.expr()
     }
+
+    fn from_ident(ident: Ident) -> Self {
+        Self::from_trace(Trace::from_ident::<Self>(ident))
+    }
 }
 
-impl<T> TransparentValue for Scalar<T>
-where
-    T: ScalarType,
-{
+impl<T: ScalarType> Constructible for Scalar<T> {
     fn from_trace(trace: Trace) -> Self {
-        assert!(trace.expr().ty() == <Self::Type as Type>::ty());
+        assert!(trace.expr().ty() == <Self::Posh as Value>::ty());
 
         Scalar {
             _phantom: PhantomData,
@@ -70,10 +60,7 @@ where
         Self::from_expr(Expr::Literal(LiteralExpr { literal: x.into() }))
     }
 
-    pub fn eq<V>(&self, right: impl IntoPosh<Posh = V>) -> Bool
-    where
-        V: Value<Type = T>,
-    {
+    pub fn eq(&self, right: impl IntoPosh<Posh = Self>) -> Bool {
         binary(*self, BinaryOp::Eq, right)
     }
 }
@@ -87,7 +74,7 @@ impl Bool {
         binary(self, BinaryOp::And, right)
     }
 
-    pub fn ternary<V: TransparentValue>(
+    pub fn ternary<V: Constructible>(
         self,
         true_value: impl IntoPosh<Posh = V>,
         false_value: impl IntoPosh<Posh = V>,

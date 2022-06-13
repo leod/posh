@@ -1,12 +1,12 @@
-use posh::{lang::Ident, posh, IntoPosh as _, Posh, Struct, Value};
+use posh::{lang::Ident, posh, IntoPosh, Posh, Value};
 
-#[derive(Struct)]
+#[derive(IntoPosh)]
 pub struct Helper {
     x: i32,
     y: i32,
 }
 
-#[derive(Struct)]
+#[derive(IntoPosh)]
 pub struct Vertex {
     pos: i32,
     time: f32,

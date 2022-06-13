@@ -6,21 +6,9 @@ use crate::{
 };
 
 use super::{
-    binary, builtin3, builtin4, field, scalar::NumericType, Lift, Scalar, ScalarType, Trace,
-    TransparentValue, Type,
+    binary, builtin3, builtin4, field, scalar::NumericType, Constructible, Lift, Scalar,
+    ScalarType, Trace,
 };
-
-impl<T: ScalarType> Type for [T; 3] {
-    fn ty() -> Ty {
-        Ty::BuiltIn(BuiltInTy::Vec3(T::scalar_ty()))
-    }
-}
-
-impl<T: ScalarType> Type for [T; 4] {
-    fn ty() -> Ty {
-        Ty::BuiltIn(BuiltInTy::Vec4(T::scalar_ty()))
-    }
-}
 
 #[must_use]
 #[derive(Debug, Copy, Clone)]
@@ -31,8 +19,34 @@ pub struct Vec3<T> {
     pub z: Scalar<T>,
 }
 
+#[must_use]
+#[derive(Debug, Clone, Copy)]
+pub struct Vec4<T> {
+    trace: Trace,
+    pub x: Scalar<T>,
+    pub y: Scalar<T>,
+    pub z: Scalar<T>,
+    pub w: Scalar<T>,
+}
+
 impl<T: ScalarType> Value for Vec3<T> {
-    type Type = [T; 3];
+    fn ty() -> Ty {
+        Ty::BuiltIn(BuiltInTy::Vec3(T::scalar_ty()))
+    }
+
+    fn expr(&self) -> Expr {
+        self.trace.expr()
+    }
+
+    fn from_ident(ident: Ident) -> Self {
+        Self::from_trace(Trace::from_ident::<Self>(ident))
+    }
+}
+
+impl<T: ScalarType> Value for Vec4<T> {
+    fn ty() -> Ty {
+        Ty::BuiltIn(BuiltInTy::Vec4(T::scalar_ty()))
+    }
 
     fn from_ident(ident: Ident) -> Self {
         Self::from_trace(Trace::from_ident::<Self>(ident))
@@ -43,15 +57,29 @@ impl<T: ScalarType> Value for Vec3<T> {
     }
 }
 
-impl<T: ScalarType> TransparentValue for Vec3<T> {
+impl<T: ScalarType> Constructible for Vec3<T> {
     fn from_trace(trace: Trace) -> Self {
-        assert!(trace.expr().ty() == <Self::Type as Type>::ty());
+        assert!(trace.expr().ty() == <Self::Posh as Value>::ty());
 
         Self {
             trace,
             x: field(trace, "x"),
             y: field(trace, "y"),
             z: field(trace, "z"),
+        }
+    }
+}
+
+impl<T: ScalarType> Constructible for Vec4<T> {
+    fn from_trace(trace: Trace) -> Self {
+        assert!(trace.expr().ty() == <Self::Posh as Value>::ty());
+
+        Self {
+            trace,
+            x: field(trace, "x"),
+            y: field(trace, "y"),
+            z: field(trace, "z"),
+            w: field(trace, "w"),
         }
     }
 }
@@ -81,42 +109,6 @@ impl<T: ScalarType> IntoPosh for [T; 3] {
 impl<T: ScalarType> IntoPosh for [T; 4] {
     fn into_posh(self) -> Self::Posh {
         vec4(self[0], self[1], self[2], self[3])
-    }
-}
-
-#[must_use]
-#[derive(Debug, Clone, Copy)]
-pub struct Vec4<T> {
-    trace: Trace,
-    pub x: Scalar<T>,
-    pub y: Scalar<T>,
-    pub z: Scalar<T>,
-    pub w: Scalar<T>,
-}
-
-impl<T: ScalarType> Value for Vec4<T> {
-    type Type = [T; 4];
-
-    fn from_ident(ident: Ident) -> Self {
-        Self::from_trace(Trace::from_ident::<Self>(ident))
-    }
-
-    fn expr(&self) -> Expr {
-        self.trace.expr()
-    }
-}
-
-impl<T: ScalarType> TransparentValue for Vec4<T> {
-    fn from_trace(trace: Trace) -> Self {
-        assert!(trace.expr().ty() == <Self::Type as Type>::ty());
-
-        Self {
-            trace,
-            x: field(trace, "x"),
-            y: field(trace, "y"),
-            z: field(trace, "z"),
-            w: field(trace, "w"),
-        }
     }
 }
 
