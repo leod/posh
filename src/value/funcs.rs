@@ -1,6 +1,6 @@
-use crate::IntoValue;
+use crate::{IntoValue, Po};
 
-use super::{builtin1, builtin2, Constructible, Vec3, F32};
+use super::{builtin1, builtin2, Constructible, Vec3};
 
 pub trait GenValue: Constructible + Sized {
     fn normalize(self) -> Self {
@@ -60,5 +60,5 @@ pub trait GenValue: Constructible + Sized {
     }
 }
 
-impl GenValue for F32 {}
+impl GenValue for Po<f32> {}
 impl GenValue for Vec3<f32> {}

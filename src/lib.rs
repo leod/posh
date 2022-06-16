@@ -1,17 +1,14 @@
 pub mod lang;
-pub mod prelude;
 pub mod shader;
 pub mod value;
 
 pub use static_assertions;
 pub use uuid;
 
-pub use prelude::*;
-
 pub use shader::{
     FSIn, FSOut, FragmentOut, Resource, Resources, Shader, VSIn, VSOut, Vertex, VertexIn, VertexOut,
 };
-pub use value::{GenValue, IntoValue, Sampler2, Value};
+pub use value::{var, vec3, IntoValue, Sampler2, GenValue, Value, Vec3, Vec4, Po};
 
 pub use posh_macros::{posh, IntoValue};
 

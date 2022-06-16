@@ -12,7 +12,7 @@ use crate::lang::{Expr, Ident, Ty};
 pub use funcs::GenValue;
 pub use primitives::{common_field_base, field, func_def_and_call, var};
 pub use sampler::Sampler2;
-pub use scalar::{Bool, Scalar, ScalarType, F32, I32, U32};
+pub use scalar::{Scalar, ScalarType};
 pub use trace::Trace;
 pub use vec::{vec3, Vec3, Vec4};
 
@@ -22,8 +22,10 @@ pub trait Lift {
     type Type: Copy + Lift<Type = Self::Type>;
 }
 
+pub type Po<T> = <T as Lift>::Type;
+
 pub trait IntoValue: Lift {
-    fn into_value(self) -> Self::Type;
+    fn into_value(self) -> Po<Self>;
 }
 
 pub trait Value: Copy + Lift<Type = Self> + Sized {
@@ -43,8 +45,6 @@ pub trait Constructible: Value {
 }
 
 pub trait FuncArg: Value {}
-
-pub type Po<T> = <T as Lift>::Type;
 
 impl<V: Constructible> FuncArg for V {}
 

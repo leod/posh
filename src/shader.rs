@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use crate::{
     lang::{Expr, Ident},
     value::{Constructible, Lift},
-    Po, Value, Vec3, Vec4, F32, I32,
+    Po, Value, Vec3, Vec4,
 };
 
 pub trait Resource {
@@ -38,8 +38,8 @@ pub trait FragmentOut: Constructible {}
 #[derive(Clone, Copy)]
 pub struct VSIn<V: Lift> {
     pub vertex: Po<V>,
-    pub vertex_id: I32,
-    pub instance_id: I32,
+    pub vertex_id: Po<i32>,
+    pub instance_id: Po<i32>,
 }
 
 pub struct VSOut<W: Lift> {
@@ -54,7 +54,7 @@ pub struct FSIn<W: Lift> {
 
 pub struct FSOut<R: Lift> {
     pub fragment: Po<R>,
-    pub frag_depth: Option<F32>,
+    pub frag_depth: Option<Po<f32>>,
 }
 
 pub struct ErasedVertexFunc {
