@@ -4,17 +4,16 @@ use syn::{Data, DataStruct, DeriveInput, Error, Fields, Ident, Result};
 use uuid::Uuid;
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
-    let fields =
-        match &input.data {
-            Data::Struct(DataStruct {
-                fields: Fields::Named(fields),
-                ..
-            }) => Ok(&fields.named),
-            _ => Err(Error::new_spanned(
-                input.ident.clone(),
-                "derive(IntoPosh) does not support tuple structs, unit structs, enums, or unions",
-            )),
-        }?;
+    let fields = match &input.data {
+        Data::Struct(DataStruct {
+            fields: Fields::Named(fields),
+            ..
+        }) => Ok(&fields.named),
+        _ => Err(Error::new_spanned(
+            input.ident.clone(),
+            "derive(IntoValue) does not support tuple structs, unit structs, enums, or unions",
+        )),
+    }?;
 
     let name = input.ident;
     let vis = input.vis;
@@ -41,16 +40,16 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
         #[allow(non_camel_case_types)]
         #vis struct #posh_name #ty_generics #where_clause {
             #(
-                #field_vis #field_idents: ::posh::Posh<#field_tys>
+                #field_vis #field_idents: ::posh::Po<#field_tys>
             ),*
         }
 
         impl #impl_generics ::posh::value::Lift for #name #ty_generics #where_clause {
-            type Posh = #posh_name #ty_generics;
+            type Type = #posh_name #ty_generics;
         }
 
         impl #impl_generics ::posh::value::Lift for #posh_name #ty_generics #where_clause {
-            type Posh = Self;
+            type Type = Self;
         }
 
         impl #impl_generics ::posh::Value for #posh_name #ty_generics #where_clause {
@@ -64,7 +63,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                     #(
                         (
                             #field_name_strs.to_string(),
-                            <<#field_tys as ::posh::value::Lift>::Posh as ::posh::Value>::ty(),
+                            <<#field_tys as ::posh::value::Lift>::Type as ::posh::Value>::ty(),
                         )
                     ),*
                 ];
@@ -120,11 +119,11 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             }
         }
 
-        impl #impl_generics ::posh::IntoPosh for #name #ty_generics #where_clause {
-            fn into_posh(self) -> Self::Posh {
+        impl #impl_generics ::posh::IntoValue for #name #ty_generics #where_clause {
+            fn into_value(self) -> Self::Type {
                 #posh_name {
                     #(
-                        #field_idents: <#field_tys as ::posh::IntoPosh>::into_posh(
+                        #field_idents: <#field_tys as ::posh::IntoValue>::into_value(
                             self.#field_idents,
                         )
                     ),*

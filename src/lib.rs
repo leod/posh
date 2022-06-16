@@ -11,9 +11,9 @@ pub use prelude::*;
 pub use shader::{
     FSIn, FSOut, FragmentOut, Resource, Resources, Shader, VSIn, VSOut, Vertex, VertexIn, VertexOut,
 };
-pub use value::{GenValue, IntoPosh, Sampler2, Value};
+pub use value::{GenValue, IntoValue, Sampler2, Value};
 
-pub use posh_macros::{posh, IntoPosh};
+pub use posh_macros::{posh, IntoValue};
 
 // This is here so that our macros can refer to `posh` even when we use them inside this crate.
 extern crate self as posh;

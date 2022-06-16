@@ -19,14 +19,14 @@ pub use vec::{vec3, Vec3, Vec4};
 pub(crate) use primitives::{binary, builtin1, builtin2, builtin3, builtin4};
 
 pub trait Lift {
-    type Posh: Copy + Lift<Posh = Self::Posh>;
+    type Type: Copy + Lift<Type = Self::Type>;
 }
 
-pub trait IntoPosh: Lift {
-    fn into_posh(self) -> Self::Posh;
+pub trait IntoValue: Lift {
+    fn into_value(self) -> Self::Type;
 }
 
-pub trait Value: Copy + Lift<Posh = Self> + Sized {
+pub trait Value: Copy + Lift<Type = Self> + Sized {
     fn ty() -> Ty;
     fn expr(&self) -> Expr;
 
@@ -44,15 +44,15 @@ pub trait Constructible: Value {
 
 pub trait FuncArg: Value {}
 
-pub type Posh<T> = <T as Lift>::Posh;
+pub type Po<T> = <T as Lift>::Type;
 
 impl<V: Constructible> FuncArg for V {}
 
-impl<V> IntoPosh for V
+impl<V> IntoValue for V
 where
-    V: Lift<Posh = Self> + Value,
+    V: Lift<Type = Self> + Value,
 {
-    fn into_posh(self) -> Self {
+    fn into_value(self) -> Self {
         self
     }
 }

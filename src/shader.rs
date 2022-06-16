@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use crate::{
     lang::{Expr, Ident},
     value::{Constructible, Lift},
-    Posh, Value, Vec3, Vec4, F32, I32,
+    Po, Value, Vec3, Vec4, F32, I32,
 };
 
 pub trait Resource {
@@ -37,23 +37,23 @@ pub trait FragmentOut: Constructible {}
 
 #[derive(Clone, Copy)]
 pub struct VSIn<V: Lift> {
-    pub vertex: Posh<V>,
+    pub vertex: Po<V>,
     pub vertex_id: I32,
     pub instance_id: I32,
 }
 
 pub struct VSOut<W: Lift> {
     pub position: Vec3<f32>,
-    pub varying: Posh<W>,
+    pub varying: Po<W>,
 }
 
 pub struct FSIn<W: Lift> {
-    pub varying: Posh<W>,
+    pub varying: Po<W>,
     pub frag_coord: Vec4<f32>,
 }
 
 pub struct FSOut<R: Lift> {
-    pub fragment: Posh<R>,
+    pub fragment: Po<R>,
     pub frag_depth: Option<F32>,
 }
 
@@ -90,9 +90,9 @@ fn builtin_var<V: Value>(name: &'static str) -> V {
 impl<V> VSIn<V>
 where
     V: Lift,
-    V::Posh: VertexIn,
+    V::Type: VertexIn,
 {
-    pub fn new(vertex: Posh<V>) -> Self {
+    pub fn new(vertex: Po<V>) -> Self {
         Self {
             vertex,
             vertex_id: builtin_var("gl_VertexID"),
@@ -101,16 +101,16 @@ where
     }
 
     pub fn func_arg() -> Self {
-        Self::new(Posh::<V>::from_ident(Ident::new("input")))
+        Self::new(Po::<V>::from_ident(Ident::new("input")))
     }
 }
 
 impl<W> FSIn<W>
 where
     W: Lift,
-    W::Posh: VertexOut,
+    W::Type: VertexOut,
 {
-    pub fn new(varying: Posh<W>) -> Self {
+    pub fn new(varying: Po<W>) -> Self {
         Self {
             varying,
             frag_coord: builtin_var("gl_FragCoord"),
@@ -118,16 +118,16 @@ where
     }
 
     pub fn func_arg() -> Self {
-        Self::new(Posh::<W>::from_ident(Ident::new("input")))
+        Self::new(Po::<W>::from_ident(Ident::new("input")))
     }
 }
 
 impl<R> FSOut<R>
 where
     R: Lift,
-    R::Posh: FragmentOut,
+    R::Type: FragmentOut,
 {
-    pub fn new(fragment: Posh<R>) -> Self {
+    pub fn new(fragment: Po<R>) -> Self {
         Self {
             fragment,
             frag_depth: None,
@@ -140,19 +140,19 @@ where
     R: Lift,
     V: Lift,
     F: Lift,
-    R::Posh: Resources,
-    V::Posh: VertexIn,
-    F::Posh: FragmentOut,
+    R::Type: Resources,
+    V::Type: VertexIn,
+    F::Type: FragmentOut,
 {
     pub fn new<W, VS, FS>(vertex_stage: VS, fragment_stage: FS) -> Self
     where
         W: Lift,
-        W::Posh: VertexOut,
-        VS: FnOnce(Posh<R>, VSIn<V>) -> VSOut<W>,
-        FS: FnOnce(Posh<R>, FSIn<W>) -> FSOut<F>,
+        W::Type: VertexOut,
+        VS: FnOnce(Po<R>, VSIn<V>) -> VSOut<W>,
+        FS: FnOnce(Po<R>, FSIn<W>) -> FSOut<F>,
     {
-        let vertex_out = vertex_stage(R::Posh::func_arg(), VSIn::func_arg());
-        let fragment_out = fragment_stage(R::Posh::func_arg(), FSIn::func_arg());
+        let vertex_out = vertex_stage(R::Type::func_arg(), VSIn::func_arg());
+        let fragment_out = fragment_stage(R::Type::func_arg(), FSIn::func_arg());
 
         let vertex = ErasedVertexFunc {
             position: vertex_out.position.expr(),

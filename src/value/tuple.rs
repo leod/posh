@@ -1,4 +1,4 @@
-use crate::{Posh, Value};
+use crate::{Po, Value};
 
 use super::{Constructible, Lift};
 
@@ -7,7 +7,7 @@ where
     U: Lift,
     V: Lift,
 {
-    type Posh = (Posh<U>, Posh<V>);
+    type Type = (Po<U>, Po<V>);
 }
 
 impl<U, V> Value for (U, V)

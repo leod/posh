@@ -1,4 +1,4 @@
-use crate::IntoPosh;
+use crate::IntoValue;
 
 use super::{builtin1, builtin2, Constructible, Vec3, F32};
 
@@ -27,7 +27,7 @@ pub trait GenValue: Constructible + Sized {
         builtin1("acos", self)
     }
 
-    fn atan2(self, x: impl IntoPosh<Posh = Self>) -> Self {
+    fn atan2(self, x: impl IntoValue<Type = Self>) -> Self {
         builtin2("atan", self, x)
     }
 

@@ -5,14 +5,14 @@ use crate::lang::{
     VarExpr,
 };
 
-use super::{Constructible, IntoPosh, Trace, Value};
+use super::{Constructible, IntoValue, Trace, Value};
 
 pub fn var<R: Constructible>(init: R) -> R {
     let init = Some(Rc::new(init.expr()));
 
     let var = VarExpr {
         ident: Ident::new("var"),
-        ty: <R::Posh as Value>::ty(),
+        ty: <R::Type as Value>::ty(),
         init,
     };
 
@@ -62,7 +62,7 @@ pub fn field<R: Constructible>(base: Trace, member: &str) -> R {
     let expr = Expr::Field(FieldExpr {
         base: Rc::new(base.expr()),
         member: member.into(),
-        ty: <R::Posh as Value>::ty(),
+        ty: <R::Type as Value>::ty(),
     });
 
     R::from_expr(expr)
@@ -88,40 +88,40 @@ pub fn func_def_and_call<R: Constructible>(
 }
 
 pub(crate) fn binary<U, V, R>(
-    left: impl IntoPosh<Posh = U>,
+    left: impl IntoValue<Type = U>,
     op: BinaryOp,
-    right: impl IntoPosh<Posh = V>,
+    right: impl IntoValue<Type = V>,
 ) -> R
 where
     U: Value,
     V: Value,
     R: Constructible,
 {
-    let left = Rc::new(left.into_posh().expr());
-    let right = Rc::new(right.into_posh().expr());
+    let left = Rc::new(left.into_value().expr());
+    let right = Rc::new(right.into_value().expr());
 
     let expr = Expr::Binary(BinaryExpr {
         left,
         op,
         right,
-        ty: <R::Posh as Value>::ty(),
+        ty: <R::Type as Value>::ty(),
     });
 
     R::from_expr(expr)
 }
 
-pub(crate) fn builtin1<U, R>(name: &str, u: impl IntoPosh<Posh = U>) -> R
+pub(crate) fn builtin1<U, R>(name: &str, u: impl IntoValue<Type = U>) -> R
 where
     U: Value,
     R: Constructible,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Posh as Value>::ty(),
+        ty: <R::Type as Value>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
-        args: vec![u.into_posh().expr()],
+        args: vec![u.into_value().expr()],
     });
 
     R::from_expr(expr)
@@ -129,8 +129,8 @@ where
 
 pub(crate) fn builtin2<U, V, R>(
     name: &str,
-    u: impl IntoPosh<Posh = U>,
-    v: impl IntoPosh<Posh = V>,
+    u: impl IntoValue<Type = U>,
+    v: impl IntoValue<Type = V>,
 ) -> R
 where
     U: Value,
@@ -139,11 +139,11 @@ where
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Posh as Value>::ty(),
+        ty: <R::Type as Value>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
-        args: vec![u.into_posh().expr(), v.into_posh().expr()],
+        args: vec![u.into_value().expr(), v.into_value().expr()],
     });
 
     R::from_expr(expr)
@@ -151,9 +151,9 @@ where
 
 pub(crate) fn builtin3<U, V, W, R>(
     name: &str,
-    u: impl IntoPosh<Posh = U>,
-    v: impl IntoPosh<Posh = V>,
-    w: impl IntoPosh<Posh = W>,
+    u: impl IntoValue<Type = U>,
+    v: impl IntoValue<Type = V>,
+    w: impl IntoValue<Type = W>,
 ) -> R
 where
     U: Value,
@@ -163,14 +163,14 @@ where
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Posh as Value>::ty(),
+        ty: <R::Type as Value>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
         args: vec![
-            u.into_posh().expr(),
-            v.into_posh().expr(),
-            w.into_posh().expr(),
+            u.into_value().expr(),
+            v.into_value().expr(),
+            w.into_value().expr(),
         ],
     });
 
@@ -179,10 +179,10 @@ where
 
 pub(crate) fn builtin4<U, V, W, X, R>(
     name: &str,
-    u: impl IntoPosh<Posh = U>,
-    v: impl IntoPosh<Posh = V>,
-    w: impl IntoPosh<Posh = W>,
-    x: impl IntoPosh<Posh = X>,
+    u: impl IntoValue<Type = U>,
+    v: impl IntoValue<Type = V>,
+    w: impl IntoValue<Type = W>,
+    x: impl IntoValue<Type = X>,
 ) -> R
 where
     U: Value,
@@ -193,15 +193,15 @@ where
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Posh as Value>::ty(),
+        ty: <R::Type as Value>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
         args: vec![
-            u.into_posh().expr(),
-            v.into_posh().expr(),
-            w.into_posh().expr(),
-            x.into_posh().expr(),
+            u.into_value().expr(),
+            v.into_value().expr(),
+            w.into_value().expr(),
+            x.into_value().expr(),
         ],
     });
 

@@ -9,7 +9,7 @@ use super::{builtin2, FuncArg, Lift, Trace};
 pub struct Sampler2(Trace);
 
 impl Lift for Sampler2 {
-    type Posh = Self;
+    type Type = Self;
 }
 
 impl Value for Sampler2 {

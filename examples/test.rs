@@ -1,7 +1,7 @@
-use posh::{lang::Ident, posh, var, vec3, GenValue, Sampler2, Value, Vec4, F32};
+use posh::{lang::Ident, posh, var, vec3, GenValue, Po, Sampler2, Value, Vec4};
 
 #[posh]
-fn foo(x: F32, y: F32) -> F32 {
+fn foo(x: Po<f32>, y: Po<f32>) -> Po<f32> {
     let z = var(x * y);
     let w = var(1.0 + y + x + 1.0);
 
@@ -9,7 +9,7 @@ fn foo(x: F32, y: F32) -> F32 {
 }
 
 #[posh]
-fn bar(x: F32) -> F32 {
+fn bar(x: Po<f32>) -> Po<f32> {
     x.eq(5.0).ternary(x.atan2(2.0), -1.0)
 }
 

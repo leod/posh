@@ -14,7 +14,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                     input_tys.push(input.ty.clone());
 
                     let input_ty = &input.ty;
-                    input.ty = parse_quote! { impl ::posh::IntoPosh<Posh = #input_ty> };
+                    input.ty = parse_quote! { impl ::posh::IntoValue<Type = #input_ty> };
                 }
                 _ => {
                     return Err(Error::new_spanned(
@@ -44,7 +44,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
             };
 
             #(
-                let #input_idents = ::posh::IntoPosh::into_posh(#input_idents);
+                let #input_idents = ::posh::IntoValue::into_value(#input_idents);
             )*
 
             let #args_ident = vec![
@@ -72,7 +72,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                 ],
                 {
                     //use ::posh::prelude::*;
-                    ::posh::IntoPosh::into_posh(#func_body)
+                    ::posh::IntoValue::into_value(#func_body)
                 },
                 #args_ident,
             )

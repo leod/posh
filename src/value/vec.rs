@@ -2,7 +2,7 @@ use std::ops::{Add, Div, Mul, Sub};
 
 use crate::{
     lang::{BinaryOp, BuiltInTy, Expr, Ident, Ty},
-    IntoPosh, Value,
+    IntoValue, Value,
 };
 
 use super::{
@@ -59,7 +59,7 @@ impl<T: ScalarType> Value for Vec4<T> {
 
 impl<T: ScalarType> Constructible for Vec3<T> {
     fn from_trace(trace: Trace) -> Self {
-        assert!(trace.expr().ty() == <Self::Posh as Value>::ty());
+        assert!(trace.expr().ty() == <Self::Type as Value>::ty());
 
         Self {
             trace,
@@ -72,7 +72,7 @@ impl<T: ScalarType> Constructible for Vec3<T> {
 
 impl<T: ScalarType> Constructible for Vec4<T> {
     fn from_trace(trace: Trace) -> Self {
-        assert!(trace.expr().ty() == <Self::Posh as Value>::ty());
+        assert!(trace.expr().ty() == <Self::Type as Value>::ty());
 
         Self {
             trace,
@@ -85,29 +85,29 @@ impl<T: ScalarType> Constructible for Vec4<T> {
 }
 
 impl<T: ScalarType> Lift for [T; 3] {
-    type Posh = Vec3<T>;
+    type Type = Vec3<T>;
 }
 
 impl<T: ScalarType> Lift for [T; 4] {
-    type Posh = Vec4<T>;
+    type Type = Vec4<T>;
 }
 
 impl<T: ScalarType> Lift for Vec3<T> {
-    type Posh = Self;
+    type Type = Self;
 }
 
 impl<T: ScalarType> Lift for Vec4<T> {
-    type Posh = Self;
+    type Type = Self;
 }
 
-impl<T: ScalarType> IntoPosh for [T; 3] {
-    fn into_posh(self) -> Self::Posh {
+impl<T: ScalarType> IntoValue for [T; 3] {
+    fn into_value(self) -> Self::Type {
         vec3(self[0], self[1], self[2])
     }
 }
 
-impl<T: ScalarType> IntoPosh for [T; 4] {
-    fn into_posh(self) -> Self::Posh {
+impl<T: ScalarType> IntoValue for [T; 4] {
+    fn into_value(self) -> Self::Type {
         vec4(self[0], self[1], self[2], self[3])
     }
 }
@@ -132,7 +132,7 @@ macro_rules! impl_scalar_binary_op {
         impl<T, Rhs> $op<Rhs> for $ty<T>
         where
             T: NumericType,
-            Rhs: IntoPosh<Posh = Scalar<T>>,
+            Rhs: IntoValue<Type = Scalar<T>>,
         {
             type Output = Self;
 
@@ -195,18 +195,18 @@ macro_rules! impl_ops {
 impl_ops!(Vec3);
 
 pub fn vec3<T: ScalarType>(
-    x: impl IntoPosh<Posh = Scalar<T>>,
-    y: impl IntoPosh<Posh = Scalar<T>>,
-    z: impl IntoPosh<Posh = Scalar<T>>,
+    x: impl IntoValue<Type = Scalar<T>>,
+    y: impl IntoValue<Type = Scalar<T>>,
+    z: impl IntoValue<Type = Scalar<T>>,
 ) -> Vec3<T> {
     builtin3("vec3", x, y, z)
 }
 
 pub fn vec4<T: ScalarType>(
-    x: impl IntoPosh<Posh = Scalar<T>>,
-    y: impl IntoPosh<Posh = Scalar<T>>,
-    z: impl IntoPosh<Posh = Scalar<T>>,
-    w: impl IntoPosh<Posh = Scalar<T>>,
+    x: impl IntoValue<Type = Scalar<T>>,
+    y: impl IntoValue<Type = Scalar<T>>,
+    z: impl IntoValue<Type = Scalar<T>>,
+    w: impl IntoValue<Type = Scalar<T>>,
 ) -> Vec4<T> {
     builtin4("vec4", x, y, z, w)
 }

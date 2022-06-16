@@ -20,7 +20,7 @@ impl Trace {
     pub fn from_ident<R: Value>(ident: Ident) -> Self {
         Self::new(Expr::Var(VarExpr {
             ident,
-            ty: <R::Posh as Value>::ty(),
+            ty: <R::Type as Value>::ty(),
             init: None,
         }))
     }
