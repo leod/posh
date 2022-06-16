@@ -44,11 +44,11 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             ),*
         }
 
-        impl #impl_generics ::posh::value::Lift for #name #ty_generics #where_clause {
+        impl #impl_generics ::posh::value::Binding for #name #ty_generics #where_clause {
             type Type = #posh_name #ty_generics;
         }
 
-        impl #impl_generics ::posh::value::Lift for #posh_name #ty_generics #where_clause {
+        impl #impl_generics ::posh::value::Binding for #posh_name #ty_generics #where_clause {
             type Type = Self;
         }
 
@@ -63,7 +63,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                     #(
                         (
                             #field_name_strs.to_string(),
-                            <<#field_tys as ::posh::value::Lift>::Type as ::posh::Value>::ty(),
+                            <<#field_tys as ::posh::value::Binding>::Type as ::posh::Value>::ty(),
                         )
                     ),*
                 ];

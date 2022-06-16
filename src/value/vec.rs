@@ -6,7 +6,7 @@ use crate::{
 };
 
 use super::{
-    binary, builtin3, builtin4, field, scalar::NumericType, Constructible, Lift, Scalar,
+    binary, builtin3, builtin4, field, scalar::NumericType, Binding, Constructible, Scalar,
     ScalarType, Trace,
 };
 
@@ -84,19 +84,19 @@ impl<T: ScalarType> Constructible for Vec4<T> {
     }
 }
 
-impl<T: ScalarType> Lift for [T; 3] {
+impl<T: ScalarType> Binding for [T; 3] {
     type Type = Vec3<T>;
 }
 
-impl<T: ScalarType> Lift for [T; 4] {
+impl<T: ScalarType> Binding for [T; 4] {
     type Type = Vec4<T>;
 }
 
-impl<T: ScalarType> Lift for Vec3<T> {
+impl<T: ScalarType> Binding for Vec3<T> {
     type Type = Self;
 }
 
-impl<T: ScalarType> Lift for Vec4<T> {
+impl<T: ScalarType> Binding for Vec4<T> {
     type Type = Self;
 }
 
