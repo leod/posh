@@ -3,12 +3,12 @@ use crate::{
     Value, Vec3, Vec4,
 };
 
-use super::{builtin2, Binding, FuncArg, Trace};
+use super::{builtin2, FuncArg, Lift, Trace};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Sampler2(Trace);
 
-impl Binding for Sampler2 {
+impl Lift for Sampler2 {
     type Type = Self;
 }
 

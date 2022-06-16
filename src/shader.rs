@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::{
     lang::{Expr, Ident},
-    value::{Binding, Constructible},
+    value::{Constructible, Lift},
     Po, Value, Vec3, Vec4,
 };
 
@@ -36,23 +36,23 @@ pub trait VertexOut: Constructible {}
 pub trait FragmentOut: Constructible {}
 
 #[derive(Clone, Copy)]
-pub struct VSIn<V: Binding> {
+pub struct VSIn<V: Lift> {
     pub vertex: Po<V>,
     pub vertex_id: Po<i32>,
     pub instance_id: Po<i32>,
 }
 
-pub struct VSOut<W: Binding> {
+pub struct VSOut<W: Lift> {
     pub position: Vec3<f32>,
     pub varying: Po<W>,
 }
 
-pub struct FSIn<W: Binding> {
+pub struct FSIn<W: Lift> {
     pub varying: Po<W>,
     pub frag_coord: Vec4<f32>,
 }
 
-pub struct FSOut<R: Binding> {
+pub struct FSOut<R: Lift> {
     pub fragment: Po<R>,
     pub frag_depth: Option<Po<f32>>,
 }
@@ -89,7 +89,7 @@ fn builtin_var<V: Value>(name: &'static str) -> V {
 
 impl<V> VSIn<V>
 where
-    V: Binding,
+    V: Lift,
     V::Type: VertexIn,
 {
     pub fn new(vertex: Po<V>) -> Self {
@@ -107,7 +107,7 @@ where
 
 impl<W> FSIn<W>
 where
-    W: Binding,
+    W: Lift,
     W::Type: VertexOut,
 {
     pub fn new(varying: Po<W>) -> Self {
@@ -124,7 +124,7 @@ where
 
 impl<R> FSOut<R>
 where
-    R: Binding,
+    R: Lift,
     R::Type: FragmentOut,
 {
     pub fn new(fragment: Po<R>) -> Self {
@@ -137,16 +137,16 @@ where
 
 impl<R, V, F> Shader<R, V, F>
 where
-    R: Binding,
-    V: Binding,
-    F: Binding,
+    R: Lift,
+    V: Lift,
+    F: Lift,
     R::Type: Resources,
     V::Type: VertexIn,
     F::Type: FragmentOut,
 {
     pub fn new<W, VS, FS>(vertex_stage: VS, fragment_stage: FS) -> Self
     where
-        W: Binding,
+        W: Lift,
         W::Type: VertexOut,
         VS: FnOnce(Po<R>, VSIn<V>) -> VSOut<W>,
         FS: FnOnce(Po<R>, FSIn<W>) -> FSOut<F>,

@@ -1,11 +1,11 @@
 use crate::{Po, Value};
 
-use super::{Binding, Constructible};
+use super::{Constructible, Lift};
 
-impl<U, V> Binding for (U, V)
+impl<U, V> Lift for (U, V)
 where
-    U: Binding,
-    V: Binding,
+    U: Lift,
+    V: Lift,
 {
     type Type = (Po<U>, Po<V>);
 }

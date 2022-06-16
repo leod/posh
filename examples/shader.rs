@@ -43,25 +43,23 @@ struct FragmentOut {
 }
 
 fn vertex(resources: Po<Resources>, input: VSIn<Vertex>) -> VSOut<VertexOut> {
-    let position = resources.one.view_to_clip * resources.one.model_to_view * input.vertex.position;
-    let varying = Po::<VertexOut> {
-        color: vec3(255.0, 0.0, 0.0),
-        normal: resources.two.model_to_view * input.vertex.normal,
-    };
-
-    VSOut { position, varying }
+    VSOut {
+        position: resources.one.view_to_clip * resources.one.model_to_view * input.vertex.position,
+        varying: Po::<VertexOut> {
+            color: vec3(255.0, 0.0, 0.0),
+            normal: resources.two.model_to_view * input.vertex.normal,
+        },
+    }
 }
 
 fn vertex2(params: Po<Resources>, input: VSIn<(Vertex, Instance)>) -> VSOut<VertexOut> {
-    let (vertex, instance) = input.vertex;
-
-    let position = params.one.model_to_view * vertex.position;
-    let varying = Po::<VertexOut> {
-        color: instance.color,
-        normal: params.one.model_to_view * vertex.normal,
-    };
-
-    VSOut { position, varying }
+    VSOut {
+        position: params.one.model_to_view * input.vertex.0.position,
+        varying: Po::<VertexOut> {
+            color: input.vertex.1.color,
+            normal: params.one.model_to_view * input.vertex.0.normal,
+        },
+    }
 }
 
 fn fragment(_: Po<Resources>, input: FSIn<VertexOut>) -> FSOut<FragmentOut> {
@@ -74,11 +72,11 @@ fn fragment(_: Po<Resources>, input: FSIn<VertexOut>) -> FSOut<FragmentOut> {
 }
 
 struct MyShader {
-    shader: Shader<Resources, Vertex, FragmentOut>,
+    shader: Shader<ParamSet, Vertex, Fragment>,
 }
 
 struct MyShader2 {
-    shader: Shader<Resources, (Vertex, Instance), FragmentOut>,
+    shader: Shader<ParamSet, (Vertex, Instance), Fragment>,
 }
 
 fn main() {

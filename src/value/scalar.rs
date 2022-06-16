@@ -8,7 +8,7 @@ use crate::lang::{
     BinaryOp, BuiltInTy, Expr, Ident, Literal, LiteralExpr, ScalarTy, TernaryExpr, Ty,
 };
 
-use super::{binary, Binding, Constructible, IntoValue, Trace, Value};
+use super::{binary, Constructible, IntoValue, Lift, Trace, Value};
 
 pub trait ScalarType: Copy + Into<Literal> + IntoValue<Type = Scalar<Self>> {
     fn scalar_ty() -> ScalarTy;
@@ -16,7 +16,7 @@ pub trait ScalarType: Copy + Into<Literal> + IntoValue<Type = Scalar<Self>> {
 
 pub trait NumericType: ScalarType {}
 
-impl<T: ScalarType> Binding for Scalar<T> {
+impl<T: ScalarType> Lift for Scalar<T> {
     type Type = Self;
 }
 
@@ -146,7 +146,7 @@ macro_rules! impl_scalar {
             }
         }
 
-        impl Binding for $ty {
+        impl Lift for $ty {
             type Type = Scalar<$ty>;
         }
 
