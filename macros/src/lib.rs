@@ -14,7 +14,7 @@ pub fn posh(_args: TokenStream, input: TokenStream) -> TokenStream {
     .into()
 }
 
-#[proc_macro_derive(IntoPosh)]
+#[proc_macro_derive(IntoPosh, attributes(posh_derive))]
 pub fn derive_into_posh(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match into_posh::derive(input) {

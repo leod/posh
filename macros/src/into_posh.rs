@@ -9,12 +9,12 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             Data::Struct(DataStruct {
                 fields: Fields::Named(fields),
                 ..
-            }) => &fields.named,
-            _ => return Err(Error::new_spanned(
-                input.ident,
+            }) => Ok(&fields.named),
+            _ => Err(Error::new_spanned(
+                input.ident.clone(),
                 "derive(IntoPosh) does not support tuple structs, unit structs, enums, or unions",
             )),
-        };
+        }?;
 
     let name = input.ident;
     let vis = input.vis;

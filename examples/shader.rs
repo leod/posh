@@ -1,20 +1,21 @@
 use posh::{posh, var, vec3, FSIn, FSOut, IntoPosh, Posh, Shader, VSIn, VSOut};
 
 #[derive(IntoPosh)]
-#[posh(UniformBlock)]
+#[posh_derive(UniformBlock)]
 struct ModelToClip {
     model_to_view: [f32; 3],
     view_to_clip: [f32; 3],
 }
 
-#[derive(Resources)]
-struct Params {
+#[derive(IntoPosh)]
+#[posh_derive(Resource)]
+struct Resources {
     one: ModelToClip,
     two: ModelToClip,
 }
 
 #[derive(IntoPosh)]
-#[posh(Vertex)]
+#[posh_derive(Vertex)]
 struct Vertex {
     position: [f32; 3],
     normal: [f32; 3],
@@ -22,47 +23,47 @@ struct Vertex {
 }
 
 #[derive(IntoPosh)]
-#[posh(Vertex)]
+#[posh_derive(Vertex)]
 struct Instance {
     color: [f32; 3],
 }
 
 #[derive(IntoPosh)]
-#[posh(VertexOut)]
+#[posh_derive(VertexOut)]
 struct VertexOut {
     color: [f32; 3],
     normal: [f32; 3],
 }
 
 #[derive(IntoPosh)]
-#[posh(FragmentOut)]
+#[posh_derive(FragmentOut)]
 struct FragmentOut {
     color: [f32; 3],
     normal: [f32; 3],
 }
 
-fn vertex(params: Posh<ParamSet>, input: VSIn<Vertex>) -> VSOut<VertexOut> {
+fn vertex(resources: Posh<Resources>, input: VSIn<Vertex>) -> VSOut<VertexOut> {
     VSOut {
-        position: params.one.view_to_clip * params.one.model_to_view * input.vertex.position,
+        position: resources.one.view_to_clip * resources.one.model_to_view * input.vertex.position,
         varying: Posh::<VertexOut> {
             color: vec3(255.0, 0.0, 0.0),
-            normal: params.two.model_to_view * input.vertex.normal,
+            normal: resources.two.model_to_view * input.vertex.normal,
         },
     }
 }
 
-fn vertex2(params: Posh<ParamSet>, input: VSIn<(Vertex, Instance)>) -> VSOut<Varying> {
+fn vertex2(params: Posh<Resources>, input: VSIn<(Vertex, Instance)>) -> VSOut<VertexOut> {
     VSOut {
         position: params.one.model_to_view * input.vertex.0.position,
-        varying: Posh::<Varying> {
+        varying: Posh::<VertexOut> {
             color: input.vertex.1.color,
             normal: params.one.model_to_view * input.vertex.0.normal,
         },
     }
 }
 
-fn fragment(_: Posh<ParamSet>, input: FSIn<Varying>) -> FSOut<Fragment> {
-    let fragment = var(Posh::<Fragment> {
+fn fragment(_: Posh<Resources>, input: FSIn<VertexOut>) -> FSOut<FragmentOut> {
+    let fragment = var(Posh::<FragmentOut> {
         color: input.varying.color,
         normal: input.varying.normal,
     });
