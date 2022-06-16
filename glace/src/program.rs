@@ -1,12 +1,10 @@
-use posh::{Shader, Binding};
+use posh::{Lift, Shader};
 
-pub trait ResourceBinding: Binding {
+pub trait BindResources: Lift {}
 
-}
+pub trait BindVertexIn: Lift {}
 
-pub trait VertexBinding: Binding {
-
-}
+pub trait BindFragmentOut: Lift {}
 
 pub struct Program<R, V, F> {
     shader: Shader<R, V, F>,
@@ -14,7 +12,8 @@ pub struct Program<R, V, F> {
 
 impl<R, V, F> Program<R, V, F>
 where
-    R: ResourceBinding,
+    R: BindResources,
+    V: BindVertexIn,
+    F: BindFragmentOut,
 {
-
 }

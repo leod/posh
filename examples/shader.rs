@@ -8,7 +8,7 @@ struct ModelToClip {
 }
 
 #[derive(IntoValue)]
-#[posh_derive(Resource)]
+#[posh_derive(Resources)]
 struct Resources {
     one: ModelToClip,
     two: ModelToClip,
@@ -43,23 +43,23 @@ struct FragmentOut {
 }
 
 fn vertex(resources: Po<Resources>, input: VSIn<Vertex>) -> VSOut<VertexOut> {
-    VSOut {
-        position: resources.one.view_to_clip * resources.one.model_to_view * input.vertex.position,
-        varying: Po::<VertexOut> {
-            color: vec3(255.0, 0.0, 0.0),
-            normal: resources.two.model_to_view * input.vertex.normal,
-        },
-    }
+    let position = resources.one.view_to_clip * resources.one.model_to_view * input.vertex.position;
+    let varying = Po::<VertexOut> {
+        color: vec3(255.0, 0.0, 0.0),
+        normal: resources.two.model_to_view * input.vertex.normal,
+    };
+
+    VSOut { position, varying }
 }
 
 fn vertex2(params: Po<Resources>, input: VSIn<(Vertex, Instance)>) -> VSOut<VertexOut> {
-    VSOut {
-        position: params.one.model_to_view * input.vertex.0.position,
-        varying: Po::<VertexOut> {
-            color: input.vertex.1.color,
-            normal: params.one.model_to_view * input.vertex.0.normal,
-        },
-    }
+    let position = params.one.model_to_view * input.vertex.0.position;
+    let varying = Po::<VertexOut> {
+        color: input.vertex.1.color,
+        normal: params.one.model_to_view * input.vertex.0.normal,
+    };
+
+    VSOut { position, varying }
 }
 
 fn fragment(_: Po<Resources>, input: FSIn<VertexOut>) -> FSOut<FragmentOut> {
@@ -72,11 +72,11 @@ fn fragment(_: Po<Resources>, input: FSIn<VertexOut>) -> FSOut<FragmentOut> {
 }
 
 struct MyShader {
-    shader: Shader<ParamSet, Vertex, Fragment>,
+    shader: Shader<Resources, Vertex, FragmentOut>,
 }
 
 struct MyShader2 {
-    shader: Shader<ParamSet, (Vertex, Instance), Fragment>,
+    shader: Shader<Resources, (Vertex, Instance), FragmentOut>,
 }
 
 fn main() {
