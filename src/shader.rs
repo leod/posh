@@ -36,23 +36,23 @@ pub trait VOutputs: Constructible {}
 pub trait FOutputs: Constructible {}
 
 #[derive(Clone, Copy)]
-pub struct VStageArg<V: Lift> {
+pub struct VStageIn<V: Lift> {
     pub vertex: Po<V>,
     pub vertex_id: Po<i32>,
     pub instance_id: Po<i32>,
 }
 
-pub struct VStageRes<W: Lift> {
+pub struct VStageOut<W: Lift> {
     pub outputs: Po<W>,
     pub position: Vec3<f32>,
 }
 
-pub struct FStageArg<W: Lift> {
+pub struct FStageIn<W: Lift> {
     pub inputs: Po<W>,
     pub frag_coord: Vec4<f32>,
 }
 
-pub struct FStageRes<F: Lift> {
+pub struct FStageOut<F: Lift> {
     pub outputs: Po<F>,
     pub frag_depth: Option<Po<f32>>,
 }
@@ -87,7 +87,7 @@ fn builtin_var<V: Value>(name: &'static str) -> V {
     V::from_ident(Ident::new(name))
 }
 
-impl<V> VStageArg<V>
+impl<V> VStageIn<V>
 where
     V: Lift,
     V::Type: VInputs,
@@ -105,7 +105,7 @@ where
     }
 }
 
-impl<W> FStageArg<W>
+impl<W> FStageIn<W>
 where
     W: Lift,
     W::Type: VOutputs,
@@ -122,7 +122,7 @@ where
     }
 }
 
-impl<F> FStageRes<F>
+impl<F> FStageOut<F>
 where
     F: Lift,
     F::Type: FOutputs,
@@ -136,27 +136,27 @@ where
 }
 
 impl ErasedVStage {
-    fn new<W>(res: VStageRes<W>) -> Self
+    fn new<W>(out: VStageOut<W>) -> Self
     where
         W: Lift,
         W::Type: VOutputs,
     {
         Self {
-            outputs: res.outputs.expr(),
-            position: res.position.expr(),
+            outputs: out.outputs.expr(),
+            position: out.position.expr(),
         }
     }
 }
 
 impl ErasedFStage {
-    fn new<F>(res: FStageRes<F>) -> Self
+    fn new<F>(out: FStageOut<F>) -> Self
     where
         F: Lift,
         F::Type: FOutputs,
     {
         Self {
-            outputs: res.outputs.expr(),
-            frag_depth: res.frag_depth.map(|v| v.expr()),
+            outputs: out.outputs.expr(),
+            frag_depth: out.frag_depth.map(|v| v.expr()),
         }
     }
 }
@@ -174,14 +174,14 @@ where
     where
         W: Lift,
         W::Type: VOutputs,
-        VStage: FnOnce(Po<R>, VStageArg<V>) -> VStageRes<W>,
-        FStage: FnOnce(Po<R>, FStageArg<W>) -> FStageRes<F>,
+        VStage: FnOnce(Po<R>, VStageIn<V>) -> VStageOut<W>,
+        FStage: FnOnce(Po<R>, FStageIn<W>) -> FStageOut<F>,
     {
-        let v_res = v_stage(R::Type::func_arg(), VStageArg::func_arg());
-        let f_res = f_stage(R::Type::func_arg(), FStageArg::func_arg());
+        let v_out = v_stage(R::Type::func_arg(), VStageIn::func_arg());
+        let f_out = f_stage(R::Type::func_arg(), FStageIn::func_arg());
 
-        let v_stage = ErasedVStage::new(v_res);
-        let f_stage = ErasedFStage::new(f_res);
+        let v_stage = ErasedVStage::new(v_out);
+        let f_stage = ErasedFStage::new(f_out);
 
         Self {
             v_stage,

@@ -1,20 +1,20 @@
-use posh::{posh, var, vec3, FStageArg, FStageRes, IntoValue, Po, Shader, VStageArg, VStageRes};
+use posh::{posh, var, vec3, FStageIn, FStageOut, IntoValue, Po, Shader, VStageIn, VStageOut};
 
-#[derive(IntoValue)]
+#[derive(Posh, IntoValue)]
 #[posh_derive(UniformBlock)]
 struct ModelToClip {
     model_to_view: [f32; 3],
     view_to_clip: [f32; 3],
 }
 
-#[derive(IntoValue)]
+#[derive(Posh, BindResources)]
 #[posh_derive(Resources)]
 struct Resources {
     one: ModelToClip,
     two: ModelToClip,
 }
 
-#[derive(IntoValue)]
+#[derive(Posh, IntoValue)]
 #[posh_derive(Vertex)]
 struct Vertex {
     position: [f32; 3],
@@ -22,7 +22,7 @@ struct Vertex {
     thickness: f32,
 }
 
-#[derive(IntoValue)]
+#[derive(Posh, IntoValue)]
 #[posh_derive(Vertex)]
 struct Instance {
     color: [f32; 3],
@@ -42,33 +42,33 @@ struct FOutputs {
     normal: [f32; 3],
 }
 
-fn vertex(res: Po<Resources>, arg: VStageArg<Vertex>) -> VStageRes<VOutputs> {
+fn vertex(res: Po<Resources>, arg: VStageIn<Vertex>) -> VStageOut<VOutputs> {
     let outputs = Po::<VOutputs> {
         color: vec3(255.0, 0.0, 0.0),
         normal: res.two.model_to_view * arg.vertex.normal,
     };
     let position = res.one.view_to_clip * res.one.model_to_view * arg.vertex.position;
 
-    VStageRes { outputs, position }
+    VStageOut { outputs, position }
 }
 
-fn vertex2(res: Po<Resources>, arg: VStageArg<(Vertex, Instance)>) -> VStageRes<VOutputs> {
+fn vertex2(res: Po<Resources>, arg: VStageIn<(Vertex, Instance)>) -> VStageOut<VOutputs> {
     let outputs = Po::<VOutputs> {
         color: arg.vertex.1.color,
         normal: res.one.model_to_view * arg.vertex.0.normal,
     };
     let position = res.one.model_to_view * arg.vertex.0.position;
 
-    VStageRes { outputs, position }
+    VStageOut { outputs, position }
 }
 
-fn fragment(_: Po<Resources>, arg: FStageArg<VOutputs>) -> FStageRes<FOutputs> {
+fn fragment(_: Po<Resources>, arg: FStageIn<VOutputs>) -> FStageOut<FOutputs> {
     let fragment = var(Po::<FOutputs> {
         color: arg.inputs.color,
         normal: arg.inputs.normal,
     });
 
-    FStageRes::outputs(fragment)
+    FStageOut::outputs(fragment)
 }
 
 struct MyShader {

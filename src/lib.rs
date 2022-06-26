@@ -6,8 +6,8 @@ pub use static_assertions;
 pub use uuid;
 
 pub use shader::{
-    FOutputs, FStageArg, FStageRes, Resource, Resources, Shader, VInputs, VOutputs, VStageArg,
-    VStageRes, Vertex,
+    FOutputs, FStageIn, FStageOut, Resource, Resources, Shader, VInputs, VOutputs, VStageIn,
+    VStageOut, Vertex,
 };
 pub use value::{var, vec3, GenValue, IntoValue, Lift, Po, Sampler2, Value, Vec3, Vec4};
 
