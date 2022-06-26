@@ -25,51 +25,51 @@ where
 
 pub trait Vertex: Constructible {}
 
-pub trait VertexIn: Constructible {}
+pub trait VInputs: Constructible {}
 
-impl<V: Vertex> VertexIn for V {}
+impl<V: Vertex> VInputs for V {}
 
-impl<V1: Vertex, V2: Vertex> VertexIn for (V1, V2) {}
+impl<V1: Vertex, V2: Vertex> VInputs for (V1, V2) {}
 
-pub trait VertexOut: Constructible {}
+pub trait VOutputs: Constructible {}
 
-pub trait FragmentOut: Constructible {}
+pub trait FOutputs: Constructible {}
 
 #[derive(Clone, Copy)]
-pub struct VSIn<V: Lift> {
+pub struct VStageArg<V: Lift> {
     pub vertex: Po<V>,
     pub vertex_id: Po<i32>,
     pub instance_id: Po<i32>,
 }
 
-pub struct VSOut<W: Lift> {
+pub struct VStageRes<W: Lift> {
+    pub outputs: Po<W>,
     pub position: Vec3<f32>,
-    pub varying: Po<W>,
 }
 
-pub struct FSIn<W: Lift> {
-    pub varying: Po<W>,
+pub struct FStageArg<W: Lift> {
+    pub inputs: Po<W>,
     pub frag_coord: Vec4<f32>,
 }
 
-pub struct FSOut<R: Lift> {
-    pub fragment: Po<R>,
+pub struct FStageRes<F: Lift> {
+    pub outputs: Po<F>,
     pub frag_depth: Option<Po<f32>>,
 }
 
-pub struct ErasedVertexFunc {
+struct ErasedVStage {
+    pub outputs: Expr,
     pub position: Expr,
-    pub varying: Expr,
 }
 
-pub struct ErasedFragmentFunc {
-    pub fragment: Expr,
+struct ErasedFStage {
+    pub outputs: Expr,
     pub frag_depth: Option<Expr>,
 }
 
 pub struct Shader<P, V, R> {
-    vertex: ErasedVertexFunc,
-    fragment: ErasedFragmentFunc,
+    v_stage: ErasedVStage,
+    f_stage: ErasedFStage,
     _phantom: PhantomData<(P, V, R)>,
 }
 
@@ -87,12 +87,12 @@ fn builtin_var<V: Value>(name: &'static str) -> V {
     V::from_ident(Ident::new(name))
 }
 
-impl<V> VSIn<V>
+impl<V> VStageArg<V>
 where
     V: Lift,
-    V::Type: VertexIn,
+    V::Type: VInputs,
 {
-    pub fn new(vertex: Po<V>) -> Self {
+    fn new(vertex: Po<V>) -> Self {
         Self {
             vertex,
             vertex_id: builtin_var("gl_VertexID"),
@@ -100,37 +100,63 @@ where
         }
     }
 
-    pub fn func_arg() -> Self {
+    fn func_arg() -> Self {
         Self::new(Po::<V>::from_ident(Ident::new("input")))
     }
 }
 
-impl<W> FSIn<W>
+impl<W> FStageArg<W>
 where
     W: Lift,
-    W::Type: VertexOut,
+    W::Type: VOutputs,
 {
-    pub fn new(varying: Po<W>) -> Self {
+    fn new(inputs: Po<W>) -> Self {
         Self {
-            varying,
+            inputs,
             frag_coord: builtin_var("gl_FragCoord"),
         }
     }
 
-    pub fn func_arg() -> Self {
+    fn func_arg() -> Self {
         Self::new(Po::<W>::from_ident(Ident::new("input")))
     }
 }
 
-impl<R> FSOut<R>
+impl<F> FStageRes<F>
 where
-    R: Lift,
-    R::Type: FragmentOut,
+    F: Lift,
+    F::Type: FOutputs,
 {
-    pub fn new(fragment: Po<R>) -> Self {
+    pub fn outputs(outputs: Po<F>) -> Self {
         Self {
-            fragment,
+            outputs,
             frag_depth: None,
+        }
+    }
+}
+
+impl ErasedVStage {
+    fn new<W>(res: VStageRes<W>) -> Self
+    where
+        W: Lift,
+        W::Type: VOutputs,
+    {
+        Self {
+            outputs: res.outputs.expr(),
+            position: res.position.expr(),
+        }
+    }
+}
+
+impl ErasedFStage {
+    fn new<F>(res: FStageRes<F>) -> Self
+    where
+        F: Lift,
+        F::Type: FOutputs,
+    {
+        Self {
+            outputs: res.outputs.expr(),
+            frag_depth: res.frag_depth.map(|v| v.expr()),
         }
     }
 }
@@ -141,32 +167,25 @@ where
     V: Lift,
     F: Lift,
     R::Type: Resources,
-    V::Type: VertexIn,
-    F::Type: FragmentOut,
+    V::Type: VInputs,
+    F::Type: FOutputs,
 {
-    pub fn new<W, VS, FS>(vertex_stage: VS, fragment_stage: FS) -> Self
+    pub fn new<W, VStage, FStage>(v_stage: VStage, f_stage: FStage) -> Self
     where
         W: Lift,
-        W::Type: VertexOut,
-        VS: FnOnce(Po<R>, VSIn<V>) -> VSOut<W>,
-        FS: FnOnce(Po<R>, FSIn<W>) -> FSOut<F>,
+        W::Type: VOutputs,
+        VStage: FnOnce(Po<R>, VStageArg<V>) -> VStageRes<W>,
+        FStage: FnOnce(Po<R>, FStageArg<W>) -> FStageRes<F>,
     {
-        let vertex_out = vertex_stage(R::Type::func_arg(), VSIn::func_arg());
-        let fragment_out = fragment_stage(R::Type::func_arg(), FSIn::func_arg());
+        let v_res = v_stage(R::Type::func_arg(), VStageArg::func_arg());
+        let f_res = f_stage(R::Type::func_arg(), FStageArg::func_arg());
 
-        let vertex = ErasedVertexFunc {
-            position: vertex_out.position.expr(),
-            varying: vertex_out.varying.expr(),
-        };
-
-        let fragment = ErasedFragmentFunc {
-            fragment: fragment_out.fragment.expr(),
-            frag_depth: fragment_out.frag_depth.map(|v| v.expr()),
-        };
+        let v_stage = ErasedVStage::new(v_res);
+        let f_stage = ErasedFStage::new(f_res);
 
         Self {
-            vertex,
-            fragment,
+            v_stage,
+            f_stage,
             _phantom: PhantomData,
         }
     }

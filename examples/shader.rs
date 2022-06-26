@@ -1,4 +1,4 @@
-use posh::{posh, var, vec3, FSIn, FSOut, IntoValue, Po, Shader, VSIn, VSOut};
+use posh::{posh, var, vec3, FStageArg, FStageRes, IntoValue, Po, Shader, VStageArg, VStageRes};
 
 #[derive(IntoValue)]
 #[posh_derive(UniformBlock)]
@@ -29,54 +29,54 @@ struct Instance {
 }
 
 #[derive(IntoValue)]
-#[posh_derive(VertexOut)]
-struct VertexOut {
+#[posh_derive(VOutputs)]
+struct VOutputs {
     color: [f32; 3],
     normal: [f32; 3],
 }
 
 #[derive(IntoValue)]
-#[posh_derive(FragmentOut)]
-struct FragmentOut {
+#[posh_derive(FOutputs)]
+struct FOutputs {
     color: [f32; 3],
     normal: [f32; 3],
 }
 
-fn vertex(resources: Po<Resources>, input: VSIn<Vertex>) -> VSOut<VertexOut> {
-    let position = resources.one.view_to_clip * resources.one.model_to_view * input.vertex.position;
-    let varying = Po::<VertexOut> {
+fn vertex(res: Po<Resources>, arg: VStageArg<Vertex>) -> VStageRes<VOutputs> {
+    let outputs = Po::<VOutputs> {
         color: vec3(255.0, 0.0, 0.0),
-        normal: resources.two.model_to_view * input.vertex.normal,
+        normal: res.two.model_to_view * arg.vertex.normal,
     };
+    let position = res.one.view_to_clip * res.one.model_to_view * arg.vertex.position;
 
-    VSOut { position, varying }
+    VStageRes { outputs, position }
 }
 
-fn vertex2(params: Po<Resources>, input: VSIn<(Vertex, Instance)>) -> VSOut<VertexOut> {
-    let position = params.one.model_to_view * input.vertex.0.position;
-    let varying = Po::<VertexOut> {
-        color: input.vertex.1.color,
-        normal: params.one.model_to_view * input.vertex.0.normal,
+fn vertex2(res: Po<Resources>, arg: VStageArg<(Vertex, Instance)>) -> VStageRes<VOutputs> {
+    let outputs = Po::<VOutputs> {
+        color: arg.vertex.1.color,
+        normal: res.one.model_to_view * arg.vertex.0.normal,
     };
+    let position = res.one.model_to_view * arg.vertex.0.position;
 
-    VSOut { position, varying }
+    VStageRes { outputs, position }
 }
 
-fn fragment(_: Po<Resources>, input: FSIn<VertexOut>) -> FSOut<FragmentOut> {
-    let fragment = var(Po::<FragmentOut> {
-        color: input.varying.color,
-        normal: input.varying.normal,
+fn fragment(_: Po<Resources>, arg: FStageArg<VOutputs>) -> FStageRes<FOutputs> {
+    let fragment = var(Po::<FOutputs> {
+        color: arg.inputs.color,
+        normal: arg.inputs.normal,
     });
 
-    FSOut::new(fragment)
+    FStageRes::outputs(fragment)
 }
 
 struct MyShader {
-    shader: Shader<Resources, Vertex, FragmentOut>,
+    shader: Shader<Resources, Vertex, FOutputs>,
 }
 
 struct MyShader2 {
-    shader: Shader<Resources, (Vertex, Instance), FragmentOut>,
+    shader: Shader<Resources, (Vertex, Instance), FOutputs>,
 }
 
 fn main() {
@@ -88,5 +88,5 @@ fn main() {
         shader: Shader::new(vertex2, fragment),
     };
 
-    let shaduer: Shader<ParamSet, _, _> = Shader::new(vertex2, fragment);
+    let shaduer: Shader<Resources, _, _> = Shader::new(vertex2, fragment);
 }
