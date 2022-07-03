@@ -1,18 +1,17 @@
-use crate::{
-    lang::{BuiltInTy, Expr, Ident, Ty},
-    ValueBase, Vec3, Vec4,
-};
+use crate::lang::{BuiltInTy, Expr, Ident, Ty};
 
-use super::{builtin2, FuncArg, Lift, Trace};
+use super::{builtin2, FuncArgVal, Trace, Type, TypedVal, Val, Vec3, Vec4};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Sampler2(Trace);
 
-impl Lift for Sampler2 {
-    type Type = Self;
+impl Type for Sampler2 {
+    type Val = Self;
 }
 
-impl ValueBase for Sampler2 {
+impl Val for Sampler2 {}
+
+impl TypedVal for Sampler2 {
     fn from_ident(ident: Ident) -> Self {
         Sampler2(Trace::from_ident::<Self>(ident))
     }
@@ -26,7 +25,7 @@ impl ValueBase for Sampler2 {
     }
 }
 
-impl FuncArg for Sampler2 {}
+impl FuncArgVal for Sampler2 {}
 
 impl Sampler2 {
     pub fn load(self, tex_coord: Vec3<f32>) -> Vec4<f32> {

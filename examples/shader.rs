@@ -1,4 +1,4 @@
-use posh::{posh, var, vec3, FStageIn, FStageOut, IntoPosh, Po, Shader, VStageIn, VStageOut};
+use posh::{posh, var, vec3, FStageIn, FStageOut, IntoVal, Shader, VStageIn, VStageOut, Value};
 
 #[derive(Posh)]
 #[posh_derive(UniformBlock)]
@@ -42,8 +42,8 @@ struct FOutputs {
     normal: [f32; 3],
 }
 
-fn vertex(res: Po<Resources>, arg: VStageIn<Vertex>) -> VStageOut<VOutputs> {
-    let outputs = Po::<VOutputs> {
+fn vertex(res: Value<Resources>, arg: VStageIn<Vertex>) -> VStageOut<VOutputs> {
+    let outputs = Value::<VOutputs> {
         color: vec3(255.0, 0.0, 0.0),
         normal: res.two.model_to_view * arg.vertex.normal,
     };
@@ -52,10 +52,10 @@ fn vertex(res: Po<Resources>, arg: VStageIn<Vertex>) -> VStageOut<VOutputs> {
     VStageOut { outputs, position }
 }
 
-fn vertex2(res: Po<Resources>, arg: VStageIn<(Vertex, Instance)>) -> VStageOut<VOutputs> {
+fn vertex2(res: Value<Resources>, arg: VStageIn<(Vertex, Instance)>) -> VStageOut<VOutputs> {
     let (instance, vertex) = arg.vertex;
 
-    let outputs = Po::<VOutputs> {
+    let outputs = Value::<VOutputs> {
         color: instance.color,
         normal: res.one.model_to_view * vertex.normal,
     };
@@ -64,8 +64,8 @@ fn vertex2(res: Po<Resources>, arg: VStageIn<(Vertex, Instance)>) -> VStageOut<V
     VStageOut { outputs, position }
 }
 
-fn fragment(_: Po<Resources>, arg: FStageIn<VOutputs>) -> FStageOut<FOutputs> {
-    let outputs = var(Po::<FOutputs> {
+fn fragment(_: Value<Resources>, arg: FStageIn<VOutputs>) -> FStageOut<FOutputs> {
+    let outputs = var(Value::<FOutputs> {
         color: arg.inputs.color,
         normal: arg.inputs.normal,
     });

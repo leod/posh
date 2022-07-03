@@ -14,7 +14,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                     input_tys.push(input.ty.clone());
 
                     let input_ty = &input.ty;
-                    input.ty = parse_quote! { impl ::posh::IntoPosh<Type = #input_ty> };
+                    input.ty = parse_quote! { impl ::posh::IntoVal<Val = #input_ty> };
                 }
                 _ => {
                     return Err(Error::new_spanned(
@@ -33,29 +33,27 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
 
     item.block = parse_quote! {
         {
-            use ::posh::ValueBase as _;
-
             const _: fn() = || {
                 use ::posh::static_assertions as sa;
 
                 #(
-                    sa::assert_impl_all!(#input_tys: ::posh::value::FuncArg);
+                    sa::assert_impl_all!(#input_tys: ::posh::FuncArgVal);
                 )*
             };
 
             #(
-                let #input_idents = ::posh::IntoPosh::into_posh(#input_idents);
+                let #input_idents = ::posh::IntoVal::into_val(#input_idents);
             )*
 
             let #args_ident = vec![
                 #(
-                    ::posh::ValueBase::expr(&#input_idents).clone()
+                    ::posh::TypedVal::expr(&#input_idents).clone()
                 ),*
             ];
 
             #(
                 let #input_idents =
-                    <#input_tys as ::posh::ValueBase>::from_ident(
+                    <#input_tys as ::posh::TypedVal>::from_ident(
                         ::posh::lang::Ident::new(stringify!(#input_idents)),
                     );
             )*
@@ -64,7 +62,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                 stringify!(#func_ident),
                 vec![
                     #(
-                        match ::posh::Value::expr(&#input_idents) {
+                        match ::posh::TypedVal::expr(&#input_idents) {
                             ::posh::lang::Expr::Var(var) => var,
                             _ => unreachable!(),
                         }
@@ -72,7 +70,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                 ],
                 {
                     //use ::posh::prelude::*;
-                    ::posh::IntoPosh::into_posh(#func_body)
+                    ::posh::IntoVal::into_val(#func_body)
                 },
                 #args_ident,
             )

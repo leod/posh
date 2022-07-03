@@ -1,19 +1,19 @@
-use posh::{lang::Ident, posh, var, vec3, GenValue, Po, Sampler2, ValueBase, Vec4};
+use posh::{lang::Ident, var, vec3, GenVal, Sampler2, TypedVal, Value, Vec4};
 
-#[posh]
-fn foo(x: Po<f32>, y: Po<f32>) -> Po<f32> {
+#[posh::def]
+fn foo(x: Value<f32>, y: Value<f32>) -> Value<f32> {
     let z = var(x * y);
     let w = var(1.0 + y + x + 1.0);
 
     z.eq(w).and(w.eq(1.0)).ternary(3.0 * z * 2.0, 1.0)
 }
 
-#[posh]
-fn bar(x: Po<f32>) -> Po<f32> {
+#[posh::def]
+fn bar(x: Value<f32>) -> Value<f32> {
     x.eq(5.0).ternary(x.atan2(2.0), -1.0)
 }
 
-#[posh]
+#[posh::def]
 fn texture_thing(sampler: Sampler2) -> Vec4<f32> {
     let c = var(sampler.load(vec3(1.0, 1.0, bar(3.0))));
     sampler.load(vec3(c.z, 2.0 * c.y, foo(1.0, 2.0)).normalize() / 5.0)

@@ -1,10 +1,10 @@
-use posh::{FOutputs, Lift, Resources, Shader, VInputs};
+use posh::{FOutputs, Resources, Shader, Type, VInputs};
 
-pub trait BindResources: Lift {}
+pub trait BindResources: Type {}
 
-pub trait BindVInputs: Lift {}
+pub trait BindVInputs: Type {}
 
-pub trait BindFOutputs: Lift {}
+pub trait BindFOutputs: Type {}
 
 pub struct Program<R, V, F> {
     shader: Shader<R, V, F>,
@@ -12,12 +12,12 @@ pub struct Program<R, V, F> {
 
 impl<R, V, F> Program<R, V, F>
 where
-    R: Lift,
-    V: Lift,
-    F: Lift,
-    R::Type: Resources,
-    V::Type: VInputs,
-    F::Type: FOutputs,
+    R: Type,
+    V: Type,
+    F: Type,
+    R::Val: Resources,
+    V::Val: VInputs,
+    F::Val: FOutputs,
     R: BindResources,
     V: BindVInputs,
     F: BindFOutputs,

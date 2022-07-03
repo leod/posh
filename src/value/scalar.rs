@@ -8,16 +8,16 @@ use crate::lang::{
     BinaryOp, BuiltInTy, Expr, Ident, Literal, LiteralExpr, ScalarTy, TernaryExpr, Ty,
 };
 
-use super::{binary, IntoPosh, Lift, Trace, Value, ValueBase};
+use super::{binary, ConstructibleVal, IntoVal, Trace, Type, TypedVal, Val};
 
-pub trait ScalarType: Copy + Into<Literal> + IntoPosh<Type = Scalar<Self>> {
+pub trait ScalarType: Copy + Into<Literal> + IntoVal<Val = Scalar<Self>> {
     fn scalar_ty() -> ScalarTy;
 }
 
 pub trait NumericType: ScalarType {}
 
-impl<T: ScalarType> Lift for Scalar<T> {
-    type Type = Self;
+impl<T: ScalarType> Type for Scalar<T> {
+    type Val = Self;
 }
 
 #[must_use]
@@ -27,7 +27,9 @@ pub struct Scalar<T> {
     trace: Trace,
 }
 
-impl<T: ScalarType> ValueBase for Scalar<T> {
+impl<T: ScalarType> Val for Scalar<T> {}
+
+impl<T: ScalarType> TypedVal for Scalar<T> {
     fn ty() -> Ty {
         Ty::BuiltIn(BuiltInTy::Scalar(T::scalar_ty()))
     }
@@ -41,9 +43,9 @@ impl<T: ScalarType> ValueBase for Scalar<T> {
     }
 }
 
-impl<T: ScalarType> Value for Scalar<T> {
+impl<T: ScalarType> ConstructibleVal for Scalar<T> {
     fn from_trace(trace: Trace) -> Self {
-        assert!(trace.expr().ty() == <Self::Type as ValueBase>::ty());
+        assert!(trace.expr().ty() == <Self::Val as TypedVal>::ty());
 
         Scalar {
             _phantom: PhantomData,
@@ -60,28 +62,28 @@ where
         Self::from_expr(Expr::Literal(LiteralExpr { literal: x.into() }))
     }
 
-    pub fn eq(&self, right: impl IntoPosh<Type = Self>) -> Bool {
+    pub fn eq(&self, right: impl IntoVal<Val = Self>) -> Bool {
         binary(*self, BinaryOp::Eq, right)
     }
 }
 
 impl Bool {
-    pub fn and(self, right: impl IntoPosh<Type = Bool>) -> Bool {
+    pub fn and(self, right: impl IntoVal<Val = Bool>) -> Bool {
         binary(self, BinaryOp::And, right)
     }
 
-    pub fn or(self, right: impl IntoPosh<Type = Bool>) -> Bool {
+    pub fn or(self, right: impl IntoVal<Val = Bool>) -> Bool {
         binary(self, BinaryOp::And, right)
     }
 
-    pub fn ternary<V: Value>(
+    pub fn ternary<V: ConstructibleVal>(
         self,
-        true_value: impl IntoPosh<Type = V>,
-        false_value: impl IntoPosh<Type = V>,
+        true_value: impl IntoVal<Val = V>,
+        false_value: impl IntoVal<Val = V>,
     ) -> V {
         let cond = Rc::new(self.expr());
-        let true_expr = Rc::new(true_value.into_posh().expr());
-        let false_expr = Rc::new(false_value.into_posh().expr());
+        let true_expr = Rc::new(true_value.into_val().expr());
+        let false_expr = Rc::new(false_value.into_val().expr());
 
         let expr = Expr::Ternary(TernaryExpr {
             cond,
@@ -98,7 +100,7 @@ macro_rules! impl_binary_op {
         impl<T, Rhs> $op<Rhs> for Scalar<T>
         where
             T: NumericType,
-            Rhs: IntoPosh<Type = Scalar<T>>,
+            Rhs: IntoVal<Val = Scalar<T>>,
         {
             type Output = Self;
 
@@ -146,12 +148,12 @@ macro_rules! impl_scalar {
             }
         }
 
-        impl Lift for $ty {
-            type Type = Scalar<$ty>;
+        impl Type for $ty {
+            type Val = Scalar<$ty>;
         }
 
-        impl IntoPosh for $ty {
-            fn into_posh(self) -> Self::Type {
+        impl IntoVal for $ty {
+            fn into_val(self) -> Self::Val {
                 Scalar::new(self)
             }
         }

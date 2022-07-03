@@ -11,7 +11,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
         }) => Ok(&fields.named),
         _ => Err(Error::new_spanned(
             input.ident.clone(),
-            "derive(IntoValue) does not support tuple structs, unit structs, enums, or unions",
+            "derive(IntoVal) does not support tuple structs, unit structs, enums, or unions",
         )),
     }?;
 
@@ -40,19 +40,22 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
         #[allow(non_camel_case_types)]
         #vis struct #posh_name #ty_generics #where_clause {
             #(
-                #field_vis #field_idents: ::posh::Po<#field_tys>
+                #field_vis #field_idents: ::posh::Value<#field_tys>
             ),*
         }
 
-        impl #impl_generics ::posh::value::Lift for #name #ty_generics #where_clause {
-            type Type = #posh_name #ty_generics;
+        impl #impl_generics ::posh::value::Type for #name #ty_generics #where_clause {
+            type Val = #posh_name #ty_generics;
         }
 
-        impl #impl_generics ::posh::value::Lift for #posh_name #ty_generics #where_clause {
-            type Type = Self;
+        impl #impl_generics ::posh::value::Type for #posh_name #ty_generics #where_clause {
+            type Val = Self;
         }
 
-        impl #impl_generics ::posh::Value for #posh_name #ty_generics #where_clause {
+        impl #impl_generics ::posh::Val for #posh_name #ty_generics #where_clause {
+        }
+
+        impl #impl_generics ::posh::TypedVal for #posh_name #ty_generics #where_clause {
             fn ty() -> ::posh::lang::Ty {
                 let ident = ::posh::lang::Ident {
                     name: #name_str.to_string(),
@@ -63,7 +66,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                     #(
                         (
                             #field_name_strs.to_string(),
-                            <<#field_tys as ::posh::value::Lift>::Type as ::posh::Value>::ty(),
+                            <<#field_tys as ::posh::value::Type>::Val as ::posh::TypedVal>::ty(),
                         )
                     ),*
                 ];
@@ -78,7 +81,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
 
             fn expr(&self) -> ::posh::lang::Expr {
                 let func = ::posh::lang::Func::Struct(::posh::lang::StructFunc {
-                    ty: match <Self as ::posh::Value>::ty() {
+                    ty: match <Self as ::posh::TypedVal>::ty() {
                         ::posh::lang::Ty::Struct(ty) => ty,
                         _ => unreachable!(),
                     },
@@ -86,7 +89,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
 
                 let args = vec![
                     #(
-                        ::posh::Value::expr(&self.#field_idents)
+                        ::posh::TypedVal::expr(&self.#field_idents)
                     ),*
                 ];
 
@@ -101,13 +104,13 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             }
 
             fn from_ident(ident: ::posh::lang::Ident) -> Self {
-                <Self as ::posh::value::Constructible>::from_trace(
+                <Self as ::posh::value::ConstructibleVal>::from_trace(
                     ::posh::value::Trace::from_ident::<Self>(ident),
                 )
             }
         }
 
-        impl #impl_generics ::posh::value::Constructible for #posh_name #ty_generics
+        impl #impl_generics ::posh::value::ConstructibleVal for #posh_name #ty_generics
         #where_clause
         {
             fn from_trace(trace: ::posh::value::Trace) -> Self {
@@ -119,11 +122,11 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             }
         }
 
-        impl #impl_generics ::posh::IntoValue for #name #ty_generics #where_clause {
-            fn into_value(self) -> Self::Type {
+        impl #impl_generics ::posh::IntoVal for #name #ty_generics #where_clause {
+            fn into_val(self) -> Self::Val {
                 #posh_name {
                     #(
-                        #field_idents: <#field_tys as ::posh::IntoValue>::into_value(
+                        #field_idents: <#field_tys as ::posh::IntoVal>::into_val(
                             self.#field_idents,
                         )
                     ),*

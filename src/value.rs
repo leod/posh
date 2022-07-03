@@ -1,5 +1,5 @@
 pub(crate) mod expr_reg;
-mod funcs;
+mod gen_val;
 mod primitives;
 mod sampler;
 mod scalar;
@@ -9,7 +9,7 @@ mod vec;
 
 use crate::lang::{Expr, Ident, Ty};
 
-pub use funcs::GenValue;
+pub use gen_val::GenVal;
 pub use primitives::{common_field_base, field, func_def_and_call, var};
 pub use sampler::Sampler2;
 pub use scalar::{Scalar, ScalarType};
@@ -18,17 +18,19 @@ pub use vec::{vec3, Vec3, Vec4};
 
 pub(crate) use primitives::{binary, builtin1, builtin2, builtin3, builtin4};
 
-pub trait Lift {
-    type Type: Copy + Lift<Type = Self::Type>;
+pub trait Type {
+    type Val: Val;
 }
 
-pub type Po<T> = <T as Lift>::Type;
+pub type Value<T> = <T as Type>::Val;
 
-pub trait IntoPosh: Lift {
-    fn into_posh(self) -> Po<Self>;
+pub trait IntoVal: Type {
+    fn into_val(self) -> Value<Self>;
 }
 
-pub trait ValueBase: Copy + Lift<Type = Self> + Sized {
+pub trait Val: Copy + Type<Val = Self> + Sized {}
+
+pub trait TypedVal: Val {
     fn ty() -> Ty;
     fn expr(&self) -> Expr;
 
@@ -36,7 +38,7 @@ pub trait ValueBase: Copy + Lift<Type = Self> + Sized {
     fn from_ident(ident: Ident) -> Self;
 }
 
-pub trait Value: ValueBase {
+pub trait ConstructibleVal: TypedVal {
     fn from_trace(trace: Trace) -> Self;
 
     fn from_expr(expr: Expr) -> Self {
@@ -44,15 +46,15 @@ pub trait Value: ValueBase {
     }
 }
 
-pub trait FuncArg: ValueBase {}
+pub trait FuncArgVal: TypedVal {}
 
-impl<V: Value> FuncArg for V {}
+impl<V: ConstructibleVal> FuncArgVal for V {}
 
-impl<V> IntoPosh for V
+impl<V> IntoVal for V
 where
-    V: Lift<Type = Self> + ValueBase,
+    V: Type<Val = Self> + TypedVal,
 {
-    fn into_posh(self) -> Self {
+    fn into_val(self) -> Self {
         self
     }
 }

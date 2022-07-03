@@ -9,9 +9,12 @@ pub use shader::{
     FOutputs, FStageIn, FStageOut, Resource, Resources, Shader, VInputs, VOutputs, VStageIn,
     VStageOut, Vertex,
 };
-pub use value::{var, vec3, GenValue, IntoPosh, Lift, Po, Sampler2, Value, ValueBase, Vec3, Vec4};
+pub use value::{
+    var, vec3, ConstructibleVal, FuncArgVal, GenVal, IntoVal, Sampler2, Type, TypedVal, Val, Value,
+    Vec3, Vec4,
+};
 
-pub use posh_macros::{posh, IntoValue};
+pub use posh_macros::{def, IntoVal};
 
-// This is here so that our macros can refer to `posh` even when we use them inside this crate.
-extern crate self as posh;
+// This was here so that our macros could refer to `posh` even when we use them inside this crate.
+//extern crate self as posh;
