@@ -1,42 +1,45 @@
-use posh::{posh, var, vec3, FStageIn, FStageOut, IntoVal, Shader, VStageIn, VStageOut, Value};
+use posh::{
+    shader::{FStageIn, FStageOut, Shader, VStageIn, VStageOut},
+    var, vec3, IntoVal, Value,
+};
 
-#[derive(Posh)]
-#[posh_derive(UniformBlock)]
+#[derive(Type, IntoVal)]
+#[val(UniformBlock)]
 struct ModelToClip {
     model_to_view: [f32; 3],
     view_to_clip: [f32; 3],
 }
 
-#[derive(Posh)]
-#[posh_derive(Resources)]
+#[derive(Type)]
+#[val(Resources)]
 struct Resources {
     one: ModelToClip,
     two: ModelToClip,
 }
 
-#[derive(Posh)]
-#[posh_derive(Vertex)]
+#[derive(Type, IntoVal)]
+#[val(Vertex)]
 struct Vertex {
     position: [f32; 3],
     normal: [f32; 3],
     thickness: f32,
 }
 
-#[derive(Posh)]
-#[posh_derive(Vertex)]
+#[derive(Type, IntoVal)]
+#[val(Vertex)]
 struct Instance {
     color: [f32; 3],
 }
 
-#[derive(Posh)]
-#[posh_derive(VOutputs)]
+#[derive(Type, IntoVal)]
+#[val(VOutputs)]
 struct VOutputs {
     color: [f32; 3],
     normal: [f32; 3],
 }
 
-#[derive(Posh)]
-#[posh_derive(FOutputs)]
+#[derive(Type, IntoVal)]
+#[val(FOutputs)]
 struct FOutputs {
     color: [f32; 3],
     normal: [f32; 3],

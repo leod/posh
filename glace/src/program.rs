@@ -1,4 +1,7 @@
-use posh::{FOutputs, Resources, Shader, Type, VInputs};
+use posh::{
+    shader::{FOutputs, Resources, Shader, VInputs},
+    Type,
+};
 
 pub trait BindResources: Type {}
 
