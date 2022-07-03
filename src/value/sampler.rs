@@ -1,6 +1,6 @@
 use crate::{
     lang::{BuiltInTy, Expr, Ident, Ty},
-    Value, Vec3, Vec4,
+    ValueBase, Vec3, Vec4,
 };
 
 use super::{builtin2, FuncArg, Lift, Trace};
@@ -12,7 +12,7 @@ impl Lift for Sampler2 {
     type Type = Self;
 }
 
-impl Value for Sampler2 {
+impl ValueBase for Sampler2 {
     fn from_ident(ident: Ident) -> Self {
         Sampler2(Trace::from_ident::<Self>(ident))
     }

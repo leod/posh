@@ -9,7 +9,7 @@ pub use shader::{
     FOutputs, FStageIn, FStageOut, Resource, Resources, Shader, VInputs, VOutputs, VStageIn,
     VStageOut, Vertex,
 };
-pub use value::{var, vec3, GenValue, IntoValue, Lift, Po, Sampler2, Value, Vec3, Vec4};
+pub use value::{var, vec3, GenValue, IntoPosh, Lift, Po, Sampler2, Value, ValueBase, Vec3, Vec4};
 
 pub use posh_macros::{posh, IntoValue};
 

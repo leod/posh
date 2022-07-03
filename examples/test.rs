@@ -1,4 +1,4 @@
-use posh::{lang::Ident, posh, var, vec3, GenValue, Po, Sampler2, Value, Vec4};
+use posh::{lang::Ident, posh, var, vec3, GenValue, Po, Sampler2, ValueBase, Vec4};
 
 #[posh]
 fn foo(x: Po<f32>, y: Po<f32>) -> Po<f32> {

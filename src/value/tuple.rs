@@ -1,6 +1,6 @@
-use crate::{Po, Value};
+use crate::{Po, ValueBase};
 
-use super::{Constructible, Lift};
+use super::{Lift, Value};
 
 impl<U, V> Lift for (U, V)
 where
@@ -10,10 +10,10 @@ where
     type Type = (Po<U>, Po<V>);
 }
 
-impl<U, V> Value for (U, V)
+impl<U, V> ValueBase for (U, V)
 where
-    U: Constructible,
-    V: Constructible,
+    U: Value,
+    V: Value,
 {
     fn ty() -> crate::lang::Ty {
         todo!()
@@ -28,10 +28,10 @@ where
     }
 }
 
-impl<U, V> Constructible for (U, V)
+impl<U, V> Value for (U, V)
 where
-    U: Constructible,
-    V: Constructible,
+    U: Value,
+    V: Value,
 {
     fn from_trace(trace: super::Trace) -> Self {
         todo!()

@@ -5,14 +5,14 @@ use crate::lang::{
     VarExpr,
 };
 
-use super::{Constructible, IntoValue, Trace, Value};
+use super::{IntoPosh, Trace, Value, ValueBase};
 
-pub fn var<R: Constructible>(init: R) -> R {
+pub fn var<R: Value>(init: R) -> R {
     let init = Some(Rc::new(init.expr()));
 
     let var = VarExpr {
         ident: Ident::new("var"),
-        ty: <R::Type as Value>::ty(),
+        ty: <R::Type as ValueBase>::ty(),
         init,
     };
 
@@ -58,18 +58,18 @@ pub fn common_field_base(exprs: &[Expr]) -> Option<Expr> {
 }
 
 #[doc(hidden)]
-pub fn field<R: Constructible>(base: Trace, member: &str) -> R {
+pub fn field<R: Value>(base: Trace, member: &str) -> R {
     let expr = Expr::Field(FieldExpr {
         base: Rc::new(base.expr()),
         member: member.into(),
-        ty: <R::Type as Value>::ty(),
+        ty: <R::Type as ValueBase>::ty(),
     });
 
     R::from_expr(expr)
 }
 
 #[doc(hidden)]
-pub fn func_def_and_call<R: Constructible>(
+pub fn func_def_and_call<R: Value>(
     name: impl Into<String>,
     params: Vec<VarExpr>,
     result: R,
@@ -88,40 +88,40 @@ pub fn func_def_and_call<R: Constructible>(
 }
 
 pub(crate) fn binary<U, V, R>(
-    left: impl IntoValue<Type = U>,
+    left: impl IntoPosh<Type = U>,
     op: BinaryOp,
-    right: impl IntoValue<Type = V>,
+    right: impl IntoPosh<Type = V>,
 ) -> R
 where
-    U: Value,
-    V: Value,
-    R: Constructible,
+    U: ValueBase,
+    V: ValueBase,
+    R: Value,
 {
-    let left = Rc::new(left.into_value().expr());
-    let right = Rc::new(right.into_value().expr());
+    let left = Rc::new(left.into_posh().expr());
+    let right = Rc::new(right.into_posh().expr());
 
     let expr = Expr::Binary(BinaryExpr {
         left,
         op,
         right,
-        ty: <R::Type as Value>::ty(),
+        ty: <R::Type as ValueBase>::ty(),
     });
 
     R::from_expr(expr)
 }
 
-pub(crate) fn builtin1<U, R>(name: &str, u: impl IntoValue<Type = U>) -> R
+pub(crate) fn builtin1<U, R>(name: &str, u: impl IntoPosh<Type = U>) -> R
 where
-    U: Value,
-    R: Constructible,
+    U: ValueBase,
+    R: Value,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Type as Value>::ty(),
+        ty: <R::Type as ValueBase>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
-        args: vec![u.into_value().expr()],
+        args: vec![u.into_posh().expr()],
     });
 
     R::from_expr(expr)
@@ -129,21 +129,21 @@ where
 
 pub(crate) fn builtin2<U, V, R>(
     name: &str,
-    u: impl IntoValue<Type = U>,
-    v: impl IntoValue<Type = V>,
+    u: impl IntoPosh<Type = U>,
+    v: impl IntoPosh<Type = V>,
 ) -> R
 where
-    U: Value,
-    V: Value,
-    R: Constructible,
+    U: ValueBase,
+    V: ValueBase,
+    R: Value,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Type as Value>::ty(),
+        ty: <R::Type as ValueBase>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
-        args: vec![u.into_value().expr(), v.into_value().expr()],
+        args: vec![u.into_posh().expr(), v.into_posh().expr()],
     });
 
     R::from_expr(expr)
@@ -151,26 +151,26 @@ where
 
 pub(crate) fn builtin3<U, V, W, R>(
     name: &str,
-    u: impl IntoValue<Type = U>,
-    v: impl IntoValue<Type = V>,
-    w: impl IntoValue<Type = W>,
+    u: impl IntoPosh<Type = U>,
+    v: impl IntoPosh<Type = V>,
+    w: impl IntoPosh<Type = W>,
 ) -> R
 where
-    U: Value,
-    V: Value,
-    W: Value,
-    R: Constructible,
+    U: ValueBase,
+    V: ValueBase,
+    W: ValueBase,
+    R: Value,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Type as Value>::ty(),
+        ty: <R::Type as ValueBase>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
         args: vec![
-            u.into_value().expr(),
-            v.into_value().expr(),
-            w.into_value().expr(),
+            u.into_posh().expr(),
+            v.into_posh().expr(),
+            w.into_posh().expr(),
         ],
     });
 
@@ -179,29 +179,29 @@ where
 
 pub(crate) fn builtin4<U, V, W, X, R>(
     name: &str,
-    u: impl IntoValue<Type = U>,
-    v: impl IntoValue<Type = V>,
-    w: impl IntoValue<Type = W>,
-    x: impl IntoValue<Type = X>,
+    u: impl IntoPosh<Type = U>,
+    v: impl IntoPosh<Type = V>,
+    w: impl IntoPosh<Type = W>,
+    x: impl IntoPosh<Type = X>,
 ) -> R
 where
-    U: Value,
-    V: Value,
-    W: Value,
-    X: Value,
-    R: Constructible,
+    U: ValueBase,
+    V: ValueBase,
+    W: ValueBase,
+    X: ValueBase,
+    R: Value,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Type as Value>::ty(),
+        ty: <R::Type as ValueBase>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
         args: vec![
-            u.into_value().expr(),
-            v.into_value().expr(),
-            w.into_value().expr(),
-            x.into_value().expr(),
+            u.into_posh().expr(),
+            v.into_posh().expr(),
+            w.into_posh().expr(),
+            x.into_posh().expr(),
         ],
     });
 

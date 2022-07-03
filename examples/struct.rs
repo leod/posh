@@ -1,4 +1,4 @@
-use posh::{lang::Ident, posh, IntoValue, Po, Value};
+use posh::{lang::Ident, posh, IntoPosh, Po, ValueBase};
 
 #[derive(IntoValue)]
 pub struct Helper {

@@ -1,20 +1,20 @@
-use posh::{posh, var, vec3, FStageIn, FStageOut, IntoValue, Po, Shader, VStageIn, VStageOut};
+use posh::{posh, var, vec3, FStageIn, FStageOut, IntoPosh, Po, Shader, VStageIn, VStageOut};
 
-#[derive(Posh, IntoValue)]
+#[derive(Posh)]
 #[posh_derive(UniformBlock)]
 struct ModelToClip {
     model_to_view: [f32; 3],
     view_to_clip: [f32; 3],
 }
 
-#[derive(Posh, BindResources)]
+#[derive(Posh)]
 #[posh_derive(Resources)]
 struct Resources {
     one: ModelToClip,
     two: ModelToClip,
 }
 
-#[derive(Posh, IntoValue)]
+#[derive(Posh)]
 #[posh_derive(Vertex)]
 struct Vertex {
     position: [f32; 3],
@@ -22,20 +22,20 @@ struct Vertex {
     thickness: f32,
 }
 
-#[derive(Posh, IntoValue)]
+#[derive(Posh)]
 #[posh_derive(Vertex)]
 struct Instance {
     color: [f32; 3],
 }
 
-#[derive(IntoValue)]
+#[derive(Posh)]
 #[posh_derive(VOutputs)]
 struct VOutputs {
     color: [f32; 3],
     normal: [f32; 3],
 }
 
-#[derive(IntoValue)]
+#[derive(Posh)]
 #[posh_derive(FOutputs)]
 struct FOutputs {
     color: [f32; 3],
@@ -53,17 +53,19 @@ fn vertex(res: Po<Resources>, arg: VStageIn<Vertex>) -> VStageOut<VOutputs> {
 }
 
 fn vertex2(res: Po<Resources>, arg: VStageIn<(Vertex, Instance)>) -> VStageOut<VOutputs> {
+    let (instance, vertex) = arg.vertex;
+
     let outputs = Po::<VOutputs> {
-        color: arg.vertex.1.color,
-        normal: res.one.model_to_view * arg.vertex.0.normal,
+        color: instance.color,
+        normal: res.one.model_to_view * vertex.normal,
     };
-    let position = res.one.model_to_view * arg.vertex.0.position;
+    let position = res.one.model_to_view * vertex.position;
 
     VStageOut { outputs, position }
 }
 
 fn fragment(_: Po<Resources>, arg: FStageIn<VOutputs>) -> FStageOut<FOutputs> {
-    let fragment = var(Po::<FOutputs> {
+    let outputs = var(Po::<FOutputs> {
         color: arg.inputs.color,
         normal: arg.inputs.normal,
     });

@@ -1,8 +1,8 @@
-use crate::{IntoValue, Po};
+use crate::{IntoPosh, Po};
 
-use super::{builtin1, builtin2, Constructible, Vec3};
+use super::{builtin1, builtin2, Value, Vec3};
 
-pub trait GenValue: Constructible + Sized {
+pub trait GenValue: Value + Sized {
     fn normalize(self) -> Self {
         builtin1("normalize", self)
     }
@@ -27,7 +27,7 @@ pub trait GenValue: Constructible + Sized {
         builtin1("acos", self)
     }
 
-    fn atan2(self, x: impl IntoValue<Type = Self>) -> Self {
+    fn atan2(self, x: impl IntoPosh<Type = Self>) -> Self {
         builtin2("atan", self, x)
     }
 

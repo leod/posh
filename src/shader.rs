@@ -2,8 +2,8 @@ use std::marker::PhantomData;
 
 use crate::{
     lang::{Expr, Ident},
-    value::{Constructible, Lift},
-    Po, Value, Vec3, Vec4,
+    value::{Lift, Value},
+    Po, ValueBase, Vec3, Vec4,
 };
 
 pub trait Resource {
@@ -23,17 +23,17 @@ where
     }
 }
 
-pub trait Vertex: Constructible {}
+pub trait Vertex: Value {}
 
-pub trait VInputs: Constructible {}
+pub trait VInputs: Value {}
 
 impl<V: Vertex> VInputs for V {}
 
 impl<V1: Vertex, V2: Vertex> VInputs for (V1, V2) {}
 
-pub trait VOutputs: Constructible {}
+pub trait VOutputs: Value {}
 
-pub trait FOutputs: Constructible {}
+pub trait FOutputs: Value {}
 
 #[derive(Clone, Copy)]
 pub struct VStageIn<V: Lift> {
@@ -83,7 +83,7 @@ pub struct Shader<P, V, R> {
     }
 }*/
 
-fn builtin_var<V: Value>(name: &'static str) -> V {
+fn builtin_var<V: ValueBase>(name: &'static str) -> V {
     V::from_ident(Ident::new(name))
 }
 

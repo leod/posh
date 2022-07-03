@@ -24,11 +24,11 @@ pub trait Lift {
 
 pub type Po<T> = <T as Lift>::Type;
 
-pub trait IntoValue: Lift {
-    fn into_value(self) -> Po<Self>;
+pub trait IntoPosh: Lift {
+    fn into_posh(self) -> Po<Self>;
 }
 
-pub trait Value: Copy + Lift<Type = Self> + Sized {
+pub trait ValueBase: Copy + Lift<Type = Self> + Sized {
     fn ty() -> Ty;
     fn expr(&self) -> Expr;
 
@@ -36,7 +36,7 @@ pub trait Value: Copy + Lift<Type = Self> + Sized {
     fn from_ident(ident: Ident) -> Self;
 }
 
-pub trait Constructible: Value {
+pub trait Value: ValueBase {
     fn from_trace(trace: Trace) -> Self;
 
     fn from_expr(expr: Expr) -> Self {
@@ -44,15 +44,15 @@ pub trait Constructible: Value {
     }
 }
 
-pub trait FuncArg: Value {}
+pub trait FuncArg: ValueBase {}
 
-impl<V: Constructible> FuncArg for V {}
+impl<V: Value> FuncArg for V {}
 
-impl<V> IntoValue for V
+impl<V> IntoPosh for V
 where
-    V: Lift<Type = Self> + Value,
+    V: Lift<Type = Self> + ValueBase,
 {
-    fn into_value(self) -> Self {
+    fn into_posh(self) -> Self {
         self
     }
 }

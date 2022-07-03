@@ -8,9 +8,9 @@ use crate::lang::{
     BinaryOp, BuiltInTy, Expr, Ident, Literal, LiteralExpr, ScalarTy, TernaryExpr, Ty,
 };
 
-use super::{binary, Constructible, IntoValue, Lift, Trace, Value};
+use super::{binary, IntoPosh, Lift, Trace, Value, ValueBase};
 
-pub trait ScalarType: Copy + Into<Literal> + IntoValue<Type = Scalar<Self>> {
+pub trait ScalarType: Copy + Into<Literal> + IntoPosh<Type = Scalar<Self>> {
     fn scalar_ty() -> ScalarTy;
 }
 
@@ -27,7 +27,7 @@ pub struct Scalar<T> {
     trace: Trace,
 }
 
-impl<T: ScalarType> Value for Scalar<T> {
+impl<T: ScalarType> ValueBase for Scalar<T> {
     fn ty() -> Ty {
         Ty::BuiltIn(BuiltInTy::Scalar(T::scalar_ty()))
     }
@@ -41,9 +41,9 @@ impl<T: ScalarType> Value for Scalar<T> {
     }
 }
 
-impl<T: ScalarType> Constructible for Scalar<T> {
+impl<T: ScalarType> Value for Scalar<T> {
     fn from_trace(trace: Trace) -> Self {
-        assert!(trace.expr().ty() == <Self::Type as Value>::ty());
+        assert!(trace.expr().ty() == <Self::Type as ValueBase>::ty());
 
         Scalar {
             _phantom: PhantomData,
@@ -60,28 +60,28 @@ where
         Self::from_expr(Expr::Literal(LiteralExpr { literal: x.into() }))
     }
 
-    pub fn eq(&self, right: impl IntoValue<Type = Self>) -> Bool {
+    pub fn eq(&self, right: impl IntoPosh<Type = Self>) -> Bool {
         binary(*self, BinaryOp::Eq, right)
     }
 }
 
 impl Bool {
-    pub fn and(self, right: impl IntoValue<Type = Bool>) -> Bool {
+    pub fn and(self, right: impl IntoPosh<Type = Bool>) -> Bool {
         binary(self, BinaryOp::And, right)
     }
 
-    pub fn or(self, right: impl IntoValue<Type = Bool>) -> Bool {
+    pub fn or(self, right: impl IntoPosh<Type = Bool>) -> Bool {
         binary(self, BinaryOp::And, right)
     }
 
-    pub fn ternary<V: Constructible>(
+    pub fn ternary<V: Value>(
         self,
-        true_value: impl IntoValue<Type = V>,
-        false_value: impl IntoValue<Type = V>,
+        true_value: impl IntoPosh<Type = V>,
+        false_value: impl IntoPosh<Type = V>,
     ) -> V {
         let cond = Rc::new(self.expr());
-        let true_expr = Rc::new(true_value.into_value().expr());
-        let false_expr = Rc::new(false_value.into_value().expr());
+        let true_expr = Rc::new(true_value.into_posh().expr());
+        let false_expr = Rc::new(false_value.into_posh().expr());
 
         let expr = Expr::Ternary(TernaryExpr {
             cond,
@@ -98,7 +98,7 @@ macro_rules! impl_binary_op {
         impl<T, Rhs> $op<Rhs> for Scalar<T>
         where
             T: NumericType,
-            Rhs: IntoValue<Type = Scalar<T>>,
+            Rhs: IntoPosh<Type = Scalar<T>>,
         {
             type Output = Self;
 
@@ -150,8 +150,8 @@ macro_rules! impl_scalar {
             type Type = Scalar<$ty>;
         }
 
-        impl IntoValue for $ty {
-            fn into_value(self) -> Self::Type {
+        impl IntoPosh for $ty {
+            fn into_posh(self) -> Self::Type {
                 Scalar::new(self)
             }
         }
