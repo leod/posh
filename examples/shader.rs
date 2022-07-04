@@ -1,45 +1,45 @@
 use posh::{
     shader::{FStageIn, FStageOut, Shader, VStageIn, VStageOut},
-    var, vec3, IntoVal, Val,
+    var, vec3, IntoVal, Lift, Val,
 };
 
-#[derive(Type, IntoVal)]
-#[val(UniformBlock)]
+#[derive(Lift)]
+#[lift(UniformBlock)]
 struct ModelToClip {
     model_to_view: [f32; 3],
     view_to_clip: [f32; 3],
 }
 
-#[derive(Type)]
-#[val(Resources)]
+#[derive(Lift)]
+#[lift(Resources)]
 struct Resources {
     one: ModelToClip,
     two: ModelToClip,
 }
 
-#[derive(Type, IntoVal)]
-#[val(Vertex)]
+#[derive(Lift)]
+#[lift(Vertex)]
 struct Vertex {
     position: [f32; 3],
     normal: [f32; 3],
     thickness: f32,
 }
 
-#[derive(Type, IntoVal)]
-#[val(Vertex)]
+#[derive(Lift)]
+#[lift(Vertex)]
 struct Instance {
     color: [f32; 3],
 }
 
-#[derive(Type, IntoVal)]
-#[val(VOutputs)]
+#[derive(Lift)]
+#[lift(VOutputs)]
 struct VOutputs {
     color: [f32; 3],
     normal: [f32; 3],
 }
 
-#[derive(Type, IntoVal)]
-#[val(FOutputs)]
+#[derive(Lift)]
+#[lift(FOutputs)]
 struct FOutputs {
     color: [f32; 3],
     normal: [f32; 3],
