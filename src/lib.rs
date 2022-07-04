@@ -9,11 +9,11 @@ pub use static_assertions;
 pub use uuid;
 
 pub use value::{
-    var, vec3, ConstructibleVal, FuncArgVal, GenVal, IntoVal, Sampler2, Type, TypedVal, Val, Value,
+    var, vec3, Constructible, FuncArg, GenVal, IntoVal, Lift, Sampler2, Val, Value, ValueBase,
     Vec3, Vec4,
 };
 
-pub use posh_macros::{def, IntoVal};
+pub use posh_macros::{def, Lift};
 
 // This was here so that our macros could refer to `posh` even when we use them inside this crate.
 //extern crate self as posh;

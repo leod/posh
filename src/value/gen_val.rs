@@ -1,8 +1,8 @@
-use crate::{IntoVal, Value};
+use crate::{IntoVal, Val};
 
-use super::{builtin1, builtin2, ConstructibleVal, Vec3};
+use super::{builtin1, builtin2, Constructible, Vec3};
 
-pub trait GenVal: ConstructibleVal + Sized {
+pub trait GenVal: Constructible + Sized {
     fn normalize(self) -> Self {
         builtin1("normalize", self)
     }
@@ -27,7 +27,7 @@ pub trait GenVal: ConstructibleVal + Sized {
         builtin1("acos", self)
     }
 
-    fn atan2(self, x: impl IntoVal<Val = Self>) -> Self {
+    fn atan2(self, x: impl IntoVal<Value = Self>) -> Self {
         builtin2("atan", self, x)
     }
 
@@ -60,5 +60,5 @@ pub trait GenVal: ConstructibleVal + Sized {
     }
 }
 
-impl GenVal for Value<f32> {}
+impl GenVal for Val<f32> {}
 impl GenVal for Vec3<f32> {}

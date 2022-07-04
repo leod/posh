@@ -5,14 +5,14 @@ use crate::lang::{
     VarExpr,
 };
 
-use super::{ConstructibleVal, IntoVal, Trace, TypedVal};
+use super::{Constructible, IntoVal, Trace, Value};
 
-pub fn var<R: ConstructibleVal>(init: R) -> R {
+pub fn var<R: Constructible>(init: R) -> R {
     let init = Some(Rc::new(init.expr()));
 
     let var = VarExpr {
         ident: Ident::new("var"),
-        ty: <R::Val as TypedVal>::ty(),
+        ty: <R::Value as Value>::ty(),
         init,
     };
 
@@ -58,18 +58,18 @@ pub fn common_field_base(exprs: &[Expr]) -> Option<Expr> {
 }
 
 #[doc(hidden)]
-pub fn field<R: ConstructibleVal>(base: Trace, member: &str) -> R {
+pub fn field<R: Constructible>(base: Trace, member: &str) -> R {
     let expr = Expr::Field(FieldExpr {
         base: Rc::new(base.expr()),
         member: member.into(),
-        ty: <R::Val as TypedVal>::ty(),
+        ty: <R::Value as Value>::ty(),
     });
 
     R::from_expr(expr)
 }
 
 #[doc(hidden)]
-pub fn func_def_and_call<R: ConstructibleVal>(
+pub fn func_def_and_call<R: Constructible>(
     name: impl Into<String>,
     params: Vec<VarExpr>,
     result: R,
@@ -88,14 +88,14 @@ pub fn func_def_and_call<R: ConstructibleVal>(
 }
 
 pub(crate) fn binary<U, V, R>(
-    left: impl IntoVal<Val = U>,
+    left: impl IntoVal<Value = U>,
     op: BinaryOp,
-    right: impl IntoVal<Val = V>,
+    right: impl IntoVal<Value = V>,
 ) -> R
 where
-    U: TypedVal,
-    V: TypedVal,
-    R: ConstructibleVal,
+    U: Value,
+    V: Value,
+    R: Constructible,
 {
     let left = Rc::new(left.into_val().expr());
     let right = Rc::new(right.into_val().expr());
@@ -104,20 +104,20 @@ where
         left,
         op,
         right,
-        ty: <R::Val as TypedVal>::ty(),
+        ty: <R::Value as Value>::ty(),
     });
 
     R::from_expr(expr)
 }
 
-pub(crate) fn builtin1<U, R>(name: &str, u: impl IntoVal<Val = U>) -> R
+pub(crate) fn builtin1<U, R>(name: &str, u: impl IntoVal<Value = U>) -> R
 where
-    U: TypedVal,
-    R: ConstructibleVal,
+    U: Value,
+    R: Constructible,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Val as TypedVal>::ty(),
+        ty: <R::Value as Value>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
@@ -127,15 +127,19 @@ where
     R::from_expr(expr)
 }
 
-pub(crate) fn builtin2<U, V, R>(name: &str, u: impl IntoVal<Val = U>, v: impl IntoVal<Val = V>) -> R
+pub(crate) fn builtin2<U, V, R>(
+    name: &str,
+    u: impl IntoVal<Value = U>,
+    v: impl IntoVal<Value = V>,
+) -> R
 where
-    U: TypedVal,
-    V: TypedVal,
-    R: ConstructibleVal,
+    U: Value,
+    V: Value,
+    R: Constructible,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Val as TypedVal>::ty(),
+        ty: <R::Value as Value>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
@@ -147,19 +151,19 @@ where
 
 pub(crate) fn builtin3<U, V, W, R>(
     name: &str,
-    u: impl IntoVal<Val = U>,
-    v: impl IntoVal<Val = V>,
-    w: impl IntoVal<Val = W>,
+    u: impl IntoVal<Value = U>,
+    v: impl IntoVal<Value = V>,
+    w: impl IntoVal<Value = W>,
 ) -> R
 where
-    U: TypedVal,
-    V: TypedVal,
-    W: TypedVal,
-    R: ConstructibleVal,
+    U: Value,
+    V: Value,
+    W: Value,
+    R: Constructible,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Val as TypedVal>::ty(),
+        ty: <R::Value as Value>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
@@ -175,21 +179,21 @@ where
 
 pub(crate) fn builtin4<U, V, W, X, R>(
     name: &str,
-    u: impl IntoVal<Val = U>,
-    v: impl IntoVal<Val = V>,
-    w: impl IntoVal<Val = W>,
-    x: impl IntoVal<Val = X>,
+    u: impl IntoVal<Value = U>,
+    v: impl IntoVal<Value = V>,
+    w: impl IntoVal<Value = W>,
+    x: impl IntoVal<Value = X>,
 ) -> R
 where
-    U: TypedVal,
-    V: TypedVal,
-    W: TypedVal,
-    X: TypedVal,
-    R: ConstructibleVal,
+    U: Value,
+    V: Value,
+    W: Value,
+    X: Value,
+    R: Constructible,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Val as TypedVal>::ty(),
+        ty: <R::Value as Value>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,

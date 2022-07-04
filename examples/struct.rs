@@ -1,12 +1,14 @@
-use posh::{lang::Ident, IntoVal, TypedVal, Value};
+use posh::{lang::Ident, IntoVal, Lift, Val, Value};
 
-#[derive(IntoVal)]
+#[derive(Lift)]
+#[lift(Constructible)]
 pub struct Helper {
     x: i32,
     y: i32,
 }
 
-#[derive(IntoVal)]
+#[derive(Lift)]
+#[lift(Constructible)]
 pub struct Vertex {
     pos: i32,
     time: f32,
@@ -15,8 +17,8 @@ pub struct Vertex {
 }
 
 #[posh::def]
-fn vertex(vertex: Value<Vertex>) -> Value<Vertex> {
-    Value::<Vertex> {
+fn vertex(vertex: Val<Vertex>) -> Val<Vertex> {
+    Val::<Vertex> {
         pos: 3 * vertex.pos,
         time: 2.0.into_val(),
         ..vertex
@@ -24,7 +26,7 @@ fn vertex(vertex: Value<Vertex>) -> Value<Vertex> {
 }
 
 pub fn main() {
-    let result = vertex(Value::<Vertex>::from_ident(Ident::new("foo")));
+    let result = vertex(Val::<Vertex>::from_ident(Ident::new("foo")));
     println!("{:#?}", result.expr());
 
     if let posh::lang::Expr::Call(expr) = result.expr() {

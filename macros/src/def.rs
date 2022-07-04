@@ -14,7 +14,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                     input_tys.push(input.ty.clone());
 
                     let input_ty = &input.ty;
-                    input.ty = parse_quote! { impl ::posh::IntoVal<Val = #input_ty> };
+                    input.ty = parse_quote! { impl ::posh::IntoVal<Value = #input_ty> };
                 }
                 _ => {
                     return Err(Error::new_spanned(
@@ -37,7 +37,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                 use ::posh::static_assertions as sa;
 
                 #(
-                    sa::assert_impl_all!(#input_tys: ::posh::FuncArgVal);
+                    sa::assert_impl_all!(#input_tys: ::posh::FuncArg);
                 )*
             };
 
@@ -47,13 +47,13 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
 
             let #args_ident = vec![
                 #(
-                    ::posh::TypedVal::expr(&#input_idents).clone()
+                    ::posh::Value::expr(&#input_idents).clone()
                 ),*
             ];
 
             #(
                 let #input_idents =
-                    <#input_tys as ::posh::TypedVal>::from_ident(
+                    <#input_tys as ::posh::Value>::from_ident(
                         ::posh::lang::Ident::new(stringify!(#input_idents)),
                     );
             )*
@@ -62,7 +62,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                 stringify!(#func_ident),
                 vec![
                     #(
-                        match ::posh::TypedVal::expr(&#input_idents) {
+                        match ::posh::Value::expr(&#input_idents) {
                             ::posh::lang::Expr::Var(var) => var,
                             _ => unreachable!(),
                         }

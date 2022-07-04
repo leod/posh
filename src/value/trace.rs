@@ -2,7 +2,7 @@ use crate::lang::{Expr, Ident, VarExpr};
 
 use super::{
     expr_reg::{self, ExprId},
-    TypedVal,
+    Value,
 };
 
 #[derive(Debug, Copy, Clone)]
@@ -17,10 +17,10 @@ impl Trace {
         }
     }
 
-    pub fn from_ident<R: TypedVal>(ident: Ident) -> Self {
+    pub fn from_ident<R: Value>(ident: Ident) -> Self {
         Self::new(Expr::Var(VarExpr {
             ident,
-            ty: <R::Val as TypedVal>::ty(),
+            ty: <R::Value as Value>::ty(),
             init: None,
         }))
     }

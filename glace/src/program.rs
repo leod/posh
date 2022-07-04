@@ -1,13 +1,13 @@
 use posh::{
     shader::{FOutputs, Resources, Shader, VInputs},
-    Type,
+    Lift,
 };
 
-pub trait BindResources: Type {}
+pub trait BindResources: Lift {}
 
-pub trait BindVInputs: Type {}
+pub trait BindVInputs: Lift {}
 
-pub trait BindFOutputs: Type {}
+pub trait BindFOutputs: Lift {}
 
 pub struct Program<R, V, F> {
     shader: Shader<R, V, F>,
@@ -15,14 +15,11 @@ pub struct Program<R, V, F> {
 
 impl<R, V, F> Program<R, V, F>
 where
-    R: Type,
-    V: Type,
-    F: Type,
-    R::Val: Resources,
-    V::Val: VInputs,
-    F::Val: FOutputs,
     R: BindResources,
     V: BindVInputs,
     F: BindFOutputs,
+    R::Value: Resources,
+    V::Value: VInputs,
+    F::Value: FOutputs,
 {
 }

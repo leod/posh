@@ -18,19 +18,19 @@ pub use vec::{vec3, Vec3, Vec4};
 
 pub(crate) use primitives::{binary, builtin1, builtin2, builtin3, builtin4};
 
-pub trait Type {
-    type Val: Val;
+pub trait Lift {
+    type Value: ValueBase;
 }
 
-pub type Value<T> = <T as Type>::Val;
+pub type Val<T> = <T as Lift>::Value;
 
-pub trait IntoVal: Type {
-    fn into_val(self) -> Value<Self>;
+pub trait IntoVal: Lift {
+    fn into_val(self) -> Val<Self>;
 }
 
-pub trait Val: Copy + Type<Val = Self> + Sized {}
+pub trait ValueBase: Copy + Lift<Value = Self> + Sized {}
 
-pub trait TypedVal: Val {
+pub trait Value: ValueBase {
     fn ty() -> Ty;
     fn expr(&self) -> Expr;
 
@@ -38,7 +38,7 @@ pub trait TypedVal: Val {
     fn from_ident(ident: Ident) -> Self;
 }
 
-pub trait ConstructibleVal: TypedVal {
+pub trait Constructible: Value {
     fn from_trace(trace: Trace) -> Self;
 
     fn from_expr(expr: Expr) -> Self {
@@ -46,13 +46,13 @@ pub trait ConstructibleVal: TypedVal {
     }
 }
 
-pub trait FuncArgVal: TypedVal {}
+pub trait FuncArg: Value {}
 
-impl<V: ConstructibleVal> FuncArgVal for V {}
+impl<V: Constructible> FuncArg for V {}
 
 impl<V> IntoVal for V
 where
-    V: Type<Val = Self> + TypedVal,
+    V: Lift<Value = Self> + Value,
 {
     fn into_val(self) -> Self {
         self

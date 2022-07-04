@@ -1,24 +1,24 @@
-use super::{ConstructibleVal, Type, TypedVal, Val, Value};
+use super::{Constructible, Lift, Val, Value, ValueBase};
 
-impl<U, V> Type for (U, V)
+impl<U, V> Lift for (U, V)
 where
-    U: Type,
-    V: Type,
+    U: Lift,
+    V: Lift,
 {
-    type Val = (Value<U>, Value<V>);
+    type Value = (Val<U>, Val<V>);
 }
 
-impl<U, V> Val for (U, V)
+impl<U, V> ValueBase for (U, V)
 where
-    U: Val,
-    V: Val,
+    U: ValueBase,
+    V: ValueBase,
 {
 }
 
-impl<U, V> TypedVal for (U, V)
+impl<U, V> Value for (U, V)
 where
-    U: ConstructibleVal,
-    V: ConstructibleVal,
+    U: Constructible,
+    V: Constructible,
 {
     fn ty() -> crate::lang::Ty {
         todo!()
@@ -33,10 +33,10 @@ where
     }
 }
 
-impl<U, V> ConstructibleVal for (U, V)
+impl<U, V> Constructible for (U, V)
 where
-    U: ConstructibleVal,
-    V: ConstructibleVal,
+    U: Constructible,
+    V: Constructible,
 {
     fn from_trace(trace: super::Trace) -> Self {
         todo!()
