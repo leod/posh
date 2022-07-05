@@ -4,7 +4,7 @@ use crate::lang::{BinaryOp, BuiltInTy, Expr, Ident, Ty};
 
 use super::{
     binary, builtin3, builtin4, field, scalar::NumericType, Expose, IntoRep, Representant, Scalar,
-    ScalarType, Trace, Transparent, Value,
+    ScalarType, Trace, Value, ValueBase,
 };
 
 #[must_use]
@@ -28,7 +28,7 @@ pub struct Vec4<T> {
 
 impl<T: ScalarType> Representant for Vec3<T> {}
 
-impl<T: ScalarType> Value for Vec3<T> {
+impl<T: ScalarType> ValueBase for Vec3<T> {
     fn ty() -> Ty {
         Ty::BuiltIn(BuiltInTy::Vec3(T::scalar_ty()))
     }
@@ -44,7 +44,7 @@ impl<T: ScalarType> Value for Vec3<T> {
 
 impl<T: ScalarType> Representant for Vec4<T> {}
 
-impl<T: ScalarType> Value for Vec4<T> {
+impl<T: ScalarType> ValueBase for Vec4<T> {
     fn ty() -> Ty {
         Ty::BuiltIn(BuiltInTy::Vec4(T::scalar_ty()))
     }
@@ -58,9 +58,9 @@ impl<T: ScalarType> Value for Vec4<T> {
     }
 }
 
-impl<T: ScalarType> Transparent for Vec3<T> {
+impl<T: ScalarType> Value for Vec3<T> {
     fn from_trace(trace: Trace) -> Self {
-        assert!(trace.expr().ty() == <Self::Rep as Value>::ty());
+        assert!(trace.expr().ty() == <Self::Rep as ValueBase>::ty());
 
         Self {
             trace,
@@ -71,9 +71,9 @@ impl<T: ScalarType> Transparent for Vec3<T> {
     }
 }
 
-impl<T: ScalarType> Transparent for Vec4<T> {
+impl<T: ScalarType> Value for Vec4<T> {
     fn from_trace(trace: Trace) -> Self {
-        assert!(trace.expr().ty() == <Self::Rep as Value>::ty());
+        assert!(trace.expr().ty() == <Self::Rep as ValueBase>::ty());
 
         Self {
             trace,

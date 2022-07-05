@@ -9,7 +9,7 @@ mod vec;
 
 use crate::lang::{Expr, Ident, Ty};
 
-pub use gen_val::GenVal;
+pub use gen_val::GenValue;
 pub use primitives::{common_field_base, field, func_def_and_call, var};
 pub use sampler::Sampler2;
 pub use scalar::{Scalar, ScalarType};
@@ -24,19 +24,19 @@ pub trait Expose {
     type Rep: Representant;
 }
 
-/// Maps a type `T` implementing [Expose] to its representant `Rep<T>`.
+/// Maps a type `T` implementing [`Expose`] to its representant type `Rep<T>`.
 pub type Rep<T> = <T as Expose>::Rep;
 
-/// Conversion from `T` to [Rep<T>].
+/// A value-to-value conversion from `T` to [`Rep<T>`].
 pub trait IntoRep: Expose {
     fn into_rep(self) -> Rep<Self>;
 }
 
-/// Objects which are accessible in Posh.
+/// An object which is accessible in Posh.
 pub trait Representant: Copy + Expose<Rep = Self> + Sized {}
 
-/// [Representant]s which can be accessed as values.
-pub trait Value: Representant {
+/// A [`Representant`] which can be accessed as a value.
+pub trait ValueBase: Representant {
     fn ty() -> Ty;
     fn expr(&self) -> Expr;
 
@@ -44,8 +44,8 @@ pub trait Value: Representant {
     fn from_ident(ident: Ident) -> Self;
 }
 
-/// [Value]s which are user-constructible and can be stored in variables.
-pub trait Transparent: Value {
+/// A [`ValueBase`] which are user-constructible and can be stored in variables.
+pub trait Value: ValueBase {
     fn from_trace(trace: Trace) -> Self;
 
     fn from_expr(expr: Expr) -> Self {
@@ -53,14 +53,14 @@ pub trait Transparent: Value {
     }
 }
 
-/// [Value]s which can be passed to functions.
-pub trait FuncArg: Value {}
+/// [`Value`]s which can be passed to functions.
+pub trait FuncArg: ValueBase {}
 
-impl<V: Transparent> FuncArg for V {}
+impl<V: Value> FuncArg for V {}
 
 impl<V> IntoRep for V
 where
-    V: Expose<Rep = Self> + Value,
+    V: Expose<Rep = Self> + ValueBase,
 {
     fn into_rep(self) -> Self {
         self

@@ -1,8 +1,9 @@
 use crate::{IntoRep, Rep};
 
-use super::{builtin1, builtin2, Transparent, Vec3};
+use super::{builtin1, builtin2, Value, Vec3};
 
-pub trait GenVal: Transparent + Sized {
+/// A [`Rep<f32>`] or a [`Vec2<f32>`] or a [`Vec3<f32>`] or a [`Vec4<f32>`].
+pub trait GenValue: Value + Sized {
     fn normalize(self) -> Self {
         builtin1("normalize", self)
     }
@@ -60,5 +61,5 @@ pub trait GenVal: Transparent + Sized {
     }
 }
 
-impl GenVal for Rep<f32> {}
-impl GenVal for Vec3<f32> {}
+impl GenValue for Rep<f32> {}
+impl GenValue for Vec3<f32> {}

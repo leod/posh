@@ -1,4 +1,4 @@
-use super::{Expose, Rep, Representant, Transparent, Value};
+use super::{Expose, Rep, Representant, Value, ValueBase};
 
 impl<U, V> Expose for (U, V)
 where
@@ -15,10 +15,10 @@ where
 {
 }
 
-impl<U, V> Value for (U, V)
+impl<U, V> ValueBase for (U, V)
 where
-    U: Transparent,
-    V: Transparent,
+    U: Value,
+    V: Value,
 {
     fn ty() -> crate::lang::Ty {
         todo!()
@@ -33,10 +33,10 @@ where
     }
 }
 
-impl<U, V> Transparent for (U, V)
+impl<U, V> Value for (U, V)
 where
-    U: Transparent,
-    V: Transparent,
+    U: Value,
+    V: Value,
 {
     fn from_trace(trace: super::Trace) -> Self {
         todo!()

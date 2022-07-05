@@ -1,4 +1,4 @@
-use posh::{lang::Ident, Expose, IntoRep, Rep, Value};
+use posh::{lang::Ident, Expose, IntoRep, Rep, ValueBase};
 
 #[derive(Expose)]
 pub struct Helper {
