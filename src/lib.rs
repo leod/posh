@@ -9,8 +9,8 @@ pub use static_assertions;
 pub use uuid;
 
 pub use expose::{
-    var, vec3, Expose, FuncArg, GenValue, IntoRep, Rep, Representant, Sampler2, Value, ValueBase,
-    Vec3, Vec4,
+    var, vec3, Expose, FuncArg, GenValue, IntoRep, MapToExpr, Rep, Representative, Sampler2,
+    Scalar, Value, Vec3, Vec4,
 };
 
 pub use posh_macros::{def, Expose};

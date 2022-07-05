@@ -1,7 +1,8 @@
 use crate::lang::{BuiltInTy, Expr, Ident, Ty};
 
-use super::{builtin2, Expose, FuncArg, Representant, Trace, ValueBase, Vec3, Vec4};
+use super::{builtin2, Expose, FuncArg, MapToExpr, Representative, Trace, Vec3, Vec4};
 
+/// Representative for samplers.
 #[derive(Debug, Copy, Clone)]
 pub struct Sampler2(Trace);
 
@@ -9,9 +10,9 @@ impl Expose for Sampler2 {
     type Rep = Self;
 }
 
-impl Representant for Sampler2 {}
+impl Representative for Sampler2 {}
 
-impl ValueBase for Sampler2 {
+impl MapToExpr for Sampler2 {
     fn from_ident(ident: Ident) -> Self {
         Sampler2(Trace::from_ident::<Self>(ident))
     }

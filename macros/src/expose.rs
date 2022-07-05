@@ -52,10 +52,10 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             type Rep = Self;
         }
 
-        impl #impl_generics ::posh::Representant for #posh_name #ty_generics #where_clause {
+        impl #impl_generics ::posh::Representative for #posh_name #ty_generics #where_clause {
         }
 
-        impl #impl_generics ::posh::Value for #posh_name #ty_generics #where_clause {
+        impl #impl_generics ::posh::MapToExpr for #posh_name #ty_generics #where_clause {
             fn ty() -> ::posh::lang::Ty {
                 let ident = ::posh::lang::Ident {
                     name: #name_str.to_string(),
@@ -66,7 +66,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                     #(
                         (
                             #field_name_strs.to_string(),
-                            <::posh::Rep<#field_tys> as ::posh::Value>::ty(),
+                            <::posh::Rep<#field_tys> as ::posh::MapToExpr>::ty(),
                         )
                     ),*
                 ];
@@ -81,7 +81,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
 
             fn expr(&self) -> ::posh::lang::Expr {
                 let func = ::posh::lang::Func::Struct(::posh::lang::StructFunc {
-                    ty: match <Self as ::posh::Value>::ty() {
+                    ty: match <Self as ::posh::MapToExpr>::ty() {
                         ::posh::lang::Ty::Struct(ty) => ty,
                         _ => unreachable!(),
                     },
@@ -89,7 +89,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
 
                 let args = vec![
                     #(
-                        ::posh::Value::expr(&self.#field_idents)
+                        ::posh::MapToExpr::expr(&self.#field_idents)
                     ),*
                 ];
 
@@ -104,13 +104,13 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             }
 
             fn from_ident(ident: ::posh::lang::Ident) -> Self {
-                <Self as ::posh::Transparent>::from_trace(
+                <Self as ::posh::Value>::from_trace(
                     ::posh::expose::Trace::from_ident::<Self>(ident),
                 )
             }
         }
 
-        impl #impl_generics ::posh::Transparent for #posh_name #ty_generics
+        impl #impl_generics ::posh::Value for #posh_name #ty_generics
         #where_clause
         {
             fn from_trace(trace: ::posh::expose::Trace) -> Self {

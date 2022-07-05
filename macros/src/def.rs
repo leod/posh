@@ -47,13 +47,13 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
 
             let #args_ident = vec![
                 #(
-                    ::posh::Value::expr(&#input_idents).clone()
+                    ::posh::MapToExpr::expr(&#input_idents).clone()
                 ),*
             ];
 
             #(
                 let #input_idents =
-                    <#input_tys as ::posh::Value>::from_ident(
+                    <#input_tys as ::posh::MapToExpr>::from_ident(
                         ::posh::lang::Ident::new(stringify!(#input_idents)),
                     );
             )*
@@ -62,7 +62,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                 stringify!(#func_ident),
                 vec![
                     #(
-                        match ::posh::Value::expr(&#input_idents) {
+                        match ::posh::MapToExpr::expr(&#input_idents) {
                             ::posh::lang::Expr::Var(var) => var,
                             _ => unreachable!(),
                         }

@@ -3,10 +3,11 @@ use std::ops::{Add, Div, Mul, Sub};
 use crate::lang::{BinaryOp, BuiltInTy, Expr, Ident, Ty};
 
 use super::{
-    binary, builtin3, builtin4, field, scalar::NumericType, Expose, IntoRep, Representant, Scalar,
-    ScalarType, Trace, Value, ValueBase,
+    binary, builtin3, builtin4, field, scalar::NumericType, Expose, IntoRep, MapToExpr,
+    Representative, Scalar, ScalarType, Trace, Value,
 };
 
+/// Representative for three-dimensional vectors.
 #[must_use]
 #[derive(Debug, Copy, Clone)]
 pub struct Vec3<T> {
@@ -16,6 +17,7 @@ pub struct Vec3<T> {
     pub z: Scalar<T>,
 }
 
+/// Representative for four-dimensional vectors.
 #[must_use]
 #[derive(Debug, Clone, Copy)]
 pub struct Vec4<T> {
@@ -26,9 +28,9 @@ pub struct Vec4<T> {
     pub w: Scalar<T>,
 }
 
-impl<T: ScalarType> Representant for Vec3<T> {}
+impl<T: ScalarType> Representative for Vec3<T> {}
 
-impl<T: ScalarType> ValueBase for Vec3<T> {
+impl<T: ScalarType> MapToExpr for Vec3<T> {
     fn ty() -> Ty {
         Ty::BuiltIn(BuiltInTy::Vec3(T::scalar_ty()))
     }
@@ -42,9 +44,9 @@ impl<T: ScalarType> ValueBase for Vec3<T> {
     }
 }
 
-impl<T: ScalarType> Representant for Vec4<T> {}
+impl<T: ScalarType> Representative for Vec4<T> {}
 
-impl<T: ScalarType> ValueBase for Vec4<T> {
+impl<T: ScalarType> MapToExpr for Vec4<T> {
     fn ty() -> Ty {
         Ty::BuiltIn(BuiltInTy::Vec4(T::scalar_ty()))
     }
@@ -60,7 +62,7 @@ impl<T: ScalarType> ValueBase for Vec4<T> {
 
 impl<T: ScalarType> Value for Vec3<T> {
     fn from_trace(trace: Trace) -> Self {
-        assert!(trace.expr().ty() == <Self::Rep as ValueBase>::ty());
+        assert!(trace.expr().ty() == <Self::Rep as MapToExpr>::ty());
 
         Self {
             trace,
@@ -73,7 +75,7 @@ impl<T: ScalarType> Value for Vec3<T> {
 
 impl<T: ScalarType> Value for Vec4<T> {
     fn from_trace(trace: Trace) -> Self {
-        assert!(trace.expr().ty() == <Self::Rep as ValueBase>::ty());
+        assert!(trace.expr().ty() == <Self::Rep as MapToExpr>::ty());
 
         Self {
             trace,
@@ -195,6 +197,7 @@ macro_rules! impl_ops {
 
 impl_ops!(Vec3);
 
+/// Constructs a three-dimensional vector.
 pub fn vec3<T: ScalarType>(
     x: impl IntoRep<Rep = Scalar<T>>,
     y: impl IntoRep<Rep = Scalar<T>>,
@@ -203,6 +206,7 @@ pub fn vec3<T: ScalarType>(
     builtin3("vec3", x, y, z)
 }
 
+/// Constructs a four-dimensional vector.
 pub fn vec4<T: ScalarType>(
     x: impl IntoRep<Rep = Scalar<T>>,
     y: impl IntoRep<Rep = Scalar<T>>,

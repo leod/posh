@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use crate::{
     expose::{Expose, Value},
     lang::{Expr, Ident},
-    Rep, ValueBase, Vec3, Vec4,
+    MapToExpr, Rep, Vec3, Vec4,
 };
 
 pub trait Resource {
@@ -83,7 +83,7 @@ pub struct Shader<P, V, R> {
     }
 }*/
 
-fn builtin_var<V: ValueBase>(name: &'static str) -> V {
+fn builtin_var<V: MapToExpr>(name: &'static str) -> V {
     V::from_ident(Ident::new(name))
 }
 

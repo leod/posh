@@ -1,4 +1,4 @@
-use super::{Expose, Rep, Representant, Value, ValueBase};
+use super::{Expose, MapToExpr, Rep, Representative, Value};
 
 impl<U, V> Expose for (U, V)
 where
@@ -8,14 +8,14 @@ where
     type Rep = (Rep<U>, Rep<V>);
 }
 
-impl<U, V> Representant for (U, V)
+impl<U, V> Representative for (U, V)
 where
-    U: Representant,
-    V: Representant,
+    U: Representative,
+    V: Representative,
 {
 }
 
-impl<U, V> ValueBase for (U, V)
+impl<U, V> MapToExpr for (U, V)
 where
     U: Value,
     V: Value,

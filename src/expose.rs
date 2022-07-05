@@ -18,25 +18,31 @@ pub use vec::{vec3, Vec3, Vec4};
 
 pub(crate) use primitives::{binary, builtin1, builtin2, builtin3, builtin4};
 
-/// The `Expose` trait exposes Rust types to Posh.
+/// Exposes a Rust type to Posh through a representative type.
 pub trait Expose {
-    /// The representant for `Self` in Posh.
-    type Rep: Representant;
+    /// The type that represents `Self` in Posh.
+    type Rep: Representative;
 }
 
-/// Maps a type `T` implementing [`Expose`] to its representant type `Rep<T>`.
+/// Maps a type implementing [`Expose`] to its representative in Posh.
+///
+/// # Examples
+/// - `Rep<f32>` is [`Scalar<f32>`]
+/// - `Rep<i32>` is [`Scalar<i32>`]
+/// - `Rep<bool>` is [`Scalar<bool>`]
+/// - `Rep<[f32; 3]>` is [`Vec3<f32>`]
 pub type Rep<T> = <T as Expose>::Rep;
 
-/// A value-to-value conversion from `T` to [`Rep<T>`].
+/// A value-to-value conversion to a representative in Posh.
 pub trait IntoRep: Expose {
     fn into_rep(self) -> Rep<Self>;
 }
 
 /// An object which is accessible in Posh.
-pub trait Representant: Copy + Expose<Rep = Self> + Sized {}
+pub trait Representative: Copy + Expose<Rep = Self> + Sized {}
 
-/// A [`Representant`] which can be accessed as a value.
-pub trait ValueBase: Representant {
+/// A representative which has a [`Ty`] in Posh and can be mapped to an [`Expr`].
+pub trait MapToExpr: Representative {
     fn ty() -> Ty;
     fn expr(&self) -> Expr;
 
@@ -44,23 +50,25 @@ pub trait ValueBase: Representant {
     fn from_ident(ident: Ident) -> Self;
 }
 
-/// A [`ValueBase`] which are user-constructible and can be stored in variables.
-pub trait Value: ValueBase {
+/// A representative which can be freely used as a value in Posh.
+pub trait Value: MapToExpr {
+    #[doc(hidden)]
     fn from_trace(trace: Trace) -> Self;
 
+    #[doc(hidden)]
     fn from_expr(expr: Expr) -> Self {
         Self::from_trace(Trace::new(expr))
     }
 }
 
-/// [`Value`]s which can be passed to functions.
-pub trait FuncArg: ValueBase {}
+/// A representative which can be passed to user-defined Posh functions.
+pub trait FuncArg: MapToExpr {}
 
 impl<V: Value> FuncArg for V {}
 
 impl<V> IntoRep for V
 where
-    V: Expose<Rep = Self> + ValueBase,
+    V: Expose<Rep = Self> + MapToExpr,
 {
     fn into_rep(self) -> Self {
         self

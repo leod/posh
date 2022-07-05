@@ -5,14 +5,15 @@ use crate::lang::{
     VarExpr,
 };
 
-use super::{IntoRep, Trace, Value, ValueBase};
+use super::{IntoRep, MapToExpr, Trace, Value};
 
+/// Creates a variable which stores a [`Value`].
 pub fn var<R: Value>(init: R) -> R {
     let init = Some(Rc::new(init.expr()));
 
     let var = VarExpr {
         ident: Ident::new("var"),
-        ty: <R::Rep as ValueBase>::ty(),
+        ty: <R::Rep as MapToExpr>::ty(),
         init,
     };
 
@@ -62,7 +63,7 @@ pub fn field<R: Value>(base: Trace, member: &str) -> R {
     let expr = Expr::Field(FieldExpr {
         base: Rc::new(base.expr()),
         member: member.into(),
-        ty: <R::Rep as ValueBase>::ty(),
+        ty: <R::Rep as MapToExpr>::ty(),
     });
 
     R::from_expr(expr)
@@ -93,8 +94,8 @@ pub(crate) fn binary<U, V, R>(
     right: impl IntoRep<Rep = V>,
 ) -> R
 where
-    U: ValueBase,
-    V: ValueBase,
+    U: MapToExpr,
+    V: MapToExpr,
     R: Value,
 {
     let left = Rc::new(left.into_rep().expr());
@@ -104,7 +105,7 @@ where
         left,
         op,
         right,
-        ty: <R::Rep as ValueBase>::ty(),
+        ty: <R::Rep as MapToExpr>::ty(),
     });
 
     R::from_expr(expr)
@@ -112,12 +113,12 @@ where
 
 pub(crate) fn builtin1<U, R>(name: &str, u: impl IntoRep<Rep = U>) -> R
 where
-    U: ValueBase,
+    U: MapToExpr,
     R: Value,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Rep as ValueBase>::ty(),
+        ty: <R::Rep as MapToExpr>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
@@ -129,13 +130,13 @@ where
 
 pub(crate) fn builtin2<U, V, R>(name: &str, u: impl IntoRep<Rep = U>, v: impl IntoRep<Rep = V>) -> R
 where
-    U: ValueBase,
-    V: ValueBase,
+    U: MapToExpr,
+    V: MapToExpr,
     R: Value,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Rep as ValueBase>::ty(),
+        ty: <R::Rep as MapToExpr>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
@@ -152,14 +153,14 @@ pub(crate) fn builtin3<U, V, W, R>(
     w: impl IntoRep<Rep = W>,
 ) -> R
 where
-    U: ValueBase,
-    V: ValueBase,
-    W: ValueBase,
+    U: MapToExpr,
+    V: MapToExpr,
+    W: MapToExpr,
     R: Value,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Rep as ValueBase>::ty(),
+        ty: <R::Rep as MapToExpr>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
@@ -181,15 +182,15 @@ pub(crate) fn builtin4<U, V, W, X, R>(
     x: impl IntoRep<Rep = X>,
 ) -> R
 where
-    U: ValueBase,
-    V: ValueBase,
-    W: ValueBase,
-    X: ValueBase,
+    U: MapToExpr,
+    V: MapToExpr,
+    W: MapToExpr,
+    X: MapToExpr,
     R: Value,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Rep as ValueBase>::ty(),
+        ty: <R::Rep as MapToExpr>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
