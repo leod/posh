@@ -8,16 +8,16 @@ use crate::lang::{
     BinaryOp, BuiltInTy, Expr, Ident, Literal, LiteralExpr, ScalarTy, TernaryExpr, Ty,
 };
 
-use super::{binary, Constructible, IntoVal, Lift, Trace, Value, ValueBase};
+use super::{binary, Expose, IntoRep, Representant, Trace, Transparent, Value};
 
-pub trait ScalarType: Copy + Into<Literal> + IntoVal<Value = Scalar<Self>> {
+pub trait ScalarType: Copy + Into<Literal> + IntoRep<Rep = Scalar<Self>> {
     fn scalar_ty() -> ScalarTy;
 }
 
 pub trait NumericType: ScalarType {}
 
-impl<T: ScalarType> Lift for Scalar<T> {
-    type Value = Self;
+impl<T: ScalarType> Expose for Scalar<T> {
+    type Rep = Self;
 }
 
 #[must_use]
@@ -27,7 +27,7 @@ pub struct Scalar<T> {
     trace: Trace,
 }
 
-impl<T: ScalarType> ValueBase for Scalar<T> {}
+impl<T: ScalarType> Representant for Scalar<T> {}
 
 impl<T: ScalarType> Value for Scalar<T> {
     fn ty() -> Ty {
@@ -43,9 +43,9 @@ impl<T: ScalarType> Value for Scalar<T> {
     }
 }
 
-impl<T: ScalarType> Constructible for Scalar<T> {
+impl<T: ScalarType> Transparent for Scalar<T> {
     fn from_trace(trace: Trace) -> Self {
-        assert!(trace.expr().ty() == <Self::Value as Value>::ty());
+        assert!(trace.expr().ty() == <Self::Rep as Value>::ty());
 
         Scalar {
             _phantom: PhantomData,
@@ -62,28 +62,28 @@ where
         Self::from_expr(Expr::Literal(LiteralExpr { literal: x.into() }))
     }
 
-    pub fn eq(&self, right: impl IntoVal<Value = Self>) -> Bool {
+    pub fn eq(&self, right: impl IntoRep<Rep = Self>) -> Bool {
         binary(*self, BinaryOp::Eq, right)
     }
 }
 
 impl Bool {
-    pub fn and(self, right: impl IntoVal<Value = Bool>) -> Bool {
+    pub fn and(self, right: impl IntoRep<Rep = Bool>) -> Bool {
         binary(self, BinaryOp::And, right)
     }
 
-    pub fn or(self, right: impl IntoVal<Value = Bool>) -> Bool {
+    pub fn or(self, right: impl IntoRep<Rep = Bool>) -> Bool {
         binary(self, BinaryOp::And, right)
     }
 
-    pub fn ternary<V: Constructible>(
+    pub fn ternary<V: Transparent>(
         self,
-        true_value: impl IntoVal<Value = V>,
-        false_value: impl IntoVal<Value = V>,
+        true_value: impl IntoRep<Rep = V>,
+        false_value: impl IntoRep<Rep = V>,
     ) -> V {
         let cond = Rc::new(self.expr());
-        let true_expr = Rc::new(true_value.into_val().expr());
-        let false_expr = Rc::new(false_value.into_val().expr());
+        let true_expr = Rc::new(true_value.into_rep().expr());
+        let false_expr = Rc::new(false_value.into_rep().expr());
 
         let expr = Expr::Ternary(TernaryExpr {
             cond,
@@ -100,7 +100,7 @@ macro_rules! impl_binary_op {
         impl<T, Rhs> $op<Rhs> for Scalar<T>
         where
             T: NumericType,
-            Rhs: IntoVal<Value = Scalar<T>>,
+            Rhs: IntoRep<Rep = Scalar<T>>,
         {
             type Output = Self;
 
@@ -148,12 +148,12 @@ macro_rules! impl_scalar {
             }
         }
 
-        impl Lift for $ty {
-            type Value = Scalar<$ty>;
+        impl Expose for $ty {
+            type Rep = Scalar<$ty>;
         }
 
-        impl IntoVal for $ty {
-            fn into_val(self) -> Self::Value {
+        impl IntoRep for $ty {
+            fn into_rep(self) -> Self::Rep {
                 Scalar::new(self)
             }
         }

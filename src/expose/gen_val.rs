@@ -1,8 +1,8 @@
-use crate::{IntoVal, Val};
+use crate::{IntoRep, Rep};
 
-use super::{builtin1, builtin2, Constructible, Vec3};
+use super::{builtin1, builtin2, Transparent, Vec3};
 
-pub trait GenVal: Constructible + Sized {
+pub trait GenVal: Transparent + Sized {
     fn normalize(self) -> Self {
         builtin1("normalize", self)
     }
@@ -27,7 +27,7 @@ pub trait GenVal: Constructible + Sized {
         builtin1("acos", self)
     }
 
-    fn atan2(self, x: impl IntoVal<Value = Self>) -> Self {
+    fn atan2(self, x: impl IntoRep<Rep = Self>) -> Self {
         builtin2("atan", self, x)
     }
 
@@ -60,5 +60,5 @@ pub trait GenVal: Constructible + Sized {
     }
 }
 
-impl GenVal for Val<f32> {}
+impl GenVal for Rep<f32> {}
 impl GenVal for Vec3<f32> {}

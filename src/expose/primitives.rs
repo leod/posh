@@ -5,14 +5,14 @@ use crate::lang::{
     VarExpr,
 };
 
-use super::{Constructible, IntoVal, Trace, Value};
+use super::{IntoRep, Trace, Transparent, Value};
 
-pub fn var<R: Constructible>(init: R) -> R {
+pub fn var<R: Transparent>(init: R) -> R {
     let init = Some(Rc::new(init.expr()));
 
     let var = VarExpr {
         ident: Ident::new("var"),
-        ty: <R::Value as Value>::ty(),
+        ty: <R::Rep as Value>::ty(),
         init,
     };
 
@@ -58,18 +58,18 @@ pub fn common_field_base(exprs: &[Expr]) -> Option<Expr> {
 }
 
 #[doc(hidden)]
-pub fn field<R: Constructible>(base: Trace, member: &str) -> R {
+pub fn field<R: Transparent>(base: Trace, member: &str) -> R {
     let expr = Expr::Field(FieldExpr {
         base: Rc::new(base.expr()),
         member: member.into(),
-        ty: <R::Value as Value>::ty(),
+        ty: <R::Rep as Value>::ty(),
     });
 
     R::from_expr(expr)
 }
 
 #[doc(hidden)]
-pub fn func_def_and_call<R: Constructible>(
+pub fn func_def_and_call<R: Transparent>(
     name: impl Into<String>,
     params: Vec<VarExpr>,
     result: R,
@@ -88,62 +88,58 @@ pub fn func_def_and_call<R: Constructible>(
 }
 
 pub(crate) fn binary<U, V, R>(
-    left: impl IntoVal<Value = U>,
+    left: impl IntoRep<Rep = U>,
     op: BinaryOp,
-    right: impl IntoVal<Value = V>,
+    right: impl IntoRep<Rep = V>,
 ) -> R
 where
     U: Value,
     V: Value,
-    R: Constructible,
+    R: Transparent,
 {
-    let left = Rc::new(left.into_val().expr());
-    let right = Rc::new(right.into_val().expr());
+    let left = Rc::new(left.into_rep().expr());
+    let right = Rc::new(right.into_rep().expr());
 
     let expr = Expr::Binary(BinaryExpr {
         left,
         op,
         right,
-        ty: <R::Value as Value>::ty(),
+        ty: <R::Rep as Value>::ty(),
     });
 
     R::from_expr(expr)
 }
 
-pub(crate) fn builtin1<U, R>(name: &str, u: impl IntoVal<Value = U>) -> R
+pub(crate) fn builtin1<U, R>(name: &str, u: impl IntoRep<Rep = U>) -> R
 where
     U: Value,
-    R: Constructible,
+    R: Transparent,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Value as Value>::ty(),
+        ty: <R::Rep as Value>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
-        args: vec![u.into_val().expr()],
+        args: vec![u.into_rep().expr()],
     });
 
     R::from_expr(expr)
 }
 
-pub(crate) fn builtin2<U, V, R>(
-    name: &str,
-    u: impl IntoVal<Value = U>,
-    v: impl IntoVal<Value = V>,
-) -> R
+pub(crate) fn builtin2<U, V, R>(name: &str, u: impl IntoRep<Rep = U>, v: impl IntoRep<Rep = V>) -> R
 where
     U: Value,
     V: Value,
-    R: Constructible,
+    R: Transparent,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Value as Value>::ty(),
+        ty: <R::Rep as Value>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
-        args: vec![u.into_val().expr(), v.into_val().expr()],
+        args: vec![u.into_rep().expr(), v.into_rep().expr()],
     });
 
     R::from_expr(expr)
@@ -151,26 +147,26 @@ where
 
 pub(crate) fn builtin3<U, V, W, R>(
     name: &str,
-    u: impl IntoVal<Value = U>,
-    v: impl IntoVal<Value = V>,
-    w: impl IntoVal<Value = W>,
+    u: impl IntoRep<Rep = U>,
+    v: impl IntoRep<Rep = V>,
+    w: impl IntoRep<Rep = W>,
 ) -> R
 where
     U: Value,
     V: Value,
     W: Value,
-    R: Constructible,
+    R: Transparent,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Value as Value>::ty(),
+        ty: <R::Rep as Value>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
         args: vec![
-            u.into_val().expr(),
-            v.into_val().expr(),
-            w.into_val().expr(),
+            u.into_rep().expr(),
+            v.into_rep().expr(),
+            w.into_rep().expr(),
         ],
     });
 
@@ -179,29 +175,29 @@ where
 
 pub(crate) fn builtin4<U, V, W, X, R>(
     name: &str,
-    u: impl IntoVal<Value = U>,
-    v: impl IntoVal<Value = V>,
-    w: impl IntoVal<Value = W>,
-    x: impl IntoVal<Value = X>,
+    u: impl IntoRep<Rep = U>,
+    v: impl IntoRep<Rep = V>,
+    w: impl IntoRep<Rep = W>,
+    x: impl IntoRep<Rep = X>,
 ) -> R
 where
     U: Value,
     V: Value,
     W: Value,
     X: Value,
-    R: Constructible,
+    R: Transparent,
 {
     let func = Func::BuiltIn(BuiltInFunc {
         name: name.into(),
-        ty: <R::Value as Value>::ty(),
+        ty: <R::Rep as Value>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
         args: vec![
-            u.into_val().expr(),
-            v.into_val().expr(),
-            w.into_val().expr(),
-            x.into_val().expr(),
+            u.into_rep().expr(),
+            v.into_rep().expr(),
+            w.into_rep().expr(),
+            x.into_rep().expr(),
         ],
     });
 

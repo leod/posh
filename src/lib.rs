@@ -1,19 +1,19 @@
+#[doc(hidden)]
+pub mod expose;
 pub mod lang;
 pub mod shader;
-#[doc(hidden)]
-pub mod value;
 
 #[doc(hidden)]
 pub use static_assertions;
 #[doc(hidden)]
 pub use uuid;
 
-pub use value::{
-    var, vec3, Constructible, FuncArg, GenVal, IntoVal, Lift, Sampler2, Val, Value, ValueBase,
+pub use expose::{
+    var, vec3, Expose, FuncArg, GenVal, IntoRep, Rep, Representant, Sampler2, Transparent, Value,
     Vec3, Vec4,
 };
 
-pub use posh_macros::{def, Lift};
+pub use posh_macros::{def, Expose};
 
 // This was here so that our macros could refer to `posh` even when we use them inside this crate.
 //extern crate self as posh;

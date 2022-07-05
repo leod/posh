@@ -1,5 +1,5 @@
 mod def;
-mod lift;
+mod expose;
 
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput, ItemFn};
@@ -14,10 +14,10 @@ pub fn def(_args: TokenStream, input: TokenStream) -> TokenStream {
     .into()
 }
 
-#[proc_macro_derive(Lift, attributes(lift))]
+#[proc_macro_derive(Expose, attributes(expose_derive))]
 pub fn derive_into_value(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    match lift::derive(input) {
+    match expose::derive(input) {
         Ok(ts) => ts,
         Err(e) => e.to_compile_error(),
     }
