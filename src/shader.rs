@@ -10,6 +10,8 @@ pub trait Resource {
     fn func_arg() -> Self;
 }
 
+pub trait UniformBlock: Resource {}
+
 pub trait Resources {
     fn func_arg() -> Self;
 }

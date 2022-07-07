@@ -1,24 +1,24 @@
 use posh::{
-    shader::{FStageIn, FStageOut, Shader, VStageIn, VStageOut},
+    shader::{FStageIn, FStageOut, Shader, UniformBlock, VStageIn, VStageOut},
     var, vec3, Expose, Rep,
 };
 
 #[derive(Expose)]
-#[expose_derive(UniformBlock)]
+#[expose(UniformBlock)]
 struct ModelToClip {
     model_to_view: [f32; 3],
     view_to_clip: [f32; 3],
 }
 
 #[derive(Expose)]
-#[expose_derive(Resources)]
+#[expose(UniformBlock)]
 struct Resources {
     one: ModelToClip,
     two: ModelToClip,
 }
 
 #[derive(Expose)]
-#[expose_derive(Vertex)]
+#[expose(Vertex)]
 struct Vertex {
     position: [f32; 3],
     normal: [f32; 3],
@@ -26,20 +26,20 @@ struct Vertex {
 }
 
 #[derive(Expose)]
-#[expose_derive(Vertex)]
+#[expose(Vertex)]
 struct Instance {
     color: [f32; 3],
 }
 
 #[derive(Expose)]
-#[expose_derive(VOutputs)]
+#[expose(VOutputs)]
 struct VOutputs {
     color: [f32; 3],
     normal: [f32; 3],
 }
 
 #[derive(Expose)]
-#[expose_derive(FOutputs)]
+#[expose(FOutputs)]
 struct FOutputs {
     color: [f32; 3],
     normal: [f32; 3],

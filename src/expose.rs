@@ -68,7 +68,7 @@ impl<V: Value> FuncArg for V {}
 
 impl<V> IntoRep for V
 where
-    V: Expose<Rep = Self> + MapToExpr,
+    V: Expose<Rep = Self>,
 {
     fn into_rep(self) -> Self {
         self

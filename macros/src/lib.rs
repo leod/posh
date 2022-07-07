@@ -14,7 +14,7 @@ pub fn def(_args: TokenStream, input: TokenStream) -> TokenStream {
     .into()
 }
 
-#[proc_macro_derive(Expose, attributes(expose_derive))]
+#[proc_macro_derive(Expose, attributes(expose))]
 pub fn derive_into_value(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match expose::derive(input) {
