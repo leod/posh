@@ -1,6 +1,6 @@
 use posh::{
     shader::{FStageIn, FStageOut, Shader, UniformBlock, VStageIn, VStageOut},
-    var, vec3, Expose, Rep,
+    Expose, Rep,
 };
 
 #[derive(Expose)]
@@ -47,7 +47,7 @@ struct FOutputs {
 
 fn vertex(res: Rep<Resources>, arg: VStageIn<Vertex>) -> VStageOut<VOutputs> {
     let outputs = Rep::<VOutputs> {
-        color: vec3(255.0, 0.0, 0.0),
+        color: posh::vec3(255.0, 0.0, 0.0),
         normal: res.two.model_to_view * arg.vertex.normal,
     };
     let position = res.one.view_to_clip * res.one.model_to_view * arg.vertex.position;
@@ -68,7 +68,7 @@ fn vertex2(res: Rep<Resources>, arg: VStageIn<(Vertex, Instance)>) -> VStageOut<
 }
 
 fn fragment(_: Rep<Resources>, arg: FStageIn<VOutputs>) -> FStageOut<FOutputs> {
-    let outputs = var(Rep::<FOutputs> {
+    let outputs = posh::var(Rep::<FOutputs> {
         color: arg.inputs.color,
         normal: arg.inputs.normal,
     });
