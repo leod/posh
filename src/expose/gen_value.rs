@@ -4,7 +4,7 @@ use crate::{IntoRep, Rep};
 
 use super::{builtin1, builtin2, Value, Vec3};
 
-/// A [`Rep<f32>`] or a [`Vec2<f32>`] or a [`Vec3<f32>`] or a [`Vec4<f32>`].
+/// A representative of a `f32`-based scalar or vector type.
 #[sealed]
 pub trait GenValue: Value + Sized {
     fn normalize(self) -> Self {
