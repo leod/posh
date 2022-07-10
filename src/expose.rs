@@ -1,5 +1,6 @@
+mod built_in_value;
 mod expr_reg;
-mod gen_val;
+mod gen_value;
 mod primitives;
 mod sampler;
 mod scalar;
@@ -9,7 +10,8 @@ mod vec;
 
 use crate::lang::{Expr, Ident, Ty};
 
-pub use gen_val::GenValue;
+pub use built_in_value::BuiltInValue;
+pub use gen_value::GenValue;
 pub use primitives::{common_field_base, field, func_def_and_call, var};
 pub use sampler::Sampler2;
 pub use scalar::{Scalar, ScalarType};
