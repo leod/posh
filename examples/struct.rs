@@ -1,9 +1,11 @@
+use nalgebra::Vector3;
 use posh::{lang::Ident, Expose, IntoRep, MapToExpr, Rep};
 
 #[derive(Expose)]
 pub struct Helper {
     x: i32,
     y: i32,
+    foo: Vector3<f32>,
 }
 
 #[derive(Expose)]

@@ -1,3 +1,4 @@
+use nalgebra::Vector3;
 use posh::{
     shader::{FStageIn, FStageOut, Shader, UniformBlock, VStageIn, VStageOut},
     Expose, Rep,
@@ -6,8 +7,8 @@ use posh::{
 #[derive(Expose)]
 #[expose(UniformBlock)]
 struct ModelToClip {
-    model_to_view: [f32; 3],
-    view_to_clip: [f32; 3],
+    model_to_view: Vector3<f32>,
+    view_to_clip: Vector3<f32>,
 }
 
 #[derive(Expose)]

@@ -2,6 +2,8 @@
 mod built_in_value;
 mod expr_reg;
 mod gen_value;
+#[cfg(feature = "nalgebra")]
+mod nalgebra;
 mod primitives;
 mod sampler;
 mod scalar;

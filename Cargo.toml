@@ -9,10 +9,12 @@ version = "1.1.0"
 static_assertions = "1.1.0"
 sealed = "0.4"
 
+nalgebra = { version = "0.31", optional = true }
+
 posh-macros = { path = "macros", version = "*" }
 
 [dev-dependencies]
-posh = { version = "*", path = "." }
+posh = { version = "*", path = ".", features = ["nalgebra"] }
 
 [dependencies.uuid]
 version = "1.1.0"
