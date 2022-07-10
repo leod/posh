@@ -1,4 +1,4 @@
-pub(crate) mod expr_reg;
+mod expr_reg;
 mod gen_val;
 mod primitives;
 mod sampler;
