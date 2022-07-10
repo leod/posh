@@ -22,7 +22,7 @@ use sealed::sealed;
 pub use trace::Trace;
 pub use vec::{vec3, Vec3, Vec4};
 
-pub(crate) use primitives::{binary, builtin1, builtin2, builtin3, builtin4};
+pub(crate) use primitives::{binary, built_in1, built_in2, built_in3, builtin4};
 
 /// Exposes a Rust type to Posh through a representative type.
 pub trait Expose {

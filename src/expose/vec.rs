@@ -3,7 +3,7 @@ use std::ops::{Add, Div, Mul, Sub};
 use crate::lang::{BinaryOp, BuiltInTy, Expr, Ident, Ty};
 
 use super::{
-    binary, builtin3, builtin4, field, scalar::NumericType, Expose, IntoRep, MapToExpr,
+    binary, built_in3, builtin4, field, scalar::NumericType, Expose, IntoRep, MapToExpr,
     Representative, Scalar, ScalarType, Trace, Value,
 };
 
@@ -203,7 +203,7 @@ pub fn vec3<T: ScalarType>(
     y: impl IntoRep<Rep = Scalar<T>>,
     z: impl IntoRep<Rep = Scalar<T>>,
 ) -> Vec3<T> {
-    builtin3("vec3", x, y, z)
+    built_in3("vec3", x, y, z)
 }
 
 /// Constructs a four-dimensional vector.

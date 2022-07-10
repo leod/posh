@@ -2,65 +2,65 @@ use sealed::sealed;
 
 use crate::{IntoRep, Rep};
 
-use super::{builtin1, builtin2, Value, Vec3};
+use super::{built_in1, built_in2, Value, Vec3};
 
 /// A representative of a `f32`-based scalar or vector type.
 #[sealed]
 pub trait GenValue: Value + Sized {
     fn normalize(self) -> Self {
-        builtin1("normalize", self)
+        built_in1("normalize", self)
     }
 
     fn sin(self) -> Self {
-        builtin1("sin", self)
+        built_in1("sin", self)
     }
 
     fn cos(self) -> Self {
-        builtin1("cos", self)
+        built_in1("cos", self)
     }
 
     fn tan(self) -> Self {
-        builtin1("tan", self)
+        built_in1("tan", self)
     }
 
     fn asin(self) -> Self {
-        builtin1("asin", self)
+        built_in1("asin", self)
     }
 
     fn acos(self) -> Self {
-        builtin1("acos", self)
+        built_in1("acos", self)
     }
 
     fn atan2(self, x: impl IntoRep<Rep = Self>) -> Self {
-        builtin2("atan", self, x)
+        built_in2("atan", self, x)
     }
 
     fn atan(self) -> Self {
-        builtin1("atan", self)
+        built_in1("atan", self)
     }
 
     fn sinh(self) -> Self {
-        builtin1("sinh", self)
+        built_in1("sinh", self)
     }
 
     fn cosh(self) -> Self {
-        builtin1("cosh", self)
+        built_in1("cosh", self)
     }
 
     fn tanh(self) -> Self {
-        builtin1("tanh", self)
+        built_in1("tanh", self)
     }
 
     fn asinh(self) -> Self {
-        builtin1("asinh", self)
+        built_in1("asinh", self)
     }
 
     fn acosh(self) -> Self {
-        builtin1("acosh", self)
+        built_in1("acosh", self)
     }
 
     fn atanh(self) -> Self {
-        builtin1("atanh", self)
+        built_in1("atanh", self)
     }
 }
 

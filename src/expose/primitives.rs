@@ -111,7 +111,7 @@ where
     R::from_expr(expr)
 }
 
-pub(crate) fn builtin1<U, R>(name: &str, u: impl IntoRep<Rep = U>) -> R
+pub(crate) fn built_in1<U, R>(name: &str, u: impl IntoRep<Rep = U>) -> R
 where
     U: MapToExpr,
     R: Value,
@@ -128,7 +128,11 @@ where
     R::from_expr(expr)
 }
 
-pub(crate) fn builtin2<U, V, R>(name: &str, u: impl IntoRep<Rep = U>, v: impl IntoRep<Rep = V>) -> R
+pub(crate) fn built_in2<U, V, R>(
+    name: &str,
+    u: impl IntoRep<Rep = U>,
+    v: impl IntoRep<Rep = V>,
+) -> R
 where
     U: MapToExpr,
     V: MapToExpr,
@@ -146,7 +150,7 @@ where
     R::from_expr(expr)
 }
 
-pub(crate) fn builtin3<U, V, W, R>(
+pub(crate) fn built_in3<U, V, W, R>(
     name: &str,
     u: impl IntoRep<Rep = U>,
     v: impl IntoRep<Rep = V>,
