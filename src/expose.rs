@@ -13,6 +13,7 @@ pub use gen_val::GenValue;
 pub use primitives::{common_field_base, field, func_def_and_call, var};
 pub use sampler::Sampler2;
 pub use scalar::{Scalar, ScalarType};
+use sealed::sealed;
 pub use trace::Trace;
 pub use vec::{vec3, Vec3, Vec4};
 
@@ -62,8 +63,10 @@ pub trait Value: MapToExpr {
 }
 
 /// A representative which can be passed to user-defined Posh functions.
+#[sealed(pub(crate))]
 pub trait FuncArg: MapToExpr {}
 
+#[sealed]
 impl<V: Value> FuncArg for V {}
 
 impl<V> IntoRep for V

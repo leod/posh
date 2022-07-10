@@ -1,3 +1,5 @@
+use sealed::sealed;
+
 pub trait Resource {
     fn func_arg() -> Self;
 }
@@ -16,3 +18,6 @@ where
         <Self as Resource>::func_arg()
     }
 }
+
+#[sealed]
+pub trait UniformBlockField {}

@@ -1,6 +1,8 @@
+use sealed::sealed;
+
 use crate::lang::{BuiltInTy, Expr, Ident, Ty};
 
-use super::{builtin2, Expose, FuncArg, MapToExpr, Representative, Trace, Vec3, Vec4};
+use super::{builtin2, Expose, MapToExpr, Representative, Trace, Vec3, Vec4};
 
 /// Representative for samplers.
 #[derive(Debug, Copy, Clone)]
@@ -26,7 +28,8 @@ impl MapToExpr for Sampler2 {
     }
 }
 
-impl FuncArg for Sampler2 {}
+#[sealed]
+impl crate::expose::FuncArg for Sampler2 {}
 
 impl Sampler2 {
     pub fn load(self, tex_coord: Vec3<f32>) -> Vec4<f32> {

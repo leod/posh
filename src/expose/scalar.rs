@@ -4,16 +4,20 @@ use std::{
     rc::Rc,
 };
 
+use sealed::sealed;
+
 use crate::lang::{
     BinaryOp, BuiltInTy, Expr, Ident, Literal, LiteralExpr, ScalarTy, TernaryExpr, Ty,
 };
 
 use super::{binary, Expose, IntoRep, MapToExpr, Representative, Trace, Value};
 
+#[sealed]
 pub trait ScalarType: Copy + Into<Literal> + IntoRep<Rep = Scalar<Self>> {
     fn scalar_ty() -> ScalarTy;
 }
 
+#[sealed]
 pub trait NumericType: ScalarType {}
 
 impl<T: ScalarType> Expose for Scalar<T> {
@@ -143,6 +147,7 @@ impl_binary_op!(div, Div);
 
 macro_rules! impl_scalar {
     ($ty:ty, $name:ident) => {
+        #[sealed]
         impl ScalarType for $ty {
             fn scalar_ty() -> ScalarTy {
                 ScalarTy::$name
@@ -168,6 +173,11 @@ impl_scalar!(i32, I32);
 impl_scalar!(u32, U32);
 impl_scalar!(bool, Bool);
 
+#[sealed]
 impl NumericType for f32 {}
+
+#[sealed]
 impl NumericType for i32 {}
+
+#[sealed]
 impl NumericType for u32 {}
