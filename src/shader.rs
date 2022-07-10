@@ -10,6 +10,7 @@ pub use vertex::{FOutputs, VInputs, VOutputs, Vertex};
 
 use crate::{expose::Expose, lang::Expr, MapToExpr, Rep};
 
+/// Description of a shader.
 pub struct Shader<P, V, R> {
     v_stage: ErasedVStage,
     f_stage: ErasedFStage,

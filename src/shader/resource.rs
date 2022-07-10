@@ -1,13 +1,13 @@
 use sealed::sealed;
 
-use crate::{BuiltInValue, Value};
+use crate::{BuiltInValue, Representative, Value};
 
-/// A representative of a resource which can be passed to draw calls.
-pub trait Resource {
+/// A representative of a resource.
+pub trait Resource: Representative {
     fn func_arg() -> Self;
 }
 
-/// A representative for a uniform block.
+/// A representative of a uniform block.
 pub trait UniformBlock: Resource + Value {}
 
 /// A representative of a collection of resources.

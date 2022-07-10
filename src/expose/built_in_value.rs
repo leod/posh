@@ -4,7 +4,7 @@ use crate::Scalar;
 
 use super::{ScalarType, Vec3, Vec4};
 
-/// A built-in representative for a value type.
+/// A representative for a built-in value.
 #[sealed]
 pub trait BuiltInValue {}
 
