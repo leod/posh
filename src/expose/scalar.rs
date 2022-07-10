@@ -67,17 +67,17 @@ where
         Self::from_expr(Expr::Literal(LiteralExpr { literal: x.into() }))
     }
 
-    pub fn eq(&self, right: impl IntoRep<Rep = Self>) -> Bool {
+    pub fn eq(&self, right: impl IntoRep<Rep = Self>) -> Scalar<bool> {
         binary(*self, BinaryOp::Eq, right)
     }
 }
 
-impl Bool {
-    pub fn and(self, right: impl IntoRep<Rep = Bool>) -> Bool {
+impl Scalar<bool> {
+    pub fn and(self, right: impl IntoRep<Rep = Scalar<bool>>) -> Scalar<bool> {
         binary(self, BinaryOp::And, right)
     }
 
-    pub fn or(self, right: impl IntoRep<Rep = Bool>) -> Bool {
+    pub fn or(self, right: impl IntoRep<Rep = Scalar<bool>>) -> Scalar<bool> {
         binary(self, BinaryOp::And, right)
     }
 
@@ -163,8 +163,6 @@ macro_rules! impl_scalar {
                 Scalar::new(self)
             }
         }
-
-        pub type $name = Scalar<$ty>;
     };
 }
 
