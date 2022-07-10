@@ -1,7 +1,27 @@
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use syn::{Data, DataStruct, DeriveInput, Error, Fields, Ident, Result};
+use syn::{
+    parenthesized,
+    parse::{Parse, ParseStream},
+    punctuated::Punctuated,
+    token, Data, DataStruct, DeriveInput, Error, Fields, Ident, Result, Token,
+};
 use uuid::Uuid;
+
+struct ExposeAttr {
+    paren_token: token::Paren,
+    trait_names: Punctuated<Ident, Token![,]>,
+}
+
+impl Parse for ExposeAttr {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let content;
+        Ok(ExposeAttr {
+            paren_token: parenthesized!(content in input),
+            trait_names: content.parse_terminated(Ident::parse)?,
+        })
+    }
+}
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
     let fields = match &input.data {
@@ -14,6 +34,31 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             "derive(Expose) does not support tuple structs, unit structs, enums, or unions",
         )),
     }?;
+
+    let expose_attrs: Vec<_> = input
+        .attrs
+        .into_iter()
+        .filter(|attr| attr.path.is_ident("expose"))
+        .collect();
+
+    let expose_attr: Option<ExposeAttr> = if expose_attrs.is_empty() {
+        None
+    } else if expose_attrs.len() == 1 {
+        Some(syn::parse2(
+            expose_attrs.into_iter().next().unwrap().tokens,
+        )?)
+    } else {
+        return Err(Error::new_spanned(
+            expose_attrs[1].clone(),
+            "Can have at most one #[expose(...)] attribute",
+        ));
+    };
+
+    if let Some(attr) = expose_attr.as_ref() {
+        for trait_name in attr.trait_names.iter() {
+            panic!("{}", trait_name);
+        }
+    }
 
     let name = input.ident;
     let vis = input.vis;
@@ -34,7 +79,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
 
     let posh_name = Ident::new(&format!("_PoshRepr{}", name), name.span());
 
-    Ok(quote! {
+    let posh_struct_def = quote! {
         #[must_use]
         #[derive(Debug, Clone, Copy)]
         #[allow(non_camel_case_types)]
@@ -52,8 +97,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             type Rep = Self;
         }
 
-        impl #impl_generics ::posh::Representative for #posh_name #ty_generics #where_clause {
-        }
+        impl #impl_generics ::posh::Representative for #posh_name #ty_generics #where_clause {}
 
         impl #impl_generics ::posh::MapToExpr for #posh_name #ty_generics #where_clause {
             fn ty() -> ::posh::lang::Ty {
@@ -122,6 +166,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             }
         }
 
+        // TODO: This needs to move to a separate derive(IntoRep).
         impl #impl_generics ::posh::IntoRep for #name #ty_generics #where_clause {
             fn into_rep(self) -> Self::Rep {
                 #posh_name {
@@ -133,5 +178,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                 }
             }
         }
-    })
+    };
+
+    Ok(posh_struct_def)
 }
