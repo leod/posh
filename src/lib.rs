@@ -1,4 +1,5 @@
 #[doc(hidden)]
+#[macro_use]
 pub mod expose;
 pub mod lang;
 pub mod shader;

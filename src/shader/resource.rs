@@ -1,6 +1,6 @@
 use sealed::sealed;
 
-use crate::{BuiltInValue, Representative, Value};
+use crate::{Representative, Value};
 
 /// A representative of a resource.
 pub trait Resource: Representative {
@@ -28,5 +28,7 @@ where
 #[sealed]
 pub trait UniformBlockField {}
 
+impl_trait_for_built_in_types!(UniformBlockField);
+
 #[sealed]
-impl<T: BuiltInValue> UniformBlockField for T {}
+impl<T: UniformBlock> UniformBlockField for T {}

@@ -1,3 +1,4 @@
+#[macro_use]
 mod built_in_value;
 mod expr_reg;
 mod gen_value;
