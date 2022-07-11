@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
@@ -7,6 +7,7 @@ use syn::{
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
     token, Attribute, Data, DataStruct, DeriveInput, Error, Field, Fields, Ident, Result, Token,
+    Type,
 };
 use uuid::Uuid;
 
@@ -66,6 +67,20 @@ impl RepTrait {
         }
 
         changed
+    }
+
+    fn check_field_reqs(&self, field_tys: &[Type]) -> TokenStream2 {
+        TokenStream2::from_iter(self.field_reqs.iter().map(|req| {
+            quote! {
+                const _: fn() = || {
+                    use ::posh::static_assertions as sa;
+
+                    #(
+                        sa::assert_impl_all!(#field_tys: #req);
+                    )*
+                };
+            }
+        }))
     }
 }
 
@@ -197,9 +212,11 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
 
         impl #impl_generics ::posh::MapToExpr for #posh_name #ty_generics #where_clause {
             fn ty() -> ::posh::lang::Ty {
+                let name = #name_string.to_string();
+                let uuid = ::std::str::FromStr::from_str(#uuid_string).unwrap();
                 let ident = ::posh::lang::Ident {
-                    name: #name_string.to_string(),
-                    uuid: ::std::str::FromStr::from_str(#uuid_string).unwrap(),
+                    name,
+                    uuid,
                 };
 
                 let fields = vec![
@@ -211,58 +228,49 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                     ),*
                 ];
 
-                ::posh::lang::Ty::Struct(
-                    ::posh::lang::StructTy {
-                        ident,
-                        fields,
-                    },
-                )
+                let struct_ty = ::posh::lang::StructTy {
+                    ident,
+                    fields,
+                };
+                ::posh::lang::Ty::Struct(struct_ty)
             }
 
             fn expr(&self) -> ::posh::lang::Expr {
-                let func = ::posh::lang::Func::Struct(::posh::lang::StructFunc {
-                    ty: match <Self as ::posh::MapToExpr>::ty() {
-                        ::posh::lang::Ty::Struct(ty) => ty,
-                        _ => unreachable!(),
-                    },
-                });
+                let ty = match <Self as ::posh::MapToExpr>::ty() {
+                    ::posh::lang::Ty::Struct(ty) => ty,
+                    _ => unreachable!(),
+                };
+                let struct_func = ::posh::lang::StructFunc { ty };
+                let func = ::posh::lang::Func::Struct(struct_func);
 
                 let args = vec![
-                    #(
-                        ::posh::MapToExpr::expr(&self.#field_idents)
-                    ),*
+                    #(::posh::MapToExpr::expr(&self.#field_idents)),*
                 ];
 
                 if let Some(common_base) = ::posh::expose::common_field_base(&args) {
                     common_base
                 } else {
-                    ::posh::lang::Expr::Call(::posh::lang::CallExpr {
-                        func,
-                        args,
-                    })
+                    let call_expr = ::posh::lang::CallExpr { func, args };
+                    ::posh::lang::Expr::Call(call_expr)
                 }
             }
 
             fn from_ident(ident: ::posh::lang::Ident) -> Self {
-                <Self as ::posh::Value>::from_trace(
-                    ::posh::expose::Trace::from_ident::<Self>(ident),
-                )
+                let trace = ::posh::expose::Trace::from_ident::<Self>(ident);
+                <Self as ::posh::Value>::from_trace(trace)
             }
         }
 
-        impl #impl_generics ::posh::Value for #posh_name #ty_generics
-        #where_clause
-        {
+        impl #impl_generics ::posh::Value for #posh_name #ty_generics #where_clause {
             fn from_trace(trace: ::posh::expose::Trace) -> Self {
                 Self {
-                    #(
-                        #field_idents: ::posh::expose::field(trace, #field_strings)
-                    ),*
+                    #(#field_idents: ::posh::expose::field(trace, #field_strings)),*
                 }
             }
         }
 
         // TODO: This needs to move to a separate derive(IntoRep).
+        /*
         impl #impl_generics ::posh::IntoRep for #name #ty_generics #where_clause {
             fn into_rep(self) -> Self::Rep {
                 #posh_name {
@@ -274,6 +282,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                 }
             }
         }
+        */
     };
 
     Ok(posh_struct_def)
