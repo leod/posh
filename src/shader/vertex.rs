@@ -4,18 +4,18 @@ use crate::{expose::NumericType, Scalar, Value, Vec3, Vec4};
 
 /// A value that can be stored in a vertex.
 #[sealed]
-pub trait VertexFieldValue {}
+pub trait VertexField {}
 
 #[sealed]
-impl<T: NumericType> VertexFieldValue for Scalar<T> {}
+impl<T: NumericType> VertexField for Scalar<T> {}
 
 // TODO: VertexFieldValue for Vec2
 
 #[sealed]
-impl<T: NumericType> VertexFieldValue for Vec3<T> {}
+impl<T: NumericType> VertexField for Vec3<T> {}
 
 #[sealed]
-impl<T: NumericType> VertexFieldValue for Vec4<T> {}
+impl<T: NumericType> VertexField for Vec4<T> {}
 
 // TODO: VertexFieldValue for f32 matrix types
 
@@ -29,44 +29,44 @@ impl<V: Vertex> Attributes for V {}
 
 impl<V1: Vertex, V2: Vertex> Attributes for (V1, V2) {}
 
-/// A representative of fragment stage input fields.
-pub trait FInputs: Value {}
+/// A representative of fragment stage input.
+pub trait Interpolants: Value {}
 
 /// A value that can be given as a fragment stage input field.
 #[sealed]
-pub trait FInputFieldValue {}
+pub trait InterpolantsField {}
 
 #[sealed]
-impl<T: NumericType> FInputFieldValue for Scalar<T> {}
+impl<T: NumericType> InterpolantsField for Scalar<T> {}
 
-// TODO: FInputFieldValue for Vec2
-
-#[sealed]
-impl<T: NumericType> FInputFieldValue for Vec3<T> {}
+// TODO: InterpolantsField for Vec2
 
 #[sealed]
-impl<T: NumericType> FInputFieldValue for Vec4<T> {}
-
-// TODO: VertexFieldValue for f32 matrix types
-// TODO: FInputFieldValue for arrays
+impl<T: NumericType> InterpolantsField for Vec3<T> {}
 
 #[sealed]
-impl<V: FInputs> FInputFieldValue for V {}
+impl<T: NumericType> InterpolantsField for Vec4<T> {}
 
-/// A representative of fragment stage output fields.
-pub trait FOutputs: Value {}
+// TODO: InterpolantsField for f32 matrix types
+// TODO: InterpolantsField for arrays
+
+#[sealed]
+impl<V: Interpolants> InterpolantsField for V {}
+
+/// A representative of fragment stage output.
+pub trait Fragment: Value {}
 
 /// A value that can be given as a fragment stage output field.
 #[sealed]
-pub trait FOutputFieldValue {}
+pub trait FragmentField {}
 
 #[sealed]
-impl<T: NumericType> FOutputFieldValue for Scalar<T> {}
+impl<T: NumericType> FragmentField for Scalar<T> {}
 
 // TODO: FOutputFieldValue for Vec2
 
 #[sealed]
-impl<T: NumericType> FOutputFieldValue for Vec3<T> {}
+impl<T: NumericType> FragmentField for Vec3<T> {}
 
 #[sealed]
-impl<T: NumericType> FOutputFieldValue for Vec4<T> {}
+impl<T: NumericType> FragmentField for Vec4<T> {}

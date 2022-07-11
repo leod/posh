@@ -5,56 +5,52 @@ mod vertex;
 
 use std::marker::PhantomData;
 
-pub use resource::{Resource, Resources, UniformBlock};
-pub use stage::{FStageIn, FStageOut, VStageIn, VStageOut};
-pub use vertex::{Attributes, FInputs, FOutputs, Vertex};
-
-#[doc(hidden)]
-pub use resource::UniformBlockField;
-
-#[doc(hidden)]
-pub use vertex::{FInputFieldValue, FOutputFieldValue, VertexFieldValue};
+pub use resource::{Resource, Resources, UniformBlock, UniformBlockField};
+pub use stage::{FragArg, FragOut, VertArg, VertOut};
+pub use vertex::{
+    Attributes, Fragment, FragmentField, Interpolants, InterpolantsField, Vertex, VertexField,
+};
 
 use crate::{expose::Expose, lang::Expr, MapToExpr, Rep};
 
 /// Description of a shader.
 pub struct Shader<P, V, R> {
-    v_stage: ErasedVStage,
-    f_stage: ErasedFStage,
+    vert_stage: ErasedVertStage,
+    frag_stage: ErasedFragStage,
     _phantom: PhantomData<(P, V, R)>,
 }
 
-struct ErasedVStage {
-    pub outputs: Expr,
+struct ErasedVertStage {
+    pub interps: Expr,
     pub position: Expr,
 }
 
-struct ErasedFStage {
-    pub outputs: Expr,
+struct ErasedFragStage {
+    pub frag: Expr,
     pub frag_depth: Option<Expr>,
 }
 
-impl ErasedVStage {
-    fn new<W>(out: VStageOut<W>) -> Self
+impl ErasedVertStage {
+    fn new<W>(out: VertOut<W>) -> Self
     where
         W: Expose,
-        W::Rep: FInputs,
+        W::Rep: Interpolants,
     {
         Self {
-            outputs: out.outputs.expr(),
+            interps: out.interps.expr(),
             position: out.position.expr(),
         }
     }
 }
 
-impl ErasedFStage {
-    fn new<F>(out: FStageOut<F>) -> Self
+impl ErasedFragStage {
+    fn new<F>(out: FragOut<F>) -> Self
     where
         F: Expose,
-        F::Rep: FOutputs,
+        F::Rep: Fragment,
     {
         Self {
-            outputs: out.outputs.expr(),
+            frag: out.frag.expr(),
             frag_depth: out.frag_depth.map(|v| v.expr()),
         }
     }
@@ -67,24 +63,25 @@ where
     F: Expose,
     R::Rep: Resources,
     V::Rep: Attributes,
-    F::Rep: FOutputs,
+    F::Rep: Fragment,
 {
-    pub fn new<W, VStage, FStage>(v_stage: VStage, f_stage: FStage) -> Self
+    pub fn new<W, VertStage, FragStage>(vert_stage: VertStage, frag_stage: FragStage) -> Self
     where
         W: Expose,
-        W::Rep: FInputs,
-        VStage: FnOnce(Rep<R>, VStageIn<V>) -> VStageOut<W>,
-        FStage: FnOnce(Rep<R>, FStageIn<W>) -> FStageOut<F>,
+        W::Rep: Interpolants,
+        VertStage: FnOnce(Rep<R>, VertArg<V>) -> VertOut<W>,
+        FragStage: FnOnce(Rep<R>, FragArg<W>) -> FragOut<F>,
     {
-        let v_out = v_stage(R::Rep::stage_arg(), VStageIn::stage_arg());
-        let f_out = f_stage(R::Rep::stage_arg(), FStageIn::func_arg());
+        // FIXME: stage arg handling
+        let vert_out = vert_stage(R::Rep::stage_arg(), VertArg::stage_arg());
+        let frag_out = frag_stage(R::Rep::stage_arg(), FragArg::stage_arg());
 
-        let v_stage = ErasedVStage::new(v_out);
-        let f_stage = ErasedFStage::new(f_out);
+        let vert_stage = ErasedVertStage::new(vert_out);
+        let frag_stage = ErasedFragStage::new(frag_out);
 
         Self {
-            v_stage,
-            f_stage,
+            vert_stage,
+            frag_stage,
             _phantom: PhantomData,
         }
     }
