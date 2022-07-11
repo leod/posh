@@ -5,7 +5,7 @@ use posh::{
 };
 
 #[derive(Expose)]
-#[expose(UniformBlock)]
+#[expose(UniformBlock, Vertex)]
 struct ModelToClip {
     model_to_view: Vector3<f32>,
     view_to_clip: Vector3<f32>,

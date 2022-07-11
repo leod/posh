@@ -1,15 +1,30 @@
+use std::collections::{HashMap, HashSet};
+
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use syn::{
     parenthesized,
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    token, Data, DataStruct, DeriveInput, Error, Fields, Ident, Result, Token,
+    token, Attribute, Data, DataStruct, DeriveInput, Error, Field, Fields, Ident, Result, Token,
 };
 use uuid::Uuid;
 
+fn struct_fields(ident: &Ident, data: Data) -> Result<Vec<Field>> {
+    match data {
+        Data::Struct(DataStruct {
+            fields: Fields::Named(fields),
+            ..
+        }) => Ok(fields.named.into_iter().collect()),
+        _ => Err(Error::new_spanned(
+            ident.clone(),
+            "derive(Expose) does not support tuple structs, unit structs, enums, or unions",
+        )),
+    }
+}
+
 struct ExposeAttr {
-    paren_token: token::Paren,
+    _paren_token: token::Paren,
     trait_names: Punctuated<Ident, Token![,]>,
 }
 
@@ -17,36 +32,92 @@ impl Parse for ExposeAttr {
     fn parse(input: ParseStream) -> Result<Self> {
         let content;
         Ok(ExposeAttr {
-            paren_token: parenthesized!(content in input),
+            _paren_token: parenthesized!(content in input),
             trait_names: content.parse_terminated(Ident::parse)?,
         })
     }
 }
 
-pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
-    let fields = match &input.data {
-        Data::Struct(DataStruct {
-            fields: Fields::Named(fields),
-            ..
-        }) => Ok(&fields.named),
-        _ => Err(Error::new_spanned(
-            input.ident.clone(),
-            "derive(Expose) does not support tuple structs, unit structs, enums, or unions",
-        )),
-    }?;
+impl ExposeAttr {
+    fn trait_strings(self) -> Vec<String> {
+        self.trait_names
+            .into_iter()
+            .map(|ident| ident.to_string())
+            .collect()
+    }
+}
 
-    let expose_attrs: Vec<_> = input
-        .attrs
+#[derive(Debug, Clone)]
+struct RepTrait {
+    name: &'static str,
+    deps: &'static [&'static str],
+    field_reqs: &'static [&'static str],
+}
+
+impl RepTrait {
+    fn add_deps(&self, rep_traits: &mut HashMap<&'static str, RepTrait>) -> bool {
+        let mut changed = false;
+
+        for dep in self.deps {
+            let is_new = rep_traits
+                .insert(dep, get_rep_trait(dep).unwrap())
+                .is_none();
+            changed = is_new || changed;
+        }
+
+        changed
+    }
+}
+
+const REP_TRAITS: &'static [RepTrait] = &[
+    RepTrait {
+        name: "UniformBlock",
+        deps: &["Resource", "Value"],
+        field_reqs: &["::posh::shader::UniformBlockField"],
+    },
+    RepTrait {
+        name: "Vertex",
+        deps: &["Value"],
+        field_reqs: &[], // TODO
+    },
+    RepTrait {
+        name: "VInputs",
+        deps: &["Value"],
+        field_reqs: &[], // TODO
+    },
+    RepTrait {
+        name: "VOutputs",
+        deps: &["Value"],
+        field_reqs: &[], // TODO
+    },
+    RepTrait {
+        name: "FOutputs",
+        deps: &["Value"],
+        field_reqs: &[], // TODO
+    },
+    RepTrait {
+        name: "Value",
+        deps: &[],
+        field_reqs: &[], // TODO
+    },
+];
+
+fn get_rep_trait(name: &str) -> Option<RepTrait> {
+    REP_TRAITS.iter().find(|rep| rep.name == name).cloned()
+}
+
+fn expose_rep_traits(attrs: Vec<Attribute>) -> Result<HashMap<&'static str, RepTrait>> {
+    let expose_attrs: Vec<_> = attrs
         .into_iter()
         .filter(|attr| attr.path.is_ident("expose"))
         .collect();
 
-    let expose_attr: Option<ExposeAttr> = if expose_attrs.is_empty() {
-        None
+    let trait_strings = if expose_attrs.is_empty() {
+        vec!["Value".to_string()]
     } else if expose_attrs.len() == 1 {
-        Some(syn::parse2(
-            expose_attrs.into_iter().next().unwrap().tokens,
-        )?)
+        let tokens = expose_attrs.into_iter().next().unwrap().tokens;
+
+        syn::parse2::<ExposeAttr>(tokens)?.trait_strings()
     } else {
         return Err(Error::new_spanned(
             expose_attrs[1].clone(),
@@ -54,18 +125,43 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
         ));
     };
 
-    if let Some(attr) = expose_attr.as_ref() {
-        for trait_name in attr.trait_names.iter() {
-            panic!("{}", trait_name);
+    let mut rep_traits: HashMap<_, _> = trait_strings
+        .iter()
+        .map(|ident| {
+            let rep_trait = get_rep_trait(&ident).unwrap();
+            (rep_trait.name, rep_trait)
+        })
+        .collect();
+
+    loop {
+        let mut changed = false;
+        let mut new_rep_traits = rep_traits.clone();
+
+        for rep_trait in rep_traits.values() {
+            changed = rep_trait.add_deps(&mut new_rep_traits) || changed;
         }
+
+        if !changed {
+            break;
+        }
+
+        rep_traits = new_rep_traits;
     }
 
+    Ok(rep_traits)
+}
+
+pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
+    let fields = struct_fields(&input.ident, input.data)?;
+
+    let rep_traits = expose_rep_traits(input.attrs)?;
+
     let name = input.ident;
+    let name_string = name.to_string();
     let vis = input.vis;
-    let name_str = name.to_string();
 
     // FIXME: Using UUIDs in proc macros might break incremental compilation.
-    let uuid_str = Uuid::new_v4().to_string();
+    let uuid_string = Uuid::new_v4().to_string();
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
@@ -73,7 +169,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
         .iter()
         .map(|field| field.ident.as_ref().unwrap())
         .collect();
-    let field_name_strs: Vec<_> = field_idents.iter().map(|ident| ident.to_string()).collect();
+    let field_strings: Vec<_> = field_idents.iter().map(|ident| ident.to_string()).collect();
     let field_tys: Vec<_> = fields.iter().map(|field| &field.ty).collect();
     let field_vis: Vec<_> = fields.iter().map(|field| &field.vis).collect();
 
@@ -102,14 +198,14 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
         impl #impl_generics ::posh::MapToExpr for #posh_name #ty_generics #where_clause {
             fn ty() -> ::posh::lang::Ty {
                 let ident = ::posh::lang::Ident {
-                    name: #name_str.to_string(),
-                    uuid: ::std::str::FromStr::from_str(#uuid_str).unwrap(),
+                    name: #name_string.to_string(),
+                    uuid: ::std::str::FromStr::from_str(#uuid_string).unwrap(),
                 };
 
                 let fields = vec![
                     #(
                         (
-                            #field_name_strs.to_string(),
+                            #field_strings.to_string(),
                             <::posh::Rep<#field_tys> as ::posh::MapToExpr>::ty(),
                         )
                     ),*
@@ -160,7 +256,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             fn from_trace(trace: ::posh::expose::Trace) -> Self {
                 Self {
                     #(
-                        #field_idents: ::posh::expose::field(trace, #field_name_strs)
+                        #field_idents: ::posh::expose::field(trace, #field_strings)
                     ),*
                 }
             }

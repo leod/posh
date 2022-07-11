@@ -1,4 +1,5 @@
 mod resource;
+
 mod stage;
 mod vertex;
 
@@ -7,6 +8,9 @@ use std::marker::PhantomData;
 pub use resource::{Resource, Resources, UniformBlock};
 pub use stage::{FStageIn, FStageOut, VStageIn, VStageOut};
 pub use vertex::{FOutputs, VInputs, VOutputs, Vertex};
+
+#[doc(hidden)]
+pub use resource::UniformBlockField;
 
 use crate::{expose::Expose, lang::Expr, MapToExpr, Rep};
 
