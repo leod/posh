@@ -1,11 +1,12 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, iter};
 
-use proc_macro2::TokenStream as TokenStream2;
-use quote::quote;
+use proc_macro2::{Span, TokenStream as TokenStream2};
+use quote::{quote, quote_spanned};
 use syn::{
     parenthesized,
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
+    spanned::Spanned,
     token, Attribute, Data, DataStruct, DeriveInput, Error, Field, Fields, Ident, Result, Token,
     Type,
 };
@@ -40,11 +41,8 @@ impl Parse for ExposeAttr {
 }
 
 impl ExposeAttr {
-    fn trait_strings(self) -> Vec<String> {
-        self.trait_names
-            .into_iter()
-            .map(|ident| ident.to_string())
-            .collect()
+    fn trait_idents(self) -> Vec<Ident> {
+        self.trait_names.into_iter().collect()
     }
 }
 
@@ -52,7 +50,7 @@ impl ExposeAttr {
 struct RepTrait {
     name: &'static str,
     deps: &'static [&'static str],
-    field_reqs: &'static [&'static str],
+    field_reqs: &'static [fn() -> TokenStream2],
 }
 
 impl RepTrait {
@@ -69,14 +67,16 @@ impl RepTrait {
         changed
     }
 
-    fn check_field_reqs(&self, field_tys: &[Type]) -> TokenStream2 {
-        TokenStream2::from_iter(self.field_reqs.iter().map(|req| {
-            quote! {
-                const _: fn() = || {
-                    use ::posh::static_assertions as sa;
+    fn field_req_checks(&self, field_tys: &[&Type]) -> TokenStream2 {
+        let field_reqs: Vec<_> = self.field_reqs.iter().map(|req| req()).collect();
 
+        TokenStream2::from_iter(field_tys.iter().map(|field_ty| {
+            quote_spanned! {field_ty.span()=>
+                const _: fn() = || {
                     #(
-                        sa::assert_impl_all!(#field_tys: #req);
+                        ::posh::static_assertions::assert_impl_all!(
+                            ::posh::Rep<#field_ty>: #field_reqs
+                        );
                     )*
                 };
             }
@@ -87,8 +87,8 @@ impl RepTrait {
 const REP_TRAITS: &'static [RepTrait] = &[
     RepTrait {
         name: "UniformBlock",
-        deps: &["Resource", "Value"],
-        field_reqs: &["::posh::shader::UniformBlockField"],
+        deps: &["Value"],
+        field_reqs: &[|| quote! { ::posh::shader::UniformBlockField }],
     },
     RepTrait {
         name: "Vertex",
@@ -113,7 +113,12 @@ const REP_TRAITS: &'static [RepTrait] = &[
     RepTrait {
         name: "Value",
         deps: &[],
-        field_reqs: &[], // TODO
+        field_reqs: &[|| quote! { ::posh::Value }],
+    },
+    RepTrait {
+        name: "Resources",
+        deps: &[],
+        field_reqs: &[|| quote! { ::posh::shader::Resources }],
     },
 ];
 
@@ -127,12 +132,12 @@ fn expose_rep_traits(attrs: Vec<Attribute>) -> Result<HashMap<&'static str, RepT
         .filter(|attr| attr.path.is_ident("expose"))
         .collect();
 
-    let trait_strings = if expose_attrs.is_empty() {
-        vec!["Value".to_string()]
+    let trait_idents = if expose_attrs.is_empty() {
+        vec![Ident::new("Value", Span::call_site())]
     } else if expose_attrs.len() == 1 {
         let tokens = expose_attrs.into_iter().next().unwrap().tokens;
 
-        syn::parse2::<ExposeAttr>(tokens)?.trait_strings()
+        syn::parse2::<ExposeAttr>(tokens)?.trait_idents()
     } else {
         return Err(Error::new_spanned(
             expose_attrs[1].clone(),
@@ -140,13 +145,18 @@ fn expose_rep_traits(attrs: Vec<Attribute>) -> Result<HashMap<&'static str, RepT
         ));
     };
 
-    let mut rep_traits: HashMap<_, _> = trait_strings
+    let mut rep_traits: HashMap<_, _> = trait_idents
         .iter()
         .map(|ident| {
-            let rep_trait = get_rep_trait(&ident).unwrap();
-            (rep_trait.name, rep_trait)
+            let rep_trait = get_rep_trait(&ident.to_string()).ok_or_else(|| {
+                Error::new_spanned(
+                    ident,
+                    format!("Unhandled expose trait: {}", ident.to_string()),
+                )
+            })?;
+            Ok((rep_trait.name, rep_trait))
         })
-        .collect();
+        .collect::<Result<_>>()?;
 
     loop {
         let mut changed = false;
@@ -188,7 +198,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
     let field_tys: Vec<_> = fields.iter().map(|field| &field.ty).collect();
     let field_vis: Vec<_> = fields.iter().map(|field| &field.vis).collect();
 
-    let posh_name = Ident::new(&format!("_PoshRepr{}", name), name.span());
+    let posh_name = Ident::new(&format!("{}Posh", name), name.span());
 
     let posh_struct_def = quote! {
         #[must_use]
@@ -209,81 +219,165 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
         }
 
         impl #impl_generics ::posh::Representative for #posh_name #ty_generics #where_clause {}
-
-        impl #impl_generics ::posh::MapToExpr for #posh_name #ty_generics #where_clause {
-            fn ty() -> ::posh::lang::Ty {
-                let name = #name_string.to_string();
-                let uuid = ::std::str::FromStr::from_str(#uuid_string).unwrap();
-                let ident = ::posh::lang::Ident {
-                    name,
-                    uuid,
-                };
-
-                let fields = vec![
-                    #(
-                        (
-                            #field_strings.to_string(),
-                            <::posh::Rep<#field_tys> as ::posh::MapToExpr>::ty(),
-                        )
-                    ),*
-                ];
-
-                let struct_ty = ::posh::lang::StructTy {
-                    ident,
-                    fields,
-                };
-                ::posh::lang::Ty::Struct(struct_ty)
-            }
-
-            fn expr(&self) -> ::posh::lang::Expr {
-                let ty = match <Self as ::posh::MapToExpr>::ty() {
-                    ::posh::lang::Ty::Struct(ty) => ty,
-                    _ => unreachable!(),
-                };
-                let struct_func = ::posh::lang::StructFunc { ty };
-                let func = ::posh::lang::Func::Struct(struct_func);
-
-                let args = vec![
-                    #(::posh::MapToExpr::expr(&self.#field_idents)),*
-                ];
-
-                if let Some(common_base) = ::posh::expose::common_field_base(&args) {
-                    common_base
-                } else {
-                    let call_expr = ::posh::lang::CallExpr { func, args };
-                    ::posh::lang::Expr::Call(call_expr)
-                }
-            }
-
-            fn from_ident(ident: ::posh::lang::Ident) -> Self {
-                let trace = ::posh::expose::Trace::from_ident::<Self>(ident);
-                <Self as ::posh::Value>::from_trace(trace)
-            }
-        }
-
-        impl #impl_generics ::posh::Value for #posh_name #ty_generics #where_clause {
-            fn from_trace(trace: ::posh::expose::Trace) -> Self {
-                Self {
-                    #(#field_idents: ::posh::expose::field(trace, #field_strings)),*
-                }
-            }
-        }
-
-        // TODO: This needs to move to a separate derive(IntoRep).
-        /*
-        impl #impl_generics ::posh::IntoRep for #name #ty_generics #where_clause {
-            fn into_rep(self) -> Self::Rep {
-                #posh_name {
-                    #(
-                        #field_idents: <#field_tys as ::posh::IntoRep>::into_rep(
-                            self.#field_idents,
-                        )
-                    ),*
-                }
-            }
-        }
-        */
     };
 
-    Ok(posh_struct_def)
+    let field_req_checks = rep_traits
+        .values()
+        .map(|rep_trait| rep_trait.field_req_checks(&field_tys));
+
+    let impl_uniform_block = rep_traits.get("UniformBlock").map(|_| {
+        quote! {
+            impl #impl_generics ::posh::shader::Resource for #posh_name #ty_generics #where_clause {
+                fn stage_arg() -> ::posh::Rep<Self> {
+                    // FIXME
+                    <Self as ::posh::MapToExpr>::from_ident(::posh::lang::Ident::new("input"))
+                }
+            }
+
+            impl #impl_generics ::posh::shader::UniformBlock
+                for #posh_name #ty_generics #where_clause
+            {
+            }
+        }
+    });
+
+    let impl_vertex = rep_traits.get("Vertex").map(|_| {
+        quote! {
+            impl #impl_generics ::posh::shader::Vertex for #posh_name #ty_generics #where_clause
+            {
+            }
+        }
+    });
+
+    let impl_v_inputs = rep_traits.get("VInputs").map(|_| {
+        quote! {
+            impl #impl_generics ::posh::shader::VInputs for #posh_name #ty_generics #where_clause
+            {
+            }
+        }
+    });
+
+    let impl_v_outputs = rep_traits.get("VOutputs").map(|_| {
+        quote! {
+            impl #impl_generics ::posh::shader::VOutputs for #posh_name #ty_generics #where_clause
+            {
+            }
+        }
+    });
+
+    let impl_f_outputs = rep_traits.get("FOutputs").map(|_| {
+        quote! {
+            impl #impl_generics ::posh::shader::FOutputs for #posh_name #ty_generics #where_clause
+            {
+            }
+        }
+    });
+
+    let impl_value = rep_traits.get("Value").map(|_| {
+        quote! {
+            impl #impl_generics ::posh::MapToExpr for #posh_name #ty_generics #where_clause {
+                fn ty() -> ::posh::lang::Ty {
+                    let name = #name_string.to_string();
+                    let uuid = ::std::str::FromStr::from_str(#uuid_string).unwrap();
+                    let ident = ::posh::lang::Ident {
+                        name,
+                        uuid,
+                    };
+
+                    let fields = vec![
+                        #(
+                            (
+                                #field_strings.to_string(),
+                                <::posh::Rep<#field_tys> as ::posh::MapToExpr>::ty(),
+                            )
+                        ),*
+                    ];
+
+                    let struct_ty = ::posh::lang::StructTy {
+                        ident,
+                        fields,
+                    };
+                    ::posh::lang::Ty::Struct(struct_ty)
+                }
+
+                fn expr(&self) -> ::posh::lang::Expr {
+                    let ty = match <Self as ::posh::MapToExpr>::ty() {
+                        ::posh::lang::Ty::Struct(ty) => ty,
+                        _ => unreachable!(),
+                    };
+                    let struct_func = ::posh::lang::StructFunc { ty };
+                    let func = ::posh::lang::Func::Struct(struct_func);
+
+                    let args = vec![
+                        #(::posh::MapToExpr::expr(&self.#field_idents)),*
+                    ];
+
+                    if let Some(common_base) = ::posh::expose::common_field_base(&args) {
+                        common_base
+                    } else {
+                        let call_expr = ::posh::lang::CallExpr { func, args };
+                        ::posh::lang::Expr::Call(call_expr)
+                    }
+                }
+
+                fn from_ident(ident: ::posh::lang::Ident) -> Self {
+                    let trace = ::posh::expose::Trace::from_ident::<Self>(ident);
+                    <Self as ::posh::Value>::from_trace(trace)
+                }
+            }
+
+            impl #impl_generics ::posh::Value for #posh_name #ty_generics #where_clause {
+                fn from_trace(trace: ::posh::expose::Trace) -> Self {
+                    Self {
+                        #(#field_idents: ::posh::expose::field(trace, #field_strings)),*
+                    }
+                }
+            }
+        }
+    });
+
+    let impl_resources = rep_traits.get("Resources").map(|_| {
+        quote! {
+            impl #impl_generics ::posh::shader::Resources for #posh_name #ty_generics #where_clause
+            {
+                fn stage_arg() -> ::posh::Rep<Self> {
+                    // FIXME
+                    ::posh::Rep::<Self> {
+                        #(
+                            #field_idents: <
+                                ::posh::Rep<#field_tys> as ::posh::shader::Resource
+                            >::stage_arg()
+                        ),*
+                    }
+                }
+            }
+        }
+    });
+
+    // TODO: This needs to move to a separate derive(IntoRep).
+    /*
+    impl #impl_generics ::posh::IntoRep for #name #ty_generics #where_clause {
+        fn into_rep(self) -> Self::Rep {
+            #posh_name {
+                #(
+                    #field_idents: <#field_tys as ::posh::IntoRep>::into_rep(
+                        self.#field_idents,
+                    )
+                ),*
+            }
+        }
+    }
+    */
+
+    Ok(TokenStream2::from_iter(
+        iter::once(posh_struct_def)
+            .chain(field_req_checks)
+            .chain(impl_uniform_block)
+            .chain(impl_vertex)
+            .chain(impl_v_inputs)
+            .chain(impl_v_outputs)
+            .chain(impl_f_outputs)
+            .chain(impl_value)
+            .chain(impl_resources),
+    ))
 }

@@ -1,6 +1,6 @@
 use nalgebra::Vector3;
 use posh::{
-    shader::{FStageIn, FStageOut, Shader, UniformBlock, VStageIn, VStageOut},
+    shader::{FStageIn, FStageOut, Shader, UniformBlock, UniformBlockField, VStageIn, VStageOut},
     Expose, Rep,
 };
 
@@ -12,7 +12,7 @@ struct ModelToClip {
 }
 
 #[derive(Expose)]
-#[expose(UniformBlock)]
+#[expose(Resources)]
 struct Resources {
     one: ModelToClip,
     two: ModelToClip,
@@ -74,7 +74,7 @@ fn fragment(_: Rep<Resources>, arg: FStageIn<VOutputs>) -> FStageOut<FOutputs> {
         normal: arg.inputs.normal,
     });
 
-    FStageOut::outputs(fragment)
+    FStageOut::outputs(outputs)
 }
 
 struct MyShader {

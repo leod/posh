@@ -73,8 +73,8 @@ where
         VStage: FnOnce(Rep<R>, VStageIn<V>) -> VStageOut<W>,
         FStage: FnOnce(Rep<R>, FStageIn<W>) -> FStageOut<F>,
     {
-        let v_out = v_stage(R::Rep::func_arg(), VStageIn::func_arg());
-        let f_out = f_stage(R::Rep::func_arg(), FStageIn::func_arg());
+        let v_out = v_stage(R::Rep::stage_arg(), VStageIn::func_arg());
+        let f_out = f_stage(R::Rep::stage_arg(), FStageIn::func_arg());
 
         let v_stage = ErasedVStage::new(v_out);
         let f_stage = ErasedFStage::new(f_out);

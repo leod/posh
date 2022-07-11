@@ -52,6 +52,7 @@ pub trait MapToExpr: Representative {
     fn ty() -> Ty;
     fn expr(&self) -> Expr;
 
+    /// FIXME
     #[doc(hidden)]
     fn from_ident(ident: Ident) -> Self;
 }
