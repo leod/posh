@@ -33,8 +33,8 @@ struct Instance {
 }
 
 #[derive(Expose)]
-#[expose(VOutputs)]
-struct VOutputs {
+#[expose(FInputs)]
+struct FInputs {
     color: [f32; 3],
     normal: [f32; 3],
 }
@@ -46,8 +46,8 @@ struct FOutputs {
     normal: [f32; 3],
 }
 
-fn vertex(res: Rep<Resources>, arg: VStageIn<Vertex>) -> VStageOut<VOutputs> {
-    let outputs = Rep::<VOutputs> {
+fn vertex(res: Rep<Resources>, arg: VStageIn<Vertex>) -> VStageOut<FInputs> {
+    let outputs = Rep::<FInputs> {
         color: posh::vec3(255.0, 0.0, 0.0),
         normal: res.two.model_to_view * arg.vertex.normal,
     };
@@ -56,10 +56,10 @@ fn vertex(res: Rep<Resources>, arg: VStageIn<Vertex>) -> VStageOut<VOutputs> {
     VStageOut { outputs, position }
 }
 
-fn vertex2(res: Rep<Resources>, arg: VStageIn<(Vertex, Instance)>) -> VStageOut<VOutputs> {
+fn vertex2(res: Rep<Resources>, arg: VStageIn<(Vertex, Instance)>) -> VStageOut<FInputs> {
     let (vertex, instance) = arg.vertex;
 
-    let outputs = Rep::<VOutputs> {
+    let outputs = Rep::<FInputs> {
         color: instance.color,
         normal: res.one.model_to_view * vertex.normal,
     };
@@ -68,7 +68,7 @@ fn vertex2(res: Rep<Resources>, arg: VStageIn<(Vertex, Instance)>) -> VStageOut<
     VStageOut { outputs, position }
 }
 
-fn fragment(_: Rep<Resources>, arg: FStageIn<VOutputs>) -> FStageOut<FOutputs> {
+fn fragment(_: Rep<Resources>, arg: FStageIn<FInputs>) -> FStageOut<FOutputs> {
     let outputs = posh::var(Rep::<FOutputs> {
         color: arg.inputs.color,
         normal: arg.inputs.normal,

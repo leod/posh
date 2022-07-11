@@ -1,13 +1,13 @@
 use crate::{lang::Ident, Expose, MapToExpr, Rep, Vec3, Vec4};
 
-use super::{FOutputs, VInputs, VOutputs};
+use super::{Attributes, FInputs, FOutputs};
 
 /// Vertex stage input.
 #[derive(Clone, Copy)]
 pub struct VStageIn<V>
 where
     V: Expose,
-    V::Rep: VInputs,
+    V::Rep: Attributes,
 {
     pub vertex: Rep<V>,
     pub vertex_id: Rep<i32>,
@@ -18,7 +18,7 @@ where
 pub struct VStageOut<W>
 where
     W: Expose,
-    W::Rep: VOutputs,
+    W::Rep: FInputs,
 {
     pub outputs: Rep<W>,
     pub position: Vec3<f32>,
@@ -28,7 +28,7 @@ where
 pub struct FStageIn<W>
 where
     W: Expose,
-    W::Rep: VOutputs,
+    W::Rep: FInputs,
 {
     pub inputs: Rep<W>,
     pub frag_coord: Vec4<f32>,
@@ -51,7 +51,7 @@ fn builtin_var<V: MapToExpr>(name: &'static str) -> V {
 impl<V> VStageIn<V>
 where
     V: Expose,
-    V::Rep: VInputs,
+    V::Rep: Attributes,
 {
     fn new(vertex: Rep<V>) -> Self {
         Self {
@@ -61,7 +61,7 @@ where
         }
     }
 
-    pub(crate) fn func_arg() -> Self {
+    pub(crate) fn stage_arg() -> Self {
         Self::new(Rep::<V>::from_ident(Ident::new("input")))
     }
 }
@@ -69,7 +69,7 @@ where
 impl<W> FStageIn<W>
 where
     W: Expose,
-    W::Rep: VOutputs,
+    W::Rep: FInputs,
 {
     fn new(inputs: Rep<W>) -> Self {
         Self {

@@ -30,6 +30,7 @@ where
 #[sealed]
 pub trait UniformBlockField {}
 
+// FIXME: Check for which types we should implement `UniformBlockField`.
 impl_trait_for_built_in_types!(UniformBlockField);
 
 #[sealed]

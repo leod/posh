@@ -11,6 +11,8 @@ mod trace;
 mod tuple;
 mod vec;
 
+use sealed::sealed;
+
 use crate::lang::{Expr, Ident, Ty};
 
 pub use built_in_value::BuiltInValue;
@@ -18,11 +20,11 @@ pub use gen_value::GenValue;
 pub use primitives::{common_field_base, field, func_def_and_call, var};
 pub use sampler::Sampler2;
 pub use scalar::{Scalar, ScalarType};
-use sealed::sealed;
 pub use trace::Trace;
 pub use vec::{vec3, Vec3, Vec4};
 
 pub(crate) use primitives::{binary, built_in1, built_in2, built_in3, builtin4};
+pub(crate) use scalar::NumericType;
 
 /// Exposes a Rust type to Posh through a representative type.
 pub trait Expose {

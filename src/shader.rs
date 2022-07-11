@@ -7,10 +7,13 @@ use std::marker::PhantomData;
 
 pub use resource::{Resource, Resources, UniformBlock};
 pub use stage::{FStageIn, FStageOut, VStageIn, VStageOut};
-pub use vertex::{FOutputs, VInputs, VOutputs, Vertex};
+pub use vertex::{Attributes, FInputs, FOutputs, Vertex};
 
 #[doc(hidden)]
 pub use resource::UniformBlockField;
+
+#[doc(hidden)]
+pub use vertex::{FInputFieldValue, FOutputFieldValue, VertexFieldValue};
 
 use crate::{expose::Expose, lang::Expr, MapToExpr, Rep};
 
@@ -35,7 +38,7 @@ impl ErasedVStage {
     fn new<W>(out: VStageOut<W>) -> Self
     where
         W: Expose,
-        W::Rep: VOutputs,
+        W::Rep: FInputs,
     {
         Self {
             outputs: out.outputs.expr(),
@@ -63,17 +66,17 @@ where
     V: Expose,
     F: Expose,
     R::Rep: Resources,
-    V::Rep: VInputs,
+    V::Rep: Attributes,
     F::Rep: FOutputs,
 {
     pub fn new<W, VStage, FStage>(v_stage: VStage, f_stage: FStage) -> Self
     where
         W: Expose,
-        W::Rep: VOutputs,
+        W::Rep: FInputs,
         VStage: FnOnce(Rep<R>, VStageIn<V>) -> VStageOut<W>,
         FStage: FnOnce(Rep<R>, FStageIn<W>) -> FStageOut<F>,
     {
-        let v_out = v_stage(R::Rep::stage_arg(), VStageIn::func_arg());
+        let v_out = v_stage(R::Rep::stage_arg(), VStageIn::stage_arg());
         let f_out = f_stage(R::Rep::stage_arg(), FStageIn::func_arg());
 
         let v_stage = ErasedVStage::new(v_out);

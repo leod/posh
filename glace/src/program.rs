@@ -1,5 +1,5 @@
 use posh::{
-    shader::{FOutputs, Resources, Shader, VInputs},
+    shader::{Attributes, FOutputs, Resources, Shader},
     Expose,
 };
 
@@ -19,7 +19,7 @@ where
     V: BindVInputs,
     F: BindFOutputs,
     R::Rep: Resources,
-    V::Rep: VInputs,
+    V::Rep: Attributes,
     F::Rep: FOutputs,
 {
 }

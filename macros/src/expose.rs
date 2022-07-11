@@ -93,22 +93,17 @@ const REP_TRAITS: &'static [RepTrait] = &[
     RepTrait {
         name: "Vertex",
         deps: &["Value"],
-        field_reqs: &[], // TODO
+        field_reqs: &[|| quote! { ::posh::shader::VertexFieldValue }],
     },
     RepTrait {
-        name: "VInputs",
+        name: "FInputs",
         deps: &["Value"],
-        field_reqs: &[], // TODO
-    },
-    RepTrait {
-        name: "VOutputs",
-        deps: &["Value"],
-        field_reqs: &[], // TODO
+        field_reqs: &[|| quote! { ::posh::shader::FInputFieldValue }],
     },
     RepTrait {
         name: "FOutputs",
         deps: &["Value"],
-        field_reqs: &[], // TODO
+        field_reqs: &[|| quote! { ::posh::shader::FOutputFieldValue }],
     },
     RepTrait {
         name: "Value",
@@ -249,17 +244,9 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
         }
     });
 
-    let impl_v_inputs = rep_traits.get("VInputs").map(|_| {
+    let impl_v_outputs = rep_traits.get("FInputs").map(|_| {
         quote! {
-            impl #impl_generics ::posh::shader::VInputs for #posh_name #ty_generics #where_clause
-            {
-            }
-        }
-    });
-
-    let impl_v_outputs = rep_traits.get("VOutputs").map(|_| {
-        quote! {
-            impl #impl_generics ::posh::shader::VOutputs for #posh_name #ty_generics #where_clause
+            impl #impl_generics ::posh::shader::FInputs for #posh_name #ty_generics #where_clause
             {
             }
         }
@@ -374,7 +361,6 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             .chain(field_req_checks)
             .chain(impl_uniform_block)
             .chain(impl_vertex)
-            .chain(impl_v_inputs)
             .chain(impl_v_outputs)
             .chain(impl_f_outputs)
             .chain(impl_value)
