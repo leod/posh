@@ -4,22 +4,27 @@ use std::{
     rc::Rc,
 };
 
+use sealed::sealed;
+
 use crate::lang::{
     BinaryOp, BuiltInTy, Expr, Ident, Literal, LiteralExpr, ScalarTy, TernaryExpr, Ty,
 };
 
-use super::{binary, Constructible, IntoPosh, Lift, Trace, Value};
+use super::{binary, Expose, IntoRep, MapToExpr, Representative, Trace, Value};
 
-pub trait ScalarType: Copy + Into<Literal> + IntoPosh<Posh = Scalar<Self>> {
+#[sealed]
+pub trait ScalarType: Copy + Into<Literal> + IntoRep<Rep = Scalar<Self>> {
     fn scalar_ty() -> ScalarTy;
 }
 
+#[sealed]
 pub trait NumericType: ScalarType {}
 
-impl<T: ScalarType> Lift for Scalar<T> {
-    type Posh = Self;
+impl<T: ScalarType> Expose for Scalar<T> {
+    type Rep = Self;
 }
 
+/// Representative for scalars.
 #[must_use]
 #[derive(Debug, Copy, Clone)]
 pub struct Scalar<T> {
@@ -27,7 +32,9 @@ pub struct Scalar<T> {
     trace: Trace,
 }
 
-impl<T: ScalarType> Value for Scalar<T> {
+impl<T: ScalarType> Representative for Scalar<T> {}
+
+impl<T: ScalarType> MapToExpr for Scalar<T> {
     fn ty() -> Ty {
         Ty::BuiltIn(BuiltInTy::Scalar(T::scalar_ty()))
     }
@@ -41,9 +48,9 @@ impl<T: ScalarType> Value for Scalar<T> {
     }
 }
 
-impl<T: ScalarType> Constructible for Scalar<T> {
+impl<T: ScalarType> Value for Scalar<T> {
     fn from_trace(trace: Trace) -> Self {
-        assert!(trace.expr().ty() == <Self::Posh as Value>::ty());
+        assert!(trace.expr().ty() == <Self::Rep as MapToExpr>::ty());
 
         Scalar {
             _phantom: PhantomData,
@@ -60,28 +67,28 @@ where
         Self::from_expr(Expr::Literal(LiteralExpr { literal: x.into() }))
     }
 
-    pub fn eq(&self, right: impl IntoPosh<Posh = Self>) -> Bool {
+    pub fn eq(&self, right: impl IntoRep<Rep = Self>) -> Scalar<bool> {
         binary(*self, BinaryOp::Eq, right)
     }
 }
 
-impl Bool {
-    pub fn and(self, right: impl IntoPosh<Posh = Bool>) -> Bool {
+impl Scalar<bool> {
+    pub fn and(self, right: impl IntoRep<Rep = Scalar<bool>>) -> Scalar<bool> {
         binary(self, BinaryOp::And, right)
     }
 
-    pub fn or(self, right: impl IntoPosh<Posh = Bool>) -> Bool {
+    pub fn or(self, right: impl IntoRep<Rep = Scalar<bool>>) -> Scalar<bool> {
         binary(self, BinaryOp::And, right)
     }
 
-    pub fn ternary<V: Constructible>(
+    pub fn ternary<V: Value>(
         self,
-        true_value: impl IntoPosh<Posh = V>,
-        false_value: impl IntoPosh<Posh = V>,
+        true_value: impl IntoRep<Rep = V>,
+        false_value: impl IntoRep<Rep = V>,
     ) -> V {
         let cond = Rc::new(self.expr());
-        let true_expr = Rc::new(true_value.into_posh().expr());
-        let false_expr = Rc::new(false_value.into_posh().expr());
+        let true_expr = Rc::new(true_value.into_rep().expr());
+        let false_expr = Rc::new(false_value.into_rep().expr());
 
         let expr = Expr::Ternary(TernaryExpr {
             cond,
@@ -98,7 +105,7 @@ macro_rules! impl_binary_op {
         impl<T, Rhs> $op<Rhs> for Scalar<T>
         where
             T: NumericType,
-            Rhs: IntoPosh<Posh = Scalar<T>>,
+            Rhs: IntoRep<Rep = Scalar<T>>,
         {
             type Output = Self;
 
@@ -140,23 +147,22 @@ impl_binary_op!(div, Div);
 
 macro_rules! impl_scalar {
     ($ty:ty, $name:ident) => {
+        #[sealed]
         impl ScalarType for $ty {
             fn scalar_ty() -> ScalarTy {
                 ScalarTy::$name
             }
         }
 
-        impl Lift for $ty {
-            type Posh = Scalar<$ty>;
+        impl Expose for $ty {
+            type Rep = Scalar<$ty>;
         }
 
-        impl IntoPosh for $ty {
-            fn into_posh(self) -> Self::Posh {
+        impl IntoRep for $ty {
+            fn into_rep(self) -> Self::Rep {
                 Scalar::new(self)
             }
         }
-
-        pub type $name = Scalar<$ty>;
     };
 }
 
@@ -165,6 +171,11 @@ impl_scalar!(i32, I32);
 impl_scalar!(u32, U32);
 impl_scalar!(bool, Bool);
 
+#[sealed]
 impl NumericType for f32 {}
+
+#[sealed]
 impl NumericType for i32 {}
+
+#[sealed]
 impl NumericType for u32 {}

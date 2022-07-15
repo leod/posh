@@ -1,91 +1,98 @@
-use posh::{posh, var, vec3, FSIn, FSOut, IntoPosh, Posh, Shader, VSIn, VSOut};
+use nalgebra::Vector3;
+use posh::{
+    shader::{FragArg, FragOut, Shader, VertArg, VertOut},
+    Expose, Rep, Sampler2,
+};
 
-#[derive(IntoPosh)]
-#[posh(UniformBlock)]
+#[derive(Expose)]
+#[expose(UniformBlock, Vertex)]
 struct ModelToClip {
-    model_to_view: [f32; 3],
-    view_to_clip: [f32; 3],
+    model_to_view: Vector3<f32>,
+    view_to_clip: Vector3<f32>,
 }
 
-#[derive(Resources)]
-struct Params {
+#[derive(Expose)]
+#[expose(Resources)]
+struct Resources {
     one: ModelToClip,
     two: ModelToClip,
 }
 
-#[derive(IntoPosh)]
-#[posh(Vertex)]
+#[derive(Expose)]
+#[expose(Vertex)]
 struct Vertex {
     position: [f32; 3],
     normal: [f32; 3],
     thickness: f32,
 }
 
-#[derive(IntoPosh)]
-#[posh(Vertex)]
+#[derive(Expose)]
+#[expose(Vertex)]
 struct Instance {
     color: [f32; 3],
 }
 
-#[derive(IntoPosh)]
-#[posh(VertexOut)]
-struct VertexOut {
+#[derive(Expose)]
+#[expose(Interpolants)]
+struct Interpolants {
     color: [f32; 3],
     normal: [f32; 3],
 }
 
-#[derive(IntoPosh)]
-#[posh(FragmentOut)]
-struct FragmentOut {
+#[derive(Expose)]
+#[expose(Fragment)]
+struct Fragment {
     color: [f32; 3],
     normal: [f32; 3],
 }
 
-fn vertex(params: Posh<ParamSet>, input: VSIn<Vertex>) -> VSOut<VertexOut> {
-    VSOut {
-        position: params.one.view_to_clip * params.one.model_to_view * input.vertex.position,
-        varying: Posh::<VertexOut> {
-            color: vec3(255.0, 0.0, 0.0),
-            normal: params.two.model_to_view * input.vertex.normal,
-        },
-    }
+fn vert(res: Rep<Resources>, arg: VertArg<Vertex>) -> VertOut<Interpolants> {
+    let interps = Rep::<Interpolants> {
+        color: posh::vec3(255.0, 0.0, 0.0),
+        normal: res.two.model_to_view * arg.attrs.normal,
+    };
+    let position = res.one.view_to_clip * res.one.model_to_view * arg.attrs.position;
+
+    VertOut { interps, position }
 }
 
-fn vertex2(params: Posh<ParamSet>, input: VSIn<(Vertex, Instance)>) -> VSOut<Varying> {
-    VSOut {
-        position: params.one.model_to_view * input.vertex.0.position,
-        varying: Posh::<Varying> {
-            color: input.vertex.1.color,
-            normal: params.one.model_to_view * input.vertex.0.normal,
-        },
-    }
+fn vert2(res: Rep<Resources>, arg: VertArg<(Vertex, Instance)>) -> VertOut<Interpolants> {
+    let (vertex, instance) = arg.attrs;
+
+    let interps = Rep::<Interpolants> {
+        color: instance.color,
+        normal: res.one.model_to_view * vertex.normal,
+    };
+    let position = res.one.model_to_view * vertex.position;
+
+    VertOut { interps, position }
 }
 
-fn fragment(_: Posh<ParamSet>, input: FSIn<Varying>) -> FSOut<Fragment> {
-    let fragment = var(Posh::<Fragment> {
-        color: input.varying.color,
-        normal: input.varying.normal,
+fn frag(_: Rep<Resources>, arg: FragArg<Interpolants>) -> FragOut<Fragment> {
+    let frag = posh::var(Rep::<Fragment> {
+        color: arg.interps.color,
+        normal: arg.interps.normal,
     });
 
-    FSOut::new(fragment)
+    FragOut::frag(frag)
 }
 
 struct MyShader {
-    shader: Shader<ParamSet, Vertex, Fragment>,
+    shader: Shader<Resources, Vertex, Fragment>,
 }
 
 struct MyShader2 {
-    shader: Shader<ParamSet, (Vertex, Instance), Fragment>,
+    shader: Shader<Resources, (Vertex, Instance), Fragment>,
 }
 
 fn main() {
     let my_shader = MyShader {
-        shader: Shader::new(vertex, fragment),
+        shader: Shader::new(vert, frag),
     };
 
     let my_shader2 = MyShader2 {
-        shader: Shader::new(vertex2, fragment),
+        shader: Shader::new(vert2, frag),
     };
 
-    let shaduer: Shader<ParamSet, _, _> = Shader::new(vertex2, fragment);
+    let shaduer: Shader<Resources, _, _> = Shader::new(vert2, frag);
 }

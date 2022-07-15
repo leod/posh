@@ -1,12 +1,14 @@
-use posh::{lang::Ident, posh, IntoPosh, Posh, Value};
+use nalgebra::Vector3;
+use posh::{lang::Ident, Expose, IntoRep, MapToExpr, Rep};
 
-#[derive(IntoPosh)]
+#[derive(Expose)]
 pub struct Helper {
     x: i32,
     y: i32,
+    foo: Vector3<f32>,
 }
 
-#[derive(IntoPosh)]
+#[derive(Expose)]
 pub struct Vertex {
     pos: i32,
     time: f32,
@@ -14,17 +16,17 @@ pub struct Vertex {
     helper2: Helper,
 }
 
-#[posh]
-fn vertex(vertex: Posh<Vertex>) -> Posh<Vertex> {
-    Posh::<Vertex> {
+#[posh::def]
+fn vertex(vertex: Rep<Vertex>) -> Rep<Vertex> {
+    Rep::<Vertex> {
         pos: 3 * vertex.pos,
-        time: 2.0.into_posh(),
+        time: 2.0.into_rep(),
         ..vertex
     }
 }
 
 pub fn main() {
-    let result = vertex(Posh::<Vertex>::from_ident(Ident::new("foo")));
+    let result = vertex(Rep::<Vertex>::from_ident(Ident::new("foo")));
     println!("{:#?}", result.expr());
 
     if let posh::lang::Expr::Call(expr) = result.expr() {

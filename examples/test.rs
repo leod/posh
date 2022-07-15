@@ -1,26 +1,26 @@
-use posh::{lang::Ident, posh, var, vec3, GenValue, Sampler2, Value, Vec4, F32};
+use posh::{lang::Ident, vec3, GenValue, MapToExpr, Rep};
 
-#[posh]
-fn foo(x: F32, y: F32) -> F32 {
-    let z = var(x * y);
-    let w = var(1.0 + y + x + 1.0);
+#[posh::def]
+fn foo(x: Rep<f32>, y: Rep<f32>) -> Rep<f32> {
+    let z = posh::var(x * y);
+    let w = posh::var(1.0 + y + x + 1.0);
 
     z.eq(w).and(w.eq(1.0)).ternary(3.0 * z * 2.0, 1.0)
 }
 
-#[posh]
-fn bar(x: F32) -> F32 {
+#[posh::def]
+fn bar(x: Rep<f32>) -> Rep<f32> {
     x.eq(5.0).ternary(x.atan2(2.0), -1.0)
 }
 
-#[posh]
-fn texture_thing(sampler: Sampler2) -> Vec4<f32> {
-    let c = var(sampler.load(vec3(1.0, 1.0, bar(3.0))));
+#[posh::def]
+fn texture_thing(sampler: posh::Sampler2) -> posh::Vec4<f32> {
+    let c = posh::var(sampler.load(vec3(1.0, 1.0, bar(3.0))));
     sampler.load(vec3(c.z, 2.0 * c.y, foo(1.0, 2.0)).normalize() / 5.0)
 }
 
 fn main() {
-    let sampler = Sampler2::from_ident(Ident::new("bla")); // hack
+    let sampler = posh::Sampler2::from_ident(Ident::new("bla")); // hack
     let result = texture_thing(sampler);
 
     if let posh::lang::Expr::Call(expr) = result.expr() {

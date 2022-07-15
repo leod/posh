@@ -1,23 +1,23 @@
-mod func;
-mod into_posh;
+mod def;
+mod expose;
 
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput, ItemFn};
 
 #[proc_macro_attribute]
-pub fn posh(_args: TokenStream, input: TokenStream) -> TokenStream {
+pub fn def(_args: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as ItemFn);
-    match func::transform(input) {
+    match def::transform(input) {
         Ok(ts) => ts,
         Err(e) => e.to_compile_error(),
     }
     .into()
 }
 
-#[proc_macro_derive(IntoPosh)]
-pub fn derive_into_posh(input: TokenStream) -> TokenStream {
+#[proc_macro_derive(Expose, attributes(expose))]
+pub fn derive_into_value(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    match into_posh::derive(input) {
+    match expose::derive(input) {
         Ok(ts) => ts,
         Err(e) => e.to_compile_error(),
     }

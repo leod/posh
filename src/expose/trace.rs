@@ -1,9 +1,9 @@
-use crate::{
-    lang::{Expr, Ident, VarExpr},
-    Value,
-};
+use crate::lang::{Expr, Ident, VarExpr};
 
-use super::expr_reg::{self, ExprId};
+use super::{
+    expr_reg::{self, ExprId},
+    MapToExpr,
+};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Trace {
@@ -17,10 +17,10 @@ impl Trace {
         }
     }
 
-    pub fn from_ident<R: Value>(ident: Ident) -> Self {
+    pub fn from_ident<R: MapToExpr>(ident: Ident) -> Self {
         Self::new(Expr::Var(VarExpr {
             ident,
-            ty: <R::Posh as Value>::ty(),
+            ty: <R::Rep as MapToExpr>::ty(),
             init: None,
         }))
     }
