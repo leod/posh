@@ -193,7 +193,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
     let field_tys: Vec<_> = fields.iter().map(|field| &field.ty).collect();
     let field_vis: Vec<_> = fields.iter().map(|field| &field.vis).collect();
 
-    let posh_name = Ident::new(&format!("{}Posh", name), name.span());
+    let posh_name = Ident::new(&format!("__posh_private_{}", name), name.span());
 
     let posh_struct_def = quote! {
         #[must_use]

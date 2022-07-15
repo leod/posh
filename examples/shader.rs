@@ -1,7 +1,7 @@
 use nalgebra::Vector3;
 use posh::{
     shader::{FragArg, FragOut, Shader, VertArg, VertOut},
-    Expose, Rep,
+    Expose, Rep, Sampler2,
 };
 
 #[derive(Expose)]
