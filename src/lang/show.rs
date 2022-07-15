@@ -157,6 +157,7 @@ fn show_built_in_ty(ty: &BuiltInTy) -> String {
 
     match ty {
         Scalar(ty) => show_scalar_ty(*ty),
+        Vec2(ty) => format!("{}vec2", scalar_type_prefix(*ty)),
         Vec3(ty) => format!("{}vec3", scalar_type_prefix(*ty)),
         Vec4(ty) => format!("{}vec4", scalar_type_prefix(*ty)),
         Sampler2 => "sampler2D".to_string(),
