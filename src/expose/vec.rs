@@ -3,9 +3,18 @@ use std::ops::{Add, Div, Mul, Sub};
 use crate::lang::{BinaryOp, BuiltInTy, Expr, Ident, Ty};
 
 use super::{
-    binary, built_in3, builtin4, field, scalar::NumericType, Expose, IntoRep, MapToExpr,
+    binary, built_in2, built_in3, builtin4, field, scalar::NumericType, Expose, IntoRep, MapToExpr,
     Representative, Scalar, ScalarType, Trace, Value,
 };
+
+/// Representative for two-dimensional vectors.
+#[must_use]
+#[derive(Debug, Copy, Clone)]
+pub struct Vec2<T> {
+    trace: Trace,
+    pub x: Scalar<T>,
+    pub y: Scalar<T>,
+}
 
 /// Representative for three-dimensional vectors.
 #[must_use]
@@ -26,6 +35,22 @@ pub struct Vec4<T> {
     pub y: Scalar<T>,
     pub z: Scalar<T>,
     pub w: Scalar<T>,
+}
+
+impl<T: ScalarType> Representative for Vec2<T> {}
+
+impl<T: ScalarType> MapToExpr for Vec2<T> {
+    fn ty() -> Ty {
+        Ty::BuiltIn(BuiltInTy::Vec2(T::scalar_ty()))
+    }
+
+    fn expr(&self) -> Expr {
+        self.trace.expr()
+    }
+
+    fn from_ident(ident: Ident) -> Self {
+        Self::from_trace(Trace::from_ident::<Self>(ident))
+    }
 }
 
 impl<T: ScalarType> Representative for Vec3<T> {}
@@ -60,6 +85,18 @@ impl<T: ScalarType> MapToExpr for Vec4<T> {
     }
 }
 
+impl<T: ScalarType> Value for Vec2<T> {
+    fn from_trace(trace: Trace) -> Self {
+        assert!(trace.expr().ty() == <Self::Rep as MapToExpr>::ty());
+
+        Self {
+            trace,
+            x: field(trace, "x"),
+            y: field(trace, "y"),
+        }
+    }
+}
+
 impl<T: ScalarType> Value for Vec3<T> {
     fn from_trace(trace: Trace) -> Self {
         assert!(trace.expr().ty() == <Self::Rep as MapToExpr>::ty());
@@ -87,6 +124,10 @@ impl<T: ScalarType> Value for Vec4<T> {
     }
 }
 
+impl<T: ScalarType> Expose for [T; 2] {
+    type Rep = Vec2<T>;
+}
+
 impl<T: ScalarType> Expose for [T; 3] {
     type Rep = Vec3<T>;
 }
@@ -95,12 +136,22 @@ impl<T: ScalarType> Expose for [T; 4] {
     type Rep = Vec4<T>;
 }
 
+impl<T: ScalarType> Expose for Vec2<T> {
+    type Rep = Self;
+}
+
 impl<T: ScalarType> Expose for Vec3<T> {
     type Rep = Self;
 }
 
 impl<T: ScalarType> Expose for Vec4<T> {
     type Rep = Self;
+}
+
+impl<T: ScalarType> IntoRep for [T; 2] {
+    fn into_rep(self) -> Self::Rep {
+        vec2(self[0], self[1])
+    }
 }
 
 impl<T: ScalarType> IntoRep for [T; 3] {
@@ -195,7 +246,17 @@ macro_rules! impl_ops {
     };
 }
 
+impl_ops!(Vec2);
 impl_ops!(Vec3);
+impl_ops!(Vec4);
+
+/// Constructs a two-dimensional vector.
+pub fn vec2<T: ScalarType>(
+    x: impl IntoRep<Rep = Scalar<T>>,
+    y: impl IntoRep<Rep = Scalar<T>>,
+) -> Vec2<T> {
+    built_in2("vec2", x, y)
+}
 
 /// Constructs a three-dimensional vector.
 pub fn vec3<T: ScalarType>(

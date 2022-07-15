@@ -1,8 +1,12 @@
 use nalgebra as na;
 
-use crate::{Expose, IntoRep, Rep, Vec3, Vec4};
+use crate::{Expose, IntoRep, Rep, Vec2, Vec3, Vec4};
 
 use super::ScalarType;
+
+impl<T: ScalarType> Expose for na::Vector2<T> {
+    type Rep = Vec2<T>;
+}
 
 impl<T: ScalarType> Expose for na::Vector3<T> {
     type Rep = Vec3<T>;

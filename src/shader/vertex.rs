@@ -1,6 +1,6 @@
 use sealed::sealed;
 
-use crate::{expose::NumericType, Scalar, Value, Vec3, Vec4};
+use crate::{expose::NumericType, Scalar, Value, Vec2, Vec3, Vec4};
 
 /// A value that can be stored in a vertex.
 #[sealed]
@@ -9,7 +9,8 @@ pub trait VertexField {}
 #[sealed]
 impl<T: NumericType> VertexField for Scalar<T> {}
 
-// TODO: VertexFieldValue for Vec2
+#[sealed]
+impl<T: NumericType> VertexField for Vec2<T> {}
 
 #[sealed]
 impl<T: NumericType> VertexField for Vec3<T> {}
@@ -39,7 +40,8 @@ pub trait InterpolantsField {}
 #[sealed]
 impl<T: NumericType> InterpolantsField for Scalar<T> {}
 
-// TODO: InterpolantsField for Vec2
+#[sealed]
+impl<T: NumericType> InterpolantsField for Vec2<T> {}
 
 #[sealed]
 impl<T: NumericType> InterpolantsField for Vec3<T> {}
@@ -63,7 +65,8 @@ pub trait FragmentField {}
 #[sealed]
 impl<T: NumericType> FragmentField for Scalar<T> {}
 
-// TODO: FOutputFieldValue for Vec2
+#[sealed]
+impl<T: NumericType> FragmentField for Vec2<T> {}
 
 #[sealed]
 impl<T: NumericType> FragmentField for Vec3<T> {}

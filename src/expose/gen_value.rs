@@ -2,7 +2,7 @@ use sealed::sealed;
 
 use crate::{IntoRep, Rep};
 
-use super::{built_in1, built_in2, Value, Vec3};
+use super::{built_in1, built_in2, Value, Vec2, Vec3, Vec4};
 
 /// A representative of a `f32`-based scalar or vector type.
 #[sealed]
@@ -68,4 +68,10 @@ pub trait GenValue: Value + Sized {
 impl GenValue for Rep<f32> {}
 
 #[sealed]
+impl GenValue for Vec2<f32> {}
+
+#[sealed]
 impl GenValue for Vec3<f32> {}
+
+#[sealed]
+impl GenValue for Vec4<f32> {}

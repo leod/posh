@@ -1,4 +1,4 @@
-use posh::{lang::Ident, vec3, GenValue, MapToExpr, Rep};
+use posh::{lang::Ident, vec2, GenValue, MapToExpr, Rep};
 
 #[posh::def]
 fn foo(x: Rep<f32>, y: Rep<f32>) -> Rep<f32> {
@@ -15,8 +15,8 @@ fn bar(x: Rep<f32>) -> Rep<f32> {
 
 #[posh::def]
 fn texture_thing(sampler: posh::Sampler2) -> posh::Vec4<f32> {
-    let c = posh::var(sampler.load(vec3(1.0, 1.0, bar(3.0))));
-    sampler.load(vec3(c.z, 2.0 * c.y, foo(1.0, 2.0)).normalize() / 5.0)
+    let c = posh::var(sampler.load(vec2(1.0, bar(3.0))));
+    sampler.load(vec2(2.0 * c.y, foo(1.0, c.z)).normalize() / 5.0)
 }
 
 fn main() {
