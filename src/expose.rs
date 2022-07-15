@@ -47,7 +47,7 @@ pub trait IntoRep: Expose {
 }
 
 /// An object which is accessible in Posh.
-pub trait Representative: Copy + Expose<Rep = Self> + Sized {}
+pub trait Representative: Copy + Expose<Rep = Self> {}
 
 /// A representative which has a [`Ty`] in Posh and can be mapped to an [`Expr`].
 pub trait MapToExpr: Representative {
