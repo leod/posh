@@ -11,8 +11,6 @@ mod trace;
 mod tuple;
 mod vec;
 
-use sealed::sealed;
-
 use crate::lang::{Expr, Ident, Ty};
 
 pub use built_in_value::BuiltInValue;
@@ -69,13 +67,6 @@ pub trait Value: MapToExpr {
         Self::from_trace(Trace::new(expr))
     }
 }
-
-/// A representative which can be passed to user-defined Posh functions.
-#[sealed(pub(crate))]
-pub trait FuncArg: MapToExpr {}
-
-#[sealed]
-impl<V: Value> FuncArg for V {}
 
 impl<V> IntoRep for V
 where

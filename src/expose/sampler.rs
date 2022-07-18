@@ -28,9 +28,6 @@ impl MapToExpr for Sampler2 {
     }
 }
 
-#[sealed]
-impl crate::expose::FuncArg for Sampler2 {}
-
 impl Sampler2 {
     pub fn load(self, tex_coord: Vec2<f32>) -> Vec4<f32> {
         built_in2("texture", self, tex_coord)

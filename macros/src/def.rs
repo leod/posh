@@ -4,7 +4,7 @@ use proc_macro2::TokenStream as TokenStream2;
 use quote::{quote, quote_spanned, ToTokens};
 use syn::{
     parse_quote, parse_quote_spanned, spanned::Spanned, Block, Error, Expr, FnArg, Ident, ItemFn,
-    Local, Pat, Result, ReturnType, Signature, Stmt, Type,
+    Pat, Result, ReturnType, Signature, Stmt, Type,
 };
 
 fn inputs(sig: &Signature) -> Result<(Vec<Ident>, Vec<Box<Type>>)> {
@@ -35,7 +35,6 @@ fn inputs(sig: &Signature) -> Result<(Vec<Ident>, Vec<Box<Type>>)> {
 
 pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
     let (input_idents, input_tys) = inputs(&item.sig)?;
-    let input_idxs: Vec<_> = (0..input_idents.len()).collect();
 
     let output_ty = match item.sig.output.clone() {
         ReturnType::Default => {
@@ -120,14 +119,6 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
         }
     };
 
-    let input_req_checks = input_tys.iter().map(|ty| {
-        quote_spanned! {ty.span()=>
-            const _: fn() = || {
-                ::posh::static_assertions::assert_impl_all!(#ty: ::posh::FuncArg);
-            };
-        }
-    });
-
     let output_req_check = quote_spanned! {output_ty.span()=>
         const _: fn() = || {
             ::posh::static_assertions::assert_impl_all!(#output_ty: ::posh::Value);
@@ -135,8 +126,6 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
     };
 
     Ok(TokenStream2::from_iter(
-        input_req_checks
-            .chain(iter::once(output_req_check))
-            .chain(iter::once(item.into_token_stream())),
+        iter::once(output_req_check).chain(iter::once(item.into_token_stream())),
     ))
 }
