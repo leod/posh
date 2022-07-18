@@ -1,6 +1,8 @@
+use std::iter;
+
 use proc_macro2::TokenStream as TokenStream2;
-use quote::{quote, ToTokens};
-use syn::{parse_quote, Error, FnArg, ItemFn, Pat, Result};
+use quote::{quote, quote_spanned, ToTokens};
+use syn::{parse_quote, spanned::Spanned, Error, FnArg, ItemFn, Pat, Result, ReturnType};
 
 pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
     let mut input_idents = Vec::new();
@@ -20,6 +22,8 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                     ));
                 }
             }
+        } else {
+            // FIXME: What about receivers?
         }
     }
 
@@ -30,14 +34,6 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
 
     item.block = parse_quote! {
         {
-            const _: fn() = || {
-                use ::posh::static_assertions as sa;
-
-                #(
-                    sa::assert_impl_all!(#input_tys: ::posh::FuncArg);
-                )*
-            };
-
             let #args_ident = vec![
                 #(
                     ::posh::MapToExpr::expr(&#input_idents).clone()
@@ -61,12 +57,39 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                         }
                     ),*
                 ],
-                #func_body
-                ,
+                #func_body,
                 #args_ident,
             )
         }
     };
 
-    Ok(item.into_token_stream())
+    let arg_req_checks = input_tys.iter().map(|ty| {
+        quote_spanned! {ty.span()=>
+            const _: fn() = || {
+                ::posh::static_assertions::assert_impl_all!(#ty: ::posh::FuncArg);
+            };
+        }
+    });
+
+    let return_ty = match item.sig.output.clone() {
+        ReturnType::Default => {
+            return Err(Error::new_spanned(
+                &item.sig,
+                "posh::def: Function must return a value",
+            ));
+        }
+        ReturnType::Type(_, ty) => ty.clone(),
+    };
+
+    let result_req_check = quote_spanned! {return_ty.span()=>
+        const _: fn() = || {
+            ::posh::static_assertions::assert_impl_all!(#return_ty: ::posh::Value);
+        };
+    };
+
+    Ok(TokenStream2::from_iter(
+        arg_req_checks
+            .chain(iter::once(result_req_check))
+            .chain(iter::once(item.into_token_stream())),
+    ))
 }
