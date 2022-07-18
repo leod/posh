@@ -20,16 +20,16 @@ pub trait ScalarType: Copy + Into<Literal> + IntoRep<Rep = Scalar<Self>> {
 #[sealed]
 pub trait NumericType: ScalarType {}
 
-impl<T: ScalarType> Expose for Scalar<T> {
-    type Rep = Self;
-}
-
 /// Representative for scalars.
 #[must_use]
 #[derive(Debug, Copy, Clone)]
 pub struct Scalar<T> {
     _phantom: PhantomData<T>,
     trace: Trace,
+}
+
+impl<T: ScalarType> Expose for Scalar<T> {
+    type Rep = Self;
 }
 
 impl<T: ScalarType> Representative for Scalar<T> {}
@@ -161,6 +161,12 @@ macro_rules! impl_scalar {
         impl IntoRep for $ty {
             fn into_rep(self) -> Self::Rep {
                 Scalar::new(self)
+            }
+        }
+
+        impl From<$ty> for Scalar<$ty> {
+            fn from(x: $ty) -> Self {
+                x.into_rep()
             }
         }
     };
