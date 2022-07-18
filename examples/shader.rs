@@ -34,20 +34,20 @@ struct Instance {
 
 #[derive(Expose)]
 #[expose(Interpolants)]
-struct Interpolants {
+struct Interps {
     color: [f32; 3],
     normal: [f32; 3],
 }
 
 #[derive(Expose)]
 #[expose(Fragment)]
-struct Fragment {
+struct Frag {
     color: [f32; 3],
     normal: [f32; 3],
 }
 
-fn vertex_stage(res: Rep<Resources>, arg: VArg<Vertex>) -> VOut<Interpolants> {
-    let interps = Rep::<Interpolants> {
+fn vertex_stage(res: Rep<Resources>, arg: VArg<Vertex>) -> VOut<Interps> {
+    let interps = Rep::<Interps> {
         color: posh::vec3(255.0, 0.0, 0.0),
         normal: res.two.model_to_view * arg.attrs.normal,
     };
@@ -56,10 +56,10 @@ fn vertex_stage(res: Rep<Resources>, arg: VArg<Vertex>) -> VOut<Interpolants> {
     VOut { interps, position }
 }
 
-fn vertex_stage2(res: Rep<Resources>, arg: VArg<(Vertex, Instance)>) -> VOut<Interpolants> {
+fn vertex_stage2(res: Rep<Resources>, arg: VArg<(Vertex, Instance)>) -> VOut<Interps> {
     let (vertex, instance) = arg.attrs;
 
-    let interps = Rep::<Interpolants> {
+    let interps = Rep::<Interps> {
         color: instance.color,
         normal: res.one.model_to_view * vertex.normal,
     };
@@ -68,8 +68,8 @@ fn vertex_stage2(res: Rep<Resources>, arg: VArg<(Vertex, Instance)>) -> VOut<Int
     VOut { interps, position }
 }
 
-fn fragment_stage(_: Rep<Resources>, arg: FArg<Interpolants>) -> FOut<Fragment> {
-    let frag = posh::var(Rep::<Fragment> {
+fn fragment_stage(_: Rep<Resources>, arg: FArg<Interps>) -> FOut<Frag> {
+    let frag = posh::var(Rep::<Frag> {
         color: arg.interps.color,
         normal: arg.interps.normal,
     });
@@ -78,11 +78,11 @@ fn fragment_stage(_: Rep<Resources>, arg: FArg<Interpolants>) -> FOut<Fragment> 
 }
 
 struct MyShader {
-    shader: Shader<Resources, Vertex, Fragment>,
+    shader: Shader<Resources, Vertex, Frag>,
 }
 
 struct MyShader2 {
-    shader: Shader<Resources, (Vertex, Instance), Fragment>,
+    shader: Shader<Resources, (Vertex, Instance), Frag>,
 }
 
 fn main() {
