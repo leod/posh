@@ -2,7 +2,7 @@ use sealed::sealed;
 
 use crate::{Representative, Value};
 
-/// A representative of a resource.
+/// A representative of a resource that can be bound to shaders.
 pub trait Resource: Representative {
     #[doc(hidden)]
     fn stage_arg() -> Self;
@@ -11,7 +11,7 @@ pub trait Resource: Representative {
 /// A representative of a uniform block.
 pub trait UniformBlock: Resource + Value {}
 
-/// A representative of a collection of resources.
+/// A representative of a collection of resources that can be bound to shaders.
 pub trait Resources {
     #[doc(hidden)]
     fn stage_arg() -> Self;
@@ -26,9 +26,9 @@ where
     }
 }
 
-/// A field which can be stored in uniform blocks.
+/// A representative that can be stored in a [`UniformBlock`].
 #[sealed]
-pub trait UniformBlockField {}
+pub trait UniformBlockField: Value {}
 
 // FIXME: Check for which types we should implement `UniformBlockField`.
 impl_trait_for_built_in_types!(UniformBlockField);

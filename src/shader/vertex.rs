@@ -2,9 +2,9 @@ use sealed::sealed;
 
 use crate::{expose::NumericType, Scalar, Value, Vec2, Vec3, Vec4};
 
-/// A value that can be stored in a vertex.
+/// A representative that can be stored in a [`Vertex`].
 #[sealed]
-pub trait VertexField {}
+pub trait VertexField: Value {}
 
 #[sealed]
 impl<T: NumericType> VertexField for Scalar<T> {}
@@ -23,17 +23,17 @@ impl<T: NumericType> VertexField for Vec4<T> {}
 /// A representative of a vertex.
 pub trait Vertex: Value {}
 
-/// A representative of vertex stage input attributes.
+/// A representative of vertex stage input.
 pub trait Attributes: Value {}
 
 impl<V: Vertex> Attributes for V {}
 
 impl<V1: Vertex, V2: Vertex> Attributes for (V1, V2) {}
 
-/// A representative of fragment stage input.
+/// A representative of vertex stage output and fragment stage input.
 pub trait Interpolants: Value {}
 
-/// A value that can be given as a fragment stage input field.
+/// A representative that can be stored in [`Interpolants`].
 #[sealed]
 pub trait InterpolantsField {}
 
@@ -58,9 +58,9 @@ impl<V: Interpolants> InterpolantsField for V {}
 /// A representative of fragment stage output.
 pub trait Fragment: Value {}
 
-/// A value that can be given as a fragment stage output field.
+/// A representative that can be stored in a [`Fragment`].
 #[sealed]
-pub trait FragmentField {}
+pub trait FragmentField: Value {}
 
 #[sealed]
 impl<T: NumericType> FragmentField for Scalar<T> {}

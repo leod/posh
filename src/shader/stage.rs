@@ -2,7 +2,7 @@ use crate::{lang::Ident, Expose, FuncArg, Rep, Vec3, Vec4};
 
 use super::{Attributes, Fragment, Interpolants};
 
-/// Vertex stage input.
+/// Argument passed to vertex stages.
 #[derive(Clone, Copy)]
 pub struct VertArg<V>
 where
@@ -14,7 +14,7 @@ where
     pub instance_id: Rep<i32>,
 }
 
-/// Vertex stage output.
+/// Output produced by vertex stages.
 pub struct VertOut<W>
 where
     W: Expose,
@@ -24,7 +24,7 @@ where
     pub position: Vec3<f32>,
 }
 
-/// Fragment stage input.
+/// Argument passed to fragment stages.
 pub struct FragArg<W>
 where
     W: Expose,
@@ -34,7 +34,7 @@ where
     pub frag_coord: Vec4<f32>,
 }
 
-/// Fragment stage output.
+/// Output produced by fragment stages.
 pub struct FragOut<F>
 where
     F: Expose,
