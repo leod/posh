@@ -12,14 +12,11 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                 Pat::Ident(ident) => {
                     input_idents.push(ident.ident.clone());
                     input_tys.push(input.ty.clone());
-
-                    let input_ty = &input.ty;
-                    input.ty = parse_quote! { impl ::posh::IntoRep<Rep = #input_ty> };
                 }
                 _ => {
                     return Err(Error::new_spanned(
                         &input.pat,
-                        "posh: Only identifiers are allowed as function argument patterns",
+                        "posh::def: Only identifiers are allowed as function argument patterns",
                     ));
                 }
             }
@@ -40,10 +37,6 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                     sa::assert_impl_all!(#input_tys: ::posh::FuncArg);
                 )*
             };
-
-            #(
-                let #input_idents = ::posh::IntoRep::into_rep(#input_idents);
-            )*
 
             let #args_ident = vec![
                 #(
@@ -68,10 +61,8 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                         }
                     ),*
                 ],
-                {
-                    //use ::posh::prelude::*;
-                    ::posh::IntoRep::into_rep(#func_body)
-                },
+                #func_body
+                ,
                 #args_ident,
             )
         }

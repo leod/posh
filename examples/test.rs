@@ -15,8 +15,8 @@ fn bar(x: Rep<f32>) -> Rep<f32> {
 
 #[posh::def]
 fn texture_thing(sampler: posh::Sampler2) -> posh::Vec4<f32> {
-    let c = posh::var(sampler.load(vec2(1.0, bar(3.0))));
-    sampler.load(vec2(2.0 * c.y, foo(1.0, c.z)).normalize() / 5.0)
+    let c = posh::var(sampler.load(vec2(1.0, bar(3.0.into()))));
+    sampler.load(vec2(2.0 * c.y, foo(1.0.into(), 2.0.into())).normalize() / 5.0)
 }
 
 fn main() {
