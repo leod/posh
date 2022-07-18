@@ -225,7 +225,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             impl #impl_generics ::posh::shader::Resource for #posh_name #ty_generics #where_clause {
                 fn stage_arg() -> ::posh::Rep<Self> {
                     // FIXME
-                    <Self as ::posh::MapToExpr>::from_ident(::posh::lang::Ident::new("input"))
+                    <Self as ::posh::FuncArg>::from_ident(::posh::lang::Ident::new("input"))
                 }
             }
 
@@ -263,7 +263,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
 
     let impl_value = rep_traits.get("Value").map(|_| {
         quote! {
-            impl #impl_generics ::posh::MapToExpr for #posh_name #ty_generics #where_clause {
+            impl #impl_generics ::posh::FuncArg for #posh_name #ty_generics #where_clause {
                 fn ty() -> ::posh::lang::Ty {
                     let name = #name_string.to_string();
                     let uuid = ::std::str::FromStr::from_str(#uuid_string).unwrap();
@@ -276,7 +276,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                         #(
                             (
                                 #field_strings.to_string(),
-                                <::posh::Rep<#field_tys> as ::posh::MapToExpr>::ty(),
+                                <::posh::Rep<#field_tys> as ::posh::FuncArg>::ty(),
                             )
                         ),*
                     ];
@@ -289,7 +289,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                 }
 
                 fn expr(&self) -> ::posh::lang::Expr {
-                    let ty = match <Self as ::posh::MapToExpr>::ty() {
+                    let ty = match <Self as ::posh::FuncArg>::ty() {
                         ::posh::lang::Ty::Struct(ty) => ty,
                         _ => unreachable!(),
                     };
@@ -297,7 +297,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                     let func = ::posh::lang::Func::Struct(struct_func);
 
                     let args = vec![
-                        #(::posh::MapToExpr::expr(&self.#field_idents)),*
+                        #(::posh::FuncArg::expr(&self.#field_idents)),*
                     ];
 
                     if let Some(common_base) = ::posh::expose::common_field_base(&args) {

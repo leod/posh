@@ -1,8 +1,6 @@
-use sealed::sealed;
-
 use crate::lang::{BuiltInTy, Expr, Ident, Ty};
 
-use super::{built_in2, Expose, MapToExpr, Representative, Trace, Vec2, Vec4};
+use super::{built_in2, Expose, FuncArg, Representative, Trace, Vec2, Vec4};
 
 /// Representative for samplers.
 #[derive(Debug, Copy, Clone)]
@@ -14,7 +12,7 @@ impl Expose for Sampler2 {
 
 impl Representative for Sampler2 {}
 
-impl MapToExpr for Sampler2 {
+impl FuncArg for Sampler2 {
     fn from_ident(ident: Ident) -> Self {
         Sampler2(Trace::from_ident::<Self>(ident))
     }

@@ -58,7 +58,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
             parse_quote_spanned! {ty.span()=>
                 ::posh::lang::FuncParam {
                     ident: #param_idents_var[#idx].clone(),
-                    ty: <#ty as ::posh::MapToExpr>::ty(),
+                    ty: <#ty as ::posh::FuncArg>::ty(),
                 }
             }
         })
@@ -70,7 +70,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
         .enumerate()
         .map(|(idx, (ty, ident))| {
             parse_quote_spanned! {ty.span()=>
-                let #ident = <#ty as ::posh::MapToExpr>::from_ident(
+                let #ident = <#ty as ::posh::FuncArg>::from_ident(
                     #param_idents_var[#idx].clone(),
                 );
             }
@@ -79,7 +79,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
 
     let output_block: Block = parse_quote_spanned! {output_ty.span()=>
         {
-            <#output_ty as ::posh::MapToExpr>::expr(&#func_body)
+            <#output_ty as ::posh::FuncArg>::expr(&#func_body)
         }
     };
 
@@ -88,7 +88,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
         .zip(&input_idents)
         .map(|(ty, ident)| {
             parse_quote_spanned! {ty.span()=>
-                <#ty as ::posh::MapToExpr>::expr(&#ident)
+                <#ty as ::posh::FuncArg>::expr(&#ident)
             }
         })
         .collect();

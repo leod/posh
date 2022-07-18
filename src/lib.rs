@@ -10,7 +10,7 @@ pub use static_assertions;
 pub use uuid;
 
 pub use expose::{
-    var, vec2, vec3, vec4, BuiltInValue, Expose, GenValue, IntoRep, MapToExpr, Rep, Representative,
+    var, vec2, vec3, vec4, BuiltInValue, Expose, FuncArg, GenValue, IntoRep, Rep, Representative,
     Sampler2, Scalar, Value, Vec2, Vec3, Vec4,
 };
 

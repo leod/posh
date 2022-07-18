@@ -3,8 +3,8 @@ use std::ops::{Add, Div, Mul, Sub};
 use crate::lang::{BinaryOp, BuiltInTy, Expr, Ident, Ty};
 
 use super::{
-    binary, built_in2, built_in3, built_in4, field, scalar::NumericType, Expose, IntoRep,
-    MapToExpr, Representative, Scalar, ScalarType, Trace, Value,
+    binary, built_in2, built_in3, built_in4, field, scalar::NumericType, Expose, FuncArg, IntoRep,
+    Representative, Scalar, ScalarType, Trace, Value,
 };
 
 /// Representative for two-dimensional vectors.
@@ -39,7 +39,7 @@ pub struct Vec4<T> {
 
 impl<T: ScalarType> Representative for Vec2<T> {}
 
-impl<T: ScalarType> MapToExpr for Vec2<T> {
+impl<T: ScalarType> FuncArg for Vec2<T> {
     fn ty() -> Ty {
         Ty::BuiltIn(BuiltInTy::Vec2(T::scalar_ty()))
     }
@@ -55,7 +55,7 @@ impl<T: ScalarType> MapToExpr for Vec2<T> {
 
 impl<T: ScalarType> Representative for Vec3<T> {}
 
-impl<T: ScalarType> MapToExpr for Vec3<T> {
+impl<T: ScalarType> FuncArg for Vec3<T> {
     fn ty() -> Ty {
         Ty::BuiltIn(BuiltInTy::Vec3(T::scalar_ty()))
     }
@@ -71,7 +71,7 @@ impl<T: ScalarType> MapToExpr for Vec3<T> {
 
 impl<T: ScalarType> Representative for Vec4<T> {}
 
-impl<T: ScalarType> MapToExpr for Vec4<T> {
+impl<T: ScalarType> FuncArg for Vec4<T> {
     fn ty() -> Ty {
         Ty::BuiltIn(BuiltInTy::Vec4(T::scalar_ty()))
     }
@@ -87,7 +87,7 @@ impl<T: ScalarType> MapToExpr for Vec4<T> {
 
 impl<T: ScalarType> Value for Vec2<T> {
     fn from_trace(trace: Trace) -> Self {
-        assert!(trace.expr().ty() == <Self::Rep as MapToExpr>::ty());
+        assert!(trace.expr().ty() == <Self::Rep as FuncArg>::ty());
 
         Self {
             trace,
@@ -99,7 +99,7 @@ impl<T: ScalarType> Value for Vec2<T> {
 
 impl<T: ScalarType> Value for Vec3<T> {
     fn from_trace(trace: Trace) -> Self {
-        assert!(trace.expr().ty() == <Self::Rep as MapToExpr>::ty());
+        assert!(trace.expr().ty() == <Self::Rep as FuncArg>::ty());
 
         Self {
             trace,
@@ -112,7 +112,7 @@ impl<T: ScalarType> Value for Vec3<T> {
 
 impl<T: ScalarType> Value for Vec4<T> {
     fn from_trace(trace: Trace) -> Self {
-        assert!(trace.expr().ty() == <Self::Rep as MapToExpr>::ty());
+        assert!(trace.expr().ty() == <Self::Rep as FuncArg>::ty());
 
         Self {
             trace,

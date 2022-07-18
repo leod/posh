@@ -1,4 +1,4 @@
-use super::{Expose, MapToExpr, Rep, Representative, Value};
+use super::{Expose, FuncArg, Rep, Representative, Value};
 
 impl<U, V> Expose for (U, V)
 where
@@ -15,7 +15,7 @@ where
 {
 }
 
-impl<U, V> MapToExpr for (U, V)
+impl<U, V> FuncArg for (U, V)
 where
     U: Value,
     V: Value,

@@ -10,7 +10,7 @@ use crate::lang::{
     BinaryOp, BuiltInTy, Expr, Ident, Literal, LiteralExpr, ScalarTy, TernaryExpr, Ty,
 };
 
-use super::{binary, Expose, IntoRep, MapToExpr, Representative, Trace, Value};
+use super::{binary, Expose, FuncArg, IntoRep, Representative, Trace, Value};
 
 #[sealed]
 pub trait ScalarType: Copy + Into<Literal> + IntoRep<Rep = Scalar<Self>> {
@@ -34,7 +34,7 @@ impl<T: ScalarType> Expose for Scalar<T> {
 
 impl<T: ScalarType> Representative for Scalar<T> {}
 
-impl<T: ScalarType> MapToExpr for Scalar<T> {
+impl<T: ScalarType> FuncArg for Scalar<T> {
     fn ty() -> Ty {
         Ty::BuiltIn(BuiltInTy::Scalar(T::scalar_ty()))
     }
@@ -50,7 +50,7 @@ impl<T: ScalarType> MapToExpr for Scalar<T> {
 
 impl<T: ScalarType> Value for Scalar<T> {
     fn from_trace(trace: Trace) -> Self {
-        assert!(trace.expr().ty() == <Self::Rep as MapToExpr>::ty());
+        assert!(trace.expr().ty() == <Self::Rep as FuncArg>::ty());
 
         Scalar {
             _phantom: PhantomData,

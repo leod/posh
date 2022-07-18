@@ -11,7 +11,7 @@ pub use vertex::{
     Attributes, Fragment, FragmentField, Interpolants, InterpolantsField, Vertex, VertexField,
 };
 
-use crate::{expose::Expose, lang::Expr, MapToExpr, Rep};
+use crate::{expose::Expose, lang::Expr, FuncArg, Rep};
 
 /// Description of a shader.
 pub struct Shader<P, V, R> {

@@ -47,8 +47,14 @@ pub trait IntoRep: Expose {
 /// An object which is accessible in Posh.
 pub trait Representative: Copy + Expose<Rep = Self> {}
 
-/// A representative which has a [`Ty`] in Posh and can be mapped to an [`Expr`].
-pub trait MapToExpr: Representative {
+/// A representative which can be passed to user-defined Posh functions.
+///
+/// For more information on function definitions in Posh, see [`def`](attr.def.html).
+///
+/// Almost all implementors of `FuncArg` also implement the subtrait [`Value`]. Opaque types are an
+/// exception to this. For example, the opaque type [`Sampler2`] can be passed to functions in Posh,
+/// but it can *not* be stored in variables in Posh.
+pub trait FuncArg: Representative {
     fn ty() -> Ty;
     fn expr(&self) -> Expr;
 
@@ -57,8 +63,8 @@ pub trait MapToExpr: Representative {
     fn from_ident(ident: Ident) -> Self;
 }
 
-/// A representative which can be freely used as a value in Posh.
-pub trait Value: MapToExpr {
+/// A representative which can be stored in variables in Posh.
+pub trait Value: FuncArg {
     #[doc(hidden)]
     fn from_trace(trace: Trace) -> Self;
 

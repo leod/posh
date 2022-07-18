@@ -2,7 +2,7 @@ use crate::lang::{Expr, Ident, VarExpr};
 
 use super::{
     expr_reg::{self, ExprId},
-    MapToExpr,
+    FuncArg,
 };
 
 #[derive(Debug, Copy, Clone)]
@@ -17,10 +17,10 @@ impl Trace {
         }
     }
 
-    pub fn from_ident<R: MapToExpr>(ident: Ident) -> Self {
+    pub fn from_ident<R: FuncArg>(ident: Ident) -> Self {
         Self::new(Expr::Var(VarExpr {
             ident,
-            ty: <R::Rep as MapToExpr>::ty(),
+            ty: <R::Rep as FuncArg>::ty(),
             init: None,
         }))
     }

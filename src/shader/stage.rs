@@ -1,4 +1,4 @@
-use crate::{lang::Ident, Expose, MapToExpr, Rep, Vec3, Vec4};
+use crate::{lang::Ident, Expose, FuncArg, Rep, Vec3, Vec4};
 
 use super::{Attributes, Fragment, Interpolants};
 
@@ -44,7 +44,7 @@ where
     pub frag_depth: Option<Rep<f32>>,
 }
 
-fn builtin_var<V: MapToExpr>(name: &'static str) -> V {
+fn builtin_var<V: FuncArg>(name: &'static str) -> V {
     V::from_ident(Ident::new(name))
 }
 

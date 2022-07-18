@@ -1,5 +1,5 @@
 use nalgebra::Vector3;
-use posh::{lang::Ident, Expose, IntoRep, MapToExpr, Rep};
+use posh::{lang::Ident, Expose, FuncArg, IntoRep, Rep};
 
 #[derive(Expose)]
 pub struct Helper {
