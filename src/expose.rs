@@ -24,7 +24,17 @@ pub use vec::{vec2, vec3, vec4, Vec2, Vec3, Vec4};
 pub(crate) use primitives::{binary, built_in1, built_in2, built_in3, built_in4};
 pub(crate) use scalar::NumericType;
 
-/// Exposes a Rust type to Posh through a representative type.
+/// Exposes a type to Posh through a representative.
+///
+/// This is the door into the Posh universe. Shaders written in Posh receive inputs as
+/// representatives, perform calculations through representatives, and, finally, provide outputs as
+/// representatives. User-defined types need to implement `Expose` in order to become accessible in
+/// Posh through a representative.
+///
+/// Internally, representatives track expression trees, making it possible to transpile Posh shaders
+/// to other shader languages.
+///
+/// The recommended way to refer to representatives is [`Rep<T>`].
 pub trait Expose {
     /// The type that represents `Self` in Posh.
     type Rep: Representative;
@@ -32,11 +42,14 @@ pub trait Expose {
 
 /// Maps a type implementing [`Expose`] to its representative in Posh.
 ///
+/// This is the recommended way to refer to Posh's representatives.
+///
 /// # Examples
 /// - `Rep<f32>` is [`Scalar<f32>`]
 /// - `Rep<i32>` is [`Scalar<i32>`]
 /// - `Rep<bool>` is [`Scalar<bool>`]
 /// - `Rep<[f32; 3]>` is [`Vec3<f32>`]
+/// - `Rep<nalgebra::Vector3<f32>>` is [`Vec3<f32>`]
 pub type Rep<T> = <T as Expose>::Rep;
 
 /// A value-to-value conversion to a representative in Posh.
@@ -45,15 +58,21 @@ pub trait IntoRep: Expose {
 }
 
 /// An object which is accessible in Posh.
+///
+/// This is the supertrait for representatives of types in Posh. Many representatives additionally
+/// implement the subtraits [`FuncArg`] and [`Value`], allowing them to be passed to user-defined
+/// Posh functions and to be stored in variables in Posh respectively.
+///
+/// The recommended way to refer to representatives is [`Rep<T>`].
 pub trait Representative: Copy + Expose<Rep = Self> {}
 
 /// A representative which can be passed to user-defined Posh functions.
 ///
-/// For more information on function definitions in Posh, see [`def`](attr.def.html).
+/// Implementors of `FuncArg` typically also implement the subtrait [`Value`]. Types which implement
+/// `FuncArg` but not `Value` are called *opaque*. Objects of opaque types are not
+/// user-constructible. An example is [`Sampler2`].
 ///
-/// Almost all implementors of `FuncArg` also implement the subtrait [`Value`]. Opaque types are an
-/// exception to this. For example, the opaque type [`Sampler2`] can be passed to functions in Posh,
-/// but it can *not* be stored in variables in Posh.
+/// For more information on function definitions in Posh, see [`def`](attr.def.html).
 pub trait FuncArg: Representative {
     fn ty() -> Ty;
     fn expr(&self) -> Expr;
