@@ -6,10 +6,8 @@ use super::{
     BinaryOp, BuiltInTy, CallExpr, Expr, Func, ScalarTy, StructTy, Ty, UserDefinedFunc, VarExpr,
 };
 
-pub fn collect_structs(expr: &Expr, structs: &mut BTreeSet<StructTy>) {
-    use Expr::*;
-
-    if let Ty::Struct(ref ty) = expr.ty() {
+pub fn collect_struct_ty(ty: &Ty, structs: &mut BTreeSet<StructTy>) {
+    if let Ty::Struct(ref ty) = ty {
         structs.insert(ty.clone());
 
         for (name, ty) in ty.fields.iter() {
@@ -23,6 +21,12 @@ pub fn collect_structs(expr: &Expr, structs: &mut BTreeSet<StructTy>) {
             );
         }
     }
+}
+
+pub fn collect_structs(expr: &Expr, structs: &mut BTreeSet<StructTy>) {
+    use Expr::*;
+
+    collect_struct_ty(&expr.ty(), structs);
 
     match expr {
         Binary(expr) => {
@@ -42,7 +46,7 @@ pub fn collect_structs(expr: &Expr, structs: &mut BTreeSet<StructTy>) {
         Call(expr) => {
             if let Func::UserDefined(func) = &expr.func {
                 for param in func.params.iter() {
-                    collect_structs(&Expr::Var(param.clone()), structs);
+                    collect_struct_ty(&param.ty, structs);
                 }
                 collect_structs(&*func.result, structs);
             }
@@ -240,7 +244,7 @@ pub fn show_user_defined_funcs(func: &UserDefinedFunc) -> String {
             &mut structs,
         );
     }
-    // TODO: Sort structs by dependencies
+    // TODO: Sort structs by dependencies.
 
     let struct_defs = structs
         .iter()

@@ -2,13 +2,16 @@ use std::iter;
 
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{quote, quote_spanned, ToTokens};
-use syn::{parse_quote, spanned::Spanned, Error, FnArg, ItemFn, Pat, Result, ReturnType};
+use syn::{
+    parse_quote, parse_quote_spanned, spanned::Spanned, Block, Error, Expr, FnArg, Ident, ItemFn,
+    Local, Pat, Result, ReturnType, Signature, Stmt, Type,
+};
 
-pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
+fn inputs(sig: &Signature) -> Result<(Vec<Ident>, Vec<Box<Type>>)> {
     let mut input_idents = Vec::new();
     let mut input_tys = Vec::new();
 
-    for input in item.sig.inputs.iter_mut() {
+    for input in sig.inputs.iter() {
         if let FnArg::Typed(input) = input {
             match &*input.pat {
                 Pat::Ident(ident) => {
@@ -27,51 +30,14 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
         }
     }
 
-    let args_ident = quote! { __posh_func_args };
+    Ok((input_idents, input_tys))
+}
 
-    let func_ident = item.sig.ident.clone();
-    let func_body = item.block.clone();
+pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
+    let (input_idents, input_tys) = inputs(&item.sig)?;
+    let input_idxs: Vec<_> = (0..input_idents.len()).collect();
 
-    item.block = parse_quote! {
-        {
-            let #args_ident = vec![
-                #(
-                    ::posh::MapToExpr::expr(&#input_idents).clone()
-                ),*
-            ];
-
-            #(
-                let #input_idents =
-                    <#input_tys as ::posh::MapToExpr>::from_ident(
-                        ::posh::lang::Ident::new(stringify!(#input_idents)),
-                    );
-            )*
-
-            ::posh::expose::func_def_and_call(
-                stringify!(#func_ident),
-                vec![
-                    #(
-                        match ::posh::MapToExpr::expr(&#input_idents) {
-                            ::posh::lang::Expr::Var(var) => var,
-                            _ => unreachable!(),
-                        }
-                    ),*
-                ],
-                #func_body,
-                #args_ident,
-            )
-        }
-    };
-
-    let arg_req_checks = input_tys.iter().map(|ty| {
-        quote_spanned! {ty.span()=>
-            const _: fn() = || {
-                ::posh::static_assertions::assert_impl_all!(#ty: ::posh::FuncArg);
-            };
-        }
-    });
-
-    let return_ty = match item.sig.output.clone() {
+    let output_ty = match item.sig.output.clone() {
         ReturnType::Default => {
             return Err(Error::new_spanned(
                 &item.sig,
@@ -81,15 +47,96 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
         ReturnType::Type(_, ty) => ty.clone(),
     };
 
-    let result_req_check = quote_spanned! {return_ty.span()=>
+    let func_ident = item.sig.ident.clone();
+    let func_body = item.block.clone();
+
+    let param_idents_var = quote! { _posh_param_idents };
+
+    let param_exprs: Vec<Expr> = input_tys
+        .iter()
+        .enumerate()
+        .map(|(idx, ty)| {
+            parse_quote_spanned! {ty.span()=>
+                ::posh::lang::FuncParam {
+                    ident: #param_idents_var[#idx].clone(),
+                    ty: <#ty as ::posh::MapToExpr>::ty(),
+                }
+            }
+        })
+        .collect();
+
+    let shadow_param_stmts: Vec<Stmt> = input_tys
+        .iter()
+        .zip(&input_idents)
+        .enumerate()
+        .map(|(idx, (ty, ident))| {
+            parse_quote_spanned! {ty.span()=>
+                let #ident = <#ty as ::posh::MapToExpr>::from_ident(
+                    #param_idents_var[#idx].clone(),
+                );
+            }
+        })
+        .collect();
+
+    let output_block: Block = parse_quote_spanned! {output_ty.span()=>
+        {
+            <#output_ty as ::posh::MapToExpr>::expr(&#func_body)
+        }
+    };
+
+    let arg_exprs: Vec<Expr> = input_tys
+        .iter()
+        .zip(&input_idents)
+        .map(|(ty, ident)| {
+            parse_quote_spanned! {ty.span()=>
+                <#ty as ::posh::MapToExpr>::expr(&#ident)
+            }
+        })
+        .collect();
+
+    item.block = parse_quote! {
+        {
+            // Generate Posh identifiers for the function arguments.
+            let #param_idents_var = vec![
+                #(::posh::lang::Ident::new(stringify!(#input_idents))),*
+            ];
+
+            // Return a Posh expression which defines *and* calls the function.
+            ::posh::expose::func_def_and_call(
+                ::posh::lang::UserDefinedFunc {
+                    ident: ::posh::lang::Ident::new(stringify!(#func_ident)),
+                    params: vec![#(#param_exprs),*],
+                    result: ::std::rc::Rc::new({
+                        // Shadow the Rust function arguments with Posh expressions so that
+                        // variables in `func_body` refer to the Posh identifiers generated above.
+                        #(#shadow_param_stmts)*
+
+                        #[allow(unused_braces)]
+                        #output_block
+                    })
+                },
+                vec![#(#arg_exprs),*],
+            )
+        }
+    };
+
+    let input_req_checks = input_tys.iter().map(|ty| {
+        quote_spanned! {ty.span()=>
+            const _: fn() = || {
+                ::posh::static_assertions::assert_impl_all!(#ty: ::posh::FuncArg);
+            };
+        }
+    });
+
+    let output_req_check = quote_spanned! {output_ty.span()=>
         const _: fn() = || {
-            ::posh::static_assertions::assert_impl_all!(#return_ty: ::posh::Value);
+            ::posh::static_assertions::assert_impl_all!(#output_ty: ::posh::Value);
         };
     };
 
     Ok(TokenStream2::from_iter(
-        arg_req_checks
-            .chain(iter::once(result_req_check))
+        input_req_checks
+            .chain(iter::once(output_req_check))
             .chain(iter::once(item.into_token_stream())),
     ))
 }

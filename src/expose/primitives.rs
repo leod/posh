@@ -1,8 +1,8 @@
 use std::{collections::BTreeSet, rc::Rc};
 
 use crate::lang::{
-    BinaryExpr, BinaryOp, BuiltInFunc, CallExpr, Expr, FieldExpr, Func, Ident, Ty, UserDefinedFunc,
-    VarExpr,
+    BinaryExpr, BinaryOp, BuiltInFunc, CallExpr, Expr, FieldExpr, Func, FuncParam, Ident, Ty,
+    UserDefinedFunc, VarExpr,
 };
 
 use super::{IntoRep, MapToExpr, Trace, Value};
@@ -70,19 +70,10 @@ pub fn field<R: Value>(base: Trace, member: &str) -> R {
 }
 
 #[doc(hidden)]
-pub fn func_def_and_call<R: Value>(
-    name: impl Into<String>,
-    params: Vec<VarExpr>,
-    result: R,
-    args: Vec<Expr>,
-) -> R {
-    assert!(params.len() == args.len());
+pub fn func_def_and_call<R: Value>(def: UserDefinedFunc, args: Vec<Expr>) -> R {
+    assert!(def.params.len() == args.len());
 
-    let func = Func::UserDefined(UserDefinedFunc {
-        ident: Ident::new(name),
-        params,
-        result: Rc::new(result.expr()),
-    });
+    let func = Func::UserDefined(def);
     let expr = Expr::Call(CallExpr { func, args });
 
     R::from_expr(expr)

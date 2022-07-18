@@ -55,6 +55,12 @@ impl ToString for Ident {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct FuncParam {
+    pub ident: Ident,
+    pub ty: Ty,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Func {
     BuiltIn(BuiltInFunc),
     UserDefined(UserDefinedFunc),
@@ -70,7 +76,7 @@ pub struct BuiltInFunc {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct UserDefinedFunc {
     pub ident: Ident,
-    pub params: Vec<VarExpr>,
+    pub params: Vec<FuncParam>,
     pub result: Rc<Expr>,
 }
 
