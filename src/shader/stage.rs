@@ -4,7 +4,7 @@ use super::{Attributes, Fragment, Interpolants};
 
 /// Argument passed to vertex stages.
 #[derive(Clone, Copy)]
-pub struct VertArg<V>
+pub struct VArg<V>
 where
     V: Expose,
     V::Rep: Attributes,
@@ -15,7 +15,7 @@ where
 }
 
 /// Output produced by vertex stages.
-pub struct VertOut<W>
+pub struct VOut<W>
 where
     W: Expose,
     W::Rep: Interpolants,
@@ -25,7 +25,7 @@ where
 }
 
 /// Argument passed to fragment stages.
-pub struct FragArg<W>
+pub struct FArg<W>
 where
     W: Expose,
     W::Rep: Interpolants,
@@ -35,7 +35,7 @@ where
 }
 
 /// Output produced by fragment stages.
-pub struct FragOut<F>
+pub struct FOut<F>
 where
     F: Expose,
     F::Rep: Fragment,
@@ -48,7 +48,7 @@ fn builtin_var<V: FuncArg>(name: &'static str) -> V {
     V::from_ident(Ident::new(name))
 }
 
-impl<V> VertArg<V>
+impl<V> VArg<V>
 where
     V: Expose,
     V::Rep: Attributes,
@@ -67,7 +67,7 @@ where
     }
 }
 
-impl<W> FragArg<W>
+impl<W> FArg<W>
 where
     W: Expose,
     W::Rep: Interpolants,
@@ -85,7 +85,7 @@ where
     }
 }
 
-impl<F> FragOut<F>
+impl<F> FOut<F>
 where
     F: Expose,
     F::Rep: Fragment,

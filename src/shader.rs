@@ -6,7 +6,7 @@ mod vertex;
 use std::marker::PhantomData;
 
 pub use resource::{Resource, Resources, UniformBlock, UniformBlockField};
-pub use stage::{FragArg, FragOut, VertArg, VertOut};
+pub use stage::{FArg, FOut, VArg, VOut};
 pub use vertex::{
     Attributes, Fragment, FragmentField, Interpolants, InterpolantsField, Vertex, VertexField,
 };
@@ -31,7 +31,7 @@ struct ErasedFragStage {
 }
 
 impl ErasedVertStage {
-    fn new<W>(out: VertOut<W>) -> Self
+    fn new<W>(out: VOut<W>) -> Self
     where
         W: Expose,
         W::Rep: Interpolants,
@@ -44,7 +44,7 @@ impl ErasedVertStage {
 }
 
 impl ErasedFragStage {
-    fn new<F>(out: FragOut<F>) -> Self
+    fn new<F>(out: FOut<F>) -> Self
     where
         F: Expose,
         F::Rep: Fragment,
@@ -69,12 +69,12 @@ where
     where
         W: Expose,
         W::Rep: Interpolants,
-        VertStage: FnOnce(Rep<R>, VertArg<V>) -> VertOut<W>,
-        FragStage: FnOnce(Rep<R>, FragArg<W>) -> FragOut<F>,
+        VertStage: FnOnce(Rep<R>, VArg<V>) -> VOut<W>,
+        FragStage: FnOnce(Rep<R>, FArg<W>) -> FOut<F>,
     {
         // FIXME: stage arg handling
-        let vert_out = vert_stage(R::Rep::stage_arg(), VertArg::stage_arg());
-        let frag_out = frag_stage(R::Rep::stage_arg(), FragArg::stage_arg());
+        let vert_out = vert_stage(R::Rep::stage_arg(), VArg::stage_arg());
+        let frag_out = frag_stage(R::Rep::stage_arg(), FArg::stage_arg());
 
         let vert_stage = ErasedVertStage::new(vert_out);
         let frag_stage = ErasedFragStage::new(frag_out);

@@ -1,6 +1,6 @@
 use nalgebra::Vector3;
 use posh::{
-    shader::{FragArg, FragOut, Shader, VertArg, VertOut},
+    shader::{FArg, FOut, Shader, VArg, VOut},
     Expose, Rep, Sampler2,
 };
 
@@ -46,17 +46,17 @@ struct Fragment {
     normal: [f32; 3],
 }
 
-fn vert(res: Rep<Resources>, arg: VertArg<Vertex>) -> VertOut<Interpolants> {
+fn vertex_stage(res: Rep<Resources>, arg: VArg<Vertex>) -> VOut<Interpolants> {
     let interps = Rep::<Interpolants> {
         color: posh::vec3(255.0, 0.0, 0.0),
         normal: res.two.model_to_view * arg.attrs.normal,
     };
     let position = res.one.view_to_clip * res.one.model_to_view * arg.attrs.position;
 
-    VertOut { interps, position }
+    VOut { interps, position }
 }
 
-fn vert2(res: Rep<Resources>, arg: VertArg<(Vertex, Instance)>) -> VertOut<Interpolants> {
+fn vertex_stage2(res: Rep<Resources>, arg: VArg<(Vertex, Instance)>) -> VOut<Interpolants> {
     let (vertex, instance) = arg.attrs;
 
     let interps = Rep::<Interpolants> {
@@ -65,16 +65,16 @@ fn vert2(res: Rep<Resources>, arg: VertArg<(Vertex, Instance)>) -> VertOut<Inter
     };
     let position = res.one.model_to_view * vertex.position;
 
-    VertOut { interps, position }
+    VOut { interps, position }
 }
 
-fn frag(_: Rep<Resources>, arg: FragArg<Interpolants>) -> FragOut<Fragment> {
+fn fragment_stage(_: Rep<Resources>, arg: FArg<Interpolants>) -> FOut<Fragment> {
     let frag = posh::var(Rep::<Fragment> {
         color: arg.interps.color,
         normal: arg.interps.normal,
     });
 
-    FragOut::frag(frag)
+    FOut::frag(frag)
 }
 
 struct MyShader {
@@ -87,12 +87,12 @@ struct MyShader2 {
 
 fn main() {
     let my_shader = MyShader {
-        shader: Shader::new(vert, frag),
+        shader: Shader::new(vertex_stage, fragment_stage),
     };
 
     let my_shader2 = MyShader2 {
-        shader: Shader::new(vert2, frag),
+        shader: Shader::new(vertex_stage2, fragment_stage),
     };
 
-    let shaduer: Shader<Resources, _, _> = Shader::new(vert2, frag);
+    let shaduer: Shader<Resources, _, _> = Shader::new(vertex_stage2, fragment_stage);
 }
