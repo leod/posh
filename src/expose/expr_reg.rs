@@ -2,6 +2,8 @@ use std::{cell::RefCell, collections::BTreeMap, fmt, thread_local};
 
 use crate::lang::Expr;
 
+// The skeletons are buried in a thread local global variable.
+
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ExprId(usize);
 
