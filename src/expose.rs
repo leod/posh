@@ -21,7 +21,7 @@ pub use scalar::{Scalar, ScalarType};
 pub use trace::Trace;
 pub use vec::{vec2, vec3, vec4, Vec2, Vec3, Vec4};
 
-pub(crate) use primitives::{binary, built_in1, built_in2, built_in3, builtin4};
+pub(crate) use primitives::{binary, built_in1, built_in2, built_in3, built_in4};
 pub(crate) use scalar::NumericType;
 
 /// Exposes a Rust type to Posh through a representative type.

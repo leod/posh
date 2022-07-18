@@ -3,8 +3,8 @@ use std::ops::{Add, Div, Mul, Sub};
 use crate::lang::{BinaryOp, BuiltInTy, Expr, Ident, Ty};
 
 use super::{
-    binary, built_in2, built_in3, builtin4, field, scalar::NumericType, Expose, IntoRep, MapToExpr,
-    Representative, Scalar, ScalarType, Trace, Value,
+    binary, built_in2, built_in3, built_in4, field, scalar::NumericType, Expose, IntoRep,
+    MapToExpr, Representative, Scalar, ScalarType, Trace, Value,
 };
 
 /// Representative for two-dimensional vectors.
@@ -274,5 +274,5 @@ pub fn vec4<T: ScalarType>(
     z: impl IntoRep<Rep = Scalar<T>>,
     w: impl IntoRep<Rep = Scalar<T>>,
 ) -> Vec4<T> {
-    builtin4("vec4", x, y, z, w)
+    built_in4("vec4", x, y, z, w)
 }

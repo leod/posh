@@ -169,7 +169,7 @@ where
     R::from_expr(expr)
 }
 
-pub(crate) fn builtin4<U, V, W, X, R>(
+pub(crate) fn built_in4<U, V, W, X, R>(
     name: &str,
     u: impl IntoRep<Rep = U>,
     v: impl IntoRep<Rep = V>,
