@@ -17,12 +17,11 @@ pub use built_in_value::BuiltInValue;
 pub use gen_value::GenValue;
 pub use primitives::{common_field_base, field, func_def_and_call, var};
 pub use sampler::Sampler2;
-pub use scalar::{Scalar, ScalarType};
+pub use scalar::{NumericType, Scalar, ScalarType};
 pub use trace::Trace;
 pub use vec::{vec2, vec3, vec4, Vec2, Vec3, Vec4};
 
 pub(crate) use primitives::{binary, built_in1, built_in2, built_in3, built_in4};
-pub(crate) use scalar::NumericType;
 
 /// Exposes a type to Posh through a representative.
 ///
@@ -91,6 +90,9 @@ pub trait Value: FuncArg {
     fn from_expr(expr: Expr) -> Self {
         Self::from_trace(Trace::new(expr))
     }
+
+    #[doc(hidden)]
+    fn return_type_must_impl_posh_value() {}
 }
 
 impl<V> IntoRep for V

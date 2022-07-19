@@ -1,4 +1,9 @@
-use posh::{lang::Ident, vec2, FuncArg, GenValue, Rep};
+use posh::{lang::Ident, vec2, FuncArg, GenValue, Rep, ScalarType};
+
+#[posh::def]
+fn triplet<T: ScalarType>(t: Rep<T>) -> posh::Vec3<T> {
+    posh::vec3(t, t, t)
+}
 
 #[posh::def]
 fn foo(x: Rep<f32>, y: Rep<f32>) -> Rep<f32> {
@@ -10,7 +15,10 @@ fn foo(x: Rep<f32>, y: Rep<f32>) -> Rep<f32> {
 
 #[posh::def]
 fn bar(x: Rep<f32>) -> Rep<f32> {
-    x.eq(5.0).ternary(x.atan2(2.0), -1.0)
+    let ints = triplet::<u32>(1.into());
+    let floats = triplet(2.0.into());
+
+    floats.x * ints.y.eq(2u32).ternary(-1.0, foo(x, x))
 }
 
 #[posh::def]

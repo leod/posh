@@ -51,6 +51,10 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
 
     let param_idents_var = quote! { _posh_param_idents };
 
+    let return_type_check_stmt: Stmt = parse_quote_spanned! {output_ty.span()=>
+        <#output_ty as ::posh::Value>::return_type_must_impl_posh_value();
+    };
+
     let param_exprs: Vec<Expr> = input_tys
         .iter()
         .enumerate()
@@ -95,6 +99,8 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
 
     item.block = parse_quote! {
         {
+            #return_type_check_stmt
+
             // Generate Posh identifiers for the function arguments.
             let #param_idents_var = vec![
                 #(::posh::lang::Ident::new(stringify!(#input_idents))),*
@@ -119,13 +125,5 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
         }
     };
 
-    let output_req_check = quote_spanned! {output_ty.span()=>
-        const _: fn() = || {
-            ::posh::static_assertions::assert_impl_all!(#output_ty: ::posh::Value);
-        };
-    };
-
-    Ok(TokenStream2::from_iter(
-        iter::once(output_req_check).chain(iter::once(item.into_token_stream())),
-    ))
+    Ok(item.into_token_stream())
 }
