@@ -17,7 +17,7 @@ pub use built_in_value::BuiltInValue;
 pub use gen_value::GenValue;
 pub use primitives::{common_field_base, field, func_def_and_call, var};
 pub use sampler::Sampler2;
-pub use scalar::{NumericType, Scalar, ScalarType};
+pub use scalar::{NumType, Scalar, ScalarType};
 pub use trace::Trace;
 pub use vec::{vec2, vec3, vec4, Vec2, Vec3, Vec4};
 

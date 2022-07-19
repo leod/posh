@@ -12,13 +12,15 @@ use crate::lang::{
 
 use super::{binary, Expose, FuncArg, IntoRep, Representative, Trace, Value};
 
+/// A scalar type.
 #[sealed]
 pub trait ScalarType: Copy + Into<Literal> + IntoRep<Rep = Scalar<Self>> {
     fn scalar_ty() -> ScalarTy;
 }
 
+/// A numerical scalar type.
 #[sealed]
-pub trait NumericType: ScalarType {}
+pub trait NumType: ScalarType {}
 
 /// Representative for scalars.
 #[must_use]
@@ -104,7 +106,7 @@ macro_rules! impl_binary_op {
     ($fn:ident, $op:ident) => {
         impl<T, Rhs> $op<Rhs> for Scalar<T>
         where
-            T: NumericType,
+            T: NumType,
             Rhs: IntoRep<Rep = Scalar<T>>,
         {
             type Output = Self;
@@ -178,10 +180,10 @@ impl_scalar!(u32, U32);
 impl_scalar!(bool, Bool);
 
 #[sealed]
-impl NumericType for f32 {}
+impl NumType for f32 {}
 
 #[sealed]
-impl NumericType for i32 {}
+impl NumType for i32 {}
 
 #[sealed]
-impl NumericType for u32 {}
+impl NumType for u32 {}

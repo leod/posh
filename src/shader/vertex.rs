@@ -1,22 +1,22 @@
 use sealed::sealed;
 
-use crate::{expose::NumericType, Scalar, Value, Vec2, Vec3, Vec4};
+use crate::{expose::NumType, Scalar, Value, Vec2, Vec3, Vec4};
 
 /// A representative that can be stored in a [`Vertex`].
 #[sealed]
 pub trait VertexField: Value {}
 
 #[sealed]
-impl<T: NumericType> VertexField for Scalar<T> {}
+impl<T: NumType> VertexField for Scalar<T> {}
 
 #[sealed]
-impl<T: NumericType> VertexField for Vec2<T> {}
+impl<T: NumType> VertexField for Vec2<T> {}
 
 #[sealed]
-impl<T: NumericType> VertexField for Vec3<T> {}
+impl<T: NumType> VertexField for Vec3<T> {}
 
 #[sealed]
-impl<T: NumericType> VertexField for Vec4<T> {}
+impl<T: NumType> VertexField for Vec4<T> {}
 
 // TODO: VertexFieldValue for f32 matrix types
 
@@ -38,16 +38,16 @@ pub trait Interpolants: Value {}
 pub trait InterpolantsField {}
 
 #[sealed]
-impl<T: NumericType> InterpolantsField for Scalar<T> {}
+impl<T: NumType> InterpolantsField for Scalar<T> {}
 
 #[sealed]
-impl<T: NumericType> InterpolantsField for Vec2<T> {}
+impl<T: NumType> InterpolantsField for Vec2<T> {}
 
 #[sealed]
-impl<T: NumericType> InterpolantsField for Vec3<T> {}
+impl<T: NumType> InterpolantsField for Vec3<T> {}
 
 #[sealed]
-impl<T: NumericType> InterpolantsField for Vec4<T> {}
+impl<T: NumType> InterpolantsField for Vec4<T> {}
 
 // TODO: InterpolantsField for f32 matrix types
 // TODO: InterpolantsField for arrays
@@ -63,13 +63,13 @@ pub trait Fragment: Value {}
 pub trait FragmentField: Value {}
 
 #[sealed]
-impl<T: NumericType> FragmentField for Scalar<T> {}
+impl<T: NumType> FragmentField for Scalar<T> {}
 
 #[sealed]
-impl<T: NumericType> FragmentField for Vec2<T> {}
+impl<T: NumType> FragmentField for Vec2<T> {}
 
 #[sealed]
-impl<T: NumericType> FragmentField for Vec3<T> {}
+impl<T: NumType> FragmentField for Vec3<T> {}
 
 #[sealed]
-impl<T: NumericType> FragmentField for Vec4<T> {}
+impl<T: NumType> FragmentField for Vec4<T> {}

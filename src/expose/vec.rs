@@ -3,7 +3,7 @@ use std::ops::{Add, Div, Mul, Sub};
 use crate::lang::{BinaryOp, BuiltInTy, Expr, Ident, Ty};
 
 use super::{
-    binary, built_in2, built_in3, built_in4, field, scalar::NumericType, Expose, FuncArg, IntoRep,
+    binary, built_in2, built_in3, built_in4, field, scalar::NumType, Expose, FuncArg, IntoRep,
     Representative, Scalar, ScalarType, Trace, Value,
 };
 
@@ -170,7 +170,7 @@ macro_rules! impl_symmetric_binary_op {
     ($ty:ident, $fn:ident, $op:ident) => {
         impl<T> $op<$ty<T>> for $ty<T>
         where
-            T: NumericType,
+            T: NumType,
         {
             type Output = Self;
 
@@ -185,7 +185,7 @@ macro_rules! impl_scalar_binary_op {
     ($ty:ident, $fn:ident, $op:ident) => {
         impl<T, Rhs> $op<Rhs> for $ty<T>
         where
-            T: NumericType,
+            T: NumType,
             Rhs: IntoRep<Rep = Scalar<T>>,
         {
             type Output = Self;
@@ -197,7 +197,7 @@ macro_rules! impl_scalar_binary_op {
 
         impl<T> $op<$ty<T>> for Scalar<T>
         where
-            T: NumericType,
+            T: NumType,
         {
             type Output = $ty<T>;
 
