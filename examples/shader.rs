@@ -12,10 +12,17 @@ struct Transforms {
 }
 
 #[derive(Expose)]
+#[expose(UniformBlock)]
+struct Settings {
+    light: bool,
+}
+
+#[derive(Expose)]
 #[expose(Resources)]
 struct Resources {
     camera: Transforms,
     shadow: Transforms,
+    settings: Settings,
 }
 
 #[derive(Expose)]
@@ -63,7 +70,7 @@ fn vertex_stage(res: Rep<Resources>, arg: VArg<Vertex>) -> VOut<Interps> {
 }
 
 fn vertex_stage_instanced(res: Rep<Resources>, arg: VArg<(Vertex, Instance)>) -> VOut<Interps> {
-    let (vertex, instance) = posh::var(arg.attrs);
+    let (vertex, instance) = arg.attrs;
 
     let interps = Rep::<Interps> {
         color: instance.color,
@@ -74,21 +81,14 @@ fn vertex_stage_instanced(res: Rep<Resources>, arg: VArg<(Vertex, Instance)>) ->
     VOut { interps, pos }
 }
 
-fn fragment_stage(_: Rep<Resources>, arg: FArg<Interps>) -> FOut<Frag> {
+fn fragment_stage(res: Rep<Resources>, arg: FArg<Interps>) -> FOut<Frag> {
+    let color = posh::var(res.settings.light.branch(2.0, 3.0));
     let frag = posh::var(Rep::<Frag> {
-        color: arg.interps.color,
+        color: arg.interps.color * color,
         normal: arg.interps.normal,
     });
 
     FOut::frag(frag)
-}
-
-struct MyShader {
-    shader: Shader<Resources, Vertex, Frag>,
-}
-
-struct MyShader2 {
-    shader: Shader<Resources, (Vertex, Instance), Frag>,
 }
 
 fn main() {

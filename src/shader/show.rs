@@ -56,7 +56,7 @@ fn show_v_stage(res: &str, stage: &ErasedVStage) -> String {
     result += res;
 
     result += "\n\n";
-    result += &show_interface("attribute", stage.attrs.iter().cloned());
+    result += &show_interface("in", stage.attrs.iter().cloned());
 
     result += "\n\n";
     result += &show_interface(
