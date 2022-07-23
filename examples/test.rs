@@ -1,4 +1,7 @@
-use posh::{lang::Ident, vec2, FuncArg, GenValue, Rep, ScalarType};
+use posh::{
+    expose::compile::compile1, lang::defs::Defs, lang::show::show_defs, vec2, GenValue, Rep,
+    ScalarType,
+};
 
 #[posh::def]
 fn triplet<T: ScalarType>(t: Rep<T>) -> posh::Vec3<T> {
@@ -28,12 +31,7 @@ fn texture_thing(sampler: posh::Sampler2) -> posh::Vec4<f32> {
 }
 
 fn main() {
-    let sampler = posh::Sampler2::from_ident(Ident::new("bla")); // hack
-    let result = texture_thing(sampler);
+    let func_def = compile1(texture_thing).unwrap();
 
-    if let posh::lang::Expr::Call(expr) = result.expr() {
-        if let posh::lang::Func::UserDefined(func) = expr.func {
-            println!("{}", posh::lang::show::show_user_defined_funcs(&func));
-        }
-    }
+    println!("{}", show_defs(&Defs::from_func_def(&func_def)));
 }

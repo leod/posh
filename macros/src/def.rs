@@ -106,7 +106,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
 
             // Return a Posh expression which defines *and* calls the function.
             ::posh::expose::func_def_and_call(
-                ::posh::lang::UserDefinedFunc {
+                ::posh::lang::DefFunc {
                     ident: ::posh::lang::Ident::new(stringify!(#func_ident)),
                     params: vec![#(#param_exprs),*],
                     result: ::std::rc::Rc::new({

@@ -1,3 +1,4 @@
+pub mod defs;
 pub mod show;
 
 use std::rc::Rc;
@@ -57,7 +58,7 @@ pub struct FuncParam {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Func {
     BuiltIn(BuiltInFunc),
-    UserDefined(UserDefinedFunc),
+    Def(DefFunc),
     Struct(StructFunc),
 }
 
@@ -68,7 +69,7 @@ pub struct BuiltInFunc {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct UserDefinedFunc {
+pub struct DefFunc {
     pub ident: Ident,
     pub params: Vec<FuncParam>,
     pub result: Rc<Expr>,
@@ -85,7 +86,7 @@ impl Func {
 
         match self {
             BuiltIn(BuiltInFunc { ty, .. }) => ty.clone(),
-            UserDefined(UserDefinedFunc { result, .. }) => result.ty(),
+            Def(DefFunc { result, .. }) => result.ty(),
             Struct(StructFunc { ty }) => Ty::Struct(ty.clone()),
         }
     }
@@ -95,7 +96,7 @@ impl Func {
 
         match self {
             BuiltIn(BuiltInFunc { name, .. }) => name,
-            UserDefined(UserDefinedFunc { ident, .. }) => &ident.name,
+            Def(DefFunc { ident, .. }) => &ident.name,
             Struct(StructFunc { ty, .. }) => &ty.ident.name,
         }
     }
