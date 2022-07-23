@@ -22,14 +22,16 @@ pub fn var<R: Value>(init: R) -> R {
 }
 
 #[doc(hidden)]
-pub fn common_field_base(exprs: &[Expr]) -> Option<Expr> {
+pub fn common_field_base(target_ty: &Ty, exprs: &[Expr]) -> Option<Expr> {
     exprs.first().and_then(|first_expr| {
         if let Expr::Field(first_field_expr) = first_expr {
             let mut fields = BTreeSet::new();
 
             for expr in exprs {
                 if let Expr::Field(field_expr) = expr {
-                    if field_expr.base != first_field_expr.base {
+                    if field_expr.base.ty() != *target_ty
+                        || field_expr.base != first_field_expr.base
+                    {
                         return None;
                     }
 

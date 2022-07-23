@@ -36,7 +36,7 @@ where
     fn expr(&self) -> Expr {
         let args = vec![self.0.expr(), self.1.expr()];
 
-        if let Some(common_base) = common_field_base(&args) {
+        if let Some(common_base) = common_field_base(&Self::ty(), &args) {
             common_base
         } else {
             let ty = match <Self as FuncArg>::ty() {

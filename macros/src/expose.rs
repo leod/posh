@@ -299,7 +299,8 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                         #(::posh::FuncArg::expr(&self.#field_idents)),*
                     ];
 
-                    if let Some(common_base) = ::posh::expose::common_field_base(&args) {
+                    let common_base = ::posh::expose::common_field_base(&Self::ty(), &args);
+                    if let Some(common_base) = common_base {
                         common_base
                     } else {
                         let ty = match <Self as ::posh::FuncArg>::ty() {
