@@ -7,8 +7,8 @@ use syn::{
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
     spanned::Spanned,
-    token, Attribute, Data, DataStruct, DeriveInput, Error, Field, Fields, Ident, Result, Token,
-    Type,
+    token, Attribute, Data, DataStruct, DeriveInput, Error, Field, Fields, Generics, Ident, Result,
+    Token, Type,
 };
 use uuid::Uuid;
 
@@ -67,20 +67,34 @@ impl RepTrait {
         changed
     }
 
-    fn field_req_checks(&self, field_tys: &[&Type]) -> TokenStream2 {
+    fn field_req_checks(
+        &self,
+        rep_name: &Ident,
+        generics: &Generics,
+        field_tys: &[&Type],
+        field_idents: &[&Ident],
+    ) -> TokenStream2 {
         let field_reqs: Vec<_> = self.field_reqs.iter().map(|req| req()).collect();
+        let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
-        TokenStream2::from_iter(field_tys.iter().map(|field_ty| {
-            quote_spanned! {field_ty.span()=>
-                const _: fn() = || {
-                    #(
-                        ::posh::static_assertions::assert_impl_all!(
-                            ::posh::Rep<#field_ty>: #field_reqs
-                        );
-                    )*
-                };
-            }
-        }))
+        TokenStream2::from_iter(field_tys.iter().zip(field_idents).map(
+            |(field_ty, field_ident)| {
+                let method_name = Ident::new(
+                    &format!("{}_must_impl_{}", field_ident, self.name.to_lowercase()),
+                    field_ty.span(),
+                );
+
+                quote_spanned! {field_ty.span() =>
+                    impl #impl_generics #rep_name #ty_generics #where_clause {
+                        fn #method_name() {
+                            #(
+                                <::posh::Rep<#field_ty> as #field_reqs>::must_impl();
+                            )*
+                        }
+                    }
+                }
+            },
+        ))
     }
 }
 
@@ -185,44 +199,44 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
+    let field_vis: Vec<_> = fields.iter().map(|field| &field.vis).collect();
+    let field_tys: Vec<_> = fields.iter().map(|field| &field.ty).collect();
     let field_idents: Vec<_> = fields
         .iter()
         .map(|field| field.ident.as_ref().unwrap())
         .collect();
     let field_strings: Vec<_> = field_idents.iter().map(|ident| ident.to_string()).collect();
-    let field_tys: Vec<_> = fields.iter().map(|field| &field.ty).collect();
-    let field_vis: Vec<_> = fields.iter().map(|field| &field.vis).collect();
 
-    let posh_name = Ident::new(&format!("_{}PoshRep", name), name.span());
+    let rep_name = Ident::new(&format!("_{}PoshRep", name), name.span());
 
-    let posh_struct_def = quote! {
+    let posh_struct_def = quote_spanned! {name.span()=>
         #[must_use]
         #[derive(Debug, Clone, Copy)]
         #[allow(non_camel_case_types)]
-        #vis struct #posh_name #ty_generics #where_clause {
+        #vis struct #rep_name #impl_generics #where_clause {
             #(
                 #field_vis #field_idents: ::posh::Rep<#field_tys>
             ),*
         }
 
         impl #impl_generics ::posh::Expose for #name #ty_generics #where_clause {
-            type Rep = #posh_name #ty_generics;
+            type Rep = #rep_name #ty_generics;
         }
 
-        impl #impl_generics ::posh::Expose for #posh_name #ty_generics #where_clause {
+        impl #impl_generics ::posh::Expose for #rep_name #ty_generics #where_clause {
             type Rep = Self;
         }
 
-        impl #impl_generics ::posh::Representative for #posh_name #ty_generics #where_clause {}
+        impl #impl_generics ::posh::Representative for #rep_name #ty_generics #where_clause {}
     };
 
-    let field_req_checks = rep_traits
-        .values()
-        .map(|rep_trait| rep_trait.field_req_checks(&field_tys));
+    let field_req_checks = rep_traits.values().map(|rep_trait| {
+        rep_trait.field_req_checks(&rep_name, &input.generics, &field_tys, &field_idents)
+    });
 
     let impl_uniform_block = rep_traits.get("UniformBlock").map(|_| {
         quote! {
-            impl #impl_generics ::posh::shader::Resource for #posh_name #ty_generics #where_clause {
+            impl #impl_generics ::posh::shader::Resource for #rep_name #ty_generics #where_clause {
                 fn stage_arg() -> ::posh::Rep<Self> {
                     // FIXME
                     <Self as ::posh::FuncArg>::from_ident(::posh::lang::Ident::new("input"))
@@ -230,7 +244,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             }
 
             impl #impl_generics ::posh::shader::UniformBlock
-                for #posh_name #ty_generics #where_clause
+                for #rep_name #ty_generics #where_clause
             {
             }
         }
@@ -238,7 +252,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
 
     let impl_vertex = rep_traits.get("Vertex").map(|_| {
         quote! {
-            impl #impl_generics ::posh::shader::Vertex for #posh_name #ty_generics #where_clause
+            impl #impl_generics ::posh::shader::Vertex for #rep_name #ty_generics #where_clause
             {
             }
         }
@@ -247,7 +261,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
     let impl_interpolants = rep_traits.get("Interpolants").map(|_| {
         quote! {
             impl #impl_generics ::posh::shader::Interpolants
-                for #posh_name #ty_generics #where_clause
+                for #rep_name #ty_generics #where_clause
             {
             }
         }
@@ -255,7 +269,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
 
     let impl_fragment = rep_traits.get("Fragment").map(|_| {
         quote! {
-            impl #impl_generics ::posh::shader::Fragment for #posh_name #ty_generics #where_clause
+            impl #impl_generics ::posh::shader::Fragment for #rep_name #ty_generics #where_clause
             {
             }
         }
@@ -263,7 +277,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
 
     let impl_value = rep_traits.get("Value").map(|_| {
         quote! {
-            impl #impl_generics ::posh::FuncArg for #posh_name #ty_generics #where_clause {
+            impl #impl_generics ::posh::FuncArg for #rep_name #ty_generics #where_clause {
                 fn ty() -> ::posh::lang::Ty {
                     let name = #name_string.to_string();
                     let uuid = ::std::str::FromStr::from_str(#uuid_string).unwrap();
@@ -314,7 +328,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                 }
             }
 
-            impl #impl_generics ::posh::Value for #posh_name #ty_generics #where_clause {
+            impl #impl_generics ::posh::Value for #rep_name #ty_generics #where_clause {
                 fn from_trace(trace: ::posh::expose::Trace) -> Self {
                     Self {
                         #(#field_idents: ::posh::expose::field(trace, #field_strings)),*
@@ -326,7 +340,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
 
     let impl_resources = rep_traits.get("Resources").map(|_| {
         quote! {
-            impl #impl_generics ::posh::shader::Resources for #posh_name #ty_generics #where_clause
+            impl #impl_generics ::posh::shader::Resources for #rep_name #ty_generics #where_clause
             {
                 fn stage_arg() -> ::posh::Rep<Self> {
                     // FIXME

@@ -4,7 +4,10 @@ use crate::{expose::NumType, Scalar, Value, Vec2, Vec3, Vec4};
 
 /// A representative that can be stored in a [`Vertex`].
 #[sealed]
-pub trait VertexField: Value {}
+pub trait VertexField: Value {
+    #[doc(hidden)]
+    fn must_impl() {}
+}
 
 #[sealed]
 impl<T: NumType> VertexField for Scalar<T> {}
@@ -35,7 +38,10 @@ pub trait Interpolants: Value {}
 
 /// A representative that can be stored in [`Interpolants`].
 #[sealed]
-pub trait InterpolantsField {}
+pub trait InterpolantsField {
+    #[doc(hidden)]
+    fn must_impl() {}
+}
 
 #[sealed]
 impl<T: NumType> InterpolantsField for Scalar<T> {}
@@ -60,7 +66,10 @@ pub trait Fragment: Value {}
 
 /// A representative that can be stored in a [`Fragment`].
 #[sealed]
-pub trait FragmentField: Value {}
+pub trait FragmentField: Value {
+    #[doc(hidden)]
+    fn must_impl() {}
+}
 
 #[sealed]
 impl<T: NumType> FragmentField for Scalar<T> {}

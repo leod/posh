@@ -1,5 +1,5 @@
 use nalgebra::Vector3;
-use posh::{lang::Ident, rep, Expose, FuncArg, IntoRep, Rep};
+use posh::{lang::Ident, rep, Expose, FuncArg, IntoRep, Rep, ScalarType};
 
 #[derive(Expose)]
 pub struct Helper {
@@ -21,6 +21,17 @@ mod test {
 }
 
 impl rep!(test::Vertex) {}
+
+#[derive(Expose)]
+pub struct Generic<T: ScalarType> {
+    x: posh::Vec3<T>,
+}
+
+impl<T: ScalarType> rep!(Generic<T>) {
+    fn foo(&self) -> Rep<f32> {
+        0.0.into()
+    }
+}
 
 #[posh::def]
 fn vertex(vertex: Rep<test::Vertex>) -> Rep<test::Vertex> {

@@ -15,6 +15,9 @@ pub trait UniformBlock: Resource + Value {}
 pub trait Resources {
     #[doc(hidden)]
     fn stage_arg() -> Self;
+
+    #[doc(hidden)]
+    fn must_impl() {}
 }
 
 impl<D> Resources for D
@@ -28,7 +31,10 @@ where
 
 /// A representative that can be stored in a [`UniformBlock`].
 #[sealed]
-pub trait UniformBlockField: Value {}
+pub trait UniformBlockField: Value {
+    #[doc(hidden)]
+    fn must_impl() {}
+}
 
 // FIXME: Check for which types we should implement `UniformBlockField`.
 impl_trait_for_built_in_types!(UniformBlockField);

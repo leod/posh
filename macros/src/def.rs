@@ -52,7 +52,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
     let param_idents_var = quote! { _posh_param_idents };
 
     let return_type_check_stmt: Stmt = parse_quote_spanned! {output_ty.span()=>
-        <#output_ty as ::posh::Value>::return_type_must_impl_posh_value();
+        <#output_ty as ::posh::Value>::must_impl();
     };
 
     let param_exprs: Vec<Expr> = input_tys

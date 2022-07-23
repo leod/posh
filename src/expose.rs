@@ -92,7 +92,7 @@ pub trait Value: FuncArg {
     }
 
     #[doc(hidden)]
-    fn return_type_must_impl_posh_value() {}
+    fn must_impl() {}
 }
 
 impl<V> IntoRep for V
