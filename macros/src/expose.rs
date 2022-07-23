@@ -85,6 +85,7 @@ impl RepTrait {
 
                 quote_spanned! {field_ty.span() =>
                     impl #impl_generics #rep_name #ty_generics #where_clause {
+                        #[allow(unused)]
                         fn #method_name() {
                             #(
                                 <::posh::Rep<#field_ty> as #field_reqs>::must_impl();
@@ -294,13 +295,6 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                 }
 
                 fn expr(&self) -> ::posh::lang::Expr {
-                    let ty = match <Self as ::posh::FuncArg>::ty() {
-                        ::posh::lang::Ty::Struct(ty) => ty,
-                        _ => unreachable!(),
-                    };
-                    let struct_func = ::posh::lang::StructFunc { ty };
-                    let func = ::posh::lang::Func::Struct(struct_func);
-
                     let args = vec![
                         #(::posh::FuncArg::expr(&self.#field_idents)),*
                     ];
@@ -308,6 +302,11 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                     if let Some(common_base) = ::posh::expose::common_field_base(&args) {
                         common_base
                     } else {
+                        let ty = match <Self as ::posh::FuncArg>::ty() {
+                            ::posh::lang::Ty::Struct(ty) => ty,
+                            _ => unreachable!(),
+                        };
+                        let func = ::posh::lang::Func::Struct(::posh::lang::StructFunc { ty });
                         let call_expr = ::posh::lang::CallExpr { func, args };
                         ::posh::lang::Expr::Call(call_expr)
                     }
