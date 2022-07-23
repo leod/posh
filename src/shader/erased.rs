@@ -3,7 +3,10 @@ use crate::{
     Expose, FuncArg,
 };
 
-use super::{fields::Fields, Attributes, FOut, Fragment, Interpolants, VArg, VOut};
+use super::{
+    fields::{Fields, InputFields},
+    Attributes, FOut, Fragment, Interpolants, VArg, VOut,
+};
 
 pub struct ErasedVStage {
     pub attributes: Vec<(String, Ty)>,
@@ -58,7 +61,7 @@ impl ErasedVStage {
         V: Expose,
         V::Rep: Attributes,
     {
-        VArg::new(<V::Rep as Fields>::stage_input("attrs"))
+        VArg::new(<V::Rep as InputFields>::stage_input("attrs"))
     }
 
     pub fn output_exprs(&self) -> impl IntoIterator<Item = &Expr> + '_ {

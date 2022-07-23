@@ -105,18 +105,23 @@ const REP_TRAITS: &[RepTrait] = &[
         field_reqs: &[],
     },
     RepTrait {
+        name: "InputFields",
+        deps: &["Fields"],
+        field_reqs: &[],
+    },
+    RepTrait {
         name: "Value",
         deps: &[],
         field_reqs: &[|| quote! { ::posh::Value }],
     },
     RepTrait {
         name: "Vertex",
-        deps: &["Value", "Fields"],
+        deps: &["Value", "InputFields"],
         field_reqs: &[|| quote! { ::posh::shader::VertexField }],
     },
     RepTrait {
         name: "Interpolants",
-        deps: &["Value", "Fields"],
+        deps: &["Value", "InputFields"],
         field_reqs: &[|| quote! { ::posh::shader::InterpolantsField }],
     },
     RepTrait {
@@ -131,7 +136,7 @@ const REP_TRAITS: &[RepTrait] = &[
     },
     RepTrait {
         name: "Resources",
-        deps: &[],
+        deps: &["InputFields"],
         field_reqs: &[|| quote! { ::posh::shader::Resources }],
     },
 ];
@@ -247,7 +252,15 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                         ),*
                     ]
                 }
+           }
+        }
+    });
 
+    let impl_input_fields = rep_traits.get("InputFields").map(|_| {
+        quote! {
+            impl #impl_generics ::posh::shader::fields::InputFields
+                for #rep_name #ty_generics #where_clause
+            {
                 fn stage_input(prefix: &str) -> Self {
                     Self {
                         #(
@@ -398,6 +411,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
         iter::once(posh_struct_def)
             .chain(field_req_checks)
             .chain(impl_fields)
+            .chain(impl_input_fields)
             .chain(impl_value)
             .chain(impl_vertex)
             .chain(impl_interpolants)

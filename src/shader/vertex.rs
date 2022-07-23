@@ -2,7 +2,7 @@ use sealed::sealed;
 
 use crate::{expose::NumType, lang::Ty, Scalar, Value, Vec2, Vec3, Vec4};
 
-use super::fields::{add_prefix, Fields};
+use super::fields::{add_prefix, Fields, InputFields};
 
 /// A representative that can be stored in a [`Vertex`].
 #[sealed]
@@ -26,10 +26,10 @@ impl<T: NumType> VertexField for Vec4<T> {}
 // TODO: VertexFieldValue for f32 matrix types
 
 /// A representative of a vertex.
-pub trait Vertex: Value + Fields {}
+pub trait Vertex: Value + InputFields {}
 
 /// A representative of vertex stage input.
-pub trait Attributes: Value + Fields {}
+pub trait Attributes: Value + InputFields {}
 
 impl<V: Vertex> Attributes for V {}
 
@@ -40,7 +40,9 @@ impl<V0: Vertex, V1: Vertex> Fields for (V0, V1) {
             .chain(V1::fields(&add_prefix(prefix, "x1")))
             .collect()
     }
+}
 
+impl<V0: Vertex, V1: Vertex> InputFields for (V0, V1) {
     fn stage_input(prefix: &str) -> Self {
         (
             V0::stage_input(&add_prefix(prefix, "x0")),
