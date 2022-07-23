@@ -14,10 +14,10 @@ pub use vertex::{
 use crate::{expose::Expose, lang::Expr, FuncArg, Rep};
 
 /// Description of a shader.
-pub struct Shader<P, V, R> {
+pub struct Shader<R, V, F> {
     vert_stage: ErasedVertStage,
     frag_stage: ErasedFragStage,
-    _phantom: PhantomData<(P, V, R)>,
+    _phantom: PhantomData<(R, V, F)>,
 }
 
 struct ErasedVertStage {

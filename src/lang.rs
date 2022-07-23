@@ -2,8 +2,6 @@ pub mod show;
 
 use std::rc::Rc;
 
-pub use uuid::Uuid;
-
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ScalarTy {
     F32,
@@ -36,21 +34,17 @@ pub struct StructTy {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Ident {
     pub name: String,
-    pub uuid: Uuid,
 }
 
 impl Ident {
     pub fn new(name: impl Into<String>) -> Self {
-        Self {
-            name: name.into(),
-            uuid: Uuid::new_v4(),
-        }
+        Self { name: name.into() }
     }
 }
 
 impl ToString for Ident {
     fn to_string(&self) -> String {
-        format!("{}_{}", self.name, &self.uuid.simple().to_string()[0..8])
+        self.name.clone()
     }
 }
 

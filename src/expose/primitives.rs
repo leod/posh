@@ -1,8 +1,8 @@
 use std::{collections::BTreeSet, rc::Rc};
 
 use crate::lang::{
-    BinaryExpr, BinaryOp, BuiltInFunc, CallExpr, Expr, FieldExpr, Func, FuncParam, Ident, Ty,
-    UserDefinedFunc, VarExpr,
+    BinaryExpr, BinaryOp, BuiltInFunc, CallExpr, Expr, FieldExpr, Func, Ident, Ty, UserDefinedFunc,
+    VarExpr,
 };
 
 use super::{FuncArg, IntoRep, Trace, Value};

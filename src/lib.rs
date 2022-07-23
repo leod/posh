@@ -6,8 +6,6 @@ pub mod shader;
 
 #[doc(hidden)]
 pub use static_assertions;
-#[doc(hidden)]
-pub use uuid;
 
 pub use expose::{
     var, vec2, vec3, vec4, BuiltInValue, Expose, FuncArg, GenValue, IntoRep, NumType, Rep,

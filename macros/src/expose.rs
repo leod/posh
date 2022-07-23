@@ -10,7 +10,6 @@ use syn::{
     token, Attribute, Data, DataStruct, DeriveInput, Error, Field, Fields, Generics, Ident, Result,
     Token, Type,
 };
-use uuid::Uuid;
 
 fn struct_fields(ident: &Ident, data: Data) -> Result<Vec<Field>> {
     match data {
@@ -194,9 +193,6 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
     let name_string = name.to_string();
     let vis = input.vis;
 
-    // FIXME: Using UUIDs in proc macros might break incremental compilation.
-    let uuid_string = Uuid::new_v4().to_string();
-
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
     let field_vis: Vec<_> = fields.iter().map(|field| &field.vis).collect();
@@ -279,12 +275,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
         quote! {
             impl #impl_generics ::posh::FuncArg for #rep_name #ty_generics #where_clause {
                 fn ty() -> ::posh::lang::Ty {
-                    let name = #name_string.to_string();
-                    let uuid = ::std::str::FromStr::from_str(#uuid_string).unwrap();
-                    let ident = ::posh::lang::Ident {
-                        name,
-                        uuid,
-                    };
+                    let ident = ::posh::lang::Ident::new(#name_string);
 
                     let fields = vec![
                         #(

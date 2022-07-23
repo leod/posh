@@ -1,6 +1,6 @@
 use proc_macro2::{Ident, TokenStream as TokenStream2};
 use quote::ToTokens;
-use syn::{parse::Parse, spanned::Spanned, Error, Result, Type, TypePath};
+use syn::{spanned::Spanned, Error, Result, Type, TypePath};
 
 pub fn rep_name(name: &str) -> String {
     format!("_{}PoshRep", name)

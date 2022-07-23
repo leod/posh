@@ -1,7 +1,5 @@
-use std::iter;
-
 use proc_macro2::TokenStream as TokenStream2;
-use quote::{quote, quote_spanned, ToTokens};
+use quote::{quote, ToTokens};
 use syn::{
     parse_quote, parse_quote_spanned, spanned::Spanned, Block, Error, Expr, FnArg, Ident, ItemFn,
     Pat, Result, ReturnType, Signature, Stmt, Type,
