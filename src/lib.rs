@@ -1,5 +1,5 @@
-#[doc(hidden)]
 #[macro_use]
+#[doc(hidden)]
 pub mod expose;
 pub mod lang;
 pub mod shader;
@@ -14,7 +14,4 @@ pub use expose::{
     Representative, Sampler2, Scalar, ScalarType, Value, Vec2, Vec3, Vec4,
 };
 
-pub use posh_macros::{def, Expose};
-
-// This was here so that our macros could refer to `posh` even when we use them inside this crate.
-//extern crate self as posh;
+pub use posh_macros::{def, rep, Expose};
