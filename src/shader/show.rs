@@ -1,14 +1,14 @@
-use std::collections::BTreeSet;
+use std::{collections::BTreeSet, iter};
 
 use crate::lang::{
     defs::collect_vars,
     show::{show_defs, show_expr, show_lets, show_ty},
-    Ty,
+    Expr, Ty, VarExpr,
 };
 
 use super::{ErasedFStage, ErasedShader, ErasedVStage};
 
-fn interface(kind: &str, fields: impl IntoIterator<Item = (String, Ty)>) -> String {
+fn show_interface(kind: &str, fields: impl IntoIterator<Item = (String, Ty)>) -> String {
     fields
         .into_iter()
         .map(|(name, ty)| format!("{} {}: {};", kind, name, show_ty(&ty)))
@@ -16,67 +16,102 @@ fn interface(kind: &str, fields: impl IntoIterator<Item = (String, Ty)>) -> Stri
         .join("\n")
 }
 
-fn show_v_stage(v_stage: &ErasedVStage) -> String {
-    let mut vars = BTreeSet::new();
-    for expr in v_stage.output_exprs() {
-        collect_vars(expr, &mut vars);
+fn show_main<'a>(
+    vars: &BTreeSet<VarExpr>,
+    outputs: impl Iterator<Item = (String, &'a Expr)>,
+) -> String {
+    let mut result = String::new();
+
+    result += "fn main() {\n";
+
+    result += &show_lets(vars);
+
+    result += "\n\n";
+    for (name, expr) in outputs {
+        result += &format!("    {} := {};\n", name, show_expr(expr));
     }
 
-    let mut result = String::new();
-    result += &interface("attribute", v_stage.attrs.iter().cloned());
-    result += "\n\n";
-    result += &interface(
-        "out",
-        v_stage
-            .interps
-            .iter()
-            .map(|(name, expr)| (name.clone(), expr.ty())),
-    );
-    result += "\n\n";
-    result += &show_lets(&vars);
-    result += "\n";
-    for (name, expr) in &v_stage.interps {
-        result += &format!("{} := {};\n", name, show_expr(expr));
-    }
-    result += &format!("gl_Position := {};\n", show_expr(&v_stage.pos));
+    result += "}";
 
     result
 }
 
-fn show_f_stage(f_stage: &ErasedFStage) -> String {
+fn show_v_stage(stage: &ErasedVStage) -> String {
     let mut vars = BTreeSet::new();
-    for expr in f_stage.output_exprs() {
+    for expr in stage.output_exprs() {
         collect_vars(expr, &mut vars);
     }
 
+    let outputs = stage
+        .interps
+        .iter()
+        .map(|(name, expr)| (name.clone(), expr))
+        .chain(iter::once(("gl_Position".into(), &stage.pos)));
+
     let mut result = String::new();
-    result += &interface("in", f_stage.interps.iter().cloned());
+
+    result += &show_defs(&stage.defs());
+
     result += "\n\n";
-    result += &interface(
+    result += &show_interface("attribute", stage.attrs.iter().cloned());
+
+    result += "\n\n";
+    result += &show_interface(
         "out",
-        f_stage
+        stage
+            .interps
+            .iter()
+            .map(|(name, expr)| (name.clone(), expr.ty())),
+    );
+
+    result += "\n\n";
+    result += &show_main(&vars, outputs);
+
+    result
+}
+
+fn show_f_stage(stage: &ErasedFStage) -> String {
+    let mut vars = BTreeSet::new();
+    for expr in stage.output_exprs() {
+        collect_vars(expr, &mut vars);
+    }
+
+    let outputs = stage
+        .frag
+        .iter()
+        .map(|(name, expr)| (name.clone(), expr))
+        .chain(
+            stage
+                .frag_depth
+                .as_ref()
+                .map(|frag_depth| ("gl_FragDepth".into(), frag_depth)),
+        );
+
+    let mut result = String::new();
+
+    result += &show_defs(&stage.defs());
+
+    result += "\n\n";
+    result += &show_interface("in", stage.interps.iter().cloned());
+
+    result += "\n\n";
+    result += &show_interface(
+        "out",
+        stage
             .frag
             .iter()
             .map(|(name, expr)| (name.clone(), expr.ty())),
     );
-    result += "\n\n";
-    result += &show_lets(&vars);
-    result += "\n";
-    for (name, expr) in &f_stage.frag {
-        result += &format!("{} := {};\n", name, show_expr(expr));
-    }
 
-    if let Some(frag_depth) = f_stage.frag_depth.as_ref() {
-        result += &format!("frag_depth := {};\n", show_expr(frag_depth));
-    }
+    result += "\n\n";
+    result += &show_main(&vars, outputs);
 
     result
 }
 
 pub fn show_shader(shader: &ErasedShader) -> String {
     format!(
-        "{}\n{}\n============================================================================\n\n{}",
-        show_defs(&shader.defs()),
+        "{}\n============================================================================\n\n{}",
         show_v_stage(&shader.v_stage),
         show_f_stage(&shader.f_stage)
     )

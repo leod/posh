@@ -40,7 +40,7 @@ pub fn show_lets<'a>(vars: impl IntoIterator<Item = &'a VarExpr>) -> String {
         .filter_map(|var| {
             var.init.as_ref().map(|init| {
                 format!(
-                    "let {}: {} = {};",
+                    "    let {}: {} = {};",
                     var.ident.to_string(),
                     show_ty(&var.ty),
                     show_expr(init),

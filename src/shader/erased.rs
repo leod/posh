@@ -27,23 +27,6 @@ pub struct ErasedShader {
     pub f_stage: ErasedFStage,
 }
 
-impl ErasedShader {
-    pub fn defs(&self) -> Defs {
-        let mut defs = Defs::new();
-
-        let exprs = self
-            .v_stage
-            .output_exprs()
-            .into_iter()
-            .chain(self.f_stage.output_exprs());
-        for expr in exprs {
-            defs.extend(&Defs::from_expr(expr));
-        }
-
-        defs
-    }
-}
-
 impl ErasedVStage {
     pub(crate) fn new<V, W>(out: VOut<W>) -> Self
     where
@@ -72,6 +55,16 @@ impl ErasedVStage {
             .iter()
             .map(|(_, expr)| expr)
             .chain(iter::once(&self.pos))
+    }
+
+    pub fn defs(&self) -> Defs {
+        let mut defs = Defs::new();
+
+        for expr in self.output_exprs() {
+            defs.extend(&Defs::from_expr(expr));
+        }
+
+        defs
     }
 }
 
@@ -103,5 +96,15 @@ impl ErasedFStage {
             .iter()
             .map(|(_, expr)| expr)
             .chain(self.frag_depth.as_ref())
+    }
+
+    pub fn defs(&self) -> Defs {
+        let mut defs = Defs::new();
+
+        for expr in self.output_exprs() {
+            defs.extend(&Defs::from_expr(expr));
+        }
+
+        defs
     }
 }
