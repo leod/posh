@@ -15,22 +15,22 @@ use crate::{expose::Expose, lang::Expr, FuncArg, Rep};
 
 /// Description of a shader.
 pub struct Shader<R, V, F> {
-    vert_stage: ErasedVertStage,
-    frag_stage: ErasedFragStage,
+    v_stage: ErasedVStage,
+    f_stage: ErasedFStage,
     _phantom: PhantomData<(R, V, F)>,
 }
 
-struct ErasedVertStage {
+struct ErasedVStage {
     pub interps: Expr,
     pub position: Expr,
 }
 
-struct ErasedFragStage {
+struct ErasedFStage {
     pub frag: Expr,
     pub frag_depth: Option<Expr>,
 }
 
-impl ErasedVertStage {
+impl ErasedVStage {
     fn new<W>(out: VOut<W>) -> Self
     where
         W: Expose,
@@ -43,7 +43,7 @@ impl ErasedVertStage {
     }
 }
 
-impl ErasedFragStage {
+impl ErasedFStage {
     fn new<F>(out: FOut<F>) -> Self
     where
         F: Expose,
@@ -65,23 +65,23 @@ where
     V::Rep: Attributes,
     F::Rep: Fragment,
 {
-    pub fn new<W, VertStage, FragStage>(vert_stage: VertStage, frag_stage: FragStage) -> Self
+    pub fn new<W, VStage, FStage>(v_stage: VStage, f_stage: FStage) -> Self
     where
         W: Expose,
         W::Rep: Interpolants,
-        VertStage: FnOnce(Rep<R>, VArg<V>) -> VOut<W>,
-        FragStage: FnOnce(Rep<R>, FArg<W>) -> FOut<F>,
+        VStage: FnOnce(Rep<R>, VArg<V>) -> VOut<W>,
+        FStage: FnOnce(Rep<R>, FArg<W>) -> FOut<F>,
     {
         // FIXME: stage arg handling
-        let vert_out = vert_stage(R::Rep::stage_arg(), VArg::stage_arg());
-        let frag_out = frag_stage(R::Rep::stage_arg(), FArg::stage_arg());
+        let v_out = v_stage(R::Rep::stage_arg(), VArg::stage_arg());
+        let f_out = f_stage(R::Rep::stage_arg(), FArg::stage_arg());
 
-        let vert_stage = ErasedVertStage::new(vert_out);
-        let frag_stage = ErasedFragStage::new(frag_out);
+        let v_stage = ErasedVStage::new(v_out);
+        let f_stage = ErasedFStage::new(f_out);
 
         Self {
-            vert_stage,
-            frag_stage,
+            v_stage,
+            f_stage,
             _phantom: PhantomData,
         }
     }
