@@ -40,7 +40,7 @@ where
     W::Rep: Interpolants,
 {
     pub interps: Rep<W>,
-    pub position: Vec3<f32>,
+    pub pos: Vec3<f32>,
 }
 
 /// Argument passed to fragment stages.

@@ -1,5 +1,5 @@
 mod resource;
-
+pub mod show;
 mod stage;
 mod vertex;
 
@@ -11,49 +11,31 @@ pub use vertex::{
     Attributes, Fragment, FragmentField, Interpolants, InterpolantsField, Vertex, VertexField,
 };
 
-use crate::{expose::Expose, lang::Expr, FuncArg, Rep};
+use crate::{
+    expose::Expose,
+    lang::{defs::Defs, Expr},
+    FuncArg, Rep,
+};
 
 /// Description of a shader.
 pub struct Shader<R, V, F> {
-    v_stage: ErasedVStage,
-    f_stage: ErasedFStage,
+    erased: ErasedShader,
     _phantom: PhantomData<(R, V, F)>,
 }
 
-struct ErasedVStage {
-    pub interps: Expr,
-    pub position: Expr,
+pub struct ErasedShader {
+    v_stage: ErasedVStage,
+    f_stage: ErasedFStage,
 }
 
-struct ErasedFStage {
+pub struct ErasedVStage {
+    pub interps: Expr,
+    pub pos: Expr,
+}
+
+pub struct ErasedFStage {
     pub frag: Expr,
     pub frag_depth: Option<Expr>,
-}
-
-impl ErasedVStage {
-    fn new<W>(out: VOut<W>) -> Self
-    where
-        W: Expose,
-        W::Rep: Interpolants,
-    {
-        Self {
-            interps: out.interps.expr(),
-            position: out.position.expr(),
-        }
-    }
-}
-
-impl ErasedFStage {
-    fn new<F>(out: FOut<F>) -> Self
-    where
-        F: Expose,
-        F::Rep: Fragment,
-    {
-        Self {
-            frag: out.frag.expr(),
-            frag_depth: out.frag_depth.map(|v| v.expr()),
-        }
-    }
 }
 
 impl<R, V, F> Shader<R, V, F>
@@ -79,10 +61,71 @@ where
         let v_stage = ErasedVStage::new(v_out);
         let f_stage = ErasedFStage::new(f_out);
 
+        let erased = ErasedShader { v_stage, f_stage };
+
         Self {
-            v_stage,
-            f_stage,
+            erased,
             _phantom: PhantomData,
         }
+    }
+
+    pub fn erased(&self) -> &ErasedShader {
+        &self.erased
+    }
+}
+
+impl ErasedShader {
+    pub fn defs(&self) -> Defs {
+        let mut defs = Defs::new();
+
+        let exprs = self
+            .v_stage
+            .output_exprs()
+            .into_iter()
+            .chain(self.f_stage.output_exprs());
+        for expr in exprs {
+            defs.extend(&Defs::from_expr(expr));
+        }
+
+        defs
+    }
+}
+
+impl ErasedVStage {
+    fn new<W>(out: VOut<W>) -> Self
+    where
+        W: Expose,
+        W::Rep: Interpolants,
+    {
+        Self {
+            interps: out.interps.expr(),
+            pos: out.pos.expr(),
+        }
+    }
+
+    pub fn output_exprs(&self) -> impl IntoIterator<Item = &Expr> + '_ {
+        vec![&self.interps, &self.pos]
+    }
+}
+
+impl ErasedFStage {
+    fn new<F>(out: FOut<F>) -> Self
+    where
+        F: Expose,
+        F::Rep: Fragment,
+    {
+        Self {
+            frag: out.frag.expr(),
+            frag_depth: out.frag_depth.map(|v| v.expr()),
+        }
+    }
+
+    pub fn output_exprs(&self) -> impl IntoIterator<Item = &Expr> + '_ {
+        let mut exprs = vec![&self.frag];
+        if let Some(pos) = self.frag_depth.as_ref() {
+            exprs.push(pos);
+        }
+
+        exprs
     }
 }

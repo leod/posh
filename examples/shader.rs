@@ -1,6 +1,9 @@
+use std::collections::BTreeSet;
+
 use nalgebra::Vector3;
 use posh::{
-    shader::{FArg, FOut, Shader, VArg, VOut},
+    lang::{defs::collect_vars, show::show_defs},
+    shader::{show::show_shader, ErasedVStage, FArg, FOut, Shader, VArg, VOut},
     Expose, Rep, Sampler2,
 };
 
@@ -51,9 +54,9 @@ fn vertex_stage(res: Rep<Resources>, arg: VArg<Vertex>) -> VOut<Interps> {
         color: posh::vec3(255.0, 0.0, 0.0),
         normal: res.two.model_to_view * arg.attrs.normal,
     };
-    let position = res.one.view_to_clip * res.one.model_to_view * arg.attrs.position;
+    let pos = res.one.view_to_clip * res.one.model_to_view * arg.attrs.position;
 
-    VOut { interps, position }
+    VOut { interps, pos }
 }
 
 fn vertex_stage2(res: Rep<Resources>, arg: VArg<(Vertex, Instance)>) -> VOut<Interps> {
@@ -63,9 +66,9 @@ fn vertex_stage2(res: Rep<Resources>, arg: VArg<(Vertex, Instance)>) -> VOut<Int
         color: instance.color,
         normal: res.one.model_to_view * vertex.normal,
     };
-    let position = res.one.model_to_view * vertex.position;
+    let pos = res.one.model_to_view * vertex.position;
 
-    VOut { interps, position }
+    VOut { interps, pos }
 }
 
 fn fragment_stage(_: Rep<Resources>, arg: FArg<Interps>) -> FOut<Frag> {
@@ -94,5 +97,7 @@ fn main() {
         shader: Shader::new(vertex_stage2, fragment_stage),
     };
 
-    let shaduer: Shader<Resources, _, _> = Shader::new(vertex_stage2, fragment_stage);
+    let shader: Shader<Resources, _, _> = Shader::new(vertex_stage2, fragment_stage);
+
+    println!("{}", show_shader(shader.erased()))
 }

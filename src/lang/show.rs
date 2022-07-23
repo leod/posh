@@ -2,7 +2,7 @@ use std::collections::BTreeSet;
 
 use super::{
     defs::{collect_vars, Defs},
-    BinaryOp, BuiltInTy, CallExpr, DefFunc, Expr, Func, ScalarTy, StructTy, Ty,
+    BinaryOp, BuiltInTy, CallExpr, DefFunc, Expr, Func, ScalarTy, StructTy, Ty, VarExpr,
 };
 
 pub fn show_expr(expr: &Expr) -> String {
@@ -34,6 +34,24 @@ pub fn show_expr(expr: &Expr) -> String {
     }
 }
 
+pub fn show_lets<'a>(vars: impl IntoIterator<Item = &'a VarExpr>) -> String {
+    let lets: Vec<_> = vars
+        .into_iter()
+        .filter_map(|var| {
+            var.init.as_ref().map(|init| {
+                format!(
+                    "let {}: {} = {};",
+                    var.ident.to_string(),
+                    show_ty(&var.ty),
+                    show_expr(init),
+                )
+            })
+        })
+        .collect();
+
+    lets.join("\n")
+}
+
 pub fn show_func_def(def: &DefFunc) -> String {
     let params: Vec<_> = def
         .params
@@ -45,24 +63,12 @@ pub fn show_func_def(def: &DefFunc) -> String {
     let mut vars = BTreeSet::new();
     collect_vars(&def.result, &mut vars);
 
-    let lets: Vec<_> = vars
-        .iter()
-        .map(|var| {
-            format!(
-                "    let {}: {} = {};",
-                var.ident.to_string(),
-                show_ty(&var.ty),
-                show_expr(var.init.as_ref().unwrap())
-            )
-        })
-        .collect();
-
     format!(
         "fn {}({}) -> {} {{\n{}\n    {}\n}}",
         def.ident.name,
         params.join(", "),
         show_ty(&def.result.ty()),
-        lets.join("\n"),
+        show_lets(&vars),
         show_expr(&def.result),
     )
 }
