@@ -1,21 +1,24 @@
+use std::iter;
+
 use crate::{
     lang::{defs::Defs, Expr, Ty},
     Expose, FuncArg,
 };
 
 use super::{
-    fields::{Fields, InputFields},
-    Attributes, FOut, Fragment, Interpolants, VArg, VOut,
+    fields::{Fields, InputFields, OutputFields},
+    Attributes, FArg, FOut, Fragment, Interpolants, VArg, VOut,
 };
 
 pub struct ErasedVStage {
-    pub attributes: Vec<(String, Ty)>,
-    pub interps: Expr,
+    pub attrs: Vec<(String, Ty)>,
+    pub interps: Vec<(String, Expr)>,
     pub pos: Expr,
 }
 
 pub struct ErasedFStage {
-    pub frag: Expr,
+    pub interps: Vec<(String, Ty)>,
+    pub frag: Vec<(String, Expr)>,
     pub frag_depth: Option<Expr>,
 }
 
@@ -50,8 +53,8 @@ impl ErasedVStage {
         W::Rep: Interpolants,
     {
         Self {
-            attributes: <V::Rep as Fields>::fields("attrs"),
-            interps: out.interps.expr(),
+            attrs: <V::Rep as Fields>::fields("attrs"),
+            interps: out.interps.stage_output("interps"),
             pos: out.pos.expr(),
         }
     }
@@ -65,28 +68,40 @@ impl ErasedVStage {
     }
 
     pub fn output_exprs(&self) -> impl IntoIterator<Item = &Expr> + '_ {
-        vec![&self.interps, &self.pos]
+        self.interps
+            .iter()
+            .map(|(_, expr)| expr)
+            .chain(iter::once(&self.pos))
     }
 }
 
 impl ErasedFStage {
-    pub(crate) fn new<F>(out: FOut<F>) -> Self
+    pub(crate) fn new<W, F>(out: FOut<F>) -> Self
     where
+        W: Expose,
+        W::Rep: Interpolants,
         F: Expose,
         F::Rep: Fragment,
     {
         Self {
-            frag: out.frag.expr(),
+            interps: <W::Rep as Fields>::fields("interps"),
+            frag: out.frag.stage_output("frag"),
             frag_depth: out.frag_depth.map(|v| v.expr()),
         }
     }
 
-    pub fn output_exprs(&self) -> impl IntoIterator<Item = &Expr> + '_ {
-        let mut exprs = vec![&self.frag];
-        if let Some(pos) = self.frag_depth.as_ref() {
-            exprs.push(pos);
-        }
+    pub fn stage_arg<W>() -> FArg<W>
+    where
+        W: Expose,
+        W::Rep: Interpolants,
+    {
+        FArg::new(<W::Rep as InputFields>::stage_input("interps"))
+    }
 
-        exprs
+    pub fn output_exprs(&self) -> impl IntoIterator<Item = &Expr> + '_ {
+        self.frag
+            .iter()
+            .map(|(_, expr)| expr)
+            .chain(self.frag_depth.as_ref())
     }
 }

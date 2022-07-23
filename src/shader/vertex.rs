@@ -2,7 +2,7 @@ use sealed::sealed;
 
 use crate::{expose::NumType, lang::Ty, Scalar, Value, Vec2, Vec3, Vec4};
 
-use super::fields::{add_prefix, Fields, InputFields};
+use super::fields::{add_prefix, Fields, InputFields, OutputFields};
 
 /// A representative that can be stored in a [`Vertex`].
 #[sealed]
@@ -54,7 +54,7 @@ impl<V0: Vertex, V1: Vertex> InputFields for (V0, V1) {
 impl<V1: Vertex, V2: Vertex> Attributes for (V1, V2) {}
 
 /// A representative of vertex stage output and fragment stage input.
-pub trait Interpolants: Value {}
+pub trait Interpolants: Value + InputFields + OutputFields {}
 
 /// A representative that can be stored in [`Interpolants`].
 #[sealed]
@@ -82,7 +82,7 @@ impl<T: NumType> InterpolantsField for Vec4<T> {}
 impl<V: Interpolants> InterpolantsField for V {}
 
 /// A representative of fragment stage output.
-pub trait Fragment: Value {}
+pub trait Fragment: Value + OutputFields {}
 
 /// A representative that can be stored in a [`Fragment`].
 #[sealed]

@@ -15,5 +15,5 @@ pub trait InputFields: Fields {
 }
 
 pub trait OutputFields: Fields {
-    fn stage_output(self) -> Vec<(String, Expr)>;
+    fn stage_output(self, prefix: &str) -> Vec<(String, Expr)>;
 }

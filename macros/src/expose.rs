@@ -110,6 +110,11 @@ const REP_TRAITS: &[RepTrait] = &[
         field_reqs: &[],
     },
     RepTrait {
+        name: "OutputFields",
+        deps: &["Fields"],
+        field_reqs: &[],
+    },
+    RepTrait {
         name: "Value",
         deps: &[],
         field_reqs: &[|| quote! { ::posh::Value }],
@@ -121,12 +126,12 @@ const REP_TRAITS: &[RepTrait] = &[
     },
     RepTrait {
         name: "Interpolants",
-        deps: &["Value", "InputFields"],
+        deps: &["Value", "InputFields", "OutputFields"],
         field_reqs: &[|| quote! { ::posh::shader::InterpolantsField }],
     },
     RepTrait {
         name: "Fragment",
-        deps: &["Value", "Fields"],
+        deps: &["Value", "OutputFields"],
         field_reqs: &[|| quote! { ::posh::shader::FragmentField }],
     },
     RepTrait {
@@ -276,6 +281,27 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
         }
     });
 
+    let impl_output_fields = rep_traits.get("OutputFields").map(|_| {
+        quote! {
+            impl #impl_generics ::posh::shader::fields::OutputFields
+                for #rep_name #ty_generics #where_clause
+            {
+                fn stage_output(self, prefix: &str) -> Vec<(String, ::posh::lang::Expr)> {
+                    vec![
+                        #(
+                            (
+                                ::posh::shader::fields::add_prefix(prefix, #field_strings),
+                                <::posh::Rep<#field_tys> as ::posh::FuncArg>::expr(
+                                    &self.#field_idents
+                                ),
+                            )
+                        ),*
+                    ]
+                }
+           }
+        }
+    });
+
     let impl_value = rep_traits.get("Value").map(|_| {
         quote! {
             impl #impl_generics ::posh::FuncArg for #rep_name #ty_generics #where_clause {
@@ -412,6 +438,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             .chain(field_req_checks)
             .chain(impl_fields)
             .chain(impl_input_fields)
+            .chain(impl_output_fields)
             .chain(impl_value)
             .chain(impl_vertex)
             .chain(impl_interpolants)

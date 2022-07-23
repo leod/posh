@@ -63,7 +63,7 @@ fn vertex_stage(res: Rep<Resources>, arg: VArg<Vertex>) -> VOut<Interps> {
 }
 
 fn vertex_stage_instanced(res: Rep<Resources>, arg: VArg<(Vertex, Instance)>) -> VOut<Interps> {
-    let (vertex, instance) = arg.attrs;
+    let (vertex, instance) = posh::var(arg.attrs);
 
     let interps = Rep::<Interps> {
         color: instance.color,

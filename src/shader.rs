@@ -47,10 +47,10 @@ where
     {
         // FIXME: stage arg handling
         let v_out = v_stage(R::Rep::stage_arg(), ErasedVStage::stage_arg());
-        let f_out = f_stage(R::Rep::stage_arg(), FArg::stage_arg());
+        let f_out = f_stage(R::Rep::stage_arg(), ErasedFStage::stage_arg());
 
-        let v_stage = ErasedVStage::new::<V, _>(v_out);
-        let f_stage = ErasedFStage::new(f_out);
+        let v_stage = ErasedVStage::new::<V, W>(v_out);
+        let f_stage = ErasedFStage::new::<W, F>(f_out);
 
         let erased = ErasedShader { v_stage, f_stage };
 

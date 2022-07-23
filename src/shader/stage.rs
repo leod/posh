@@ -19,7 +19,7 @@ where
     V: Expose,
     V::Rep: Attributes,
 {
-    pub(super) fn new(attrs: Rep<V>) -> Self {
+    pub(crate) fn new(attrs: Rep<V>) -> Self {
         Self {
             attrs,
             vertex_id: builtin_var("gl_VertexID"),
@@ -53,16 +53,11 @@ where
     W: Expose,
     W::Rep: Interpolants,
 {
-    fn new(inputs: Rep<W>) -> Self {
+    pub(crate) fn new(inputs: Rep<W>) -> Self {
         Self {
             interps: inputs,
             frag_coord: builtin_var("gl_FragCoord"),
         }
-    }
-
-    pub(crate) fn stage_arg() -> Self {
-        // FIXME: stage arg handling
-        Self::new(Rep::<W>::from_ident(Ident::new("input")))
     }
 }
 
