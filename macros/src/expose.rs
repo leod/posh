@@ -100,29 +100,34 @@ impl RepTrait {
 
 const REP_TRAITS: &[RepTrait] = &[
     RepTrait {
-        name: "UniformBlock",
-        deps: &["Value"],
-        field_reqs: &[|| quote! { ::posh::shader::UniformBlockField }],
-    },
-    RepTrait {
-        name: "Vertex",
-        deps: &["Value"],
-        field_reqs: &[|| quote! { ::posh::shader::VertexField }],
-    },
-    RepTrait {
-        name: "Interpolants",
-        deps: &["Value"],
-        field_reqs: &[|| quote! { ::posh::shader::InterpolantsField }],
-    },
-    RepTrait {
-        name: "Fragment",
-        deps: &["Value"],
-        field_reqs: &[|| quote! { ::posh::shader::FragmentField }],
+        name: "Fields",
+        deps: &[],
+        field_reqs: &[],
     },
     RepTrait {
         name: "Value",
         deps: &[],
         field_reqs: &[|| quote! { ::posh::Value }],
+    },
+    RepTrait {
+        name: "Vertex",
+        deps: &["Value", "Fields"],
+        field_reqs: &[|| quote! { ::posh::shader::VertexField }],
+    },
+    RepTrait {
+        name: "Interpolants",
+        deps: &["Value", "Fields"],
+        field_reqs: &[|| quote! { ::posh::shader::InterpolantsField }],
+    },
+    RepTrait {
+        name: "Fragment",
+        deps: &["Value", "Fields"],
+        field_reqs: &[|| quote! { ::posh::shader::FragmentField }],
+    },
+    RepTrait {
+        name: "UniformBlock",
+        deps: &["Value"],
+        field_reqs: &[|| quote! { ::posh::shader::UniformBlockField }],
     },
     RepTrait {
         name: "Resources",
@@ -228,44 +233,33 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
         rep_trait.field_req_checks(&rep_name, &input.generics, &field_tys, &field_idents)
     });
 
-    let impl_uniform_block = rep_traits.get("UniformBlock").map(|_| {
+    let impl_fields = rep_traits.get("Fields").map(|_| {
         quote! {
-            impl #impl_generics ::posh::shader::Resource for #rep_name #ty_generics #where_clause {
-                fn stage_arg() -> ::posh::Rep<Self> {
-                    // FIXME
-                    <Self as ::posh::FuncArg>::from_ident(::posh::lang::Ident::new("input"))
+            impl #impl_generics ::posh::shader::fields::Fields for #rep_name #ty_generics #where_clause
+            {
+                fn fields(prefix: &str) -> Vec<(String, ::posh::lang::Ty)> {
+                    vec![
+                        #(
+                            (
+                                ::posh::shader::fields::add_prefix(prefix, #field_strings),
+                                <::posh::Rep<#field_tys> as ::posh::FuncArg>::ty(),
+                            )
+                        ),*
+                    ]
                 }
-            }
 
-            impl #impl_generics ::posh::shader::UniformBlock
-                for #rep_name #ty_generics #where_clause
-            {
-            }
-        }
-    });
-
-    let impl_vertex = rep_traits.get("Vertex").map(|_| {
-        quote! {
-            impl #impl_generics ::posh::shader::Vertex for #rep_name #ty_generics #where_clause
-            {
-            }
-        }
-    });
-
-    let impl_interpolants = rep_traits.get("Interpolants").map(|_| {
-        quote! {
-            impl #impl_generics ::posh::shader::Interpolants
-                for #rep_name #ty_generics #where_clause
-            {
-            }
-        }
-    });
-
-    let impl_fragment = rep_traits.get("Fragment").map(|_| {
-        quote! {
-            impl #impl_generics ::posh::shader::Fragment for #rep_name #ty_generics #where_clause
-            {
-            }
+                fn stage_input(prefix: &str) -> Self {
+                    Self {
+                        #(
+                            #field_idents: <::posh::Rep<#field_tys> as ::posh::FuncArg>::from_ident(
+                                ::posh::lang::Ident::new(
+                                    ::posh::shader::fields::add_prefix(prefix, #field_strings)
+                                )
+                            )
+                        ),*
+                    }
+                }
+           }
         }
     });
 
@@ -326,6 +320,47 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
         }
     });
 
+    let impl_vertex = rep_traits.get("Vertex").map(|_| {
+        quote! {
+            impl #impl_generics ::posh::shader::Vertex for #rep_name #ty_generics #where_clause
+            {
+            }
+        }
+    });
+
+    let impl_interpolants = rep_traits.get("Interpolants").map(|_| {
+        quote! {
+            impl #impl_generics ::posh::shader::Interpolants
+                for #rep_name #ty_generics #where_clause
+            {
+            }
+        }
+    });
+
+    let impl_fragment = rep_traits.get("Fragment").map(|_| {
+        quote! {
+            impl #impl_generics ::posh::shader::Fragment for #rep_name #ty_generics #where_clause
+            {
+            }
+        }
+    });
+
+    let impl_uniform_block = rep_traits.get("UniformBlock").map(|_| {
+        quote! {
+            impl #impl_generics ::posh::shader::Resource for #rep_name #ty_generics #where_clause {
+                fn stage_arg() -> ::posh::Rep<Self> {
+                    // FIXME
+                    <Self as ::posh::FuncArg>::from_ident(::posh::lang::Ident::new("input"))
+                }
+            }
+
+            impl #impl_generics ::posh::shader::UniformBlock
+                for #rep_name #ty_generics #where_clause
+            {
+            }
+        }
+    });
+
     let impl_resources = rep_traits.get("Resources").map(|_| {
         quote! {
             impl #impl_generics ::posh::shader::Resources for #rep_name #ty_generics #where_clause
@@ -362,11 +397,12 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
     Ok(TokenStream2::from_iter(
         iter::once(posh_struct_def)
             .chain(field_req_checks)
-            .chain(impl_uniform_block)
+            .chain(impl_fields)
+            .chain(impl_value)
             .chain(impl_vertex)
             .chain(impl_interpolants)
             .chain(impl_fragment)
-            .chain(impl_value)
+            .chain(impl_uniform_block)
             .chain(impl_resources),
     ))
 }

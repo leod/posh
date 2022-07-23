@@ -25,7 +25,7 @@ where
     fn ty() -> Ty {
         Ty::Struct(StructTy {
             ident: Ident::new("Pair"),
-            fields: vec![("p0".into(), U::ty()), ("p1".into(), V::ty())],
+            fields: vec![("x0".into(), U::ty()), ("x1".into(), V::ty())],
         })
     }
 

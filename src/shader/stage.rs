@@ -19,17 +19,12 @@ where
     V: Expose,
     V::Rep: Attributes,
 {
-    fn new(attrs: Rep<V>) -> Self {
+    pub(super) fn new(attrs: Rep<V>) -> Self {
         Self {
             attrs,
             vertex_id: builtin_var("gl_VertexID"),
             instance_id: builtin_var("gl_InstanceID"),
         }
-    }
-
-    pub(crate) fn stage_arg() -> Self {
-        // FIXME: stage arg handling
-        Self::new(Rep::<V>::from_ident(Ident::new("input")))
     }
 }
 
