@@ -1,21 +1,28 @@
 use nalgebra::Vector3;
 use posh::{
-    shader::{FArg, FOut, Shader, VArg, VOut},
-    Expose, Rep, Sampler2,
+    shader::{show::show_shader, FArg, FOut, Shader, VArg, VOut},
+    Expose, Rep,
 };
 
 #[derive(Expose)]
-#[expose(UniformBlock, Vertex)]
-struct ModelToClip {
-    model_to_view: Vector3<f32>,
+#[expose(UniformBlock)]
+struct Transforms {
+    world_to_view: Vector3<f32>,
     view_to_clip: Vector3<f32>,
+}
+
+#[derive(Expose)]
+#[expose(UniformBlock)]
+struct Settings {
+    light: bool,
 }
 
 #[derive(Expose)]
 #[expose(Resources)]
 struct Resources {
-    one: ModelToClip,
-    two: ModelToClip,
+    camera: Transforms,
+    shadow: Transforms,
+    settings: Settings,
 }
 
 #[derive(Expose)]
@@ -29,6 +36,7 @@ struct Vertex {
 #[derive(Expose)]
 #[expose(Vertex)]
 struct Instance {
+    model_to_world: Vector3<f32>,
     color: [f32; 3],
 }
 
@@ -46,53 +54,46 @@ struct Frag {
     normal: [f32; 3],
 }
 
+#[posh::def]
+fn transform(ts: Rep<Transforms>, pos: posh::Vec3<f32>) -> posh::Vec3<f32> {
+    ts.view_to_clip * ts.world_to_view * pos
+}
+
 fn vertex_stage(res: Rep<Resources>, arg: VArg<Vertex>) -> VOut<Interps> {
     let interps = Rep::<Interps> {
         color: posh::vec3(255.0, 0.0, 0.0),
-        normal: res.two.model_to_view * arg.attrs.normal,
+        normal: res.shadow.world_to_view * arg.attrs.normal,
     };
-    let position = res.one.view_to_clip * res.one.model_to_view * arg.attrs.position;
+    let pos = transform(res.camera, arg.attrs.position);
 
-    VOut { interps, position }
+    VOut { interps, pos }
 }
 
-fn vertex_stage2(res: Rep<Resources>, arg: VArg<(Vertex, Instance)>) -> VOut<Interps> {
+fn vertex_stage_instanced(res: Rep<Resources>, arg: VArg<(Vertex, Instance)>) -> VOut<Interps> {
     let (vertex, instance) = arg.attrs;
 
     let interps = Rep::<Interps> {
         color: instance.color,
-        normal: res.one.model_to_view * vertex.normal,
+        normal: res.shadow.world_to_view * vertex.normal,
     };
-    let position = res.one.model_to_view * vertex.position;
+    let pos = transform(res.camera, instance.model_to_world * vertex.position);
 
-    VOut { interps, position }
+    VOut { interps, pos }
 }
 
-fn fragment_stage(_: Rep<Resources>, arg: FArg<Interps>) -> FOut<Frag> {
+fn fragment_stage(res: Rep<Resources>, arg: FArg<Interps>) -> FOut<Frag> {
+    let color = posh::var(res.settings.light.branch(2.0, 3.0));
     let frag = posh::var(Rep::<Frag> {
-        color: arg.interps.color,
+        color: arg.interps.color * color,
         normal: arg.interps.normal,
     });
 
     FOut::frag(frag)
 }
 
-struct MyShader {
-    shader: Shader<Resources, Vertex, Frag>,
-}
-
-struct MyShader2 {
-    shader: Shader<Resources, (Vertex, Instance), Frag>,
-}
-
 fn main() {
-    let my_shader = MyShader {
-        shader: Shader::new(vertex_stage, fragment_stage),
-    };
+    let shader = Shader::<Resources, _, _>::new(vertex_stage, fragment_stage);
+    let shader_instanced = Shader::<Resources, _, _>::new(vertex_stage_instanced, fragment_stage);
 
-    let my_shader2 = MyShader2 {
-        shader: Shader::new(vertex_stage2, fragment_stage),
-    };
-
-    let shaduer: Shader<Resources, _, _> = Shader::new(vertex_stage2, fragment_stage);
+    println!("{}", show_shader(shader_instanced.erased()))
 }

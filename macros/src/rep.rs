@@ -1,6 +1,10 @@
 use proc_macro2::{Ident, TokenStream as TokenStream2};
 use quote::ToTokens;
-use syn::{parse::Parse, spanned::Spanned, Error, Result, Type, TypePath};
+use syn::{spanned::Spanned, Error, Result, Type, TypePath};
+
+pub fn rep_name(name: &str) -> String {
+    format!("_{}PoshRep", name)
+}
 
 fn rep_type(ty: &mut Type) -> Result<()> {
     let span = ty.span();
@@ -12,7 +16,7 @@ fn rep_type(ty: &mut Type) -> Result<()> {
                 .last_mut()
                 .ok_or_else(|| Error::new(span, "posh::rep: Empty path not supported"))?;
             last_segment.ident = Ident::new(
-                &("_".to_string() + &last_segment.ident.to_string() + "PoshRep"),
+                &rep_name(&last_segment.ident.to_string()),
                 last_segment.ident.span(),
             );
             Ok(())

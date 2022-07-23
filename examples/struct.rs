@@ -1,5 +1,9 @@
 use nalgebra::Vector3;
-use posh::{lang::Ident, rep, Expose, FuncArg, IntoRep, Rep, ScalarType};
+use posh::{
+    expose::compile::compile1,
+    lang::{defs::Defs, show::show_defs},
+    rep, Expose, IntoRep, Rep, ScalarType,
+};
 
 #[derive(Expose)]
 pub struct Helper {
@@ -43,12 +47,7 @@ fn vertex(vertex: Rep<test::Vertex>) -> Rep<test::Vertex> {
 }
 
 pub fn main() {
-    let result = vertex(Rep::<test::Vertex>::from_ident(Ident::new("foo")));
-    println!("{:#?}", result.expr());
+    let func_def = compile1(vertex).unwrap();
 
-    if let posh::lang::Expr::Call(expr) = result.expr() {
-        if let posh::lang::Func::UserDefined(func) = expr.func {
-            println!("{}", posh::lang::show::show_user_defined_funcs(&func));
-        }
-    }
+    println!("{}", show_defs(&Defs::from_func_def(&func_def)));
 }

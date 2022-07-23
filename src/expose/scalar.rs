@@ -7,7 +7,7 @@ use std::{
 use sealed::sealed;
 
 use crate::lang::{
-    BinaryOp, BuiltInTy, Expr, Ident, Literal, LiteralExpr, ScalarTy, TernaryExpr, Ty,
+    BinaryOp, BranchExpr, BuiltInTy, Expr, Ident, Literal, LiteralExpr, ScalarTy, Ty,
 };
 
 use super::{binary, Expose, FuncArg, IntoRep, Representative, Trace, Value};
@@ -83,7 +83,7 @@ impl Scalar<bool> {
         binary(self, BinaryOp::And, right)
     }
 
-    pub fn ternary<V: Value>(
+    pub fn branch<V: Value>(
         self,
         true_value: impl IntoRep<Rep = V>,
         false_value: impl IntoRep<Rep = V>,
@@ -92,7 +92,7 @@ impl Scalar<bool> {
         let true_expr = Rc::new(true_value.into_rep().expr());
         let false_expr = Rc::new(false_value.into_rep().expr());
 
-        let expr = Expr::Ternary(TernaryExpr {
+        let expr = Expr::Branch(BranchExpr {
             cond,
             true_expr,
             false_expr,

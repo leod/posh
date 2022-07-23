@@ -16,9 +16,5 @@ posh-macros = { path = "macros", version = "*" }
 [dev-dependencies]
 posh = { version = "*", path = ".", features = ["nalgebra"] }
 
-[dependencies.uuid]
-version = "1.1.0"
-features = ["v4"]
-
 [workspace]
 members = ["macros", "glace"]

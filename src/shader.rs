@@ -1,59 +1,32 @@
+mod erased;
+#[doc(hidden)]
+pub mod fields;
 mod resource;
-
+pub mod show;
 mod stage;
 mod vertex;
 
 use std::marker::PhantomData;
 
+pub use erased::{ErasedFStage, ErasedShader, ErasedVStage};
 pub use resource::{Resource, Resources, UniformBlock, UniformBlockField};
 pub use stage::{FArg, FOut, VArg, VOut};
 pub use vertex::{
     Attributes, Fragment, FragmentField, Interpolants, InterpolantsField, Vertex, VertexField,
 };
 
-use crate::{expose::Expose, lang::Expr, FuncArg, Rep};
+use crate::{
+    expose::Expose,
+    lang::{defs::Defs, Expr},
+    FuncArg, Rep,
+};
+
+use self::fields::{Fields, InputFields};
 
 /// Description of a shader.
-pub struct Shader<P, V, R> {
-    vert_stage: ErasedVertStage,
-    frag_stage: ErasedFragStage,
-    _phantom: PhantomData<(P, V, R)>,
-}
-
-struct ErasedVertStage {
-    pub interps: Expr,
-    pub position: Expr,
-}
-
-struct ErasedFragStage {
-    pub frag: Expr,
-    pub frag_depth: Option<Expr>,
-}
-
-impl ErasedVertStage {
-    fn new<W>(out: VOut<W>) -> Self
-    where
-        W: Expose,
-        W::Rep: Interpolants,
-    {
-        Self {
-            interps: out.interps.expr(),
-            position: out.position.expr(),
-        }
-    }
-}
-
-impl ErasedFragStage {
-    fn new<F>(out: FOut<F>) -> Self
-    where
-        F: Expose,
-        F::Rep: Fragment,
-    {
-        Self {
-            frag: out.frag.expr(),
-            frag_depth: out.frag_depth.map(|v| v.expr()),
-        }
-    }
+pub struct Shader<R, V, F> {
+    erased: ErasedShader,
+    _phantom: PhantomData<(R, V, F)>,
 }
 
 impl<R, V, F> Shader<R, V, F>
@@ -65,24 +38,40 @@ where
     V::Rep: Attributes,
     F::Rep: Fragment,
 {
-    pub fn new<W, VertStage, FragStage>(vert_stage: VertStage, frag_stage: FragStage) -> Self
+    pub fn new<W, VStage, FStage>(v_stage: VStage, f_stage: FStage) -> Self
     where
         W: Expose,
         W::Rep: Interpolants,
-        VertStage: FnOnce(Rep<R>, VArg<V>) -> VOut<W>,
-        FragStage: FnOnce(Rep<R>, FArg<W>) -> FOut<F>,
+        VStage: FnOnce(Rep<R>, VArg<V>) -> VOut<W>,
+        FStage: FnOnce(Rep<R>, FArg<W>) -> FOut<F>,
     {
         // FIXME: stage arg handling
-        let vert_out = vert_stage(R::Rep::stage_arg(), VArg::stage_arg());
-        let frag_out = frag_stage(R::Rep::stage_arg(), FArg::stage_arg());
+        let v_out = v_stage(
+            <R::Rep as InputFields>::stage_input("res"),
+            ErasedVStage::stage_arg(),
+        );
+        let f_out = f_stage(
+            <R::Rep as InputFields>::stage_input("res"),
+            ErasedFStage::stage_arg(),
+        );
 
-        let vert_stage = ErasedVertStage::new(vert_out);
-        let frag_stage = ErasedFragStage::new(frag_out);
+        let res = <R::Rep as Fields>::fields("res");
+        let v_stage = ErasedVStage::new::<V, W>(v_out);
+        let f_stage = ErasedFStage::new::<W, F>(f_out);
+
+        let erased = ErasedShader {
+            res,
+            v_stage,
+            f_stage,
+        };
 
         Self {
-            vert_stage,
-            frag_stage,
+            erased,
             _phantom: PhantomData,
         }
+    }
+
+    pub fn erased(&self) -> &ErasedShader {
+        &self.erased
     }
 }

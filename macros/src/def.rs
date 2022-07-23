@@ -1,13 +1,11 @@
-use std::iter;
-
 use proc_macro2::TokenStream as TokenStream2;
-use quote::{quote, quote_spanned, ToTokens};
+use quote::{quote, ToTokens};
 use syn::{
     parse_quote, parse_quote_spanned, spanned::Spanned, Block, Error, Expr, FnArg, Ident, ItemFn,
     Pat, Result, ReturnType, Signature, Stmt, Type,
 };
 
-fn inputs(sig: &Signature) -> Result<(Vec<Ident>, Vec<Box<Type>>)> {
+fn inputs(sig: &Signature) -> Result<(Vec<Ident>, Vec<Type>)> {
     let mut input_idents = Vec::new();
     let mut input_tys = Vec::new();
 
@@ -16,7 +14,7 @@ fn inputs(sig: &Signature) -> Result<(Vec<Ident>, Vec<Box<Type>>)> {
             match &*input.pat {
                 Pat::Ident(ident) => {
                     input_idents.push(ident.ident.clone());
-                    input_tys.push(input.ty.clone());
+                    input_tys.push(*input.ty.clone());
                 }
                 _ => {
                     return Err(Error::new_spanned(
@@ -43,7 +41,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                 "posh::def: Function must return a value",
             ));
         }
-        ReturnType::Type(_, ty) => ty.clone(),
+        ReturnType::Type(_, ty) => ty,
     };
 
     let func_ident = item.sig.ident.clone();
@@ -108,7 +106,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
 
             // Return a Posh expression which defines *and* calls the function.
             ::posh::expose::func_def_and_call(
-                ::posh::lang::UserDefinedFunc {
+                ::posh::lang::DefFunc {
                     ident: ::posh::lang::Ident::new(stringify!(#func_ident)),
                     params: vec![#(#param_exprs),*],
                     result: ::std::rc::Rc::new({

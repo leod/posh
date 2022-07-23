@@ -1,8 +1,7 @@
 use std::{collections::BTreeSet, rc::Rc};
 
 use crate::lang::{
-    BinaryExpr, BinaryOp, BuiltInFunc, CallExpr, Expr, FieldExpr, Func, FuncParam, Ident, Ty,
-    UserDefinedFunc, VarExpr,
+    BinaryExpr, BinaryOp, BuiltInFunc, CallExpr, DefFunc, Expr, FieldExpr, Func, Ident, Ty, VarExpr,
 };
 
 use super::{FuncArg, IntoRep, Trace, Value};
@@ -23,14 +22,16 @@ pub fn var<R: Value>(init: R) -> R {
 }
 
 #[doc(hidden)]
-pub fn common_field_base(exprs: &[Expr]) -> Option<Expr> {
+pub fn common_field_base(target_ty: &Ty, exprs: &[Expr]) -> Option<Expr> {
     exprs.first().and_then(|first_expr| {
         if let Expr::Field(first_field_expr) = first_expr {
             let mut fields = BTreeSet::new();
 
             for expr in exprs {
                 if let Expr::Field(field_expr) = expr {
-                    if field_expr.base != first_field_expr.base {
+                    if field_expr.base.ty() != *target_ty
+                        || field_expr.base != first_field_expr.base
+                    {
                         return None;
                     }
 
@@ -70,10 +71,10 @@ pub fn field<R: Value>(base: Trace, member: &str) -> R {
 }
 
 #[doc(hidden)]
-pub fn func_def_and_call<R: Value>(def: UserDefinedFunc, args: Vec<Expr>) -> R {
+pub fn func_def_and_call<R: Value>(def: DefFunc, args: Vec<Expr>) -> R {
     assert!(def.params.len() == args.len());
 
-    let func = Func::UserDefined(def);
+    let func = Func::Def(def);
     let expr = Expr::Call(CallExpr { func, args });
 
     R::from_expr(expr)

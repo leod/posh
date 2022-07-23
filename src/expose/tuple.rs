@@ -1,4 +1,6 @@
-use super::{Expose, FuncArg, Rep, Representative, Value};
+use crate::lang::{CallExpr, Expr, Func, Ident, StructFunc, StructTy, Ty};
+
+use super::{common_field_base, field, Expose, FuncArg, Rep, Representative, Trace, Value};
 
 impl<U, V> Expose for (U, V)
 where
@@ -20,16 +22,30 @@ where
     U: Value,
     V: Value,
 {
-    fn ty() -> crate::lang::Ty {
-        todo!()
+    fn ty() -> Ty {
+        Ty::Struct(StructTy {
+            ident: Ident::new("Pair"),
+            fields: vec![("x0".into(), U::ty()), ("x1".into(), V::ty())],
+        })
     }
 
-    fn from_ident(ident: crate::lang::Ident) -> Self {
-        todo!()
+    fn from_ident(ident: Ident) -> Self {
+        Self::from_trace(Trace::from_ident::<Self>(ident))
     }
 
-    fn expr(&self) -> crate::lang::Expr {
-        todo!()
+    fn expr(&self) -> Expr {
+        let args = vec![self.0.expr(), self.1.expr()];
+
+        if let Some(common_base) = common_field_base(&Self::ty(), &args) {
+            common_base
+        } else {
+            let ty = match <Self as FuncArg>::ty() {
+                Ty::Struct(ty) => ty,
+                _ => unreachable!(),
+            };
+            let func = Func::Struct(StructFunc { ty });
+            Expr::Call(CallExpr { func, args })
+        }
     }
 }
 
@@ -38,7 +54,9 @@ where
     U: Value,
     V: Value,
 {
-    fn from_trace(trace: super::Trace) -> Self {
-        todo!()
+    fn from_trace(trace: Trace) -> Self {
+        assert!(trace.expr().ty() == <Self::Rep as FuncArg>::ty());
+
+        (field(trace, "p0"), field(trace, "p1"))
     }
 }
