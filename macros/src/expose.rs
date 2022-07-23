@@ -207,7 +207,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
         .collect();
     let field_strings: Vec<_> = field_idents.iter().map(|ident| ident.to_string()).collect();
 
-    let rep_name = Ident::new(&format!("_{}PoshRep", name), name.span());
+    let rep_name = Ident::new(&super::rep::rep_name(&name_string), name.span());
 
     let posh_struct_def = quote_spanned! {name.span()=>
         #[must_use]
