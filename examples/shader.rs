@@ -5,7 +5,7 @@ use posh::{
 };
 
 #[derive(Expose)]
-#[expose(UniformBlock, Vertex)]
+#[expose(UniformBlock)]
 struct Transforms {
     world_to_view: Vector3<f32>,
     view_to_clip: Vector3<f32>,

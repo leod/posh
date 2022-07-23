@@ -1,33 +1,39 @@
 use sealed::sealed;
 
-use crate::{Representative, Value};
+use crate::{
+    lang::{Ident, Ty},
+    FuncArg, Representative, Value,
+};
+
+use super::fields::{Fields, InputFields};
 
 /// A representative of a resource that can be bound to shaders.
-pub trait Resource: Representative {
-    #[doc(hidden)]
-    fn stage_arg() -> Self;
-}
+pub trait Resource: FuncArg + InputFields {}
 
 /// A representative of a uniform block.
 pub trait UniformBlock: Resource + Value {}
 
 /// A representative of a collection of resources that can be bound to shaders.
-pub trait Resources {
-    #[doc(hidden)]
-    fn stage_arg() -> Self;
-
+pub trait Resources: InputFields {
     #[doc(hidden)]
     fn must_impl() {}
 }
 
-impl<D> Resources for D
-where
-    D: Resource,
-{
-    fn stage_arg() -> Self {
-        <Self as Resource>::stage_arg()
+/*
+impl<D: Resource> Fields for D {
+    fn fields(prefix: &str) -> Vec<(String, Ty)> {
+        vec![(prefix.into(), <D as FuncArg>::ty())]
     }
 }
+
+impl<D: Resource> InputFields for D {
+    fn stage_input(prefix: &str) -> Self {
+        <D as FuncArg>::from_ident(Ident::new(prefix))
+    }
+}
+*/
+
+impl<D: Resource> Resources for D {}
 
 /// A representative that can be stored in a [`UniformBlock`].
 #[sealed]

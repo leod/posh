@@ -248,14 +248,18 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             impl #impl_generics ::posh::shader::fields::Fields for #rep_name #ty_generics #where_clause
             {
                 fn fields(prefix: &str) -> Vec<(String, ::posh::lang::Ty)> {
-                    vec![
-                        #(
-                            (
-                                ::posh::shader::fields::add_prefix(prefix, #field_strings),
-                                <::posh::Rep<#field_tys> as ::posh::FuncArg>::ty(),
-                            )
-                        ),*
-                    ]
+                    let mut result = Vec::new();
+
+                    #(
+                        let fields =
+                            <::posh::Rep<#field_tys> as ::posh::shader::fields::Fields>::fields(
+                                &::posh::shader::fields::add_prefix(prefix, #field_strings),
+                            );
+
+                        result.extend(fields);
+                    )*
+
+                    result
                 }
            }
         }
@@ -269,11 +273,11 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                 fn stage_input(prefix: &str) -> Self {
                     Self {
                         #(
-                            #field_idents: <::posh::Rep<#field_tys> as ::posh::FuncArg>::from_ident(
-                                ::posh::lang::Ident::new(
-                                    ::posh::shader::fields::add_prefix(prefix, #field_strings)
+                            #field_idents:
+                                <::posh::Rep<#field_tys> as ::posh::shader::fields::InputFields>::
+                                stage_input(
+                                    &::posh::shader::fields::add_prefix(prefix, #field_strings)
                                 )
-                            )
                         ),*
                     }
                 }
@@ -386,11 +390,23 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
 
     let impl_uniform_block = rep_traits.get("UniformBlock").map(|_| {
         quote! {
-            impl #impl_generics ::posh::shader::Resource for #rep_name #ty_generics #where_clause {
-                fn stage_arg() -> ::posh::Rep<Self> {
-                    // FIXME
-                    <Self as ::posh::FuncArg>::from_ident(::posh::lang::Ident::new("input"))
+            impl #impl_generics ::posh::shader::fields::Fields
+                for #rep_name #ty_generics #where_clause
+            {
+                fn fields(prefix: &str) -> Vec<(String, ::posh::lang::Ty)> {
+                    vec![(prefix.into(), <Self as ::posh::FuncArg>::ty())]
                 }
+            }
+
+            impl #impl_generics ::posh::shader::fields::InputFields
+                for #rep_name #ty_generics #where_clause
+            {
+                fn stage_input(prefix: &str) -> Self {
+                    <Self as ::posh::FuncArg>::from_ident(::posh::lang::Ident::new(prefix))
+                }
+            }
+
+            impl #impl_generics ::posh::shader::Resource for #rep_name #ty_generics #where_clause {
             }
 
             impl #impl_generics ::posh::shader::UniformBlock
@@ -404,16 +420,6 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
         quote! {
             impl #impl_generics ::posh::shader::Resources for #rep_name #ty_generics #where_clause
             {
-                fn stage_arg() -> ::posh::Rep<Self> {
-                    // FIXME
-                    ::posh::Rep::<Self> {
-                        #(
-                            #field_idents: <
-                                ::posh::Rep<#field_tys> as ::posh::shader::Resource
-                            >::stage_arg()
-                        ),*
-                    }
-                }
             }
         }
     });

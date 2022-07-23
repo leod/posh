@@ -36,7 +36,7 @@ fn show_main<'a>(
     result
 }
 
-fn show_v_stage(stage: &ErasedVStage) -> String {
+fn show_v_stage(res: &str, stage: &ErasedVStage) -> String {
     let mut vars = BTreeSet::new();
     for expr in stage.output_exprs() {
         collect_vars(expr, &mut vars);
@@ -51,6 +51,9 @@ fn show_v_stage(stage: &ErasedVStage) -> String {
     let mut result = String::new();
 
     result += &show_defs(&stage.defs());
+
+    result += "\n\n";
+    result += res;
 
     result += "\n\n";
     result += &show_interface("attribute", stage.attrs.iter().cloned());
@@ -70,7 +73,7 @@ fn show_v_stage(stage: &ErasedVStage) -> String {
     result
 }
 
-fn show_f_stage(stage: &ErasedFStage) -> String {
+fn show_f_stage(res: &str, stage: &ErasedFStage) -> String {
     let mut vars = BTreeSet::new();
     for expr in stage.output_exprs() {
         collect_vars(expr, &mut vars);
@@ -92,6 +95,9 @@ fn show_f_stage(stage: &ErasedFStage) -> String {
     result += &show_defs(&stage.defs());
 
     result += "\n\n";
+    result += res;
+
+    result += "\n\n";
     result += &show_interface("in", stage.interps.iter().cloned());
 
     result += "\n\n";
@@ -110,9 +116,11 @@ fn show_f_stage(stage: &ErasedFStage) -> String {
 }
 
 pub fn show_shader(shader: &ErasedShader) -> String {
+    let res = show_interface("uniform", shader.res.iter().cloned());
+
     format!(
         "{}\n============================================================================\n\n{}",
-        show_v_stage(&shader.v_stage),
-        show_f_stage(&shader.f_stage)
+        show_v_stage(&res, &shader.v_stage),
+        show_f_stage(&res, &shader.f_stage)
     )
 }

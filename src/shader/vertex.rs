@@ -1,14 +1,66 @@
 use sealed::sealed;
 
-use crate::{expose::NumType, lang::Ty, Scalar, Value, Vec2, Vec3, Vec4};
+use crate::{
+    expose::NumType,
+    lang::{Ident, Ty},
+    FuncArg, Scalar, Value, Vec2, Vec3, Vec4,
+};
 
 use super::fields::{add_prefix, Fields, InputFields, OutputFields};
 
 /// A representative that can be stored in a [`Vertex`].
 #[sealed]
-pub trait VertexField: Value {
+pub trait VertexField: Value + InputFields {
     #[doc(hidden)]
     fn must_impl() {}
+}
+
+impl<T: NumType> Fields for Scalar<T> {
+    fn fields(prefix: &str) -> Vec<(String, Ty)> {
+        vec![(prefix.into(), <Self as FuncArg>::ty())]
+    }
+}
+
+impl<T: NumType> Fields for Vec2<T> {
+    fn fields(prefix: &str) -> Vec<(String, Ty)> {
+        vec![(prefix.into(), <Self as FuncArg>::ty())]
+    }
+}
+
+impl<T: NumType> Fields for Vec3<T> {
+    fn fields(prefix: &str) -> Vec<(String, Ty)> {
+        vec![(prefix.into(), <Self as FuncArg>::ty())]
+    }
+}
+
+impl<T: NumType> Fields for Vec4<T> {
+    fn fields(prefix: &str) -> Vec<(String, Ty)> {
+        vec![(prefix.into(), <Self as FuncArg>::ty())]
+    }
+}
+
+impl<T: NumType> InputFields for Scalar<T> {
+    fn stage_input(prefix: &str) -> Self {
+        Self::from_ident(Ident::new(prefix))
+    }
+}
+
+impl<T: NumType> InputFields for Vec2<T> {
+    fn stage_input(prefix: &str) -> Self {
+        Self::from_ident(Ident::new(prefix))
+    }
+}
+
+impl<T: NumType> InputFields for Vec3<T> {
+    fn stage_input(prefix: &str) -> Self {
+        Self::from_ident(Ident::new(prefix))
+    }
+}
+
+impl<T: NumType> InputFields for Vec4<T> {
+    fn stage_input(prefix: &str) -> Self {
+        Self::from_ident(Ident::new(prefix))
+    }
 }
 
 #[sealed]
@@ -23,7 +75,7 @@ impl<T: NumType> VertexField for Vec3<T> {}
 #[sealed]
 impl<T: NumType> VertexField for Vec4<T> {}
 
-// TODO: VertexFieldValue for f32 matrix types
+// TODO: VertexField for f32 matrix types
 
 /// A representative of a vertex.
 pub trait Vertex: Value + InputFields {}
@@ -58,7 +110,7 @@ pub trait Interpolants: Value + InputFields + OutputFields {}
 
 /// A representative that can be stored in [`Interpolants`].
 #[sealed]
-pub trait InterpolantsField {
+pub trait InterpolantsField: Value + InputFields {
     #[doc(hidden)]
     fn must_impl() {}
 }

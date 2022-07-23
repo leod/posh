@@ -23,6 +23,7 @@ pub struct ErasedFStage {
 }
 
 pub struct ErasedShader {
+    pub res: Vec<(String, Ty)>,
     pub v_stage: ErasedVStage,
     pub f_stage: ErasedFStage,
 }

@@ -21,7 +21,7 @@ use crate::{
     FuncArg, Rep,
 };
 
-use self::fields::Fields;
+use self::fields::{Fields, InputFields};
 
 /// Description of a shader.
 pub struct Shader<R, V, F> {
@@ -46,13 +46,24 @@ where
         FStage: FnOnce(Rep<R>, FArg<W>) -> FOut<F>,
     {
         // FIXME: stage arg handling
-        let v_out = v_stage(R::Rep::stage_arg(), ErasedVStage::stage_arg());
-        let f_out = f_stage(R::Rep::stage_arg(), ErasedFStage::stage_arg());
+        let v_out = v_stage(
+            <R::Rep as InputFields>::stage_input("res"),
+            ErasedVStage::stage_arg(),
+        );
+        let f_out = f_stage(
+            <R::Rep as InputFields>::stage_input("res"),
+            ErasedFStage::stage_arg(),
+        );
 
+        let res = <R::Rep as Fields>::fields("res");
         let v_stage = ErasedVStage::new::<V, W>(v_out);
         let f_stage = ErasedFStage::new::<W, F>(f_out);
 
-        let erased = ErasedShader { v_stage, f_stage };
+        let erased = ErasedShader {
+            res,
+            v_stage,
+            f_stage,
+        };
 
         Self {
             erased,
