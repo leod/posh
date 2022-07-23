@@ -143,11 +143,11 @@ pub fn show_struct_def(ty: &StructTy) -> String {
     let fields: Vec<_> = ty
         .fields
         .iter()
-        .map(|(name, ty)| format!("    {}: {}", name, show_ty(ty)))
+        .map(|(name, ty)| format!("    {}: {},", name, show_ty(ty)))
         .collect();
 
     format!(
-        "struct {}\n{{\n{}\n}};",
+        "struct {}\n{{\n{}\n}}",
         ty.ident.to_string(),
         fields.join("\n")
     )
