@@ -33,7 +33,7 @@ pub fn collect_structs(expr: &Expr, structs: &mut BTreeSet<StructTy>) {
             collect_structs(&*expr.left, structs);
             collect_structs(&*expr.right, structs);
         }
-        Ternary(expr) => {
+        Branch(expr) => {
             collect_structs(&*expr.cond, structs);
             collect_structs(&*expr.true_expr, structs);
             collect_structs(&*expr.false_expr, structs);
@@ -59,7 +59,6 @@ pub fn collect_structs(expr: &Expr, structs: &mut BTreeSet<StructTy>) {
         Field(expr) => {
             collect_structs(&*expr.base, structs);
         }
-        BuiltInVar(_) => (),
     }
 }
 
@@ -71,7 +70,7 @@ pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<UserDefinedFunc>) {
             collect_funcs(&*expr.left, funcs);
             collect_funcs(&*expr.right, funcs);
         }
-        Ternary(expr) => {
+        Branch(expr) => {
             collect_funcs(&*expr.cond, funcs);
             collect_funcs(&*expr.true_expr, funcs);
             collect_funcs(&*expr.false_expr, funcs);
@@ -95,7 +94,6 @@ pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<UserDefinedFunc>) {
         Field(expr) => {
             collect_funcs(&*expr.base, funcs);
         }
-        BuiltInVar(_) => (),
     }
 }
 
@@ -107,7 +105,7 @@ pub fn collect_vars(expr: &Expr, vars: &mut BTreeSet<VarExpr>) {
             collect_vars(&*expr.left, vars);
             collect_vars(&*expr.right, vars);
         }
-        Ternary(expr) => {
+        Branch(expr) => {
             collect_vars(&*expr.cond, vars);
             collect_vars(&*expr.true_expr, vars);
             collect_vars(&*expr.false_expr, vars);
@@ -130,7 +128,6 @@ pub fn collect_vars(expr: &Expr, vars: &mut BTreeSet<VarExpr>) {
         Field(expr) => {
             collect_vars(&*expr.base, vars);
         }
-        BuiltInVar(_) => (),
     }
 }
 
@@ -285,7 +282,7 @@ pub fn show_expr(expr: &Expr) -> String {
             show_binary_op(expr.op),
             show_expr(&*expr.right)
         ),
-        Ternary(expr) => format!(
+        Branch(expr) => format!(
             "if {} {{ {} }} else {{ {} }}",
             show_expr(&*expr.cond),
             show_expr(&*expr.true_expr),
@@ -301,6 +298,5 @@ pub fn show_expr(expr: &Expr) -> String {
             let base = show_expr(&*expr.base);
             format!("({}).{}", base, expr.member)
         }
-        BuiltInVar(expr) => expr.name.to_string(),
     }
 }

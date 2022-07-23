@@ -10,7 +10,7 @@ fn foo(x: Rep<f32>, y: Rep<f32>) -> Rep<f32> {
     let z = posh::var(x * y);
     let w = posh::var(1.0 + y + x + 1.0);
 
-    z.eq(w).and(w.eq(1.0)).ternary(3.0 * z * 2.0, 1.0)
+    z.eq(w).and(w.eq(1.0)).branch(3.0 * z * 2.0, 1.0)
 }
 
 #[posh::def]
@@ -18,7 +18,7 @@ fn bar(x: Rep<f32>) -> Rep<f32> {
     let ints = triplet::<u32>(1.into());
     let floats = triplet(2.0.into());
 
-    floats.x * ints.y.eq(2u32).ternary(-1.0, foo(x, x))
+    floats.x * ints.y.eq(2u32).branch(-1.0, foo(x, x))
 }
 
 #[posh::def]
