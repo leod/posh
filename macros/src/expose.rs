@@ -98,7 +98,7 @@ impl RepTrait {
     }
 }
 
-const REP_TRAITS: &'static [RepTrait] = &[
+const REP_TRAITS: &[RepTrait] = &[
     RepTrait {
         name: "UniformBlock",
         deps: &["Value"],
@@ -158,10 +158,7 @@ fn expose_rep_traits(attrs: Vec<Attribute>) -> Result<HashMap<&'static str, RepT
         .iter()
         .map(|ident| {
             let rep_trait = get_rep_trait(&ident.to_string()).ok_or_else(|| {
-                Error::new_spanned(
-                    ident,
-                    format!("Unhandled expose trait: {}", ident.to_string()),
-                )
+                Error::new_spanned(ident, format!("Unhandled expose trait: {}", ident))
             })?;
             Ok((rep_trait.name, rep_trait))
         })

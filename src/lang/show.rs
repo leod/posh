@@ -2,7 +2,7 @@ use std::collections::BTreeSet;
 
 use super::{
     defs::{collect_vars, Defs},
-    BinaryOp, BuiltInTy, CallExpr, DefFunc, Expr, Func, ScalarTy, StructTy, Ty, VarExpr,
+    BinaryOp, BuiltInTy, DefFunc, Expr, ScalarTy, StructTy, Ty, VarExpr,
 };
 
 pub fn show_expr(expr: &Expr) -> String {

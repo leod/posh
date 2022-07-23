@@ -5,7 +5,7 @@ use syn::{
     Pat, Result, ReturnType, Signature, Stmt, Type,
 };
 
-fn inputs(sig: &Signature) -> Result<(Vec<Ident>, Vec<Box<Type>>)> {
+fn inputs(sig: &Signature) -> Result<(Vec<Ident>, Vec<Type>)> {
     let mut input_idents = Vec::new();
     let mut input_tys = Vec::new();
 
@@ -14,7 +14,7 @@ fn inputs(sig: &Signature) -> Result<(Vec<Ident>, Vec<Box<Type>>)> {
             match &*input.pat {
                 Pat::Ident(ident) => {
                     input_idents.push(ident.ident.clone());
-                    input_tys.push(input.ty.clone());
+                    input_tys.push(*input.ty.clone());
                 }
                 _ => {
                     return Err(Error::new_spanned(
@@ -41,7 +41,7 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                 "posh::def: Function must return a value",
             ));
         }
-        ReturnType::Type(_, ty) => ty.clone(),
+        ReturnType::Type(_, ty) => ty,
     };
 
     let func_ident = item.sig.ident.clone();

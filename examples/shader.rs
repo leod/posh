@@ -1,10 +1,7 @@
-use std::collections::BTreeSet;
-
 use nalgebra::Vector3;
 use posh::{
-    lang::{defs::collect_vars, show::show_defs},
-    shader::{show::show_shader, ErasedVStage, FArg, FOut, Shader, VArg, VOut},
-    Expose, Rep, Sampler2,
+    shader::{show::show_shader, FArg, FOut, Shader, VArg, VOut},
+    Expose, Rep,
 };
 
 #[derive(Expose)]
