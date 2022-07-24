@@ -54,6 +54,16 @@ struct Frag {
     normal: [f32; 3],
 }
 
+trait HasSettings {
+    fn settings(self) -> Rep<Settings>;
+}
+
+impl HasSettings for Rep<Resources> {
+    fn settings(self) -> Rep<Settings> {
+        self.settings
+    }
+}
+
 #[posh::def]
 fn transform(ts: Rep<Transforms>, pos: posh::Vec3<f32>) -> posh::Vec3<f32> {
     ts.view_to_clip * ts.world_to_view * pos
@@ -81,8 +91,8 @@ fn vertex_stage_instanced(res: Rep<Resources>, arg: VArg<(Vertex, Instance)>) ->
     VOut { interps, pos }
 }
 
-fn fragment_stage(res: Rep<Resources>, arg: FArg<Interps>) -> FOut<Frag> {
-    let color = posh::var(res.settings.light.branch(2.0, 3.0));
+fn fragment_stage<R: HasSettings>(res: R, arg: FArg<Interps>) -> FOut<Frag> {
+    let color = posh::var(res.settings().light.branch(2.0, 3.0));
     let frag = posh::var(Rep::<Frag> {
         color: arg.interps.color * color,
         normal: arg.interps.normal,
