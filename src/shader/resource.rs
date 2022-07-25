@@ -1,8 +1,6 @@
 use sealed::sealed;
 
-use crate::{
-    FuncArg, Value,
-};
+use crate::{FuncArg, Value};
 
 use super::fields::InputFields;
 

@@ -15,10 +15,7 @@ pub use vertex::{
     Attributes, Fragment, FragmentField, Interpolants, InterpolantsField, Vertex, VertexField,
 };
 
-use crate::{
-    expose::Expose,
-    Rep,
-};
+use crate::{expose::Expose, Rep};
 
 use self::fields::{Fields, InputFields};
 

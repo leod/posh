@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::BTreeMap, fmt, thread_local, rc::Rc};
+use std::{cell::RefCell, collections::BTreeMap, fmt, rc::Rc, thread_local};
 
 use crate::lang::Expr;
 

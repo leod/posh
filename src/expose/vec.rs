@@ -1,4 +1,7 @@
-use std::{ops::{Add, Div, Mul, Sub}, rc::Rc};
+use std::{
+    ops::{Add, Div, Mul, Sub},
+    rc::Rc,
+};
 
 use crate::lang::{BinaryOp, BuiltInTy, Expr, Ident, Ty};
 
