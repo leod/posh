@@ -23,7 +23,7 @@ pub fn show_expr(expr: &Expr) -> String {
         ),
         Var(expr) => expr.ident.to_string(),
         Call(expr) => {
-            let args: Vec<_> = expr.args.iter().map(show_expr).collect();
+            let args: Vec<_> = expr.args.iter().map(|arg| show_expr(&*arg)).collect();
             format!("{}({})", expr.func.name(), args.join(", "),)
         }
         Literal(expr) => expr.literal.value.clone(),

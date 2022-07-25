@@ -12,6 +12,8 @@ mod trace;
 mod tuple;
 mod vec;
 
+use std::rc::Rc;
+
 use crate::lang::{Expr, Ident, Ty};
 
 pub use built_in_value::BuiltInValue;
@@ -75,7 +77,7 @@ pub trait Representative: Copy + Expose<Rep = Self> {}
 /// For more information on function definitions in Posh, see [`def`](attr.def.html).
 pub trait FuncArg: Representative {
     fn ty() -> Ty;
-    fn expr(&self) -> Expr;
+    fn expr(&self) -> Rc<Expr>;
 
     /// FIXME
     #[doc(hidden)]

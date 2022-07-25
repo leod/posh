@@ -17,8 +17,7 @@ pub use vertex::{
 
 use crate::{
     expose::Expose,
-    lang::{defs::Defs, Expr},
-    FuncArg, Rep,
+    Rep,
 };
 
 use self::fields::{Fields, InputFields};

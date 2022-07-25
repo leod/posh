@@ -8,7 +8,7 @@ use super::{FuncArg, IntoRep, Trace, Value};
 
 /// Creates a variable which stores a [`Value`].
 pub fn var<R: Value>(init: R) -> R {
-    let init = Some(Rc::new(init.expr()));
+    let init = Some(init.expr());
 
     let var = VarExpr {
         ident: Ident::new("var"),
@@ -22,13 +22,13 @@ pub fn var<R: Value>(init: R) -> R {
 }
 
 #[doc(hidden)]
-pub fn common_field_base(target_ty: &Ty, exprs: &[Expr]) -> Option<Expr> {
+pub fn common_field_base(target_ty: &Ty, exprs: &[Rc<Expr>]) -> Option<Rc<Expr>> {
     exprs.first().and_then(|first_expr| {
-        if let Expr::Field(first_field_expr) = first_expr {
+        if let Expr::Field(first_field_expr) = &**first_expr {
             let mut fields = BTreeSet::new();
 
             for expr in exprs {
-                if let Expr::Field(field_expr) = expr {
+                if let Expr::Field(field_expr) = &**expr {
                     if field_expr.base.ty() != *target_ty
                         || field_expr.base != first_field_expr.base
                     {
@@ -46,7 +46,7 @@ pub fn common_field_base(target_ty: &Ty, exprs: &[Expr]) -> Option<Expr> {
                     ty.fields.iter().map(|(name, _)| name.clone()).collect();
 
                 if needed_fields == fields {
-                    Some((*first_field_expr.base).clone())
+                    Some(first_field_expr.base.clone())
                 } else {
                     None
                 }
@@ -62,7 +62,7 @@ pub fn common_field_base(target_ty: &Ty, exprs: &[Expr]) -> Option<Expr> {
 #[doc(hidden)]
 pub fn field<R: Value>(base: Trace, member: &str) -> R {
     let expr = Expr::Field(FieldExpr {
-        base: Rc::new(base.expr()),
+        base: base.expr(),
         member: member.into(),
         ty: <R::Rep as FuncArg>::ty(),
     });
@@ -71,7 +71,7 @@ pub fn field<R: Value>(base: Trace, member: &str) -> R {
 }
 
 #[doc(hidden)]
-pub fn func_def_and_call<R: Value>(def: DefFunc, args: Vec<Expr>) -> R {
+pub fn func_def_and_call<R: Value>(def: DefFunc, args: Vec<Rc<Expr>>) -> R {
     assert!(def.params.len() == args.len());
 
     let func = Func::Def(def);
@@ -90,8 +90,8 @@ where
     V: FuncArg,
     R: Value,
 {
-    let left = Rc::new(left.into_rep().expr());
-    let right = Rc::new(right.into_rep().expr());
+    let left = left.into_rep().expr();
+    let right = right.into_rep().expr();
 
     let expr = Expr::Binary(BinaryExpr {
         left,

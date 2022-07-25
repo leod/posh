@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::lang::{BuiltInTy, Expr, Ident, Ty};
 
 use super::{built_in2, Expose, FuncArg, Representative, Trace, Vec2, Vec4};
@@ -17,7 +19,7 @@ impl FuncArg for Sampler2 {
         Sampler2(Trace::from_ident::<Self>(ident))
     }
 
-    fn expr(&self) -> Expr {
+    fn expr(&self) -> Rc<Expr> {
         self.0.expr()
     }
 

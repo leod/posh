@@ -190,7 +190,7 @@ pub struct VarExpr {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct CallExpr {
     pub func: Func,
-    pub args: Vec<Expr>,
+    pub args: Vec<Rc<Expr>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

@@ -1,4 +1,4 @@
-use std::ops::{Add, Div, Mul, Sub};
+use std::{ops::{Add, Div, Mul, Sub}, rc::Rc};
 
 use crate::lang::{BinaryOp, BuiltInTy, Expr, Ident, Ty};
 
@@ -44,7 +44,7 @@ impl<T: ScalarType> FuncArg for Vec2<T> {
         Ty::BuiltIn(BuiltInTy::Vec2(T::scalar_ty()))
     }
 
-    fn expr(&self) -> Expr {
+    fn expr(&self) -> Rc<Expr> {
         self.trace.expr()
     }
 
@@ -60,7 +60,7 @@ impl<T: ScalarType> FuncArg for Vec3<T> {
         Ty::BuiltIn(BuiltInTy::Vec3(T::scalar_ty()))
     }
 
-    fn expr(&self) -> Expr {
+    fn expr(&self) -> Rc<Expr> {
         self.trace.expr()
     }
 
@@ -80,7 +80,7 @@ impl<T: ScalarType> FuncArg for Vec4<T> {
         Self::from_trace(Trace::from_ident::<Self>(ident))
     }
 
-    fn expr(&self) -> Expr {
+    fn expr(&self) -> Rc<Expr> {
         self.trace.expr()
     }
 }

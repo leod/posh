@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::BTreeMap, fmt, thread_local};
+use std::{cell::RefCell, collections::BTreeMap, fmt, thread_local, rc::Rc};
 
 use crate::lang::Expr;
 
@@ -15,13 +15,15 @@ impl fmt::Debug for ExprId {
 
 struct ExprReg {
     next_id: ExprId,
-    exprs: BTreeMap<ExprId, Expr>,
+    exprs: BTreeMap<ExprId, Rc<Expr>>,
+    expr_ids: BTreeMap<Rc<Expr>, ExprId>,
 }
 
 thread_local! {
     static EXPR_REG: RefCell<ExprReg> = RefCell::new(ExprReg {
         next_id: ExprId(0),
         exprs: BTreeMap::new(),
+        expr_ids: BTreeMap::new(),
     });
 }
 
@@ -32,12 +34,15 @@ pub fn put(expr: Expr) -> ExprId {
         let id = reg.next_id;
         reg.next_id.0 += 1;
 
-        reg.exprs.insert(id, expr);
+        let expr = Rc::new(expr);
+
+        reg.exprs.insert(id, expr.clone());
+        reg.expr_ids.insert(expr, id);
 
         id
     })
 }
 
-pub fn get(id: ExprId) -> Expr {
+pub fn get(id: ExprId) -> Rc<Expr> {
     EXPR_REG.with(|reg| reg.borrow().exprs.get(&id).unwrap().clone())
 }

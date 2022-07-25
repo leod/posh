@@ -109,14 +109,14 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
                 ::posh::lang::DefFunc {
                     ident: ::posh::lang::Ident::new(stringify!(#func_ident)),
                     params: vec![#(#param_exprs),*],
-                    result: ::std::rc::Rc::new({
+                    result: {
                         // Shadow the Rust function arguments with Posh expressions so that
                         // variables in `func_body` refer to the Posh identifiers generated above.
                         #(#shadow_param_stmts)*
 
                         #[allow(unused_braces)]
                         #output_block
-                    })
+                    },
                 },
                 vec![#(#arg_exprs),*],
             )

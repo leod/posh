@@ -10,9 +10,9 @@ where
     let u = U::from_ident(Ident::new("u"));
     let r = f(u);
 
-    if let Expr::Call(expr) = r.expr() {
-        if let Func::Def(func) = expr.func {
-            Some(func)
+    if let Expr::Call(expr) = &*r.expr() {
+        if let Func::Def(ref func) = expr.func {
+            Some(func.clone())
         } else {
             None
         }

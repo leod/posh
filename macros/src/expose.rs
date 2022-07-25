@@ -295,9 +295,9 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                         #(
                             (
                                 ::posh::shader::fields::add_prefix(prefix, #field_strings),
-                                <::posh::Rep<#field_tys> as ::posh::FuncArg>::expr(
-                                    &self.#field_idents
-                                ),
+                                (*<::posh::Rep<#field_tys> as ::posh::FuncArg>::expr(
+                                    &self.#field_idents,
+                                )).clone(),
                             )
                         ),*
                     ]
@@ -328,7 +328,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                     ::posh::lang::Ty::Struct(struct_ty)
                 }
 
-                fn expr(&self) -> ::posh::lang::Expr {
+                fn expr(&self) -> std::rc::Rc<::posh::lang::Expr> {
                     let args = vec![
                         #(::posh::FuncArg::expr(&self.#field_idents)),*
                     ];
@@ -343,7 +343,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                         };
                         let func = ::posh::lang::Func::Struct(::posh::lang::StructFunc { ty });
                         let call_expr = ::posh::lang::CallExpr { func, args };
-                        ::posh::lang::Expr::Call(call_expr)
+                        std::rc::Rc::new(::posh::lang::Expr::Call(call_expr))
                     }
                 }
 

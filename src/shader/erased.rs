@@ -39,7 +39,7 @@ impl ErasedVStage {
         Self {
             attrs: <V::Rep as Fields>::fields("attrs"),
             interps: out.interps.stage_output("interps"),
-            pos: out.pos.expr(),
+            pos: (*out.pos.expr()).clone(),
         }
     }
 
@@ -80,7 +80,7 @@ impl ErasedFStage {
         Self {
             interps: <W::Rep as Fields>::fields("interps"),
             frag: out.frag.stage_output("frag"),
-            frag_depth: out.frag_depth.map(|v| v.expr()),
+            frag_depth: out.frag_depth.map(|v| (*v.expr()).clone()),
         }
     }
 

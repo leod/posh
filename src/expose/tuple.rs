@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::lang::{CallExpr, Expr, Func, Ident, StructFunc, StructTy, Ty};
 
 use super::{common_field_base, field, Expose, FuncArg, Rep, Representative, Trace, Value};
@@ -33,7 +35,7 @@ where
         Self::from_trace(Trace::from_ident::<Self>(ident))
     }
 
-    fn expr(&self) -> Expr {
+    fn expr(&self) -> Rc<Expr> {
         let args = vec![self.0.expr(), self.1.expr()];
 
         if let Some(common_base) = common_field_base(&Self::ty(), &args) {
@@ -44,7 +46,7 @@ where
                 _ => unreachable!(),
             };
             let func = Func::Struct(StructFunc { ty });
-            Expr::Call(CallExpr { func, args })
+            Rc::new(Expr::Call(CallExpr { func, args }))
         }
     }
 }

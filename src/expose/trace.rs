@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::lang::{Expr, Ident, VarExpr};
 
 use super::{
@@ -25,7 +27,7 @@ impl Trace {
         }))
     }
 
-    pub fn expr(&self) -> Expr {
+    pub fn expr(&self) -> Rc<Expr> {
         expr_reg::get(self.expr_id)
     }
 }

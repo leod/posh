@@ -1,11 +1,10 @@
 use sealed::sealed;
 
 use crate::{
-    lang::{Ident, Ty},
-    FuncArg, Representative, Value,
+    FuncArg, Value,
 };
 
-use super::fields::{Fields, InputFields};
+use super::fields::InputFields;
 
 /// A representative of a resource that can be bound to shaders.
 pub trait Resource: FuncArg + InputFields {}

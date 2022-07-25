@@ -41,7 +41,7 @@ impl<T: ScalarType> FuncArg for Scalar<T> {
         Ty::BuiltIn(BuiltInTy::Scalar(T::scalar_ty()))
     }
 
-    fn expr(&self) -> Expr {
+    fn expr(&self) -> Rc<Expr> {
         self.trace.expr()
     }
 
@@ -88,9 +88,9 @@ impl Scalar<bool> {
         true_value: impl IntoRep<Rep = V>,
         false_value: impl IntoRep<Rep = V>,
     ) -> V {
-        let cond = Rc::new(self.expr());
-        let true_expr = Rc::new(true_value.into_rep().expr());
-        let false_expr = Rc::new(false_value.into_rep().expr());
+        let cond = self.expr();
+        let true_expr = true_value.into_rep().expr();
+        let false_expr = false_value.into_rep().expr();
 
         let expr = Expr::Branch(BranchExpr {
             cond,
