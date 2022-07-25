@@ -16,20 +16,6 @@ pub trait Resources: InputFields {
     fn must_impl() {}
 }
 
-/*
-impl<D: Resource> Fields for D {
-    fn fields(prefix: &str) -> Vec<(String, Ty)> {
-        vec![(prefix.into(), <D as FuncArg>::ty())]
-    }
-}
-
-impl<D: Resource> InputFields for D {
-    fn stage_input(prefix: &str) -> Self {
-        <D as FuncArg>::from_ident(Ident::new(prefix))
-    }
-}
-*/
-
 impl<D: Resource> Resources for D {}
 
 /// A representative that can be stored in a [`UniformBlock`].
