@@ -1,7 +1,6 @@
 #[macro_use]
 mod built_in_value;
 pub mod compile;
-mod expr_reg;
 mod gen_value;
 #[cfg(feature = "nalgebra")]
 mod nalgebra;
