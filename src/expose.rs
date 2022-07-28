@@ -17,7 +17,7 @@ use crate::lang::{Expr, Ident, Ty};
 
 pub use built_in_value::BuiltInValue;
 pub use gen_value::GenValue;
-pub use primitives::{common_field_base, field, func_def_and_call, var};
+pub use primitives::{common_field_base, field, func_def_and_call};
 pub use sampler::Sampler2;
 pub use scalar::{NumType, Scalar, ScalarType};
 pub use trace::Trace;

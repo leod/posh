@@ -92,11 +92,11 @@ fn vertex_stage_instanced(res: Rep<Resources>, arg: VArg<(Vertex, Instance)>) ->
 }
 
 fn fragment_stage<R: HasSettings>(res: R, arg: FArg<Interps>) -> FOut<Frag> {
-    let color = posh::var(res.settings().light.branch(2.0, 3.0));
-    let frag = posh::var(Rep::<Frag> {
+    let color = res.settings().light.branch(2.0, 3.0);
+    let frag = Rep::<Frag> {
         color: arg.interps.color * color,
         normal: arg.interps.normal,
-    });
+    };
 
     FOut::frag(frag)
 }

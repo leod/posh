@@ -23,7 +23,6 @@ impl Trace {
         Self::new(Expr::Var(VarExpr {
             ident,
             ty: <R::Rep as FuncArg>::ty(),
-            init: None,
         }))
     }
 

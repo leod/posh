@@ -53,11 +53,7 @@ pub fn collect_structs(expr: &Expr, structs: &mut BTreeSet<StructTy>) {
             collect_structs(&*expr.true_expr, structs);
             collect_structs(&*expr.false_expr, structs);
         }
-        Var(expr) => {
-            if let Some(ref init) = expr.init {
-                collect_structs(init, structs);
-            }
-        }
+        Var(expr) => (),
         Call(expr) => {
             if let Func::Def(func) = &expr.func {
                 for param in func.params.iter() {
@@ -86,7 +82,6 @@ fn collect_struct_ty(ty: &Ty, structs: &mut BTreeSet<StructTy>) {
                 &Expr::Var(VarExpr {
                     ident: Ident::new(name),
                     ty: ty.clone(),
-                    init: None,
                 }),
                 structs,
             );
@@ -107,12 +102,7 @@ pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<DefFunc>) {
             collect_funcs(&*expr.true_expr, funcs);
             collect_funcs(&*expr.false_expr, funcs);
         }
-        Var(VarExpr {
-            init: Some(init), ..
-        }) => {
-            collect_funcs(init, funcs);
-        }
-        Var(VarExpr { init: None, .. }) => (),
+        Var(VarExpr { .. }) => (),
         Call(expr) => {
             if let Func::Def(func) = &expr.func {
                 funcs.insert(func.clone());
@@ -125,40 +115,6 @@ pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<DefFunc>) {
         Literal(_) => (),
         Field(expr) => {
             collect_funcs(&*expr.base, funcs);
-        }
-    }
-}
-
-pub fn collect_vars(expr: &Expr, vars: &mut BTreeSet<VarExpr>) {
-    use Expr::*;
-
-    match expr {
-        Binary(expr) => {
-            collect_vars(&*expr.left, vars);
-            collect_vars(&*expr.right, vars);
-        }
-        Branch(expr) => {
-            collect_vars(&*expr.cond, vars);
-            collect_vars(&*expr.true_expr, vars);
-            collect_vars(&*expr.false_expr, vars);
-        }
-        Var(
-            var @ VarExpr {
-                init: Some(init), ..
-            },
-        ) => {
-            vars.insert(var.clone());
-            collect_vars(init, vars);
-        }
-        Var(VarExpr { init: None, .. }) => (),
-        Call(expr) => {
-            for arg in &expr.args {
-                collect_vars(arg, vars);
-            }
-        }
-        Literal(_) => (),
-        Field(expr) => {
-            collect_vars(&*expr.base, vars);
         }
     }
 }

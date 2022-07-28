@@ -1,25 +1,10 @@
 use std::{collections::BTreeSet, rc::Rc};
 
 use crate::lang::{
-    BinaryExpr, BinaryOp, BuiltInFunc, CallExpr, DefFunc, Expr, FieldExpr, Func, Ident, Ty, VarExpr,
+    BinaryExpr, BinaryOp, BuiltInFunc, CallExpr, DefFunc, Expr, FieldExpr, Func, Ty,
 };
 
 use super::{FuncArg, IntoRep, Trace, Value};
-
-/// Creates a variable which stores a [`Value`].
-pub fn var<R: Value>(init: R) -> R {
-    let init = Some(init.expr());
-
-    let var = VarExpr {
-        ident: Ident::new("var"),
-        ty: <R::Rep as FuncArg>::ty(),
-        init,
-    };
-
-    let expr = Expr::Var(var);
-
-    R::from_expr(expr)
-}
 
 #[doc(hidden)]
 pub fn common_field_base(target_ty: &Ty, exprs: &[Rc<Expr>]) -> Option<Rc<Expr>> {

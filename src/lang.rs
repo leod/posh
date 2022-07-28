@@ -1,6 +1,6 @@
 pub mod defs;
 pub(crate) mod expr_reg;
-pub mod scope;
+//pub mod scope;
 pub mod show;
 
 use std::rc::Rc;
@@ -186,7 +186,6 @@ pub struct BranchExpr {
 pub struct VarExpr {
     pub ident: Ident,
     pub ty: Ty,
-    pub init: Option<Rc<Expr>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
