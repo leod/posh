@@ -1,8 +1,9 @@
 use nalgebra::Vector3;
 use posh::{
     expose::compile::compile1,
-    lang::{defs::Defs, show::show_defs},
-    rep, Expose, IntoRep, Rep, ScalarType,
+    rep,
+    scope::{show::show_defs, Defs},
+    Expose, IntoRep, Rep, ScalarType,
 };
 
 #[derive(Expose)]

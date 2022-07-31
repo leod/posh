@@ -1,10 +1,6 @@
 pub mod show;
 
-use std::{
-    collections::{HashMap, HashSet},
-    mem,
-    rc::Rc,
-};
+use std::{collections::HashMap, rc::Rc};
 
 use crate::lang::{
     show::show_ty, BinaryExpr, BranchExpr, BuiltInFunc, CallExpr, Expr, FieldExpr, Func, FuncDef,
@@ -131,7 +127,7 @@ impl Defs {
                 ty: result_ty,
             };
 
-            self.func_defs.push(scoped_func_def.clone());
+            self.func_defs.push(scoped_func_def);
             self.func_def_map.insert(func_def, named_func.clone());
 
             named_func
@@ -246,7 +242,7 @@ impl Scope {
         parents: &[&Scope],
         defs: &mut Defs,
     ) -> (Scope, Expr) {
-        let mut child_parents: Vec<&Scope> = parents.iter().map(|x| *x).collect();
+        let mut child_parents: Vec<&Scope> = parents.to_vec();
         child_parents.push(self);
 
         let mut child_scope = Self {

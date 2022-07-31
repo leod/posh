@@ -1,4 +1,4 @@
-use std::{iter, rc::Rc};
+use std::iter;
 
 use crate::{
     lang::{defs::Defs, Expr, Ty},

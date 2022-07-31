@@ -36,20 +36,12 @@ impl ExprReg {
         let id = self.next_id;
         self.next_id.0 += 1;
 
-        self.exprs.insert(id, expr.clone());
+        self.exprs.insert(id, expr);
 
         id
     }
 
     pub fn get(&self, id: ExprId) -> Rc<Expr> {
         self.exprs.get(&id).unwrap().clone()
-    }
-
-    pub fn len(&self) -> usize {
-        self.exprs.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.exprs.is_empty()
     }
 }

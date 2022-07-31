@@ -44,7 +44,7 @@ pub fn show_scope(scope: &Scope) -> String {
                 show_scope(&init.false_scope),
                 show_expr(&init.branch_expr.false_expr),
             ),
-            Expr(init) => show_expr(&init),
+            Expr(init) => show_expr(init),
         };
 
         result += &format!(
