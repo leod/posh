@@ -52,12 +52,6 @@ impl ToString for Ident {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct FuncParam {
-    pub ident: Ident,
-    pub ty: Ty,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Func {
     BuiltIn(BuiltInFunc),
     Def(DefFunc),
@@ -67,6 +61,12 @@ pub enum Func {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct BuiltInFunc {
     pub name: String,
+    pub ty: Ty,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct FuncParam {
+    pub ident: Ident,
     pub ty: Ty,
 }
 
@@ -213,7 +213,10 @@ impl Expr {
         match self {
             Binary(expr) => expr.ty.clone(),
             Branch(expr) => {
-                assert!(expr.true_expr.ty() == expr.false_expr.ty());
+                // Careful: The following assertion has potential for introducing exponential
+                // slowdown.
+                //assert!(expr.true_expr.ty() == expr.false_expr.ty());
+
                 expr.true_expr.ty()
             }
             Var(expr) => expr.ty.clone(),

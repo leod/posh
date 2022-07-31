@@ -78,7 +78,6 @@ pub trait FuncArg: Representative {
     fn ty() -> Ty;
     fn expr(&self) -> Rc<Expr>;
 
-    /// FIXME
     #[doc(hidden)]
     fn from_ident(ident: Ident) -> Self;
 }

@@ -53,7 +53,7 @@ pub fn collect_structs(expr: &Expr, structs: &mut BTreeSet<StructTy>) {
             collect_structs(&*expr.true_expr, structs);
             collect_structs(&*expr.false_expr, structs);
         }
-        Var(expr) => (),
+        Var(_) => (),
         Call(expr) => {
             if let Func::Def(func) = &expr.func {
                 for param in func.params.iter() {
@@ -102,7 +102,7 @@ pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<DefFunc>) {
             collect_funcs(&*expr.true_expr, funcs);
             collect_funcs(&*expr.false_expr, funcs);
         }
-        Var(VarExpr { .. }) => (),
+        Var(_) => (),
         Call(expr) => {
             if let Func::Def(func) = &expr.func {
                 funcs.insert(func.clone());

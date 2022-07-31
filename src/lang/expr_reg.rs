@@ -14,7 +14,6 @@ pub struct ExprId(usize);
 pub struct ExprReg {
     next_id: ExprId,
     exprs: BTreeMap<ExprId, Rc<Expr>>,
-    expr_ids: BTreeMap<Rc<Expr>, ExprId>,
 }
 
 impl Default for ExprReg {
@@ -22,7 +21,6 @@ impl Default for ExprReg {
         Self {
             next_id: ExprId(0),
             exprs: BTreeMap::new(),
-            expr_ids: BTreeMap::new(),
         }
     }
 }
@@ -33,18 +31,25 @@ impl ExprReg {
     }
 
     pub fn insert(&mut self, expr: Expr) -> ExprId {
+        let expr = Rc::new(expr);
+
         let id = self.next_id;
         self.next_id.0 += 1;
 
-        let expr = Rc::new(expr);
-
         self.exprs.insert(id, expr.clone());
-        self.expr_ids.insert(expr, id);
 
         id
     }
 
     pub fn get(&self, id: ExprId) -> Rc<Expr> {
         self.exprs.get(&id).unwrap().clone()
+    }
+
+    pub fn len(&self) -> usize {
+        self.exprs.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.exprs.is_empty()
     }
 }
