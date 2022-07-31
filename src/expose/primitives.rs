@@ -1,7 +1,7 @@
 use std::{collections::BTreeSet, rc::Rc};
 
 use crate::lang::{
-    BinaryExpr, BinaryOp, BuiltInFunc, CallExpr, DefFunc, Expr, FieldExpr, Func, Ty,
+    BinaryExpr, BinaryOp, BuiltInFunc, CallExpr, Expr, FieldExpr, Func, FuncDef, Ty,
 };
 
 use super::{FuncArg, IntoRep, Trace, Value};
@@ -56,7 +56,7 @@ pub fn field<R: Value>(base: Trace, member: &str) -> R {
 }
 
 #[doc(hidden)]
-pub fn func_def_and_call<R: Value>(def: DefFunc, args: Vec<Rc<Expr>>) -> R {
+pub fn func_def_and_call<R: Value>(def: FuncDef, args: Vec<Rc<Expr>>) -> R {
     assert!(def.params.len() == args.len());
 
     let func = Func::Def(def);

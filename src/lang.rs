@@ -1,22 +1,15 @@
 pub mod defs;
 pub(crate) mod expr_reg;
-//pub mod scope;
+pub mod scope;
 pub mod show;
 
 use std::rc::Rc;
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum ScalarTy {
-    F32,
-    I32,
-    U32,
-    Bool,
-}
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Ty {
     BuiltIn(BuiltInTy),
     Struct(StructTy),
+    Named(NamedTy),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -28,10 +21,23 @@ pub enum BuiltInTy {
     Sampler2,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ScalarTy {
+    F32,
+    I32,
+    U32,
+    Bool,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct StructTy {
     pub ident: Ident,
     pub fields: Vec<(String, Ty)>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct NamedTy {
+    pub name: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -54,7 +60,7 @@ impl ToString for Ident {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Func {
     BuiltIn(BuiltInFunc),
-    Def(DefFunc),
+    Def(FuncDef),
     Struct(StructFunc),
 }
 
@@ -71,7 +77,7 @@ pub struct FuncParam {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct DefFunc {
+pub struct FuncDef {
     pub ident: Ident,
     pub params: Vec<FuncParam>,
     pub result: Rc<Expr>,
@@ -88,7 +94,7 @@ impl Func {
 
         match self {
             BuiltIn(BuiltInFunc { ty, .. }) => ty.clone(),
-            Def(DefFunc { result, .. }) => result.ty(),
+            Def(FuncDef { result, .. }) => result.ty(),
             Struct(StructFunc { ty }) => Ty::Struct(ty.clone()),
         }
     }
@@ -98,7 +104,7 @@ impl Func {
 
         match self {
             BuiltIn(BuiltInFunc { name, .. }) => name,
-            Def(DefFunc { ident, .. }) => &ident.name,
+            Def(FuncDef { ident, .. }) => &ident.name,
             Struct(StructFunc { ty, .. }) => &ty.ident.name,
         }
     }

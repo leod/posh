@@ -1,7 +1,7 @@
-use std::iter;
+use std::{iter, rc::Rc};
 
 use crate::{
-    lang::{defs::Defs, Expr, Ty},
+    lang::{defs::Defs, scope::Scope, Expr, Ty},
     Expose, FuncArg,
 };
 

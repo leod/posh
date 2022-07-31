@@ -1,11 +1,11 @@
 use std::collections::BTreeSet;
 
-use super::{DefFunc, Expr, Func, Ident, StructTy, Ty, VarExpr};
+use super::{Expr, Func, FuncDef, Ident, StructTy, Ty, VarExpr};
 
 #[derive(Debug, Clone, Default)]
 pub struct Defs {
     pub structs: BTreeSet<StructTy>,
-    pub funcs: BTreeSet<DefFunc>,
+    pub funcs: BTreeSet<FuncDef>,
 }
 
 impl Defs {
@@ -23,7 +23,7 @@ impl Defs {
         Self { structs, funcs }
     }
 
-    pub fn from_func_def(func: &DefFunc) -> Self {
+    pub fn from_func_def(func: &FuncDef) -> Self {
         let mut defs = Defs::from_expr(&func.result);
         defs.funcs.insert(func.clone());
 
@@ -89,7 +89,7 @@ fn collect_struct_ty(ty: &Ty, structs: &mut BTreeSet<StructTy>) {
     }
 }
 
-pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<DefFunc>) {
+pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<FuncDef>) {
     use Expr::*;
 
     match expr {

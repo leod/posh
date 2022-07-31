@@ -1,8 +1,8 @@
-use crate::lang::{DefFunc, Expr, Func, Ident};
+use crate::lang::{Expr, Func, FuncDef, Ident};
 
 use super::{FuncArg, Value};
 
-pub fn compile1<U, R>(f: fn(U) -> R) -> Option<DefFunc>
+pub fn compile1<U, R>(f: fn(U) -> R) -> Option<FuncDef>
 where
     U: FuncArg,
     R: Value,

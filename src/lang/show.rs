@@ -1,4 +1,4 @@
-use super::{defs::Defs, BinaryOp, BuiltInTy, DefFunc, Expr, ScalarTy, StructTy, Ty};
+use super::{defs::Defs, BinaryOp, BuiltInTy, Expr, FuncDef, ScalarTy, StructTy, Ty};
 
 pub fn show_expr(expr: &Expr) -> String {
     use Expr::*;
@@ -29,7 +29,7 @@ pub fn show_expr(expr: &Expr) -> String {
     }
 }
 
-pub fn show_func_def(def: &DefFunc) -> String {
+pub fn show_func_def(def: &FuncDef) -> String {
     let params: Vec<_> = def
         .params
         .iter()
@@ -108,6 +108,7 @@ pub fn show_ty(ty: &Ty) -> String {
     match ty {
         BuiltIn(ty) => show_built_in_ty(ty),
         Struct(ty) => show_struct_ty(ty),
+        Named(ty) => ty.name.clone(),
     }
 }
 
