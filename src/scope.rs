@@ -14,6 +14,15 @@ pub struct ScopedVarDef {
     init: Init,
 }
 
+impl ScopedVarDef {
+    pub fn expr(&self) -> Expr {
+        Expr::Var(VarExpr {
+            ident: Ident::new(self.name.clone()),
+            ty: self.init.expr().ty(),
+        })
+    }
+}
+
 fn expr_ptr(expr: &Rc<Expr>) -> *const Expr {
     Rc::as_ptr(expr)
 }
@@ -250,13 +259,13 @@ impl Scope {
     fn walk_expr(&mut self, expr: &Rc<Expr>, parents: &[&Scope], defs: &mut Defs) -> Expr {
         use Expr::*;
 
-        if let Some(var) = self.get_var_def(expr_ptr(expr)) {
-            return var.init.expr();
+        if let Some(var_def) = self.get_var_def(expr_ptr(expr)) {
+            return var_def.expr();
         }
 
         for parent in parents {
-            if let Some(var) = parent.get_var_def(expr_ptr(expr)) {
-                return var.init.expr();
+            if let Some(var_def) = parent.get_var_def(expr_ptr(expr)) {
+                return var_def.expr();
             }
         }
 
