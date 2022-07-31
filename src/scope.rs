@@ -51,16 +51,14 @@ impl Init {
 
 #[derive(Debug, Default, Clone)]
 pub struct Scope {
-    next_var_num: usize,
-    var_defs: Vec<ScopedVarDef>,
+    struct_defs: Vec<StructTy>,
+    struct_def_map: HashMap<StructTy, NamedTy>,
 
-    next_func_num: usize,
     func_defs: Vec<ScopedFuncDef>,
     func_def_map: HashMap<FuncDef, BuiltInFunc>,
 
-    next_struct_num: usize,
-    struct_defs: Vec<StructTy>,
-    struct_def_map: HashMap<StructTy, NamedTy>,
+    next_var_num: usize,
+    var_defs: Vec<ScopedVarDef>,
 }
 
 impl Scope {
@@ -124,8 +122,7 @@ impl Scope {
         self.func_defs = mem::replace(&mut func_scope.func_defs, Default::default());
         self.struct_defs = mem::replace(&mut func_scope.struct_defs, Default::default());
 
-        let name = format!("{}_posh_func_{}", func.ident.name, self.next_func_num);
-        self.next_func_num += 1;
+        let name = format!("{}_posh_func_{}", func.ident.name, self.func_defs.len());
 
         let func_def = FuncDef {
             ident: Ident::new(name.clone()),
@@ -188,8 +185,7 @@ impl Scope {
                         .map(|(field_name, field_ty)| (field_name.clone(), self.walk_ty(field_ty)))
                         .collect();
 
-                    let name = format!("{}_posh_ty_{}", ty.ident.name, self.next_struct_num);
-                    self.next_struct_num += 1;
+                    let name = format!("{}_posh_ty_{}", ty.ident.name, self.struct_defs.len());
 
                     let ident = Ident::new(name.clone());
 
