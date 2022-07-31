@@ -1,6 +1,10 @@
 pub mod show;
 
-use std::{collections::HashMap, mem, rc::Rc};
+use std::{
+    collections::{HashMap, HashSet},
+    mem,
+    rc::Rc,
+};
 
 use crate::lang::{
     show::show_ty, BinaryExpr, BranchExpr, BuiltInFunc, CallExpr, Expr, FieldExpr, Func, FuncDef,
@@ -221,17 +225,17 @@ impl Scope {
         assert!(self.var_defs.len() < len);
     }
 
-    fn shared_var_defs(&self, other: &Scope) -> Vec<ScopedVarDef> {
+    fn shared_var_defs<'a>(&'a self, other: &'a Scope) -> HashMap<*const Expr, ScopedVarDef> {
         self.var_defs
             .iter()
-            .filter(|var| other.contains_var_def(var.expr_ptr))
+            .filter(|var_def| other.contains_var_def(var_def.expr_ptr))
             .chain(
                 other
                     .var_defs
                     .iter()
-                    .filter(|var| self.contains_var_def(var.expr_ptr)),
+                    .filter(|var_def| self.contains_var_def(var_def.expr_ptr)),
             )
-            .cloned()
+            .map(|var_def| (var_def.expr_ptr, var_def.clone()))
             .collect()
     }
 
@@ -288,12 +292,12 @@ impl Scope {
                 let (mut false_scope, false_expr) =
                     self.walk_child_expr(&expr.false_expr, parents, defs);
 
-                for var_def in true_scope.shared_var_defs(&false_scope) {
-                    true_scope.remove_var_def(var_def.expr_ptr);
-                    false_scope.remove_var_def(var_def.expr_ptr);
+                for (expr_ptr, var_def) in true_scope.shared_var_defs(&false_scope) {
+                    true_scope.remove_var_def(expr_ptr);
+                    false_scope.remove_var_def(expr_ptr);
 
-                    assert!(!self.contains_var_def(var_def.expr_ptr));
-                    self.var_defs.push(var_def);
+                    assert!(!self.contains_var_def(expr_ptr));
+                    self.var_defs.push(var_def.clone());
                 }
 
                 let branch_expr = BranchExpr {

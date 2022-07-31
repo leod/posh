@@ -1,6 +1,6 @@
 use posh::{
     expose::compile::compile1,
-    lang::{defs::Defs, show::show_defs},
+    scope::{show::show_defs, Defs},
     IntoRep, Rep,
 };
 
@@ -75,6 +75,9 @@ fn blowup(x: Rep<u32>) -> Rep<u32> {
 
 fn main() {
     let func_def = compile1(blowup).unwrap();
+
+    let defs = Defs::from_func_def(&func_def);
+    println!("{}", show_defs(&defs));
 
     //println!("{}", show_defs(&Defs::from_func_def(&func_def)));
 }
