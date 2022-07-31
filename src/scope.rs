@@ -125,6 +125,7 @@ impl Defs {
                 result_ty: result_ty.clone(),
             };
 
+            // FIXME
             let named_func = BuiltInFunc {
                 name,
                 ty: result_ty,
@@ -263,6 +264,12 @@ impl Scope {
     fn walk_expr(&mut self, expr: &Rc<Expr>, parents: &[&Scope], defs: &mut Defs) -> Expr {
         use Expr::*;
 
+        match &**expr {
+            expr @ Var(_) => return expr.clone(),
+            expr @ Literal(_) => return expr.clone(),
+            _ => (),
+        }
+
         if let Some(var_def) = self.get_var_def(expr_ptr(expr)) {
             return var_def.expr();
         }
@@ -289,9 +296,12 @@ impl Scope {
                 let cond = self.walk_expr(&expr.cond, parents, defs);
                 let (mut true_scope, true_expr) =
                     self.walk_child_expr(&expr.true_expr, parents, defs);
+
+                // FIXME: Needs to be able to pull out variables from `true_expr`.
                 let (mut false_scope, false_expr) =
                     self.walk_child_expr(&expr.false_expr, parents, defs);
 
+                // FIXME: Produces references to removed variables.
                 for (expr_ptr, var_def) in true_scope.shared_var_defs(&false_scope) {
                     true_scope.remove_var_def(expr_ptr);
                     false_scope.remove_var_def(expr_ptr);
@@ -312,7 +322,7 @@ impl Scope {
                     false_scope,
                 })
             }
-            Var(expr) => Init::Expr(Expr::Var(expr.clone())),
+            Var(_) => unreachable!(),
             Call(expr) => {
                 use Func::*;
 
@@ -338,7 +348,7 @@ impl Scope {
 
                 Init::Expr(Expr::Call(CallExpr { func, args }))
             }
-            expr @ Literal(_) => Init::Expr(expr.clone()),
+            Literal(_) => unreachable!(),
             Field(expr) => {
                 let base = self.walk_expr(&expr.base, parents, defs);
 

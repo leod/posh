@@ -7,6 +7,8 @@ use posh::{
 #[posh::def]
 fn blowup(x: Rep<u32>) -> Rep<u32> {
     let b = true.into_rep();
+    let x = b.branch(x, x);
+    /*let x = b.branch(x, 2 * x);
     let x = b.branch(x, 2 * x);
     let x = b.branch(x, 2 * x);
     let x = b.branch(x, 2 * x);
@@ -67,9 +69,7 @@ fn blowup(x: Rep<u32>) -> Rep<u32> {
     let x = b.branch(x, 2 * x);
     let x = b.branch(x, 2 * x);
     let x = b.branch(x, 2 * x);
-    let x = b.branch(x, 2 * x);
-    let x = b.branch(x, 2 * x);
-    let x = b.branch(x, 2 * x);
+    let x = b.branch(x, 2 * x);*/
     x
 }
 
