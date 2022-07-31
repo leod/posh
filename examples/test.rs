@@ -1,8 +1,6 @@
 use posh::{
     expose::compile::compile1,
-    lang::defs::Defs,
-    lang::show::show_defs,
-    scope::{show::show_scope, Scope},
+    scope::{show::show_defs, Defs},
     vec2, GenValue, Rep, ScalarType,
 };
 
@@ -40,8 +38,8 @@ fn texture_thing(sampler: posh::Sampler2) -> posh::Vec4<f32> {
 fn main() {
     let func_def = compile1(texture_thing).unwrap();
 
-    let scope = Scope::from_func_def(&func_def);
-    println!("{}", show_scope(&scope));
+    let defs = Defs::from_func_def(&func_def);
+    println!("{}", show_defs(&defs));
 
     // /println!("{}", show_defs(&Defs::from_func_def(&func_def)));
 }
