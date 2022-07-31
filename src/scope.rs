@@ -254,7 +254,7 @@ impl Scope {
         let init = match &**expr {
             Binary(expr) => {
                 let left = self.walk_expr(&expr.left, parents);
-                let right = self.walk_expr(&expr.left, parents);
+                let right = self.walk_expr(&expr.right, parents);
 
                 Init::Expr(Expr::Binary(BinaryExpr {
                     left: Rc::new(left),
