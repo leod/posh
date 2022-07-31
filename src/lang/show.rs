@@ -5,7 +5,7 @@ pub fn show_expr(expr: &Expr) -> String {
 
     match expr {
         Binary(expr) => format!(
-            "({}) {} ({})",
+            "({} {} {})",
             show_expr(&*expr.left),
             show_binary_op(expr.op),
             show_expr(&*expr.right)
@@ -24,7 +24,7 @@ pub fn show_expr(expr: &Expr) -> String {
         Literal(expr) => expr.literal.value.clone(),
         Field(expr) => {
             let base = show_expr(&*expr.base);
-            format!("({}).{}", base, expr.member)
+            format!("{}.{}", base, expr.member)
         }
     }
 }
