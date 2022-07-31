@@ -1,10 +1,11 @@
+pub mod show;
+
 use std::{collections::HashMap, mem, rc::Rc};
 
 use crate::lang::{
-    show::show_ty, BinaryExpr, BuiltInFunc, CallExpr, Func, FuncParam, Ident, VarExpr,
+    show::show_ty, BinaryExpr, BranchExpr, BuiltInFunc, CallExpr, Expr, FieldExpr, Func, FuncDef,
+    FuncParam, Ident, NamedTy, StructTy, Ty, VarExpr,
 };
-
-use super::{BranchExpr, Expr, FuncDef, NamedTy, StructTy, Ty};
 
 #[derive(Debug, Clone)]
 pub struct ScopedVarDef {
@@ -23,6 +24,7 @@ pub struct ScopedFuncDef {
     params: Vec<FuncParam>,
     scope: Scope,
     result: String,
+    result_ty: Ty,
 }
 
 #[derive(Debug, Clone)]
@@ -66,10 +68,25 @@ impl Scope {
         Self::default()
     }
 
+    pub fn from_func_def(func_def: &FuncDef) -> Self {
+        let mut scope = Scope::new();
+        scope.add_func_def(func_def);
+
+        scope
+    }
+
     pub fn var_defs(&self) -> impl Iterator<Item = (&str, &Init)> {
         self.var_defs
             .iter()
             .map(|var| (var.name.as_str(), &var.init))
+    }
+
+    pub fn func_defs(&self) -> impl Iterator<Item = &ScopedFuncDef> {
+        self.func_defs.iter()
+    }
+
+    pub fn struct_defs(&self) -> impl Iterator<Item = &StructTy> {
+        self.struct_defs.iter()
     }
 
     pub fn get_var_def(&self, expr_ptr: *const Expr) -> Option<&ScopedVarDef> {
@@ -85,6 +102,58 @@ impl Scope {
         let name = self.var_defs.last().unwrap().name.clone();
 
         (expr, name)
+    }
+
+    pub fn add_func_def(&mut self, func: &FuncDef) -> BuiltInFunc {
+        let mut params = Vec::new();
+
+        for param in &func.params {
+            params.push(FuncParam {
+                ident: param.ident.clone(),
+                ty: self.walk_ty(&param.ty),
+            })
+        }
+
+        let mut func_scope = Scope::new();
+        func_scope.func_defs = mem::replace(&mut self.func_defs, Default::default());
+        func_scope.struct_defs = mem::replace(&mut self.struct_defs, Default::default());
+
+        let (result_expr, result_name) = func_scope.add_expr(&func.result);
+        let result_ty = self.walk_ty(&result_expr.ty());
+
+        self.func_defs = mem::replace(&mut func_scope.func_defs, Default::default());
+        self.struct_defs = mem::replace(&mut func_scope.struct_defs, Default::default());
+
+        let name = format!("{}_posh_func_{}", func.ident.name, self.next_func_num);
+        self.next_func_num += 1;
+
+        let func_def = FuncDef {
+            ident: Ident::new(name.clone()),
+            params: params.clone(),
+            result: Rc::new(result_expr),
+        };
+
+        if let Some(named_func) = self.func_def_map.get(&func_def) {
+            named_func.clone()
+        } else {
+            let scoped_func_def = ScopedFuncDef {
+                name: name.clone(),
+                params,
+                scope: func_scope,
+                result: result_name,
+                result_ty: result_ty.clone(),
+            };
+
+            let named_func = BuiltInFunc {
+                name,
+                ty: result_ty,
+            };
+
+            self.func_defs.push(scoped_func_def.clone());
+            self.func_def_map.insert(func_def, named_func.clone());
+
+            named_func
+        }
     }
 
     fn add_var_def(&mut self, expr: &Rc<Expr>, init: Init) -> Expr {
@@ -235,60 +304,7 @@ impl Scope {
 
                 let func = match &expr.func {
                     func @ BuiltIn(_) => func.clone(),
-                    Def(func) => {
-                        let mut params = Vec::new();
-
-                        for param in &func.params {
-                            params.push(FuncParam {
-                                ident: param.ident.clone(),
-                                ty: self.walk_ty(&param.ty),
-                            })
-                        }
-
-                        let mut func_scope = Scope::new();
-                        func_scope.func_defs =
-                            mem::replace(&mut self.func_defs, Default::default());
-                        func_scope.struct_defs =
-                            mem::replace(&mut self.struct_defs, Default::default());
-
-                        let (result_expr, result_name) = func_scope.add_expr(&func.result);
-                        let result_ty = self.walk_ty(&result_expr.ty());
-
-                        self.func_defs =
-                            mem::replace(&mut func_scope.func_defs, Default::default());
-                        self.struct_defs =
-                            mem::replace(&mut func_scope.struct_defs, Default::default());
-
-                        let name = format!("{}_posh_func_{}", func.ident.name, self.next_func_num);
-                        self.next_func_num += 1;
-
-                        let func_def = FuncDef {
-                            ident: Ident::new(name.clone()),
-                            params: params.clone(),
-                            result: Rc::new(result_expr),
-                        };
-
-                        if let Some(named_func) = self.func_def_map.get(&func_def) {
-                            Func::BuiltIn(named_func.clone())
-                        } else {
-                            let scoped_func_def = ScopedFuncDef {
-                                name: name.clone(),
-                                params,
-                                scope: func_scope,
-                                result: result_name,
-                            };
-
-                            let named_func = BuiltInFunc {
-                                name,
-                                ty: result_ty,
-                            };
-
-                            self.func_defs.push(scoped_func_def.clone());
-                            self.func_def_map.insert(func_def, named_func.clone());
-
-                            Func::BuiltIn(named_func)
-                        }
-                    }
+                    Def(func) => Func::BuiltIn(self.add_func_def(func)),
                     Struct(func) => {
                         let ty = self.walk_ty(&Ty::Struct(func.ty.clone()));
 
@@ -302,8 +318,16 @@ impl Scope {
 
                 Init::Expr(Expr::Call(CallExpr { func, args }))
             }
-            Literal(_) => todo!(),
-            Field(_) => todo!(),
+            expr @ Literal(_) => Init::Expr(expr.clone()),
+            Field(expr) => {
+                let base = self.walk_expr(&expr.base, parents);
+
+                Init::Expr(Expr::Field(FieldExpr {
+                    base: Rc::new(base),
+                    member: expr.member.clone(),
+                    ty: self.walk_ty(&expr.ty),
+                }))
+            }
         };
 
         self.add_var_def(expr, init)

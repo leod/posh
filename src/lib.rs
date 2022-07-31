@@ -2,6 +2,7 @@
 #[doc(hidden)]
 pub mod expose;
 pub mod lang;
+pub mod scope;
 pub mod shader;
 
 #[doc(hidden)]

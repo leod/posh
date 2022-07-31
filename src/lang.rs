@@ -1,6 +1,5 @@
 pub mod defs;
 pub(crate) mod expr_reg;
-pub mod scope;
 pub mod show;
 
 use std::rc::Rc;
