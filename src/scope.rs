@@ -61,10 +61,10 @@ impl Init {
 #[derive(Debug, Default, Clone)]
 pub struct Defs {
     struct_defs: Vec<StructTy>,
-    struct_def_map: HashMap<StructTy, NamedTy>,
+    struct_map: HashMap<StructTy, NamedTy>,
 
     func_defs: Vec<ScopedFuncDef>,
-    func_def_map: HashMap<FuncDef, BuiltInFunc>,
+    func_map: HashMap<FuncDef, BuiltInFunc>,
 }
 
 impl Defs {
@@ -110,7 +110,7 @@ impl Defs {
             result: Rc::new(result_expr),
         };
 
-        if let Some(named_func) = self.func_def_map.get(&func_def) {
+        if let Some(named_func) = self.func_map.get(&func_def) {
             named_func.clone()
         } else {
             let scoped_func_def = ScopedFuncDef {
@@ -128,7 +128,7 @@ impl Defs {
             };
 
             self.func_defs.push(scoped_func_def);
-            self.func_def_map.insert(func_def, named_func.clone());
+            self.func_map.insert(func_def, named_func.clone());
 
             named_func
         }
@@ -138,7 +138,7 @@ impl Defs {
         match ty {
             ty @ Ty::BuiltIn(_) => ty.clone(),
             Ty::Struct(ty) => {
-                if let Some(named_ty) = self.struct_def_map.get(ty) {
+                if let Some(named_ty) = self.struct_map.get(ty) {
                     Ty::Named(named_ty.clone())
                 } else {
                     let fields = ty
@@ -154,7 +154,7 @@ impl Defs {
                     self.struct_defs.push(StructTy { ident, fields });
 
                     let named_ty = NamedTy { name };
-                    self.struct_def_map.insert(ty.clone(), named_ty.clone());
+                    self.struct_map.insert(ty.clone(), named_ty.clone());
 
                     Ty::Named(named_ty)
                 }
