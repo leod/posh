@@ -178,11 +178,13 @@ impl Scope {
     pub fn var_defs(&self) -> impl Iterator<Item = (&str, &Init)> {
         self.var_defs
             .iter()
-            .map(|var| (var.name.as_str(), &var.init))
+            .map(|var_def| (var_def.name.as_str(), &var_def.init))
     }
 
     pub fn get_var_def(&self, expr_ptr: *const Expr) -> Option<&ScopedVarDef> {
-        self.var_defs.iter().find(|var| var.expr_ptr == expr_ptr)
+        self.var_defs
+            .iter()
+            .find(|var_def| var_def.expr_ptr == expr_ptr)
     }
 
     pub fn contains_var_def(&self, expr_ptr: *const Expr) -> bool {
@@ -217,7 +219,7 @@ impl Scope {
 
     fn remove_var_def(&mut self, expr_ptr: *const Expr) {
         let len = self.var_defs.len();
-        self.var_defs.retain(|var| var.expr_ptr != expr_ptr);
+        self.var_defs.retain(|var_def| var_def.expr_ptr != expr_ptr);
 
         assert!(self.var_defs.len() < len);
     }
