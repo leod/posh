@@ -13,6 +13,10 @@ pub struct StructDefs {
 }
 
 impl StructDefs {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     pub fn defs(&self) -> impl Iterator<Item = &StructTy> {
         self.defs.iter()
     }

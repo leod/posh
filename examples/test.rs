@@ -1,6 +1,9 @@
 use posh::{
     expose::compile::compile1,
-    var_form::{show::show_defs, VarFormFuncDefs},
+    var_form::{
+        show::{show_func_defs, show_struct_defs},
+        StructDefs, VarFormFuncDefs,
+    },
     vec2, GenValue, Rep, ScalarType,
 };
 
@@ -38,8 +41,8 @@ fn texture_thing(sampler: posh::Sampler2) -> posh::Vec4<f32> {
 fn main() {
     let func_def = compile1(texture_thing).unwrap();
 
-    let defs = VarFormFuncDefs::from_func_def(&func_def);
-    println!("{}", show_defs(&defs));
-
-    // /println!("{}", show_defs(&Defs::from_func_def(&func_def)));
+    let mut structs = StructDefs::new();
+    let funcs = VarFormFuncDefs::from_func_def(&func_def, &mut structs);
+    println!("{}", show_struct_defs(&structs));
+    println!("{}", show_func_defs(&funcs));
 }

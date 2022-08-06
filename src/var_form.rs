@@ -1,5 +1,5 @@
-//pub mod show;
-pub mod struct_defs;
+pub mod show;
+mod struct_defs;
 
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
@@ -8,10 +8,14 @@ use crate::lang::{
     Ident, NameFunc, Ty, VarExpr,
 };
 
-use self::struct_defs::StructDefs;
+pub use struct_defs::StructDefs;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct VarId(usize);
+
+pub fn var_name(id: VarId) -> Ident {
+    Ident::new(format!("posh_var_{}", id.0))
+}
 
 #[derive(Debug, Clone)]
 pub enum VarInit {
@@ -24,6 +28,15 @@ pub struct BranchVarInit {
     branch_expr: BranchExpr,
     true_scope: Rc<RefCell<Scope>>,
     false_scope: Rc<RefCell<Scope>>,
+}
+
+impl VarInit {
+    pub fn expr(&self) -> Expr {
+        match self {
+            VarInit::Branch(branch) => Expr::Branch(branch.branch_expr.clone()),
+            VarInit::Expr(expr) => expr.clone(),
+        }
+    }
 }
 
 #[derive(Debug, Default, Clone)]
@@ -48,6 +61,10 @@ impl Scope {
         self.vars.retain(|(id, _)| *id != remove_id);
 
         var_init
+    }
+
+    fn vars(&self) -> &[(VarId, VarInit)] {
+        &self.vars
     }
 }
 
@@ -88,6 +105,10 @@ impl VarFormFuncDefs {
         defs.add(func_def, structs);
 
         defs
+    }
+
+    pub fn defs(&self) -> impl Iterator<Item = &(String, VarFormFunc)> {
+        self.defs.iter()
     }
 
     pub fn add(&mut self, func: &FuncDef, structs: &mut StructDefs) -> NameFunc {
@@ -146,10 +167,6 @@ pub struct ScopeBuilder {
 
 fn expr_ptr(expr: &Rc<Expr>) -> *const Expr {
     Rc::as_ptr(expr)
-}
-
-fn var_name(id: VarId) -> Ident {
-    Ident::new(format!("posh_var_{}", id.0))
 }
 
 struct LCA {
@@ -229,6 +246,7 @@ impl ScopeBuilder {
 
                 // TODO: Insert at correct position.
                 lca.scope.borrow_mut().vars.push((var_id, var_init));
+                self.var_scopes.insert(var_id, lca.scope.clone());
             }
 
             return Expr::Var(VarExpr {
@@ -236,6 +254,9 @@ impl ScopeBuilder {
                 ty: expr.ty(),
             });
         }
+
+        // FIXME: We will need to turn this recursion into iteration so that we don't stack overflow
+        //        on deep expressions.
 
         let var_init = match &*expr {
             Binary(expr) => {
@@ -313,6 +334,7 @@ impl ScopeBuilder {
         };
 
         scope.borrow_mut().vars.push((var_id, var_init));
+        self.var_scopes.insert(var_id, scope.clone());
 
         Expr::Var(VarExpr {
             ident: var_name(var_id),
