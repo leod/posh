@@ -108,7 +108,7 @@ pub fn show_ty(ty: &Ty) -> String {
     match ty {
         BuiltIn(ty) => show_built_in_ty(ty),
         Struct(ty) => show_struct_ty(ty),
-        Named(ty) => ty.name.clone(),
+        Name(ty) => ty.name.clone(),
     }
 }
 

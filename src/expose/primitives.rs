@@ -1,8 +1,6 @@
 use std::{collections::BTreeSet, rc::Rc};
 
-use crate::lang::{
-    BinaryExpr, BinaryOp, BuiltInFunc, CallExpr, Expr, FieldExpr, Func, FuncDef, Ty,
-};
+use crate::lang::{BinaryExpr, BinaryOp, CallExpr, Expr, FieldExpr, Func, FuncDef, NameFunc, Ty};
 
 use super::{FuncArg, IntoRep, Trace, Value};
 
@@ -93,7 +91,7 @@ where
     U: FuncArg,
     R: Value,
 {
-    let func = Func::BuiltIn(BuiltInFunc {
+    let func = Func::Name(NameFunc {
         name: name.into(),
         ty: <R::Rep as FuncArg>::ty(),
     });
@@ -115,7 +113,7 @@ where
     V: FuncArg,
     R: Value,
 {
-    let func = Func::BuiltIn(BuiltInFunc {
+    let func = Func::Name(NameFunc {
         name: name.into(),
         ty: <R::Rep as FuncArg>::ty(),
     });
@@ -139,7 +137,7 @@ where
     W: FuncArg,
     R: Value,
 {
-    let func = Func::BuiltIn(BuiltInFunc {
+    let func = Func::Name(NameFunc {
         name: name.into(),
         ty: <R::Rep as FuncArg>::ty(),
     });
@@ -169,7 +167,7 @@ where
     X: FuncArg,
     R: Value,
 {
-    let func = Func::BuiltIn(BuiltInFunc {
+    let func = Func::Name(NameFunc {
         name: name.into(),
         ty: <R::Rep as FuncArg>::ty(),
     });

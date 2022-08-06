@@ -2,8 +2,8 @@
 #[doc(hidden)]
 pub mod expose;
 pub mod lang;
-pub mod scope;
 pub mod shader;
+pub mod var_form;
 
 #[doc(hidden)]
 pub use static_assertions;

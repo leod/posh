@@ -2,7 +2,7 @@ use nalgebra::Vector3;
 use posh::{
     expose::compile::compile1,
     rep,
-    scope::{show::show_defs, Defs},
+    var_form::{show::show_defs, VarFormFuncDefs},
     Expose, IntoRep, Rep, ScalarType,
 };
 
@@ -50,5 +50,5 @@ fn vertex(vertex: Rep<test::Vertex>) -> Rep<test::Vertex> {
 pub fn main() {
     let func_def = compile1(vertex).unwrap();
 
-    println!("{}", show_defs(&Defs::from_func_def(&func_def)));
+    println!("{}", show_defs(&VarFormFuncDefs::from_func_def(&func_def)));
 }

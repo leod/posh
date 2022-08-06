@@ -8,7 +8,7 @@ use std::rc::Rc;
 pub enum Ty {
     BuiltIn(BuiltInTy),
     Struct(StructTy),
-    Named(NamedTy),
+    Name(NameTy),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -35,7 +35,7 @@ pub struct StructTy {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct NamedTy {
+pub struct NameTy {
     pub name: String,
 }
 
@@ -58,13 +58,13 @@ impl ToString for Ident {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Func {
-    BuiltIn(BuiltInFunc),
+    Name(NameFunc),
     Def(FuncDef),
     Struct(StructFunc),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct BuiltInFunc {
+pub struct NameFunc {
     pub name: String,
     pub ty: Ty,
 }
@@ -92,7 +92,7 @@ impl Func {
         use Func::*;
 
         match self {
-            BuiltIn(BuiltInFunc { ty, .. }) => ty.clone(),
+            Name(NameFunc { ty, .. }) => ty.clone(),
             Def(FuncDef { result, .. }) => result.ty(),
             Struct(StructFunc { ty }) => Ty::Struct(ty.clone()),
         }
@@ -102,7 +102,7 @@ impl Func {
         use Func::*;
 
         match self {
-            BuiltIn(BuiltInFunc { name, .. }) => name,
+            Name(NameFunc { name, .. }) => name,
             Def(FuncDef { ident, .. }) => &ident.name,
             Struct(StructFunc { ty, .. }) => &ty.ident.name,
         }

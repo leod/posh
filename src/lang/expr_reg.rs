@@ -2,7 +2,7 @@ use std::{collections::BTreeMap, rc::Rc};
 
 use super::Expr;
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct ExprId(usize);
 
 /*impl fmt::Debug for ExprId {
@@ -11,18 +11,10 @@ pub struct ExprId(usize);
     }
 }*/
 
+#[derive(Default)]
 pub struct ExprReg {
     next_id: ExprId,
     exprs: BTreeMap<ExprId, Rc<Expr>>,
-}
-
-impl Default for ExprReg {
-    fn default() -> Self {
-        Self {
-            next_id: ExprId(0),
-            exprs: BTreeMap::new(),
-        }
-    }
 }
 
 impl ExprReg {
