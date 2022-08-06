@@ -128,10 +128,8 @@ impl VarFormFuncDefs {
             func_scope_builder.walk_expr(scope.clone(), func.result.clone(), structs, self);
         let result_ty = structs.walk(&result_expr.ty());
 
-        let name = func_name(&func.ident.name, self.defs.len());
-
         let func_def = FuncDef {
-            ident: Ident::new(name.clone()),
+            ident: func.ident.clone(),
             params: params.clone(),
             result: Rc::new(result_expr.clone()),
         };
@@ -146,7 +144,7 @@ impl VarFormFuncDefs {
             };
 
             let name_func = NameFunc {
-                name,
+                name: func_name(&func.ident.name, self.defs.len()),
                 ty: result_ty,
             };
 
@@ -205,7 +203,7 @@ impl LCA {
             v = v_parent.expect("no lca exists");
         }
 
-        assert!(u_child.is_some() || v_child.is_some());
+        //assert!(u_child.is_some() || v_child.is_some());
 
         Self {
             scope: u.clone(),
