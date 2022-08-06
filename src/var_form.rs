@@ -156,11 +156,17 @@ impl VarFormFuncDefs {
     }
 }
 
+#[derive(Debug, Clone)]
+struct VarInfo {
+    scope: ScopeRef,
+    deps: Vec<VarId>,
+}
+
 #[derive(Debug, Default, Clone)]
 pub struct ScopeBuilder {
     next_var_id: VarId,
     var_ids: HashMap<*const Expr, VarId>,
-    var_scopes: HashMap<VarId, ScopeRef>,
+    var_infos: HashMap<VarId, VarInfo>,
 }
 
 fn expr_ptr(expr: &Rc<Expr>) -> *const Expr {
@@ -229,22 +235,22 @@ impl ScopeBuilder {
             _ => (),
         }
 
-        let var_id = *self.var_ids.entry(expr_ptr(&expr)).or_insert_with(|| {
-            let id = self.next_var_id;
-            self.next_var_id.0 += 1;
-
-            id
+        let var = self.var_ids.get(&expr_ptr(&expr)).and_then(|var_id| {
+            self.var_infos
+                .get_mut(&var_id)
+                .map(|var_info| (*var_id, var_info))
         });
 
-        if let Some(other_scope) = self.var_scopes.get(&var_id) {
-            let lca = LCA::find(scope.clone(), other_scope.clone());
+        if let Some((var_id, var_info)) = var {
+            let lca = LCA::find(scope.clone(), var_info.scope.clone());
 
-            if !Rc::ptr_eq(&lca.scope, &other_scope) {
-                let var_init = other_scope.borrow_mut().remove(var_id);
+            if !Rc::ptr_eq(&lca.scope, &var_info.scope) {
+                let var_init = var_info.scope.borrow_mut().remove(var_id);
 
                 // TODO: Insert at correct position.
                 lca.scope.borrow_mut().vars.push((var_id, var_init));
-                self.var_scopes.insert(var_id, lca.scope.clone());
+
+                var_info.scope = lca.scope;
             }
 
             return Expr::Var(VarExpr {
@@ -331,8 +337,14 @@ impl ScopeBuilder {
             Literal(_) => unreachable!(),
         };
 
+        let var_id = self.next_var_id;
+        self.next_var_id.0 += 1;
+
         scope.borrow_mut().vars.push((var_id, var_init));
-        self.var_scopes.insert(var_id, scope.clone());
+
+        let deps = vec![];
+        let var_info = VarInfo { scope, deps };
+        self.var_infos.insert(var_id, var_info);
 
         Expr::Var(VarExpr {
             ident: var_name(var_id),
