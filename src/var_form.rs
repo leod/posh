@@ -1,11 +1,16 @@
 pub mod show;
 mod struct_defs;
 
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::{
+    cell::RefCell,
+    collections::{HashMap, HashSet},
+    rc::Rc,
+};
 
 use crate::lang::{
-    show::show_ty, BinaryExpr, BranchExpr, CallExpr, Expr, FieldExpr, Func, FuncDef, FuncParam,
-    Ident, NameFunc, Ty, VarExpr,
+    show::{show_expr, show_ty},
+    BinaryExpr, BranchExpr, CallExpr, Expr, FieldExpr, Func, FuncDef, FuncParam, Ident, NameFunc,
+    Ty, VarExpr,
 };
 
 pub use struct_defs::StructDefs;
@@ -124,8 +129,9 @@ impl VarFormFuncDefs {
         let scope = Rc::new(RefCell::new(Scope::default()));
         let mut func_scope_builder = ScopeBuilder::default();
 
-        let result_expr =
-            func_scope_builder.walk_expr(scope.clone(), func.result.clone(), structs, self);
+        let result_expr = func_scope_builder
+            .walk_expr(scope.clone(), func.result.clone(), structs, self)
+            .0;
         let result_ty = structs.walk(&result_expr.ty());
 
         let func_def = FuncDef {
@@ -159,7 +165,7 @@ impl VarFormFuncDefs {
 #[derive(Debug, Clone)]
 struct VarInfo {
     scope: ScopeRef,
-    deps: Vec<VarId>,
+    deps: HashSet<VarId>,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -226,87 +232,126 @@ impl ScopeBuilder {
         expr: Rc<Expr>,
         structs: &mut StructDefs,
         funcs: &mut VarFormFuncDefs,
-    ) -> Expr {
+    ) -> (Expr, HashSet<VarId>) {
         use Expr::*;
 
         match &*expr {
-            expr @ Var(_) => return expr.clone(),
-            expr @ Literal(_) => return expr.clone(),
+            expr @ Var(_) => return (expr.clone(), HashSet::new()),
+            expr @ Literal(_) => return (expr.clone(), HashSet::new()),
             _ => (),
         }
 
-        let var = self.var_ids.get(&expr_ptr(&expr)).and_then(|var_id| {
-            self.var_infos
-                .get_mut(&var_id)
-                .map(|var_info| (*var_id, var_info))
-        });
+        if let Some(var_id) = self.var_ids.get(&expr_ptr(&expr)).cloned() {
+            let var_info = self.var_infos[&var_id].clone();
 
-        if let Some((var_id, var_info)) = var {
+            eprintln!("match {:?}", var_id);
+
             let lca = LCA::find(scope.clone(), var_info.scope.clone());
 
-            if !Rc::ptr_eq(&lca.scope, &var_info.scope) {
-                let var_init = var_info.scope.borrow_mut().remove(var_id);
+            let mut result_deps = var_info.deps.clone();
+            result_deps.insert(var_id);
 
-                // TODO: Insert at correct position.
-                lca.scope.borrow_mut().vars.push((var_id, var_init));
-
-                var_info.scope = lca.scope;
-            }
-
-            return Expr::Var(VarExpr {
+            let result_expr = Expr::Var(VarExpr {
                 ident: var_name(var_id),
                 ty: expr.ty(),
             });
+
+            if !Rc::ptr_eq(&lca.scope, &var_info.scope) {
+                eprintln!(
+                    "pulling {:?} from {:?} to {:?}",
+                    var_id,
+                    Rc::as_ptr(&var_info.scope),
+                    Rc::as_ptr(&lca.scope)
+                );
+
+                for dep in &var_info.deps {
+                    let dep_info = &self.var_infos[&dep];
+                    let dep_lca = LCA::find(scope.clone(), dep_info.scope.clone());
+
+                    let dep_init = dep_info.scope.borrow_mut().remove(*dep);
+                    dep_lca.scope.borrow_mut().vars.push((*dep, dep_init));
+                    self.var_infos.get_mut(&dep).unwrap().scope = dep_lca.scope;
+                }
+
+                let var_init = var_info.scope.borrow_mut().remove(var_id);
+                lca.scope.borrow_mut().vars.push((var_id, var_init));
+                self.var_infos.get_mut(&var_id).unwrap().scope = lca.scope;
+            }
+
+            return (result_expr, result_deps);
         }
 
         // FIXME: We will need to turn this recursion into iteration so that we don't stack overflow
         //        on deep expressions.
 
-        let var_init = match &*expr {
+        let (var_init, mut deps) = match &*expr {
             Binary(expr) => {
-                let left = self.walk_expr(scope.clone(), expr.left.clone(), structs, funcs);
-                let right = self.walk_expr(scope.clone(), expr.right.clone(), structs, funcs);
+                let (left_expr, left_deps) =
+                    self.walk_expr(scope.clone(), expr.left.clone(), structs, funcs);
+                let (right_expr, right_deps) =
+                    self.walk_expr(scope.clone(), expr.right.clone(), structs, funcs);
 
-                VarInit::Expr(Expr::Binary(BinaryExpr {
-                    left: Rc::new(left),
-                    op: expr.op,
-                    right: Rc::new(right),
-                    ty: structs.walk(&expr.ty),
-                }))
+                let mut deps = left_deps;
+                deps.extend(right_deps);
+
+                (
+                    VarInit::Expr(Expr::Binary(BinaryExpr {
+                        left: Rc::new(left_expr),
+                        op: expr.op,
+                        right: Rc::new(right_expr),
+                        ty: structs.walk(&expr.ty),
+                    })),
+                    deps,
+                )
             }
             Branch(expr) => {
-                let cond = self.walk_expr(scope.clone(), expr.cond.clone(), structs, funcs);
+                let (cond_expr, cond_deps) =
+                    self.walk_expr(scope.clone(), expr.cond.clone(), structs, funcs);
 
                 let true_scope = new_child_scope(scope.clone());
-                let true_expr =
+                let (true_expr, mut true_deps) =
                     self.walk_expr(true_scope.clone(), expr.true_expr.clone(), structs, funcs);
 
+                for (var_id, _) in &true_scope.borrow().vars {
+                    true_deps.remove(var_id);
+                }
+
                 let false_scope = new_child_scope(scope.clone());
-                let false_expr =
+                let (false_expr, mut false_deps) =
                     self.walk_expr(false_scope.clone(), expr.false_expr.clone(), structs, funcs);
 
+                for (var_id, _) in &false_scope.borrow().vars {
+                    false_deps.remove(var_id);
+                }
+
+                let mut deps = cond_deps;
+                deps.extend(true_deps);
+                deps.extend(false_deps);
+
                 let branch_expr = BranchExpr {
-                    cond: Rc::new(cond),
+                    cond: Rc::new(cond_expr),
                     true_expr: Rc::new(true_expr),
                     false_expr: Rc::new(false_expr),
                 };
 
-                VarInit::Branch(BranchVarInit {
-                    branch_expr,
-                    true_scope,
-                    false_scope,
-                })
+                (
+                    VarInit::Branch(BranchVarInit {
+                        branch_expr,
+                        true_scope,
+                        false_scope,
+                    }),
+                    deps,
+                )
             }
             Call(expr) => {
                 let mut args = Vec::new();
+                let mut deps = HashSet::new();
 
                 for arg in &expr.args {
-                    args.push(Rc::new(self.walk_expr(
-                        scope.clone(),
-                        arg.clone(),
-                        structs,
-                        funcs,
-                    )));
+                    let (arg_expr, arg_deps) =
+                        self.walk_expr(scope.clone(), arg.clone(), structs, funcs);
+                    args.push(Rc::new(arg_expr));
+                    deps.extend(arg_deps);
                 }
 
                 let func = match &expr.func {
@@ -322,16 +367,20 @@ impl ScopeBuilder {
                     }
                 };
 
-                VarInit::Expr(Expr::Call(CallExpr { func, args }))
+                (VarInit::Expr(Expr::Call(CallExpr { func, args })), deps)
             }
             Field(expr) => {
-                let base = self.walk_expr(scope.clone(), expr.base.clone(), structs, funcs);
+                let (base_expr, base_deps) =
+                    self.walk_expr(scope.clone(), expr.base.clone(), structs, funcs);
 
-                VarInit::Expr(Expr::Field(FieldExpr {
-                    base: Rc::new(base),
-                    member: expr.member.clone(),
-                    ty: structs.walk(&expr.ty),
-                }))
+                (
+                    VarInit::Expr(Expr::Field(FieldExpr {
+                        base: Rc::new(base_expr),
+                        member: expr.member.clone(),
+                        ty: structs.walk(&expr.ty),
+                    })),
+                    base_deps,
+                )
             }
             Var(_) => unreachable!(),
             Literal(_) => unreachable!(),
@@ -340,15 +389,32 @@ impl ScopeBuilder {
         let var_id = self.next_var_id;
         self.next_var_id.0 += 1;
 
+        eprintln!(
+            "declare {:?} = {} in {:?}",
+            var_id,
+            show_expr(&var_init.expr()),
+            Rc::as_ptr(&scope)
+        );
+
         scope.borrow_mut().vars.push((var_id, var_init));
 
-        let deps = vec![];
-        let var_info = VarInfo { scope, deps };
-        self.var_infos.insert(var_id, var_info);
+        self.var_ids.insert(expr_ptr(&expr), var_id);
+        self.var_infos.insert(
+            var_id,
+            VarInfo {
+                scope,
+                deps: deps.clone(),
+            },
+        );
 
-        Expr::Var(VarExpr {
-            ident: var_name(var_id),
-            ty: expr.ty(),
-        })
+        deps.insert(var_id);
+
+        (
+            Expr::Var(VarExpr {
+                ident: var_name(var_id),
+                ty: expr.ty(),
+            }),
+            deps,
+        )
     }
 }
