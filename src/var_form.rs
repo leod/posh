@@ -3,14 +3,14 @@ mod struct_defs;
 
 use std::{
     cell::RefCell,
+    cmp::Ordering,
     collections::{HashMap, HashSet},
     rc::Rc,
 };
 
 use crate::lang::{
-    show::{show_expr, show_ty},
-    BinaryExpr, BranchExpr, CallExpr, Expr, FieldExpr, Func, FuncDef, FuncParam, Ident, NameFunc,
-    Ty, VarExpr,
+    show::show_ty, BinaryExpr, BranchExpr, CallExpr, Expr, FieldExpr, Func, FuncDef, FuncParam,
+    Ident, NameFunc, Ty, VarExpr,
 };
 
 pub use struct_defs::StructDefs;
@@ -70,6 +70,20 @@ impl Scope {
 
     fn vars(&self) -> &[(VarId, VarInit)] {
         &self.vars
+    }
+
+    fn sort(&mut self, var_infos: &HashMap<VarId, VarInfo>) {
+        // FIXME: We should probly store deps here rather than in `var_infos`.
+
+        self.vars.sort_by(|(x_id, _), (y_id, _)| {
+            if var_infos[y_id].deps.contains(x_id) {
+                Ordering::Less
+            } else if var_infos[x_id].deps.contains(y_id) {
+                Ordering::Greater
+            } else {
+                Ordering::Equal
+            }
+        })
     }
 }
 
@@ -132,6 +146,8 @@ impl VarFormFuncDefs {
         let result_expr = func_scope_builder
             .walk_expr(scope.clone(), func.result.clone(), structs, self)
             .0;
+        scope.borrow_mut().sort(&func_scope_builder.var_infos);
+
         let result_ty = structs.walk(&result_expr.ty());
 
         let func_def = FuncDef {
@@ -179,50 +195,26 @@ fn expr_ptr(expr: &Rc<Expr>) -> *const Expr {
     Rc::as_ptr(expr)
 }
 
-struct LCA {
-    scope: ScopeRef,
-    u_child: Option<ScopeRef>,
-    v_child: Option<ScopeRef>,
-}
-
-impl LCA {
-    fn find(mut u: ScopeRef, mut v: ScopeRef) -> Self {
-        let mut u_child = None;
-        let mut v_child = None;
-
-        while u.borrow().depth != v.borrow().depth {
-            if u.borrow().depth > v.borrow().depth {
-                u_child = Some(u.clone());
-
-                let u_parent = u.borrow().parent.clone();
-                u = u_parent.expect("invalid depth or parent");
-            } else {
-                v_child = Some(v.clone());
-
-                let v_parent = v.borrow().parent.clone();
-                v = v_parent.expect("invalid depth or parent");
-            }
-        }
-
-        while !Rc::ptr_eq(&u, &v) {
-            u_child = Some(u.clone());
-            v_child = Some(v.clone());
-
+fn find_lca(mut u: ScopeRef, mut v: ScopeRef) -> ScopeRef {
+    while u.borrow().depth != v.borrow().depth {
+        if u.borrow().depth > v.borrow().depth {
             let u_parent = u.borrow().parent.clone();
-            u = u_parent.expect("no lca exists");
-
+            u = u_parent.expect("invalid depth or parent");
+        } else {
             let v_parent = v.borrow().parent.clone();
-            v = v_parent.expect("no lca exists");
-        }
-
-        //assert!(u_child.is_some() || v_child.is_some());
-
-        Self {
-            scope: u.clone(),
-            u_child,
-            v_child,
+            v = v_parent.expect("invalid depth or parent");
         }
     }
+
+    while !Rc::ptr_eq(&u, &v) {
+        let u_parent = u.borrow().parent.clone();
+        u = u_parent.expect("no lca exists");
+
+        let v_parent = v.borrow().parent.clone();
+        v = v_parent.expect("no lca exists");
+    }
+
+    u
 }
 
 impl ScopeBuilder {
@@ -244,9 +236,7 @@ impl ScopeBuilder {
         if let Some(var_id) = self.var_ids.get(&expr_ptr(&expr)).cloned() {
             let var_info = self.var_infos[&var_id].clone();
 
-            eprintln!("match {:?}", var_id);
-
-            let lca = LCA::find(scope.clone(), var_info.scope.clone());
+            let lca = find_lca(scope.clone(), var_info.scope.clone());
 
             let mut result_deps = var_info.deps.clone();
             result_deps.insert(var_id);
@@ -256,26 +246,19 @@ impl ScopeBuilder {
                 ty: expr.ty(),
             });
 
-            if !Rc::ptr_eq(&lca.scope, &var_info.scope) {
-                eprintln!(
-                    "pulling {:?} from {:?} to {:?}",
-                    var_id,
-                    Rc::as_ptr(&var_info.scope),
-                    Rc::as_ptr(&lca.scope)
-                );
-
+            if !Rc::ptr_eq(&lca, &var_info.scope) {
                 for dep in &var_info.deps {
-                    let dep_info = &self.var_infos[&dep];
-                    let dep_lca = LCA::find(scope.clone(), dep_info.scope.clone());
+                    let dep_info = &self.var_infos[dep];
+                    let dep_lca = find_lca(scope.clone(), dep_info.scope.clone());
 
                     let dep_init = dep_info.scope.borrow_mut().remove(*dep);
-                    dep_lca.scope.borrow_mut().vars.push((*dep, dep_init));
-                    self.var_infos.get_mut(&dep).unwrap().scope = dep_lca.scope;
+                    dep_lca.borrow_mut().vars.push((*dep, dep_init));
+                    self.var_infos.get_mut(dep).unwrap().scope = dep_lca;
                 }
 
                 let var_init = var_info.scope.borrow_mut().remove(var_id);
-                lca.scope.borrow_mut().vars.push((var_id, var_init));
-                self.var_infos.get_mut(&var_id).unwrap().scope = lca.scope;
+                lca.borrow_mut().vars.push((var_id, var_init));
+                self.var_infos.get_mut(&var_id).unwrap().scope = lca;
             }
 
             return (result_expr, result_deps);
@@ -312,6 +295,7 @@ impl ScopeBuilder {
                 let (true_expr, mut true_deps) =
                     self.walk_expr(true_scope.clone(), expr.true_expr.clone(), structs, funcs);
 
+                true_scope.borrow_mut().sort(&self.var_infos);
                 for (var_id, _) in &true_scope.borrow().vars {
                     true_deps.remove(var_id);
                 }
@@ -320,6 +304,7 @@ impl ScopeBuilder {
                 let (false_expr, mut false_deps) =
                     self.walk_expr(false_scope.clone(), expr.false_expr.clone(), structs, funcs);
 
+                false_scope.borrow_mut().sort(&self.var_infos);
                 for (var_id, _) in &false_scope.borrow().vars {
                     false_deps.remove(var_id);
                 }
@@ -388,13 +373,6 @@ impl ScopeBuilder {
 
         let var_id = self.next_var_id;
         self.next_var_id.0 += 1;
-
-        eprintln!(
-            "declare {:?} = {} in {:?}",
-            var_id,
-            show_expr(&var_init.expr()),
-            Rc::as_ptr(&scope)
-        );
 
         scope.borrow_mut().vars.push((var_id, var_init));
 
