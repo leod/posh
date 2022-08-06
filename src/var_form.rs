@@ -111,7 +111,7 @@ pub struct VarFormFuncDefs {
 }
 
 fn func_name(name: &str, num_defs: usize) -> String {
-    format!("{}_posh_ty_{}", name, num_defs)
+    format!("{}_posh_func_{}", name, num_defs)
 }
 
 impl VarFormFuncDefs {
@@ -165,12 +165,13 @@ impl VarFormFuncDefs {
                 result: (result_expr, result_ty.clone()),
             };
 
+            let name = func_name(&func.ident.name, self.defs.len());
             let name_func = NameFunc {
-                name: func_name(&func.ident.name, self.defs.len()),
+                name: name.clone(),
                 ty: result_ty,
             };
 
-            self.defs.push((func.ident.name.clone(), var_form_func));
+            self.defs.push((name, var_form_func));
             self.map.insert(func_def, name_func.clone());
 
             name_func
