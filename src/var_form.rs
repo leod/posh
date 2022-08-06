@@ -144,7 +144,7 @@ impl VarFormFuncDefs {
         let mut func_scope_builder = ScopeBuilder::default();
 
         let result_expr = func_scope_builder
-            .walk_expr(scope.clone(), func.result.clone(), structs, self)
+            .walk(scope.clone(), func.result.clone(), structs, self)
             .0;
         scope.borrow_mut().sort(&func_scope_builder.var_infos);
 
@@ -218,7 +218,7 @@ fn find_lca(mut u: ScopeRef, mut v: ScopeRef) -> ScopeRef {
 }
 
 impl ScopeBuilder {
-    fn walk_expr(
+    fn walk(
         &mut self,
         scope: ScopeRef,
         expr: Rc<Expr>,
@@ -270,9 +270,9 @@ impl ScopeBuilder {
         let (var_init, mut deps) = match &*expr {
             Binary(expr) => {
                 let (left_expr, left_deps) =
-                    self.walk_expr(scope.clone(), expr.left.clone(), structs, funcs);
+                    self.walk(scope.clone(), expr.left.clone(), structs, funcs);
                 let (right_expr, right_deps) =
-                    self.walk_expr(scope.clone(), expr.right.clone(), structs, funcs);
+                    self.walk(scope.clone(), expr.right.clone(), structs, funcs);
 
                 let mut deps = left_deps;
                 deps.extend(right_deps);
@@ -289,11 +289,11 @@ impl ScopeBuilder {
             }
             Branch(expr) => {
                 let (cond_expr, cond_deps) =
-                    self.walk_expr(scope.clone(), expr.cond.clone(), structs, funcs);
+                    self.walk(scope.clone(), expr.cond.clone(), structs, funcs);
 
                 let true_scope = new_child_scope(scope.clone());
                 let (true_expr, mut true_deps) =
-                    self.walk_expr(true_scope.clone(), expr.true_expr.clone(), structs, funcs);
+                    self.walk(true_scope.clone(), expr.true_expr.clone(), structs, funcs);
 
                 true_scope.borrow_mut().sort(&self.var_infos);
                 for (var_id, _) in &true_scope.borrow().vars {
@@ -302,7 +302,7 @@ impl ScopeBuilder {
 
                 let false_scope = new_child_scope(scope.clone());
                 let (false_expr, mut false_deps) =
-                    self.walk_expr(false_scope.clone(), expr.false_expr.clone(), structs, funcs);
+                    self.walk(false_scope.clone(), expr.false_expr.clone(), structs, funcs);
 
                 false_scope.borrow_mut().sort(&self.var_infos);
                 for (var_id, _) in &false_scope.borrow().vars {
@@ -334,7 +334,7 @@ impl ScopeBuilder {
 
                 for arg in &expr.args {
                     let (arg_expr, arg_deps) =
-                        self.walk_expr(scope.clone(), arg.clone(), structs, funcs);
+                        self.walk(scope.clone(), arg.clone(), structs, funcs);
                     args.push(Rc::new(arg_expr));
                     deps.extend(arg_deps);
                 }
@@ -356,7 +356,7 @@ impl ScopeBuilder {
             }
             Field(expr) => {
                 let (base_expr, base_deps) =
-                    self.walk_expr(scope.clone(), expr.base.clone(), structs, funcs);
+                    self.walk(scope.clone(), expr.base.clone(), structs, funcs);
 
                 (
                     VarInit::Expr(Field(FieldExpr {
