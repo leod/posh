@@ -251,7 +251,7 @@ impl ScopeBuilder {
             let mut result_deps = var_info.deps.clone();
             result_deps.insert(var_id);
 
-            let result_expr = Expr::Var(VarExpr {
+            let result_expr = Var(VarExpr {
                 ident: var_name(var_id),
                 ty: expr.ty(),
             });
@@ -295,7 +295,7 @@ impl ScopeBuilder {
                 deps.extend(right_deps);
 
                 (
-                    VarInit::Expr(Expr::Binary(BinaryExpr {
+                    VarInit::Expr(Binary(BinaryExpr {
                         left: Rc::new(left_expr),
                         op: expr.op,
                         right: Rc::new(right_expr),
@@ -367,14 +367,14 @@ impl ScopeBuilder {
                     }
                 };
 
-                (VarInit::Expr(Expr::Call(CallExpr { func, args })), deps)
+                (VarInit::Expr(Call(CallExpr { func, args })), deps)
             }
             Field(expr) => {
                 let (base_expr, base_deps) =
                     self.walk_expr(scope.clone(), expr.base.clone(), structs, funcs);
 
                 (
-                    VarInit::Expr(Expr::Field(FieldExpr {
+                    VarInit::Expr(Field(FieldExpr {
                         base: Rc::new(base_expr),
                         member: expr.member.clone(),
                         ty: structs.walk(&expr.ty),
@@ -410,7 +410,7 @@ impl ScopeBuilder {
         deps.insert(var_id);
 
         (
-            Expr::Var(VarExpr {
+            Var(VarExpr {
                 ident: var_name(var_id),
                 ty: expr.ty(),
             }),
