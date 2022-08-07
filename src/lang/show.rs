@@ -21,7 +21,7 @@ pub fn show_expr(expr: &Expr) -> String {
             let args: Vec<_> = expr.args.iter().map(|arg| show_expr(&*arg)).collect();
             format!("{}({})", expr.func.name(), args.join(", "),)
         }
-        Literal(expr) => expr.literal.value.clone(),
+        Literal(expr) => expr.value.clone(),
         Field(expr) => {
             let base = show_expr(&*expr.base);
             format!("{}.{}", base, expr.member)

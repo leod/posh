@@ -49,7 +49,7 @@ pub enum Func {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct NameFunc {
     pub name: String,
-    pub ty: Ty,
+    pub result_ty: Ty,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -69,7 +69,7 @@ impl Func {
         use Func::*;
 
         match self {
-            Name(NameFunc { ty, .. }) => ty.clone(),
+            Name(NameFunc { result_ty: ty, .. }) => ty.clone(),
             Def(FuncDef { result, .. }) => result.ty(),
             Struct(StructFunc { ty }) => Ty::Struct(ty.clone()),
         }
@@ -87,12 +87,12 @@ impl Func {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Literal {
+pub struct LiteralExpr {
     pub value: String,
     pub ty: Ty,
 }
 
-impl From<bool> for Literal {
+impl From<bool> for LiteralExpr {
     fn from(x: bool) -> Self {
         Self {
             value: x.to_string(),
@@ -101,7 +101,7 @@ impl From<bool> for Literal {
     }
 }
 
-impl From<i32> for Literal {
+impl From<i32> for LiteralExpr {
     fn from(x: i32) -> Self {
         Self {
             value: x.to_string(),
@@ -110,7 +110,7 @@ impl From<i32> for Literal {
     }
 }
 
-impl From<u32> for Literal {
+impl From<u32> for LiteralExpr {
     fn from(x: u32) -> Self {
         Self {
             value: x.to_string(),
@@ -119,7 +119,7 @@ impl From<u32> for Literal {
     }
 }
 
-impl From<f32> for Literal {
+impl From<f32> for LiteralExpr {
     fn from(x: f32) -> Self {
         Self {
             value: x.to_string(),
@@ -141,11 +141,11 @@ pub enum BinaryOp {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Expr {
+    Var(VarExpr),
+    Literal(LiteralExpr),
     Binary(BinaryExpr),
     Branch(BranchExpr),
-    Var(VarExpr),
     Call(CallExpr),
-    Literal(LiteralExpr),
     Field(FieldExpr),
 }
 
@@ -177,11 +177,6 @@ pub struct CallExpr {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct LiteralExpr {
-    pub literal: Literal,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FieldExpr {
     pub base: Rc<Expr>,
     pub member: String,
@@ -203,7 +198,7 @@ impl Expr {
             }
             Var(expr) => expr.ty.clone(),
             Call(expr) => expr.func.ty(),
-            Literal(expr) => expr.literal.ty.clone(),
+            Literal(expr) => expr.ty.clone(),
             Field(expr) => expr.ty.clone(),
         }
     }

@@ -165,7 +165,7 @@ impl VarFormFuncDefs {
             let name = func_name(&func.name, self.defs.len());
             let name_func = NameFunc {
                 name: name.clone(),
-                ty: result_ty,
+                result_ty,
             };
 
             self.defs.push((name, var_form_func));
@@ -345,7 +345,7 @@ impl ScopeBuilder {
 
                         Func::Name(NameFunc {
                             name: show_ty(&ty),
-                            ty,
+                            result_ty: ty,
                         })
                     }
                 };

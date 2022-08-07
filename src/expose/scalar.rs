@@ -6,13 +6,13 @@ use std::{
 
 use sealed::sealed;
 
-use crate::lang::{BinaryOp, BranchExpr, BuiltInTy, Expr, Literal, LiteralExpr, ScalarTy, Ty};
+use crate::lang::{BinaryOp, BranchExpr, BuiltInTy, Expr, LiteralExpr, ScalarTy, Ty};
 
 use super::{binary, Expose, FuncArg, IntoRep, Representative, Trace, Value};
 
 /// A scalar type.
 #[sealed]
-pub trait ScalarType: Copy + Into<Literal> + IntoRep<Rep = Scalar<Self>> {
+pub trait ScalarType: Copy + Into<LiteralExpr> + IntoRep<Rep = Scalar<Self>> {
     fn scalar_ty() -> ScalarTy;
 }
 
@@ -64,7 +64,7 @@ where
     T: ScalarType,
 {
     pub fn new(x: T) -> Self {
-        Self::from_expr(Expr::Literal(LiteralExpr { literal: x.into() }))
+        Self::from_expr(Expr::Literal(x.into()))
     }
 
     pub fn eq(&self, right: impl IntoRep<Rep = Self>) -> Scalar<bool> {

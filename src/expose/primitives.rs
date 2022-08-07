@@ -93,7 +93,7 @@ where
 {
     let func = Func::Name(NameFunc {
         name: name.into(),
-        ty: <R::Rep as FuncArg>::ty(),
+        result_ty: <R::Rep as FuncArg>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
@@ -115,7 +115,7 @@ where
 {
     let func = Func::Name(NameFunc {
         name: name.into(),
-        ty: <R::Rep as FuncArg>::ty(),
+        result_ty: <R::Rep as FuncArg>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
@@ -139,7 +139,7 @@ where
 {
     let func = Func::Name(NameFunc {
         name: name.into(),
-        ty: <R::Rep as FuncArg>::ty(),
+        result_ty: <R::Rep as FuncArg>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
@@ -169,7 +169,7 @@ where
 {
     let func = Func::Name(NameFunc {
         name: name.into(),
-        ty: <R::Rep as FuncArg>::ty(),
+        result_ty: <R::Rep as FuncArg>::ty(),
     });
     let expr = Expr::Call(CallExpr {
         func,
