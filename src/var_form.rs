@@ -73,7 +73,7 @@ impl Scope {
     }
 
     fn sort(&mut self, var_infos: &HashMap<VarId, VarInfo>) {
-        // FIXME: We should probly store deps here rather than in `var_infos`.
+        // FIXME: We should probably store deps here rather than in `var_infos`.
 
         self.vars.sort_by(|(x_id, _), (y_id, _)| {
             if var_infos[y_id].deps.contains(x_id) {
