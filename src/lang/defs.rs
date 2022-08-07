@@ -1,11 +1,11 @@
 use std::collections::BTreeSet;
 
-use super::{DefFunc, Expr, Func, Ident, StructTy, Ty, VarExpr};
+use super::{Expr, Func, FuncDef, StructTy, Ty, VarExpr};
 
 #[derive(Debug, Clone, Default)]
 pub struct Defs {
     pub structs: BTreeSet<StructTy>,
-    pub funcs: BTreeSet<DefFunc>,
+    pub funcs: BTreeSet<FuncDef>,
 }
 
 impl Defs {
@@ -23,7 +23,7 @@ impl Defs {
         Self { structs, funcs }
     }
 
-    pub fn from_func_def(func: &DefFunc) -> Self {
+    pub fn from_func_def(func: &FuncDef) -> Self {
         let mut defs = Defs::from_expr(&func.result);
         defs.funcs.insert(func.clone());
 
@@ -53,15 +53,11 @@ pub fn collect_structs(expr: &Expr, structs: &mut BTreeSet<StructTy>) {
             collect_structs(&*expr.true_expr, structs);
             collect_structs(&*expr.false_expr, structs);
         }
-        Var(expr) => {
-            if let Some(ref init) = expr.init {
-                collect_structs(init, structs);
-            }
-        }
+        Var(_) => (),
         Call(expr) => {
             if let Func::Def(func) = &expr.func {
-                for param in func.params.iter() {
-                    collect_struct_ty(&param.ty, structs);
+                for (_, param_ty) in func.params.iter() {
+                    collect_struct_ty(param_ty, structs);
                 }
                 collect_structs(&*func.result, structs);
             }
@@ -84,9 +80,8 @@ fn collect_struct_ty(ty: &Ty, structs: &mut BTreeSet<StructTy>) {
         for (name, ty) in ty.fields.iter() {
             collect_structs(
                 &Expr::Var(VarExpr {
-                    ident: Ident::new(name),
+                    name: name.clone(),
                     ty: ty.clone(),
-                    init: None,
                 }),
                 structs,
             );
@@ -94,7 +89,7 @@ fn collect_struct_ty(ty: &Ty, structs: &mut BTreeSet<StructTy>) {
     }
 }
 
-pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<DefFunc>) {
+pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<FuncDef>) {
     use Expr::*;
 
     match expr {
@@ -107,12 +102,7 @@ pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<DefFunc>) {
             collect_funcs(&*expr.true_expr, funcs);
             collect_funcs(&*expr.false_expr, funcs);
         }
-        Var(VarExpr {
-            init: Some(init), ..
-        }) => {
-            collect_funcs(init, funcs);
-        }
-        Var(VarExpr { init: None, .. }) => (),
+        Var(_) => (),
         Call(expr) => {
             if let Func::Def(func) = &expr.func {
                 funcs.insert(func.clone());
@@ -125,40 +115,6 @@ pub fn collect_funcs(expr: &Expr, funcs: &mut BTreeSet<DefFunc>) {
         Literal(_) => (),
         Field(expr) => {
             collect_funcs(&*expr.base, funcs);
-        }
-    }
-}
-
-pub fn collect_vars(expr: &Expr, vars: &mut BTreeSet<VarExpr>) {
-    use Expr::*;
-
-    match expr {
-        Binary(expr) => {
-            collect_vars(&*expr.left, vars);
-            collect_vars(&*expr.right, vars);
-        }
-        Branch(expr) => {
-            collect_vars(&*expr.cond, vars);
-            collect_vars(&*expr.true_expr, vars);
-            collect_vars(&*expr.false_expr, vars);
-        }
-        Var(
-            var @ VarExpr {
-                init: Some(init), ..
-            },
-        ) => {
-            vars.insert(var.clone());
-            collect_vars(init, vars);
-        }
-        Var(VarExpr { init: None, .. }) => (),
-        Call(expr) => {
-            for arg in &expr.args {
-                collect_vars(arg, vars);
-            }
-        }
-        Literal(_) => (),
-        Field(expr) => {
-            collect_vars(&*expr.base, vars);
         }
     }
 }

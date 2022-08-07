@@ -1,8 +1,12 @@
 use nalgebra::Vector3;
 use posh::{
     expose::compile::compile1,
-    lang::{defs::Defs, show::show_defs},
-    rep, Expose, IntoRep, Rep, ScalarType,
+    rep,
+    var_form::{
+        show::{show_func_defs, show_struct_defs},
+        StructDefs, VarFormFuncDefs,
+    },
+    Expose, IntoRep, Rep, ScalarType,
 };
 
 #[derive(Expose)]
@@ -49,5 +53,8 @@ fn vertex(vertex: Rep<test::Vertex>) -> Rep<test::Vertex> {
 pub fn main() {
     let func_def = compile1(vertex).unwrap();
 
-    println!("{}", show_defs(&Defs::from_func_def(&func_def)));
+    let mut structs = StructDefs::new();
+    let funcs = VarFormFuncDefs::from_func_def(&func_def, &mut structs);
+    println!("{}", show_struct_defs(&structs));
+    println!("{}", show_func_defs(&funcs));
 }

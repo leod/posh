@@ -1,18 +1,18 @@
-use crate::lang::{DefFunc, Expr, Func, Ident};
+use crate::lang::{Expr, Func, FuncDef};
 
 use super::{FuncArg, Value};
 
-pub fn compile1<U, R>(f: fn(U) -> R) -> Option<DefFunc>
+pub fn compile1<U, R>(f: fn(U) -> R) -> Option<FuncDef>
 where
     U: FuncArg,
     R: Value,
 {
-    let u = U::from_ident(Ident::new("u"));
+    let u = U::from_var_name("u");
     let r = f(u);
 
-    if let Expr::Call(expr) = r.expr() {
-        if let Func::Def(func) = expr.func {
-            Some(func)
+    if let Expr::Call(expr) = &*r.expr() {
+        if let Func::Def(ref func) = expr.func {
+            Some(func.clone())
         } else {
             None
         }

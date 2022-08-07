@@ -1,4 +1,6 @@
-use crate::lang::{CallExpr, Expr, Func, Ident, StructFunc, StructTy, Ty};
+use std::rc::Rc;
+
+use crate::lang::{CallExpr, Expr, Func, StructFunc, StructTy, Ty};
 
 use super::{common_field_base, field, Expose, FuncArg, Rep, Representative, Trace, Value};
 
@@ -24,16 +26,16 @@ where
 {
     fn ty() -> Ty {
         Ty::Struct(StructTy {
-            ident: Ident::new("Pair"),
+            name: "Pair".into(),
             fields: vec![("x0".into(), U::ty()), ("x1".into(), V::ty())],
         })
     }
 
-    fn from_ident(ident: Ident) -> Self {
-        Self::from_trace(Trace::from_ident::<Self>(ident))
+    fn from_var_name(name: &str) -> Self {
+        Self::from_trace(Trace::from_var_name::<Self>(name))
     }
 
-    fn expr(&self) -> Expr {
+    fn expr(&self) -> Rc<Expr> {
         let args = vec![self.0.expr(), self.1.expr()];
 
         if let Some(common_base) = common_field_base(&Self::ty(), &args) {
@@ -44,7 +46,7 @@ where
                 _ => unreachable!(),
             };
             let func = Func::Struct(StructFunc { ty });
-            Expr::Call(CallExpr { func, args })
+            Rc::new(Expr::Call(CallExpr { func, args }))
         }
     }
 }

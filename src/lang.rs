@@ -1,20 +1,14 @@
 pub mod defs;
+pub(crate) mod expr_reg;
 pub mod show;
 
 use std::rc::Rc;
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum ScalarTy {
-    F32,
-    I32,
-    U32,
-    Bool,
-}
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Ty {
     BuiltIn(BuiltInTy),
     Struct(StructTy),
+    Name(NameTy),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -26,52 +20,42 @@ pub enum BuiltInTy {
     Sampler2,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ScalarTy {
+    F32,
+    I32,
+    U32,
+    Bool,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct StructTy {
-    pub ident: Ident,
+    pub name: String,
     pub fields: Vec<(String, Ty)>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Ident {
+pub struct NameTy {
     pub name: String,
-}
-
-impl Ident {
-    pub fn new(name: impl Into<String>) -> Self {
-        Self { name: name.into() }
-    }
-}
-
-impl ToString for Ident {
-    fn to_string(&self) -> String {
-        self.name.clone()
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct FuncParam {
-    pub ident: Ident,
-    pub ty: Ty,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Func {
-    BuiltIn(BuiltInFunc),
-    Def(DefFunc),
+    Name(NameFunc),
+    Def(FuncDef),
     Struct(StructFunc),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct BuiltInFunc {
+pub struct NameFunc {
     pub name: String,
     pub ty: Ty,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct DefFunc {
-    pub ident: Ident,
-    pub params: Vec<FuncParam>,
+pub struct FuncDef {
+    pub name: String,
+    pub params: Vec<(String, Ty)>,
     pub result: Rc<Expr>,
 }
 
@@ -85,8 +69,8 @@ impl Func {
         use Func::*;
 
         match self {
-            BuiltIn(BuiltInFunc { ty, .. }) => ty.clone(),
-            Def(DefFunc { result, .. }) => result.ty(),
+            Name(NameFunc { ty, .. }) => ty.clone(),
+            Def(FuncDef { result, .. }) => result.ty(),
             Struct(StructFunc { ty }) => Ty::Struct(ty.clone()),
         }
     }
@@ -95,9 +79,9 @@ impl Func {
         use Func::*;
 
         match self {
-            BuiltIn(BuiltInFunc { name, .. }) => name,
-            Def(DefFunc { ident, .. }) => &ident.name,
-            Struct(StructFunc { ty, .. }) => &ty.ident.name,
+            Name(NameFunc { name, .. }) => name,
+            Def(FuncDef { name, .. }) => name,
+            Struct(StructFunc { ty, .. }) => &ty.name,
         }
     }
 }
@@ -182,15 +166,14 @@ pub struct BranchExpr {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct VarExpr {
-    pub ident: Ident,
+    pub name: String,
     pub ty: Ty,
-    pub init: Option<Rc<Expr>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct CallExpr {
     pub func: Func,
-    pub args: Vec<Expr>,
+    pub args: Vec<Rc<Expr>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -212,7 +195,10 @@ impl Expr {
         match self {
             Binary(expr) => expr.ty.clone(),
             Branch(expr) => {
-                assert!(expr.true_expr.ty() == expr.false_expr.ty());
+                // Careful: The following assertion has potential for introducing exponential
+                // slowdown.
+                //assert!(expr.true_expr.ty() == expr.false_expr.ty());
+
                 expr.true_expr.ty()
             }
             Var(expr) => expr.ty.clone(),

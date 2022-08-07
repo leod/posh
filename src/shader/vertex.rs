@@ -1,10 +1,6 @@
 use sealed::sealed;
 
-use crate::{
-    expose::NumType,
-    lang::{Ident, Ty},
-    FuncArg, Scalar, Value, Vec2, Vec3, Vec4,
-};
+use crate::{expose::NumType, lang::Ty, FuncArg, Scalar, Value, Vec2, Vec3, Vec4};
 
 use super::fields::{add_prefix, Fields, InputFields, OutputFields};
 
@@ -41,25 +37,25 @@ impl<T: NumType> Fields for Vec4<T> {
 
 impl<T: NumType> InputFields for Scalar<T> {
     fn stage_input(prefix: &str) -> Self {
-        Self::from_ident(Ident::new(prefix))
+        Self::from_var_name(prefix)
     }
 }
 
 impl<T: NumType> InputFields for Vec2<T> {
     fn stage_input(prefix: &str) -> Self {
-        Self::from_ident(Ident::new(prefix))
+        Self::from_var_name(prefix)
     }
 }
 
 impl<T: NumType> InputFields for Vec3<T> {
     fn stage_input(prefix: &str) -> Self {
-        Self::from_ident(Ident::new(prefix))
+        Self::from_var_name(prefix)
     }
 }
 
 impl<T: NumType> InputFields for Vec4<T> {
     fn stage_input(prefix: &str) -> Self {
-        Self::from_ident(Ident::new(prefix))
+        Self::from_var_name(prefix)
     }
 }
 

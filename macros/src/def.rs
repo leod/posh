@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream as TokenStream2;
-use quote::{quote, ToTokens};
+use quote::ToTokens;
 use syn::{
     parse_quote, parse_quote_spanned, spanned::Spanned, Block, Error, Expr, FnArg, Ident, ItemFn,
     Pat, Result, ReturnType, Signature, Stmt, Type,
@@ -47,33 +47,34 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
     let func_ident = item.sig.ident.clone();
     let func_body = item.block.clone();
 
-    let param_idents_var = quote! { _posh_param_idents };
-
     let return_type_check_stmt: Stmt = parse_quote_spanned! {output_ty.span()=>
         <#output_ty as ::posh::Value>::must_impl();
     };
 
-    let param_exprs: Vec<Expr> = input_tys
+    let param_exprs: Vec<Expr> = input_idents
         .iter()
-        .enumerate()
-        .map(|(idx, ty)| {
+        .zip(&input_tys)
+        .map(|(ident, ty)| {
+            let name = ident.to_string();
+
             parse_quote_spanned! {ty.span()=>
-                ::posh::lang::FuncParam {
-                    ident: #param_idents_var[#idx].clone(),
-                    ty: <#ty as ::posh::FuncArg>::ty(),
-                }
+                (
+                    #name.to_string(),
+                    <#ty as ::posh::FuncArg>::ty(),
+                )
             }
         })
         .collect();
 
-    let shadow_param_stmts: Vec<Stmt> = input_tys
+    let shadow_param_stmts: Vec<Stmt> = input_idents
         .iter()
-        .zip(&input_idents)
-        .enumerate()
-        .map(|(idx, (ty, ident))| {
+        .zip(&input_tys)
+        .map(|(ident, ty)| {
+            let name = ident.to_string();
+
             parse_quote_spanned! {ty.span()=>
-                let #ident = <#ty as ::posh::FuncArg>::from_ident(
-                    #param_idents_var[#idx].clone(),
+                let #ident = <#ty as ::posh::FuncArg>::from_var_name(
+                    #name,
                 );
             }
         })
@@ -99,24 +100,19 @@ pub fn transform(mut item: ItemFn) -> Result<TokenStream2> {
         {
             #return_type_check_stmt
 
-            // Generate Posh identifiers for the function arguments.
-            let #param_idents_var = vec![
-                #(::posh::lang::Ident::new(stringify!(#input_idents))),*
-            ];
-
             // Return a Posh expression which defines *and* calls the function.
             ::posh::expose::func_def_and_call(
-                ::posh::lang::DefFunc {
-                    ident: ::posh::lang::Ident::new(stringify!(#func_ident)),
+                ::posh::lang::FuncDef {
+                    name: stringify!(#func_ident).to_string(),
                     params: vec![#(#param_exprs),*],
-                    result: ::std::rc::Rc::new({
+                    result: {
                         // Shadow the Rust function arguments with Posh expressions so that
                         // variables in `func_body` refer to the Posh identifiers generated above.
                         #(#shadow_param_stmts)*
 
                         #[allow(unused_braces)]
                         #output_block
-                    })
+                    },
                 },
                 vec![#(#arg_exprs),*],
             )

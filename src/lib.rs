@@ -3,12 +3,13 @@
 pub mod expose;
 pub mod lang;
 pub mod shader;
+pub mod var_form;
 
 #[doc(hidden)]
 pub use static_assertions;
 
 pub use expose::{
-    var, vec2, vec3, vec4, BuiltInValue, Expose, FuncArg, GenValue, IntoRep, NumType, Rep,
+    vec2, vec3, vec4, BuiltInValue, Expose, FuncArg, GenValue, IntoRep, NumType, Rep,
     Representative, Sampler2, Scalar, ScalarType, Value, Vec2, Vec3, Vec4,
 };
 

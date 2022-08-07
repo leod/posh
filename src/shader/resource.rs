@@ -1,11 +1,8 @@
 use sealed::sealed;
 
-use crate::{
-    lang::{Ident, Ty},
-    FuncArg, Representative, Value,
-};
+use crate::{FuncArg, Value};
 
-use super::fields::{Fields, InputFields};
+use super::fields::InputFields;
 
 /// A representative of a resource that can be bound to shaders.
 pub trait Resource: FuncArg + InputFields {}
@@ -18,20 +15,6 @@ pub trait Resources: InputFields {
     #[doc(hidden)]
     fn must_impl() {}
 }
-
-/*
-impl<D: Resource> Fields for D {
-    fn fields(prefix: &str) -> Vec<(String, Ty)> {
-        vec![(prefix.into(), <D as FuncArg>::ty())]
-    }
-}
-
-impl<D: Resource> InputFields for D {
-    fn stage_input(prefix: &str) -> Self {
-        <D as FuncArg>::from_ident(Ident::new(prefix))
-    }
-}
-*/
 
 impl<D: Resource> Resources for D {}
 

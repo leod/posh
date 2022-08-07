@@ -1,4 +1,4 @@
-use crate::{lang::Ident, Expose, FuncArg, Rep, Vec3, Vec4};
+use crate::{Expose, FuncArg, Rep, Vec3, Vec4};
 
 use super::{Attributes, Fragment, Interpolants};
 
@@ -85,5 +85,5 @@ where
 }
 
 fn builtin_var<V: FuncArg>(name: &'static str) -> V {
-    V::from_ident(Ident::new(name))
+    V::from_var_name(name)
 }

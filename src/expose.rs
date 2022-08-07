@@ -1,7 +1,6 @@
 #[macro_use]
 mod built_in_value;
 pub mod compile;
-mod expr_reg;
 mod gen_value;
 #[cfg(feature = "nalgebra")]
 mod nalgebra;
@@ -12,11 +11,13 @@ mod trace;
 mod tuple;
 mod vec;
 
-use crate::lang::{Expr, Ident, Ty};
+use std::rc::Rc;
+
+use crate::lang::{Expr, Ty};
 
 pub use built_in_value::BuiltInValue;
 pub use gen_value::GenValue;
-pub use primitives::{common_field_base, field, func_def_and_call, var};
+pub use primitives::{common_field_base, field, func_def_and_call};
 pub use sampler::Sampler2;
 pub use scalar::{NumType, Scalar, ScalarType};
 pub use trace::Trace;
@@ -75,11 +76,10 @@ pub trait Representative: Copy + Expose<Rep = Self> {}
 /// For more information on function definitions in Posh, see [`def`](attr.def.html).
 pub trait FuncArg: Representative {
     fn ty() -> Ty;
-    fn expr(&self) -> Expr;
+    fn expr(&self) -> Rc<Expr>;
 
-    /// FIXME
     #[doc(hidden)]
-    fn from_ident(ident: Ident) -> Self;
+    fn from_var_name(name: &str) -> Self;
 }
 
 /// A representative which can be stored in variables in Posh.

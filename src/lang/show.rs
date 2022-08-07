@@ -1,16 +1,11 @@
-use std::collections::BTreeSet;
-
-use super::{
-    defs::{collect_vars, Defs},
-    BinaryOp, BuiltInTy, DefFunc, Expr, ScalarTy, StructTy, Ty, VarExpr,
-};
+use super::{defs::Defs, BinaryOp, BuiltInTy, Expr, FuncDef, ScalarTy, StructTy, Ty};
 
 pub fn show_expr(expr: &Expr) -> String {
     use Expr::*;
 
     match expr {
         Binary(expr) => format!(
-            "({}) {} ({})",
+            "({} {} {})",
             show_expr(&*expr.left),
             show_binary_op(expr.op),
             show_expr(&*expr.right)
@@ -21,54 +16,31 @@ pub fn show_expr(expr: &Expr) -> String {
             show_expr(&*expr.true_expr),
             show_expr(&*expr.false_expr),
         ),
-        Var(expr) => expr.ident.to_string(),
+        Var(expr) => expr.name.to_string(),
         Call(expr) => {
-            let args: Vec<_> = expr.args.iter().map(show_expr).collect();
+            let args: Vec<_> = expr.args.iter().map(|arg| show_expr(&*arg)).collect();
             format!("{}({})", expr.func.name(), args.join(", "),)
         }
         Literal(expr) => expr.literal.value.clone(),
         Field(expr) => {
             let base = show_expr(&*expr.base);
-            format!("({}).{}", base, expr.member)
+            format!("{}.{}", base, expr.member)
         }
     }
 }
 
-pub fn show_lets<'a>(vars: impl IntoIterator<Item = &'a VarExpr>) -> String {
-    let lets: Vec<_> = vars
-        .into_iter()
-        .filter_map(|var| {
-            var.init.as_ref().map(|init| {
-                format!(
-                    "    let {}: {} = {};",
-                    var.ident.to_string(),
-                    show_ty(&var.ty),
-                    show_expr(init),
-                )
-            })
-        })
-        .collect();
-
-    lets.join("\n")
-}
-
-pub fn show_func_def(def: &DefFunc) -> String {
+pub fn show_func_def(def: &FuncDef) -> String {
     let params: Vec<_> = def
         .params
         .iter()
-        .map(|param| format!("{}: {}", param.ident.to_string(), show_ty(&param.ty)))
+        .map(|(name, ty)| format!("{}: {}", name, show_ty(ty)))
         .collect();
 
-    // TODO: Sort vars by dependencies.
-    let mut vars = BTreeSet::new();
-    collect_vars(&def.result, &mut vars);
-
     format!(
-        "fn {}({}) -> {} {{\n{}\n    {}\n}}",
-        def.ident.name,
+        "fn {}({}) -> {} {{\n{}\n}}",
+        def.name,
         params.join(", "),
         show_ty(&def.result.ty()),
-        show_lets(&vars),
         show_expr(&def.result),
     )
 }
@@ -127,7 +99,7 @@ pub fn show_built_in_ty(ty: &BuiltInTy) -> String {
 }
 
 pub fn show_struct_ty(ty: &StructTy) -> String {
-    ty.ident.to_string()
+    ty.name.to_string()
 }
 
 pub fn show_ty(ty: &Ty) -> String {
@@ -136,6 +108,7 @@ pub fn show_ty(ty: &Ty) -> String {
     match ty {
         BuiltIn(ty) => show_built_in_ty(ty),
         Struct(ty) => show_struct_ty(ty),
+        Name(ty) => ty.name.clone(),
     }
 }
 
@@ -146,11 +119,7 @@ pub fn show_struct_def(ty: &StructTy) -> String {
         .map(|(name, ty)| format!("    {}: {},", name, show_ty(ty)))
         .collect();
 
-    format!(
-        "struct {}\n{{\n{}\n}}",
-        ty.ident.to_string(),
-        fields.join("\n")
-    )
+    format!("struct {}\n{{\n{}\n}}", ty.name, fields.join("\n"))
 }
 
 pub fn show_binary_op(op: BinaryOp) -> String {

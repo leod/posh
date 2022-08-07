@@ -1,9 +1,8 @@
-use std::{collections::BTreeSet, iter};
+use std::iter;
 
 use crate::lang::{
-    defs::collect_vars,
-    show::{show_defs, show_expr, show_lets, show_ty},
-    Expr, Ty, VarExpr,
+    show::{show_defs, show_expr, show_ty},
+    Expr, Ty,
 };
 
 use super::{ErasedFStage, ErasedShader, ErasedVStage};
@@ -16,17 +15,11 @@ fn show_interface(kind: &str, fields: impl IntoIterator<Item = (String, Ty)>) ->
         .join("\n")
 }
 
-fn show_main<'a>(
-    vars: &BTreeSet<VarExpr>,
-    outputs: impl Iterator<Item = (String, &'a Expr)>,
-) -> String {
+fn show_main<'a>(outputs: impl Iterator<Item = (String, &'a Expr)>) -> String {
     let mut result = String::new();
 
     result += "fn main() {\n";
 
-    result += &show_lets(vars);
-
-    result += "\n\n";
     for (name, expr) in outputs {
         result += &format!("    {} := {};\n", name, show_expr(expr));
     }
@@ -37,11 +30,6 @@ fn show_main<'a>(
 }
 
 fn show_v_stage(res: &str, stage: &ErasedVStage) -> String {
-    let mut vars = BTreeSet::new();
-    for expr in stage.output_exprs() {
-        collect_vars(expr, &mut vars);
-    }
-
     let outputs = stage
         .interps
         .iter()
@@ -68,17 +56,12 @@ fn show_v_stage(res: &str, stage: &ErasedVStage) -> String {
     );
 
     result += "\n\n";
-    result += &show_main(&vars, outputs);
+    result += &show_main(outputs);
 
     result
 }
 
 fn show_f_stage(res: &str, stage: &ErasedFStage) -> String {
-    let mut vars = BTreeSet::new();
-    for expr in stage.output_exprs() {
-        collect_vars(expr, &mut vars);
-    }
-
     let outputs = stage
         .frag
         .iter()
@@ -110,7 +93,7 @@ fn show_f_stage(res: &str, stage: &ErasedFStage) -> String {
     );
 
     result += "\n\n";
-    result += &show_main(&vars, outputs);
+    result += &show_main(outputs);
 
     result
 }
