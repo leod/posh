@@ -6,9 +6,7 @@ use std::{
 
 use sealed::sealed;
 
-use crate::lang::{
-    BinaryOp, BranchExpr, BuiltInTy, Expr, Ident, Literal, LiteralExpr, ScalarTy, Ty,
-};
+use crate::lang::{BinaryOp, BranchExpr, BuiltInTy, Expr, Literal, LiteralExpr, ScalarTy, Ty};
 
 use super::{binary, Expose, FuncArg, IntoRep, Representative, Trace, Value};
 
@@ -45,8 +43,8 @@ impl<T: ScalarType> FuncArg for Scalar<T> {
         self.trace.expr()
     }
 
-    fn from_ident(ident: Ident) -> Self {
-        Self::from_trace(Trace::from_ident::<Self>(ident))
+    fn from_var_name(name: &str) -> Self {
+        Self::from_trace(Trace::from_var_name::<Self>(name))
     }
 }
 

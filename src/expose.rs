@@ -13,7 +13,7 @@ mod vec;
 
 use std::rc::Rc;
 
-use crate::lang::{Expr, Ident, Ty};
+use crate::lang::{Expr, Ty};
 
 pub use built_in_value::BuiltInValue;
 pub use gen_value::GenValue;
@@ -79,7 +79,7 @@ pub trait FuncArg: Representative {
     fn expr(&self) -> Rc<Expr>;
 
     #[doc(hidden)]
-    fn from_ident(ident: Ident) -> Self;
+    fn from_var_name(name: &str) -> Self;
 }
 
 /// A representative which can be stored in variables in Posh.

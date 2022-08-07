@@ -30,30 +30,13 @@ pub enum ScalarTy {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct StructTy {
-    pub ident: Ident,
+    pub name: String,
     pub fields: Vec<(String, Ty)>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct NameTy {
     pub name: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Ident {
-    pub name: String,
-}
-
-impl Ident {
-    pub fn new(name: impl Into<String>) -> Self {
-        Self { name: name.into() }
-    }
-}
-
-impl ToString for Ident {
-    fn to_string(&self) -> String {
-        self.name.clone()
-    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -70,15 +53,9 @@ pub struct NameFunc {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct FuncParam {
-    pub ident: Ident,
-    pub ty: Ty,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FuncDef {
-    pub ident: Ident,
-    pub params: Vec<FuncParam>,
+    pub name: String,
+    pub params: Vec<(String, Ty)>,
     pub result: Rc<Expr>,
 }
 
@@ -103,8 +80,8 @@ impl Func {
 
         match self {
             Name(NameFunc { name, .. }) => name,
-            Def(FuncDef { ident, .. }) => &ident.name,
-            Struct(StructFunc { ty, .. }) => &ty.ident.name,
+            Def(FuncDef { name, .. }) => name,
+            Struct(StructFunc { ty, .. }) => &ty.name,
         }
     }
 }
@@ -189,7 +166,7 @@ pub struct BranchExpr {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct VarExpr {
-    pub ident: Ident,
+    pub name: String,
     pub ty: Ty,
 }
 

@@ -2,7 +2,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::lang::{
     expr_reg::{ExprId, ExprReg},
-    Expr, Ident, VarExpr,
+    Expr, VarExpr,
 };
 
 use super::FuncArg;
@@ -19,9 +19,9 @@ impl Trace {
         }
     }
 
-    pub fn from_ident<R: FuncArg>(ident: Ident) -> Self {
+    pub fn from_var_name<R: FuncArg>(name: &str) -> Self {
         Self::new(Expr::Var(VarExpr {
-            ident,
+            name: name.into(),
             ty: <R::Rep as FuncArg>::ty(),
         }))
     }

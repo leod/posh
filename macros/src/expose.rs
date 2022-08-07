@@ -32,9 +32,12 @@ struct ExposeAttr {
 impl Parse for ExposeAttr {
     fn parse(input: ParseStream) -> Result<Self> {
         let content;
+        let paren_token = parenthesized!(content in input);
+        let trait_names = content.parse_terminated(Ident::parse)?;
+
         Ok(ExposeAttr {
-            _paren_token: parenthesized!(content in input),
-            trait_names: content.parse_terminated(Ident::parse)?,
+            _paren_token: paren_token,
+            trait_names,
         })
     }
 }
@@ -310,8 +313,6 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
         quote! {
             impl #impl_generics ::posh::FuncArg for #rep_name #ty_generics #where_clause {
                 fn ty() -> ::posh::lang::Ty {
-                    let ident = ::posh::lang::Ident::new(#name_string);
-
                     let fields = vec![
                         #(
                             (
@@ -322,7 +323,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                     ];
 
                     let struct_ty = ::posh::lang::StructTy {
-                        ident,
+                        name: #name_string.into(),
                         fields,
                     };
                     ::posh::lang::Ty::Struct(struct_ty)
@@ -347,8 +348,8 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                     }
                 }
 
-                fn from_ident(ident: ::posh::lang::Ident) -> Self {
-                    let trace = ::posh::expose::Trace::from_ident::<Self>(ident);
+                fn from_var_name(name: &str) -> Self {
+                    let trace = ::posh::expose::Trace::from_var_name::<Self>(name);
                     <Self as ::posh::Value>::from_trace(trace)
                 }
             }
@@ -402,7 +403,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                 for #rep_name #ty_generics #where_clause
             {
                 fn stage_input(prefix: &str) -> Self {
-                    <Self as ::posh::FuncArg>::from_ident(::posh::lang::Ident::new(prefix))
+                    <Self as ::posh::FuncArg>::from_var_name(prefix)
                 }
             }
 

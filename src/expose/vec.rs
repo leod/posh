@@ -3,7 +3,7 @@ use std::{
     rc::Rc,
 };
 
-use crate::lang::{BinaryOp, BuiltInTy, Expr, Ident, Ty};
+use crate::lang::{BinaryOp, BuiltInTy, Expr, Ty};
 
 use super::{
     binary, built_in2, built_in3, built_in4, field, scalar::NumType, Expose, FuncArg, IntoRep,
@@ -51,8 +51,8 @@ impl<T: ScalarType> FuncArg for Vec2<T> {
         self.trace.expr()
     }
 
-    fn from_ident(ident: Ident) -> Self {
-        Self::from_trace(Trace::from_ident::<Self>(ident))
+    fn from_var_name(name: &str) -> Self {
+        Self::from_trace(Trace::from_var_name::<Self>(name))
     }
 }
 
@@ -67,8 +67,8 @@ impl<T: ScalarType> FuncArg for Vec3<T> {
         self.trace.expr()
     }
 
-    fn from_ident(ident: Ident) -> Self {
-        Self::from_trace(Trace::from_ident::<Self>(ident))
+    fn from_var_name(name: &str) -> Self {
+        Self::from_trace(Trace::from_var_name::<Self>(name))
     }
 }
 
@@ -79,8 +79,8 @@ impl<T: ScalarType> FuncArg for Vec4<T> {
         Ty::BuiltIn(BuiltInTy::Vec4(T::scalar_ty()))
     }
 
-    fn from_ident(ident: Ident) -> Self {
-        Self::from_trace(Trace::from_ident::<Self>(ident))
+    fn from_var_name(name: &str) -> Self {
+        Self::from_trace(Trace::from_var_name::<Self>(name))
     }
 
     fn expr(&self) -> Rc<Expr> {

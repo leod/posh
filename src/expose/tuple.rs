@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::lang::{CallExpr, Expr, Func, Ident, StructFunc, StructTy, Ty};
+use crate::lang::{CallExpr, Expr, Func, StructFunc, StructTy, Ty};
 
 use super::{common_field_base, field, Expose, FuncArg, Rep, Representative, Trace, Value};
 
@@ -26,13 +26,13 @@ where
 {
     fn ty() -> Ty {
         Ty::Struct(StructTy {
-            ident: Ident::new("Pair"),
+            name: "Pair".into(),
             fields: vec![("x0".into(), U::ty()), ("x1".into(), V::ty())],
         })
     }
 
-    fn from_ident(ident: Ident) -> Self {
-        Self::from_trace(Trace::from_ident::<Self>(ident))
+    fn from_var_name(name: &str) -> Self {
+        Self::from_trace(Trace::from_var_name::<Self>(name))
     }
 
     fn expr(&self) -> Rc<Expr> {

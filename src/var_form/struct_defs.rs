@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::lang::{Ident, NameTy, StructTy, Ty};
+use crate::lang::{NameTy, StructTy, Ty};
 
 fn struct_name(name: &str, num_defs: usize) -> String {
     format!("{}_posh_ty_{}", name, num_defs)
@@ -36,10 +36,12 @@ impl StructDefs {
                         .map(|(field_name, field_ty)| (field_name.clone(), self.walk(field_ty)))
                         .collect();
 
-                    let name = struct_name(&ty.ident.name, self.defs.len());
+                    let name = struct_name(&ty.name, self.defs.len());
 
-                    let ident = Ident::new(name.clone());
-                    self.defs.push(StructTy { ident, fields });
+                    self.defs.push(StructTy {
+                        name: name.clone(),
+                        fields,
+                    });
 
                     let name_ty = NameTy { name };
                     self.map.insert(ty.clone(), name_ty.clone());

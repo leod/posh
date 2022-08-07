@@ -9,8 +9,8 @@ use std::{
 };
 
 use crate::lang::{
-    show::show_ty, BinaryExpr, BranchExpr, CallExpr, Expr, FieldExpr, Func, FuncDef, FuncParam,
-    Ident, NameFunc, Ty, VarExpr,
+    show::show_ty, BinaryExpr, BranchExpr, CallExpr, Expr, FieldExpr, Func, FuncDef, NameFunc, Ty,
+    VarExpr,
 };
 
 pub use struct_defs::StructDefs;
@@ -18,8 +18,8 @@ pub use struct_defs::StructDefs;
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct VarId(usize);
 
-pub fn var_name(id: VarId) -> Ident {
-    Ident::new(format!("posh_var_{}", id.0))
+pub fn var_name(id: VarId) -> String {
+    format!("posh_var_{}", id.0)
 }
 
 #[derive(Debug, Clone)]
@@ -99,7 +99,7 @@ fn new_child_scope(scope: ScopeRef) -> ScopeRef {
 
 #[derive(Debug, Clone)]
 pub struct VarFormFunc {
-    params: Vec<FuncParam>,
+    params: Vec<(String, Ty)>,
     scope: Rc<RefCell<Scope>>,
     result: (Expr, Ty),
 }
@@ -133,11 +133,8 @@ impl VarFormFuncDefs {
     pub fn add(&mut self, func: &FuncDef, structs: &mut StructDefs) -> NameFunc {
         let mut params = Vec::new();
 
-        for param in &func.params {
-            params.push(FuncParam {
-                ident: param.ident.clone(),
-                ty: structs.walk(&param.ty),
-            })
+        for (param_name, param_ty) in &func.params {
+            params.push((param_name.clone(), structs.walk(param_ty)));
         }
 
         let scope = Rc::new(RefCell::new(Scope::default()));
@@ -151,7 +148,7 @@ impl VarFormFuncDefs {
         let result_ty = structs.walk(&result_expr.ty());
 
         let func_def = FuncDef {
-            ident: func.ident.clone(),
+            name: func.name.clone(),
             params: params.clone(),
             result: Rc::new(result_expr.clone()),
         };
@@ -165,7 +162,7 @@ impl VarFormFuncDefs {
                 result: (result_expr, result_ty.clone()),
             };
 
-            let name = func_name(&func.ident.name, self.defs.len());
+            let name = func_name(&func.name, self.defs.len());
             let name_func = NameFunc {
                 name: name.clone(),
                 ty: result_ty,
@@ -243,7 +240,7 @@ impl ScopeBuilder {
             result_deps.insert(var_id);
 
             let result_expr = Var(VarExpr {
-                ident: var_name(var_id),
+                name: var_name(var_id),
                 ty: expr.ty(),
             });
 
@@ -390,7 +387,7 @@ impl ScopeBuilder {
 
         (
             Var(VarExpr {
-                ident: var_name(var_id),
+                name: var_name(var_id),
                 ty: expr.ty(),
             }),
             deps,

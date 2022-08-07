@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use super::{Expr, Func, FuncDef, Ident, StructTy, Ty, VarExpr};
+use super::{Expr, Func, FuncDef, StructTy, Ty, VarExpr};
 
 #[derive(Debug, Clone, Default)]
 pub struct Defs {
@@ -56,8 +56,8 @@ pub fn collect_structs(expr: &Expr, structs: &mut BTreeSet<StructTy>) {
         Var(_) => (),
         Call(expr) => {
             if let Func::Def(func) = &expr.func {
-                for param in func.params.iter() {
-                    collect_struct_ty(&param.ty, structs);
+                for (_, param_ty) in func.params.iter() {
+                    collect_struct_ty(param_ty, structs);
                 }
                 collect_structs(&*func.result, structs);
             }
@@ -80,7 +80,7 @@ fn collect_struct_ty(ty: &Ty, structs: &mut BTreeSet<StructTy>) {
         for (name, ty) in ty.fields.iter() {
             collect_structs(
                 &Expr::Var(VarExpr {
-                    ident: Ident::new(name),
+                    name: name.clone(),
                     ty: ty.clone(),
                 }),
                 structs,

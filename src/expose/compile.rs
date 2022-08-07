@@ -1,4 +1,4 @@
-use crate::lang::{Expr, Func, FuncDef, Ident};
+use crate::lang::{Expr, Func, FuncDef};
 
 use super::{FuncArg, Value};
 
@@ -7,7 +7,7 @@ where
     U: FuncArg,
     R: Value,
 {
-    let u = U::from_ident(Ident::new("u"));
+    let u = U::from_var_name("u");
     let r = f(u);
 
     if let Expr::Call(expr) = &*r.expr() {

@@ -22,7 +22,7 @@ pub fn show_func_defs(funcs: &VarFormFuncDefs) -> String {
         let params: Vec<_> = func
             .params
             .iter()
-            .map(|param| format!("{}: {}", param.ident.to_string(), show_ty(&param.ty)))
+            .map(|(name, ty)| format!("{}: {}", name, show_ty(ty)))
             .collect();
 
         result += &format!(
@@ -58,7 +58,7 @@ pub fn show_scope(scope: &Scope) -> String {
 
         result += &format!(
             "let {}: {} = {};\n",
-            var_name(*var_id).name,
+            var_name(*var_id),
             show_ty(&var_init.expr().ty()),
             var_init_string
         );

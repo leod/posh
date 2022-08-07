@@ -16,7 +16,7 @@ pub fn show_expr(expr: &Expr) -> String {
             show_expr(&*expr.true_expr),
             show_expr(&*expr.false_expr),
         ),
-        Var(expr) => expr.ident.to_string(),
+        Var(expr) => expr.name.to_string(),
         Call(expr) => {
             let args: Vec<_> = expr.args.iter().map(|arg| show_expr(&*arg)).collect();
             format!("{}({})", expr.func.name(), args.join(", "),)
@@ -33,12 +33,12 @@ pub fn show_func_def(def: &FuncDef) -> String {
     let params: Vec<_> = def
         .params
         .iter()
-        .map(|param| format!("{}: {}", param.ident.to_string(), show_ty(&param.ty)))
+        .map(|(name, ty)| format!("{}: {}", name, show_ty(ty)))
         .collect();
 
     format!(
         "fn {}({}) -> {} {{\n{}\n}}",
-        def.ident.name,
+        def.name,
         params.join(", "),
         show_ty(&def.result.ty()),
         show_expr(&def.result),
@@ -99,7 +99,7 @@ pub fn show_built_in_ty(ty: &BuiltInTy) -> String {
 }
 
 pub fn show_struct_ty(ty: &StructTy) -> String {
-    ty.ident.to_string()
+    ty.name.to_string()
 }
 
 pub fn show_ty(ty: &Ty) -> String {
@@ -119,11 +119,7 @@ pub fn show_struct_def(ty: &StructTy) -> String {
         .map(|(name, ty)| format!("    {}: {},", name, show_ty(ty)))
         .collect();
 
-    format!(
-        "struct {}\n{{\n{}\n}}",
-        ty.ident.to_string(),
-        fields.join("\n")
-    )
+    format!("struct {}\n{{\n{}\n}}", ty.name, fields.join("\n"))
 }
 
 pub fn show_binary_op(op: BinaryOp) -> String {
