@@ -131,11 +131,11 @@ impl VarFormFuncDefs {
     }
 
     pub fn add(&mut self, func: &FuncDef, structs: &mut StructDefs) -> NameFunc {
-        let mut params = Vec::new();
-
-        for (param_name, param_ty) in &func.params {
-            params.push((param_name.clone(), structs.walk(param_ty)));
-        }
+        let params: Vec<_> = func
+            .params
+            .iter()
+            .map(|(name, ty)| (name.clone(), structs.walk(ty)))
+            .collect();
 
         let scope = Rc::new(RefCell::new(Scope::default()));
         let mut func_scope_builder = ScopeBuilder::default();
