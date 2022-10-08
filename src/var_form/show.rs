@@ -26,7 +26,7 @@ pub fn show_func_defs(funcs: &VarFormFuncDefs) -> String {
             .collect();
 
         result += &format!(
-            "fn {}({}) -> {} {{\n{}\n{}\n}}",
+            "fn {}({}) -> {} {{\n{}\n{}\n}}\n",
             name,
             params.join(", "),
             show_ty(&func.result.1),
