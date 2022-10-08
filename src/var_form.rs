@@ -31,8 +31,8 @@ pub enum VarInit {
 #[derive(Debug, Clone)]
 pub struct BranchVarInit {
     branch_expr: BranchExpr,
-    true_scope: Rc<RefCell<Scope>>,
-    false_scope: Rc<RefCell<Scope>>,
+    true_scope: ScopeRef,
+    false_scope: ScopeRef,
 }
 
 impl VarInit {
@@ -47,7 +47,7 @@ impl VarInit {
 #[derive(Debug, Default, Clone)]
 pub struct Scope {
     depth: usize,
-    parent: Option<Rc<RefCell<Scope>>>,
+    parent: Option<ScopeRef>,
     vars: Vec<(VarId, VarInit)>,
 }
 
@@ -100,7 +100,7 @@ fn new_child_scope(scope: ScopeRef) -> ScopeRef {
 #[derive(Debug, Clone)]
 pub struct VarFormFunc {
     params: Vec<(String, Ty)>,
-    scope: Rc<RefCell<Scope>>,
+    scope: ScopeRef,
     result: (Expr, Ty),
 }
 
