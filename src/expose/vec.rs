@@ -6,8 +6,8 @@ use std::{
 use crate::lang::{BinaryOp, BuiltInTy, Expr, Ty};
 
 use super::{
-    binary, built_in2, built_in3, built_in4, field, scalar::NumType, Expose, FuncArg, IntoRep,
-    Representative, Scalar, ScalarType, Trace, Value,
+    binary, built_in2, built_in3, built_in4, field, scalar::NumType, Expose, FuncArg, IntoPosh,
+    Rep, Scalar, ScalarType, Trace, Value,
 };
 
 /// Representative for two-dimensional vectors.
@@ -40,7 +40,7 @@ pub struct Vec4<T> {
     pub w: Scalar<T>,
 }
 
-impl<T: ScalarType> Representative for Vec2<T> {}
+impl<T: ScalarType> Rep for Vec2<T> {}
 
 impl<T: ScalarType> FuncArg for Vec2<T> {
     fn ty() -> Ty {
@@ -56,7 +56,7 @@ impl<T: ScalarType> FuncArg for Vec2<T> {
     }
 }
 
-impl<T: ScalarType> Representative for Vec3<T> {}
+impl<T: ScalarType> Rep for Vec3<T> {}
 
 impl<T: ScalarType> FuncArg for Vec3<T> {
     fn ty() -> Ty {
@@ -72,7 +72,7 @@ impl<T: ScalarType> FuncArg for Vec3<T> {
     }
 }
 
-impl<T: ScalarType> Representative for Vec4<T> {}
+impl<T: ScalarType> Rep for Vec4<T> {}
 
 impl<T: ScalarType> FuncArg for Vec4<T> {
     fn ty() -> Ty {
@@ -151,20 +151,20 @@ impl<T: ScalarType> Expose for Vec4<T> {
     type Rep = Self;
 }
 
-impl<T: ScalarType> IntoRep for [T; 2] {
-    fn into_rep(self) -> Self::Rep {
+impl<T: ScalarType> IntoPosh for [T; 2] {
+    fn into_posh(self) -> Self::Rep {
         vec2(self[0], self[1])
     }
 }
 
-impl<T: ScalarType> IntoRep for [T; 3] {
-    fn into_rep(self) -> Self::Rep {
+impl<T: ScalarType> IntoPosh for [T; 3] {
+    fn into_posh(self) -> Self::Rep {
         vec3(self[0], self[1], self[2])
     }
 }
 
-impl<T: ScalarType> IntoRep for [T; 4] {
-    fn into_rep(self) -> Self::Rep {
+impl<T: ScalarType> IntoPosh for [T; 4] {
+    fn into_posh(self) -> Self::Rep {
         vec4(self[0], self[1], self[2], self[3])
     }
 }
@@ -189,7 +189,7 @@ macro_rules! impl_scalar_binary_op {
         impl<T, Rhs> $op<Rhs> for $ty<T>
         where
             T: NumType,
-            Rhs: IntoRep<Rep = Scalar<T>>,
+            Rhs: IntoPosh<Rep = Scalar<T>>,
         {
             type Output = Self;
 
@@ -255,27 +255,27 @@ impl_ops!(Vec4);
 
 /// Constructs a two-dimensional vector.
 pub fn vec2<T: ScalarType>(
-    x: impl IntoRep<Rep = Scalar<T>>,
-    y: impl IntoRep<Rep = Scalar<T>>,
+    x: impl IntoPosh<Rep = Scalar<T>>,
+    y: impl IntoPosh<Rep = Scalar<T>>,
 ) -> Vec2<T> {
     built_in2("vec2", x, y)
 }
 
 /// Constructs a three-dimensional vector.
 pub fn vec3<T: ScalarType>(
-    x: impl IntoRep<Rep = Scalar<T>>,
-    y: impl IntoRep<Rep = Scalar<T>>,
-    z: impl IntoRep<Rep = Scalar<T>>,
+    x: impl IntoPosh<Rep = Scalar<T>>,
+    y: impl IntoPosh<Rep = Scalar<T>>,
+    z: impl IntoPosh<Rep = Scalar<T>>,
 ) -> Vec3<T> {
     built_in3("vec3", x, y, z)
 }
 
 /// Constructs a four-dimensional vector.
 pub fn vec4<T: ScalarType>(
-    x: impl IntoRep<Rep = Scalar<T>>,
-    y: impl IntoRep<Rep = Scalar<T>>,
-    z: impl IntoRep<Rep = Scalar<T>>,
-    w: impl IntoRep<Rep = Scalar<T>>,
+    x: impl IntoPosh<Rep = Scalar<T>>,
+    y: impl IntoPosh<Rep = Scalar<T>>,
+    z: impl IntoPosh<Rep = Scalar<T>>,
+    w: impl IntoPosh<Rep = Scalar<T>>,
 ) -> Vec4<T> {
     built_in4("vec4", x, y, z, w)
 }

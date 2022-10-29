@@ -4,16 +4,16 @@ use posh::{
         show::{show_func_defs, show_struct_defs},
         StructDefs, VarFormFuncDefs,
     },
-    vec2, GenValue, Rep, ScalarType,
+    vec2, GenValue, Posh, ScalarType,
 };
 
 #[posh::def]
-fn triplet<T: ScalarType>(t: Rep<T>) -> (posh::Vec3<T>, Rep<u32>) {
+fn triplet<T: ScalarType>(t: Posh<T>) -> (posh::Vec3<T>, Posh<u32>) {
     (posh::vec3(t, t, t), 32.into())
 }
 
 #[posh::def]
-fn foo(x: Rep<f32>, y: Rep<f32>, z: (Rep<f32>, Rep<f32>)) -> Rep<f32> {
+fn foo(x: Posh<f32>, y: Posh<f32>, z: (Posh<f32>, Posh<f32>)) -> Posh<f32> {
     let z = x * y - z.1;
     let w = 1.0 + y + x + 1.0;
 
@@ -21,7 +21,7 @@ fn foo(x: Rep<f32>, y: Rep<f32>, z: (Rep<f32>, Rep<f32>)) -> Rep<f32> {
 }
 
 #[posh::def]
-fn bar(x: Rep<f32>) -> Rep<f32> {
+fn bar(x: Posh<f32>) -> Posh<f32> {
     let ints = triplet::<u32>(1.into()).0;
     let floats = triplet(2.0.into()).0;
 

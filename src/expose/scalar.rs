@@ -8,11 +8,11 @@ use sealed::sealed;
 
 use crate::lang::{BinaryOp, BranchExpr, BuiltInTy, Expr, LiteralExpr, ScalarTy, Ty};
 
-use super::{binary, Expose, FuncArg, IntoRep, Representative, Trace, Value};
+use super::{binary, Expose, FuncArg, IntoPosh, Rep, Trace, Value};
 
 /// A scalar type.
 #[sealed]
-pub trait ScalarType: Copy + Into<LiteralExpr> + IntoRep<Rep = Scalar<Self>> {
+pub trait ScalarType: Copy + Into<LiteralExpr> + IntoPosh<Rep = Scalar<Self>> {
     fn scalar_ty() -> ScalarTy;
 }
 
@@ -32,7 +32,7 @@ impl<T: ScalarType> Expose for Scalar<T> {
     type Rep = Self;
 }
 
-impl<T: ScalarType> Representative for Scalar<T> {}
+impl<T: ScalarType> Rep for Scalar<T> {}
 
 impl<T: ScalarType> FuncArg for Scalar<T> {
     fn ty() -> Ty {
@@ -67,28 +67,28 @@ where
         Self::from_expr(Expr::Literal(x.into()))
     }
 
-    pub fn eq(&self, right: impl IntoRep<Rep = Self>) -> Scalar<bool> {
+    pub fn eq(&self, right: impl IntoPosh<Rep = Self>) -> Scalar<bool> {
         binary(*self, BinaryOp::Eq, right)
     }
 }
 
 impl Scalar<bool> {
-    pub fn and(self, right: impl IntoRep<Rep = Scalar<bool>>) -> Scalar<bool> {
+    pub fn and(self, right: impl IntoPosh<Rep = Scalar<bool>>) -> Scalar<bool> {
         binary(self, BinaryOp::And, right)
     }
 
-    pub fn or(self, right: impl IntoRep<Rep = Scalar<bool>>) -> Scalar<bool> {
+    pub fn or(self, right: impl IntoPosh<Rep = Scalar<bool>>) -> Scalar<bool> {
         binary(self, BinaryOp::And, right)
     }
 
     pub fn branch<V: Value>(
         self,
-        true_value: impl IntoRep<Rep = V>,
-        false_value: impl IntoRep<Rep = V>,
+        true_value: impl IntoPosh<Rep = V>,
+        false_value: impl IntoPosh<Rep = V>,
     ) -> V {
         let cond = self.expr();
-        let true_expr = true_value.into_rep().expr();
-        let false_expr = false_value.into_rep().expr();
+        let true_expr = true_value.into_posh().expr();
+        let false_expr = false_value.into_posh().expr();
 
         let expr = Expr::Branch(BranchExpr {
             cond,
@@ -105,7 +105,7 @@ macro_rules! impl_binary_op {
         impl<T, Rhs> $op<Rhs> for Scalar<T>
         where
             T: NumType,
-            Rhs: IntoRep<Rep = Scalar<T>>,
+            Rhs: IntoPosh<Rep = Scalar<T>>,
         {
             type Output = Self;
 
@@ -158,15 +158,15 @@ macro_rules! impl_scalar {
             type Rep = Scalar<$ty>;
         }
 
-        impl IntoRep for $ty {
-            fn into_rep(self) -> Self::Rep {
+        impl IntoPosh for $ty {
+            fn into_posh(self) -> Self::Rep {
                 Scalar::new(self)
             }
         }
 
         impl From<$ty> for Scalar<$ty> {
             fn from(x: $ty) -> Self {
-                x.into_rep()
+                x.into_posh()
             }
         }
     };

@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use crate::lang::{BuiltInTy, Expr, Ty};
 
-use super::{built_in2, Expose, FuncArg, Representative, Trace, Vec2, Vec4};
+use super::{built_in2, Expose, FuncArg, Rep, Trace, Vec2, Vec4};
 
 /// Representative for samplers.
 #[derive(Debug, Copy, Clone)]
@@ -12,7 +12,7 @@ impl Expose for Sampler2 {
     type Rep = Self;
 }
 
-impl Representative for Sampler2 {}
+impl Rep for Sampler2 {}
 
 impl FuncArg for Sampler2 {
     fn from_var_name(name: &str) -> Self {

@@ -91,7 +91,7 @@ impl RepTrait {
                         #[allow(unused)]
                         fn #method_name() {
                             #(
-                                <::posh::Rep<#field_ty> as #field_reqs>::must_impl();
+                                <::posh::Posh<#field_ty> as #field_reqs>::must_impl();
                             )*
                         }
                     }
@@ -227,7 +227,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
         #[allow(non_camel_case_types)]
         #vis struct #rep_name #impl_generics #where_clause {
             #(
-                #field_vis #field_idents: ::posh::Rep<#field_tys>
+                #field_vis #field_idents: ::posh::Posh<#field_tys>
             ),*
         }
 
@@ -239,7 +239,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
             type Rep = Self;
         }
 
-        impl #impl_generics ::posh::Representative for #rep_name #ty_generics #where_clause {}
+        impl #impl_generics ::posh::Rep for #rep_name #ty_generics #where_clause {}
     };
 
     let field_req_checks = rep_traits.values().map(|rep_trait| {
@@ -255,7 +255,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
 
                     #(
                         let fields =
-                            <::posh::Rep<#field_tys> as ::posh::shader::fields::Fields>::fields(
+                            <::posh::Posh<#field_tys> as ::posh::shader::fields::Fields>::fields(
                                 &::posh::shader::fields::add_prefix(prefix, #field_strings),
                             );
 
@@ -277,7 +277,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                     Self {
                         #(
                             #field_idents:
-                                <::posh::Rep<#field_tys> as ::posh::shader::fields::InputFields>::
+                                <::posh::Posh<#field_tys> as ::posh::shader::fields::InputFields>::
                                 stage_input(
                                     &::posh::shader::fields::add_prefix(prefix, #field_strings)
                                 )
@@ -298,7 +298,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                         #(
                             (
                                 ::posh::shader::fields::add_prefix(prefix, #field_strings),
-                                (*<::posh::Rep<#field_tys> as ::posh::FuncArg>::expr(
+                                (*<::posh::Posh<#field_tys> as ::posh::FuncArg>::expr(
                                     &self.#field_idents,
                                 )).clone(),
                             )
@@ -317,7 +317,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream2> {
                         #(
                             (
                                 #field_strings.to_string(),
-                                <::posh::Rep<#field_tys> as ::posh::FuncArg>::ty(),
+                                <::posh::Posh<#field_tys> as ::posh::FuncArg>::ty(),
                             )
                         ),*
                     ];

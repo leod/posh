@@ -1,4 +1,4 @@
-use crate::{Expose, FuncArg, Rep, Vec3, Vec4};
+use crate::{Expose, FuncArg, Posh, Vec3, Vec4};
 
 use super::{Attributes, Fragment, Interpolants};
 
@@ -9,9 +9,9 @@ where
     V: Expose,
     V::Rep: Attributes,
 {
-    pub attrs: Rep<V>,
-    pub vertex_id: Rep<i32>,
-    pub instance_id: Rep<i32>,
+    pub attrs: Posh<V>,
+    pub vertex_id: Posh<i32>,
+    pub instance_id: Posh<i32>,
 }
 
 impl<V> VArg<V>
@@ -19,7 +19,7 @@ where
     V: Expose,
     V::Rep: Attributes,
 {
-    pub(crate) fn new(attrs: Rep<V>) -> Self {
+    pub(crate) fn new(attrs: Posh<V>) -> Self {
         Self {
             attrs,
             vertex_id: builtin_var("gl_VertexID"),
@@ -34,7 +34,7 @@ where
     W: Expose,
     W::Rep: Interpolants,
 {
-    pub interps: Rep<W>,
+    pub interps: Posh<W>,
     pub pos: Vec3<f32>,
 }
 
@@ -44,7 +44,7 @@ where
     W: Expose,
     W::Rep: Interpolants,
 {
-    pub interps: Rep<W>,
+    pub interps: Posh<W>,
     pub frag_coord: Vec4<f32>,
 }
 
@@ -53,7 +53,7 @@ where
     W: Expose,
     W::Rep: Interpolants,
 {
-    pub(crate) fn new(inputs: Rep<W>) -> Self {
+    pub(crate) fn new(inputs: Posh<W>) -> Self {
         Self {
             interps: inputs,
             frag_coord: builtin_var("gl_FragCoord"),
@@ -67,8 +67,8 @@ where
     F: Expose,
     F::Rep: Fragment,
 {
-    pub frag: Rep<F>,
-    pub frag_depth: Option<Rep<f32>>,
+    pub frag: Posh<F>,
+    pub frag_depth: Option<Posh<f32>>,
 }
 
 impl<F> FOut<F>
@@ -76,7 +76,7 @@ where
     F: Expose,
     F::Rep: Fragment,
 {
-    pub fn frag(outputs: Rep<F>) -> Self {
+    pub fn frag(outputs: Posh<F>) -> Self {
         Self {
             frag: outputs,
             frag_depth: None,

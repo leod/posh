@@ -1,7 +1,7 @@
 use nalgebra::Vector3;
 use posh::{
     shader::{show::show_shader, FArg, FOut, Shader, VArg, VOut},
-    Expose, Rep,
+    Expose, Posh,
 };
 
 #[derive(Expose)]
@@ -55,22 +55,22 @@ struct Frag {
 }
 
 trait HasSettings {
-    fn settings(self) -> Rep<Settings>;
+    fn settings(self) -> Posh<Settings>;
 }
 
-impl HasSettings for Rep<Resources> {
-    fn settings(self) -> Rep<Settings> {
+impl HasSettings for Posh<Resources> {
+    fn settings(self) -> Posh<Settings> {
         self.settings
     }
 }
 
 #[posh::def]
-fn transform(ts: Rep<Transforms>, pos: posh::Vec3<f32>) -> posh::Vec3<f32> {
+fn transform(ts: Posh<Transforms>, pos: posh::Vec3<f32>) -> posh::Vec3<f32> {
     ts.view_to_clip * ts.world_to_view * pos
 }
 
-fn vertex_stage(res: Rep<Resources>, arg: VArg<Vertex>) -> VOut<Interps> {
-    let interps = Rep::<Interps> {
+fn vertex_stage(res: Posh<Resources>, arg: VArg<Vertex>) -> VOut<Interps> {
+    let interps = Posh::<Interps> {
         color: posh::vec3(255.0, 0.0, 0.0),
         normal: res.shadow.world_to_view * arg.attrs.normal,
     };
@@ -79,10 +79,10 @@ fn vertex_stage(res: Rep<Resources>, arg: VArg<Vertex>) -> VOut<Interps> {
     VOut { interps, pos }
 }
 
-fn vertex_stage_instanced(res: Rep<Resources>, arg: VArg<(Vertex, Instance)>) -> VOut<Interps> {
+fn vertex_stage_instanced(res: Posh<Resources>, arg: VArg<(Vertex, Instance)>) -> VOut<Interps> {
     let (vertex, instance) = arg.attrs;
 
-    let interps = Rep::<Interps> {
+    let interps = Posh::<Interps> {
         color: instance.color,
         normal: res.shadow.world_to_view * vertex.normal,
     };
@@ -93,7 +93,7 @@ fn vertex_stage_instanced(res: Rep<Resources>, arg: VArg<(Vertex, Instance)>) ->
 
 fn fragment_stage<R: HasSettings>(res: R, arg: FArg<Interps>) -> FOut<Frag> {
     let color = res.settings().light.branch(2.0, 3.0);
-    let frag = Rep::<Frag> {
+    let frag = Posh::<Frag> {
         color: arg.interps.color * color,
         normal: arg.interps.normal,
     };

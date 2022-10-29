@@ -1,6 +1,6 @@
 use sealed::sealed;
 
-use crate::{IntoRep, Rep};
+use crate::{IntoPosh, Posh};
 
 use super::{built_in1, built_in2, Value, Vec2, Vec3, Vec4};
 
@@ -31,7 +31,7 @@ pub trait GenValue: Value + Sized {
         built_in1("acos", self)
     }
 
-    fn atan2(self, x: impl IntoRep<Rep = Self>) -> Self {
+    fn atan2(self, x: impl IntoPosh<Rep = Self>) -> Self {
         built_in2("atan", self, x)
     }
 
@@ -65,7 +65,7 @@ pub trait GenValue: Value + Sized {
 }
 
 #[sealed]
-impl GenValue for Rep<f32> {}
+impl GenValue for Posh<f32> {}
 
 #[sealed]
 impl GenValue for Vec2<f32> {}

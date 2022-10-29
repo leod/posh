@@ -35,10 +35,10 @@ pub(crate) use primitives::{binary, built_in1, built_in2, built_in3, built_in4};
 /// Internally, representatives track expression trees, making it possible to transpile Posh shaders
 /// to other shader languages.
 ///
-/// The recommended way to refer to representatives is [`Rep<T>`].
+/// The recommended way to refer to representatives is [`Posh<T>`].
 pub trait Expose {
     /// The type that represents `Self` in Posh.
-    type Rep: Representative;
+    type Rep: Rep;
 }
 
 /// Maps a type implementing [`Expose`] to its representative in Posh.
@@ -46,16 +46,16 @@ pub trait Expose {
 /// This is the recommended way to refer to Posh's representatives.
 ///
 /// # Examples
-/// - `Rep<f32>` is [`Scalar<f32>`]
-/// - `Rep<i32>` is [`Scalar<i32>`]
-/// - `Rep<bool>` is [`Scalar<bool>`]
-/// - `Rep<[f32; 3]>` is [`Vec3<f32>`]
-/// - `Rep<nalgebra::Vector3<f32>>` is [`Vec3<f32>`]
-pub type Rep<T> = <T as Expose>::Rep;
+/// - `Posh<f32>` is [`Scalar<f32>`]
+/// - `Posh<i32>` is [`Scalar<i32>`]
+/// - `Posh<bool>` is [`Scalar<bool>`]
+/// - `Posh<[f32; 3]>` is [`Vec3<f32>`]
+/// - `Posh<nalgebra::Vector3<f32>>` is [`Vec3<f32>`]
+pub type Posh<T> = <T as Expose>::Rep;
 
 /// A value-to-value conversion to a representative in Posh.
-pub trait IntoRep: Expose {
-    fn into_rep(self) -> Rep<Self>;
+pub trait IntoPosh: Expose {
+    fn into_posh(self) -> Posh<Self>;
 }
 
 /// An object which is accessible in Posh.
@@ -64,8 +64,8 @@ pub trait IntoRep: Expose {
 /// implement the subtraits [`FuncArg`] and [`Value`], allowing them to be passed to user-defined
 /// Posh functions and to be stored in variables in Posh respectively.
 ///
-/// The recommended way to refer to representatives is [`Rep<T>`].
-pub trait Representative: Copy + Expose<Rep = Self> {}
+/// The recommended way to refer to representatives is [`Posh<T>`].
+pub trait Rep: Copy + Expose<Rep = Self> {}
 
 /// A representative which can be passed to user-defined Posh functions.
 ///
@@ -74,7 +74,7 @@ pub trait Representative: Copy + Expose<Rep = Self> {}
 /// user-constructible. An example is [`Sampler2`].
 ///
 /// For more information on function definitions in Posh, see [`def`](attr.def.html).
-pub trait FuncArg: Representative {
+pub trait FuncArg: Rep {
     fn ty() -> Ty;
     fn expr(&self) -> Rc<Expr>;
 
@@ -96,11 +96,11 @@ pub trait Value: FuncArg {
     fn must_impl() {}
 }
 
-impl<V> IntoRep for V
+impl<V> IntoPosh for V
 where
     V: Expose<Rep = Self>,
 {
-    fn into_rep(self) -> Self {
+    fn into_posh(self) -> Self {
         self
     }
 }

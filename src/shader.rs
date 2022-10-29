@@ -15,7 +15,7 @@ pub use vertex::{
     Attributes, Fragment, FragmentField, Interpolants, InterpolantsField, Vertex, VertexField,
 };
 
-use crate::{expose::Expose, Rep};
+use crate::{expose::Expose, Posh};
 
 use self::fields::{Fields, InputFields};
 
@@ -38,8 +38,8 @@ where
     where
         W: Expose,
         W::Rep: Interpolants,
-        VStage: FnOnce(Rep<R>, VArg<V>) -> VOut<W>,
-        FStage: FnOnce(Rep<R>, FArg<W>) -> FOut<F>,
+        VStage: FnOnce(Posh<R>, VArg<V>) -> VOut<W>,
+        FStage: FnOnce(Posh<R>, FArg<W>) -> FOut<F>,
     {
         // FIXME: stage arg handling
         let v_out = v_stage(

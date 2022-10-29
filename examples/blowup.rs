@@ -4,12 +4,12 @@ use posh::{
         show::{show_func_defs, show_struct_defs},
         StructDefs, VarFormFuncDefs,
     },
-    IntoRep, Rep,
+    IntoPosh, Posh,
 };
 
 #[posh::def]
-fn blowup(x: Rep<u32>) -> Rep<u32> {
-    let b = true.into_rep();
+fn blowup(x: Posh<u32>) -> Posh<u32> {
+    let b = true.into_posh();
     let x = b.branch(x, 1 * x);
     let x = b.branch(x, 2 * x);
     let x = b.branch(x, 3 * x);

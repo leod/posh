@@ -1,6 +1,6 @@
 use nalgebra as na;
 
-use crate::{Expose, IntoRep, Rep, Vec2, Vec3, Vec4};
+use crate::{Expose, IntoPosh, Posh, Vec2, Vec3, Vec4};
 
 use super::ScalarType;
 
@@ -16,14 +16,14 @@ impl<T: ScalarType> Expose for na::Vector4<T> {
     type Rep = Vec4<T>;
 }
 
-impl<T: ScalarType> IntoRep for na::Vector3<T> {
-    fn into_rep(self) -> Rep<Self> {
-        self.data.0[0].into_rep()
+impl<T: ScalarType> IntoPosh for na::Vector3<T> {
+    fn into_posh(self) -> Posh<Self> {
+        self.data.0[0].into_posh()
     }
 }
 
-impl<T: ScalarType> IntoRep for na::Vector4<T> {
-    fn into_rep(self) -> Rep<Self> {
-        self.data.0[0].into_rep()
+impl<T: ScalarType> IntoPosh for na::Vector4<T> {
+    fn into_posh(self) -> Posh<Self> {
+        self.data.0[0].into_posh()
     }
 }

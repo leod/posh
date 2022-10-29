@@ -6,7 +6,7 @@ use posh::{
         show::{show_func_defs, show_struct_defs},
         StructDefs, VarFormFuncDefs,
     },
-    Expose, IntoRep, Rep, ScalarType,
+    Expose, IntoPosh, Posh, ScalarType,
 };
 
 #[derive(Expose)]
@@ -36,16 +36,16 @@ pub struct Generic<T: ScalarType> {
 }
 
 impl<T: ScalarType> rep!(Generic<T>) {
-    fn foo(&self) -> Rep<f32> {
+    fn foo(&self) -> Posh<f32> {
         0.0.into()
     }
 }
 
 #[posh::def]
-fn vertex(vertex: Rep<test::Vertex>) -> Rep<test::Vertex> {
-    Rep::<test::Vertex> {
+fn vertex(vertex: Posh<test::Vertex>) -> Posh<test::Vertex> {
+    Posh::<test::Vertex> {
         pos: 3 * vertex.pos,
-        time: 2.0.into_rep(),
+        time: 2.0.into_posh(),
         ..vertex
     }
 }

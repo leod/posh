@@ -2,20 +2,20 @@ use std::rc::Rc;
 
 use crate::lang::{CallExpr, Expr, Func, StructFunc, StructTy, Ty};
 
-use super::{common_field_base, field, Expose, FuncArg, Rep, Representative, Trace, Value};
+use super::{common_field_base, field, Expose, FuncArg, Posh, Rep, Trace, Value};
 
 impl<U, V> Expose for (U, V)
 where
     U: Expose,
     V: Expose,
 {
-    type Rep = (Rep<U>, Rep<V>);
+    type Rep = (Posh<U>, Posh<V>);
 }
 
-impl<U, V> Representative for (U, V)
+impl<U, V> Rep for (U, V)
 where
-    U: Representative,
-    V: Representative,
+    U: Rep,
+    V: Rep,
 {
 }
 

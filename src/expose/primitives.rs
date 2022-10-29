@@ -2,7 +2,7 @@ use std::{collections::BTreeSet, rc::Rc};
 
 use crate::lang::{BinaryExpr, BinaryOp, CallExpr, Expr, FieldExpr, Func, FuncDef, NameFunc, Ty};
 
-use super::{FuncArg, IntoRep, Trace, Value};
+use super::{FuncArg, IntoPosh, Trace, Value};
 
 #[doc(hidden)]
 pub fn common_field_base(target_ty: &Ty, exprs: &[Rc<Expr>]) -> Option<Rc<Expr>> {
@@ -64,17 +64,17 @@ pub fn func_def_and_call<R: Value>(def: FuncDef, args: Vec<Rc<Expr>>) -> R {
 }
 
 pub(crate) fn binary<U, V, R>(
-    left: impl IntoRep<Rep = U>,
+    left: impl IntoPosh<Rep = U>,
     op: BinaryOp,
-    right: impl IntoRep<Rep = V>,
+    right: impl IntoPosh<Rep = V>,
 ) -> R
 where
     U: FuncArg,
     V: FuncArg,
     R: Value,
 {
-    let left = left.into_rep().expr();
-    let right = right.into_rep().expr();
+    let left = left.into_posh().expr();
+    let right = right.into_posh().expr();
 
     let expr = Expr::Binary(BinaryExpr {
         left,
@@ -86,7 +86,7 @@ where
     R::from_expr(expr)
 }
 
-pub(crate) fn built_in1<U, R>(name: &str, u: impl IntoRep<Rep = U>) -> R
+pub(crate) fn built_in1<U, R>(name: &str, u: impl IntoPosh<Rep = U>) -> R
 where
     U: FuncArg,
     R: Value,
@@ -97,7 +97,7 @@ where
     });
     let expr = Expr::Call(CallExpr {
         func,
-        args: vec![u.into_rep().expr()],
+        args: vec![u.into_posh().expr()],
     });
 
     R::from_expr(expr)
@@ -105,8 +105,8 @@ where
 
 pub(crate) fn built_in2<U, V, R>(
     name: &str,
-    u: impl IntoRep<Rep = U>,
-    v: impl IntoRep<Rep = V>,
+    u: impl IntoPosh<Rep = U>,
+    v: impl IntoPosh<Rep = V>,
 ) -> R
 where
     U: FuncArg,
@@ -119,7 +119,7 @@ where
     });
     let expr = Expr::Call(CallExpr {
         func,
-        args: vec![u.into_rep().expr(), v.into_rep().expr()],
+        args: vec![u.into_posh().expr(), v.into_posh().expr()],
     });
 
     R::from_expr(expr)
@@ -127,9 +127,9 @@ where
 
 pub(crate) fn built_in3<U, V, W, R>(
     name: &str,
-    u: impl IntoRep<Rep = U>,
-    v: impl IntoRep<Rep = V>,
-    w: impl IntoRep<Rep = W>,
+    u: impl IntoPosh<Rep = U>,
+    v: impl IntoPosh<Rep = V>,
+    w: impl IntoPosh<Rep = W>,
 ) -> R
 where
     U: FuncArg,
@@ -144,9 +144,9 @@ where
     let expr = Expr::Call(CallExpr {
         func,
         args: vec![
-            u.into_rep().expr(),
-            v.into_rep().expr(),
-            w.into_rep().expr(),
+            u.into_posh().expr(),
+            v.into_posh().expr(),
+            w.into_posh().expr(),
         ],
     });
 
@@ -155,10 +155,10 @@ where
 
 pub(crate) fn built_in4<U, V, W, X, R>(
     name: &str,
-    u: impl IntoRep<Rep = U>,
-    v: impl IntoRep<Rep = V>,
-    w: impl IntoRep<Rep = W>,
-    x: impl IntoRep<Rep = X>,
+    u: impl IntoPosh<Rep = U>,
+    v: impl IntoPosh<Rep = V>,
+    w: impl IntoPosh<Rep = W>,
+    x: impl IntoPosh<Rep = X>,
 ) -> R
 where
     U: FuncArg,
@@ -174,10 +174,10 @@ where
     let expr = Expr::Call(CallExpr {
         func,
         args: vec![
-            u.into_rep().expr(),
-            v.into_rep().expr(),
-            w.into_rep().expr(),
-            x.into_rep().expr(),
+            u.into_posh().expr(),
+            v.into_posh().expr(),
+            w.into_posh().expr(),
+            x.into_posh().expr(),
         ],
     });
 
