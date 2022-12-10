@@ -1,14 +1,20 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+mod dag;
+mod interface;
+mod numeric;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub mod gl;
+pub mod sl;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub use interface::{
+    Attributes, AttributesDomain, Uniform, UniformDomain, UniformField, Vertex, VertexDomain,
+    VertexField,
+};
+pub use numeric::{Numeric, Primitive};
+
+/// The graphics library domain.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Gl;
+
+/// The shading language domain.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Sl;
