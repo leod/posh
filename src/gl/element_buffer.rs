@@ -14,3 +14,8 @@ impl Element for u32 {}
 pub struct ElementBuffer<E: Element> {
     _phantom: PhantomData<E>,
 }
+
+#[derive(Clone)]
+pub struct ElementBufferBinding<E: Element> {
+    _phantom: PhantomData<E>,
+}

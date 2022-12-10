@@ -2,7 +2,7 @@ use crate::Attributes;
 
 use crate::Gl;
 
-use super::{Element, ElementBuffer, VertexArray};
+use super::{Element, ElementBufferBinding};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Primitive {
@@ -16,8 +16,8 @@ pub enum Primitive {
 }
 
 #[derive(Clone)]
-pub struct VertexStream<'a, A: Attributes<Gl>, E: Element> {
-    pub vertices: &'a VertexArray<A>,
+pub struct VertexStream<A: Attributes<Gl>, E: Element> {
+    pub attribute: A,
     pub primitive: Primitive,
-    pub elements: Option<&'a ElementBuffer<E>>,
+    pub elements: Option<ElementBufferBinding<E>>,
 }
