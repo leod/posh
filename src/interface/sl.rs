@@ -1,6 +1,7 @@
 use sealed::sealed;
 
 use crate::{
+    gl::{Sampler2dBinding, UniformBufferBinding, VertexBufferBinding},
     sl::{Sampler2d, Scalar, Vec2, Vec4},
     Numeric, Sl, Uniform,
 };
@@ -42,6 +43,7 @@ impl super::VertexDomain for Sl {
 // Attributes interface
 
 impl<V: Vertex<Sl>> Attributes<Sl> for V {
+    type InGl = VertexBufferBinding<V::InGl>;
     type InSl = V::InSl;
 }
 
@@ -53,10 +55,12 @@ impl super::AttributesDomain for Sl {
 // Resource interface
 
 impl<T: Numeric> Resource<Sl> for Sampler2d<T> {
+    type InGl = Sampler2dBinding<T>;
     type InSl = Self;
 }
 
 impl<U: Uniform<Sl>> Resource<Sl> for U {
+    type InGl = UniformBufferBinding<U>;
     type InSl = Self;
 }
 

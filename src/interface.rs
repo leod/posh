@@ -1,4 +1,5 @@
 use bytemuck::Pod;
+use crevice::std140::AsStd140;
 use sealed::sealed;
 
 mod gl;
@@ -34,7 +35,7 @@ pub trait UniformDomain: Sized {
 
 /// A type that can be used as uniform input for shaders.
 pub trait Uniform<D: UniformDomain> {
-    type InGl: Uniform<Gl>; //+ AsStd140;
+    type InGl: Uniform<Gl> + AsStd140;
     type InSl: Uniform<Sl> + Value;
 }
 
@@ -76,7 +77,8 @@ pub trait Vertex<D: VertexDomain> {
 
 /// A type that can be used as attributes input for shaders.
 pub trait Attributes<D: AttributesDomain> {
-    type InSl: Attributes<Sl>;
+    type InGl: Attributes<Gl>;
+    type InSl: Attributes<Sl> + Value;
 }
 
 #[sealed]
@@ -90,13 +92,15 @@ where
     V: Attributes<D>,
     W: Attributes<D>,
 {
+    type InGl = (V::InGl, W::InGl);
     type InSl = (V::InSl, W::InSl);
 }
 
 // Resource interface
 
 /// A type that can be used as resource input for shaders.
-pub trait Resource<I: ResourceDomain> {
+pub trait Resource<D: ResourceDomain> {
+    type InGl: Resource<Gl>;
     type InSl: Resource<Sl>;
 }
 
@@ -106,12 +110,13 @@ pub trait ResourceDomain: UniformDomain {
     type Uniform<U: Uniform<Self>>: Resource<Self>;
 }
 
-impl<I, V, W> Resource<I> for (V, W)
+impl<D, V, W> Resource<D> for (V, W)
 where
-    I: ResourceDomain,
-    V: Resource<I>,
-    W: Resource<I>,
+    D: ResourceDomain,
+    V: Resource<D>,
+    W: Resource<D>,
 {
+    type InGl = (V::InGl, W::InGl);
     type InSl = (V::InSl, W::InSl);
 }
 
