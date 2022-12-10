@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
-use crate::{Attributes, Gl};
+use crate::{Attributes, Sl};
 
-pub struct VertexArray<V: Attributes<Gl>> {
+pub struct VertexArray<V: Attributes<Sl>> {
     _phantom: PhantomData<V>,
 }

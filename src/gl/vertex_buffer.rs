@@ -1,11 +1,12 @@
 use std::marker::PhantomData;
 
-use crate::{Gl, Vertex};
+use crate::{Gl, Sl, Vertex};
 
-pub struct VertexBuffer<V: Vertex<Gl>> {
-    _phantom: PhantomData<V>,
+pub struct VertexBuffer<V: Vertex<Sl>> {
+    data: Vec<V::InGl>,
 }
 
-pub struct VertexBufferBinding<V: Vertex<Gl>> {
+#[derive(Clone)]
+pub struct VertexBufferBinding<V: Vertex<Sl>> {
     _phantom: PhantomData<V>,
 }
