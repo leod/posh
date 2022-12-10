@@ -7,6 +7,8 @@ use crate::{
 
 use super::{Attributes, Primitive, Resource, ResourceDomain, Vertex};
 
+// Uniform interface
+
 #[sealed]
 impl super::UniformField<Gl> for f32 {}
 
@@ -27,6 +29,8 @@ impl super::UniformDomain for Gl {
     type Vec2<T: Primitive> = mint::Vector2<T>;
 }
 
+// Vertex interface
+
 #[sealed]
 impl<T: Numeric> super::VertexField<Gl> for T {}
 
@@ -41,6 +45,8 @@ impl super::VertexDomain for Gl {
     type Vec2<T: Numeric> = T;
 }
 
+// Attributes interface
+
 impl<V: Vertex<Gl>> Attributes<Gl> for VertexBufferBinding<V> {
     type InSl = V::InSl;
 }
@@ -49,6 +55,8 @@ impl<V: Vertex<Gl>> Attributes<Gl> for VertexBufferBinding<V> {
 impl super::AttributesDomain for Gl {
     type Vertex<V: Vertex<Gl>> = VertexBufferBinding<V>;
 }
+
+// Resource interface
 
 impl<T: Numeric> Resource<Gl> for Sampler2d<T> {
     type InSl = sl::Sampler2d<T>;
