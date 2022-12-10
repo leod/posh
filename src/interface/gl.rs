@@ -1,7 +1,9 @@
 use sealed::sealed;
 
 use crate::{
-    gl::{Sampler2d, Texture2dBinding, UniformBufferBinding, VertexBufferBinding},
+    gl::{
+        Sampler2d, Sampler2dBinding, Texture2dBinding, UniformBufferBinding, VertexBufferBinding,
+    },
     sl, Gl, Numeric, Sl, Uniform,
 };
 
@@ -47,27 +49,30 @@ impl super::VertexDomain for Gl {
 
 // Attributes interface
 
-impl<V: Vertex<Sl>> Attributes<Gl> for VertexBufferBinding<V> {
+impl<V: Vertex<Gl>> Attributes<Gl> for VertexBufferBinding<V> {
+    type InGl = Self;
     type InSl = V::InSl;
 }
 
 #[sealed]
 impl super::AttributesDomain for Gl {
-    type Vertex<V: Vertex<Gl>> = VertexBufferBinding<V::InSl>;
+    type Vertex<V: Vertex<Gl>> = VertexBufferBinding<V>;
 }
 
 // Resource interface
 
-impl<T: Numeric> Resource<Gl> for Sampler2d<T> {
+impl<T: Numeric> Resource<Gl> for Sampler2dBinding<T> {
+    type InGl = Self;
     type InSl = sl::Sampler2d<T>;
 }
 
 impl<U: Uniform<Sl>> Resource<Gl> for UniformBufferBinding<U> {
+    type InGl = Self;
     type InSl = U::InSl;
 }
 
 impl ResourceDomain for Gl {
-    type Sampler2d<T: Numeric> = Sampler2d<T>;
+    type Sampler2d<T: Numeric> = Sampler2dBinding<T>;
     type Uniform<U: Uniform<Gl>> = UniformBufferBinding<U::InSl>;
 }
 
