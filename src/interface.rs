@@ -122,3 +122,9 @@ pub trait Attachment<D: FragmentDomain> {}
 pub trait FragmentDomain: Sized {
     type Attachment2d: Attachment<Self>;
 }
+
+/// A type that can be used as fragment output for shaders.
+pub trait Fragment<D: FragmentDomain> {
+    type InGl: Fragment<Gl>;
+    type InSl: Fragment<Sl>;
+}

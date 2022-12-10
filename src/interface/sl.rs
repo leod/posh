@@ -1,11 +1,11 @@
 use sealed::sealed;
 
 use crate::{
-    sl::{Sampler2d, Scalar, Vec2},
+    sl::{Sampler2d, Scalar, Vec2, Vec4},
     Numeric, Sl, Uniform,
 };
 
-use super::{Attributes, Primitive, Resource, ResourceDomain, Vertex};
+use super::{Attachment, Attributes, FragmentDomain, Primitive, Resource, ResourceDomain, Vertex};
 
 // Uniform interface
 
@@ -63,4 +63,12 @@ impl<U: Uniform<Sl>> Resource<Sl> for U {
 impl ResourceDomain for Sl {
     type Sampler2d<T: Numeric> = Sampler2d<T>;
     type Uniform<U: Uniform<Sl>> = U;
+}
+
+// Fragment interface
+
+impl Attachment<Sl> for Vec4<f32> {}
+
+impl FragmentDomain for Sl {
+    type Attachment2d = Vec4<f32>;
 }

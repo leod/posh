@@ -1,36 +1,39 @@
 use std::marker::PhantomData;
 
-/*
-use posh::{
-    shader::{FragmentOutput, ResourceInput, VertexInput},
-    Gpu,
-};
+use crate::{sl::Varying, Attributes, Fragment, Gl, Resource, Sl};
 
-use crate::{Bind, DrawParams, Element, Surface, VertexStream};
-*/
+use super::{DrawParams, Element, SurfaceBinding, VertexStream};
 
-pub struct Program<R, V, F> {
-    _phantom: PhantomData<(R, V, F)>,
+pub struct Program<R, A, F> {
+    _phantom: PhantomData<(R, A, F)>,
 }
 
-/*
-impl<R, V, F> Program<R, V, F>
+impl<R, A, F> Program<R, A, F>
 where
-    R: ResourceInput<Space = Gpu>,
-    V: VertexInput<Gpu>,
-    F: FragmentOutput<Space = Gpu>,
+    R: Resource<Sl>,
+    A: Attributes<Sl>,
+    F: Fragment<Sl>,
 {
-    pub fn draw<'a, BindR, BindV, BindF>(
+    pub fn new<V>(vertex_shader: fn(R, A) -> V, fragment_shader: fn(R, V) -> F) -> Self
+    where
+        V: Varying,
+    {
+        Program {
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn draw<BindR, BindA, BindF, E>(
         &self,
         resource: BindR,
-        vertices: VertexStream<BindV, impl Element>,
-        surface: &impl Surface<BindF>,
+        vertices: VertexStream<BindA, E>,
+        surface: SurfaceBinding<BindF>,
         draw_params: &DrawParams,
     ) where
-        BindR: ResourceInput<Space = Bind<'a>, InPosh = R>,
-        BindV: VertexInput<Bind<'a>, InPosh = V>,
-        BindF: FragmentOutput<Posh = F>,
+        BindR: Resource<Gl, InSl = R>,
+        BindA: Attributes<Gl, InSl = A>,
+        BindF: Fragment<Gl, InSl = F>,
+        E: Element,
     {
     }
 }
-*/
