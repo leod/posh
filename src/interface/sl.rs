@@ -7,6 +7,8 @@ use crate::{
 
 use super::{Attributes, Primitive, Resource, ResourceDomain, Vertex};
 
+// Uniform interface
+
 #[sealed]
 impl<T: Primitive> super::UniformField<Sl> for Scalar<T> {}
 
@@ -20,6 +22,8 @@ impl super::UniformDomain for Sl {
     type U32 = Scalar<u32>;
     type Vec2<T: Primitive> = Vec2<T>;
 }
+
+// Vertex interface
 
 #[sealed]
 impl<T: Numeric> super::VertexField<Sl> for Scalar<T> {}
@@ -35,6 +39,8 @@ impl super::VertexDomain for Sl {
     type Vec2<T: Numeric> = Vec2<T>;
 }
 
+// Attributes interface
+
 impl<V: Vertex<Sl>> Attributes<Sl> for V {
     type InSl = V::InSl;
 }
@@ -43,6 +49,8 @@ impl<V: Vertex<Sl>> Attributes<Sl> for V {
 impl super::AttributesDomain for Sl {
     type Vertex<V: Vertex<Sl>> = V;
 }
+
+// Resource interface
 
 impl<T: Numeric> Resource<Sl> for Sampler2d<T> {
     type InSl = Self;
