@@ -1,11 +1,11 @@
 use sealed::sealed;
 
 use crate::{
-    gl::{Sampler2d, UniformBufferBinding, VertexBufferBinding},
+    gl::{Sampler2d, Texture2dBinding, UniformBufferBinding, VertexBufferBinding},
     sl, Gl, Numeric, Sl, Uniform,
 };
 
-use super::{Attributes, Primitive, Resource, ResourceDomain, Vertex};
+use super::{Attachment, Attributes, FragmentDomain, Primitive, Resource, ResourceDomain, Vertex};
 
 // Uniform interface
 
@@ -69,4 +69,12 @@ impl<U: Uniform<Sl>> Resource<Gl> for UniformBufferBinding<U> {
 impl ResourceDomain for Gl {
     type Sampler2d<T: Numeric> = Sampler2d<T>;
     type Uniform<U: Uniform<Gl>> = UniformBufferBinding<U::InSl>;
+}
+
+// Fragment interface
+
+impl Attachment<Gl> for Texture2dBinding {}
+
+impl FragmentDomain for Gl {
+    type Attachment2d = Texture2dBinding;
 }

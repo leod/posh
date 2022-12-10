@@ -6,8 +6,8 @@ pub mod gl;
 pub mod sl;
 
 pub use interface::{
-    Attributes, AttributesDomain, Uniform, UniformDomain, UniformField, Vertex, VertexDomain,
-    VertexField,
+    Attachment, Attributes, AttributesDomain, Fragment, FragmentDomain, Resource, ResourceDomain,
+    Uniform, UniformDomain, UniformField, Vertex, VertexDomain, VertexField,
 };
 pub use numeric::{Numeric, Primitive};
 

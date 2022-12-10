@@ -1,3 +1,4 @@
+mod program_def;
 mod sampler;
 mod scalar;
 mod tuple;
@@ -11,6 +12,7 @@ use std::rc::Rc;
 use super::dag::{Expr, Ty};
 
 pub use {
+    program_def::ProgramDef,
     sampler::Sampler2d,
     scalar::Scalar,
     vec::{Vec2, Vec4},
@@ -52,3 +54,5 @@ where
         self
     }
 }
+
+pub trait Varying: Value {}
