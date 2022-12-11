@@ -2,7 +2,7 @@ use sealed::sealed;
 
 use crate::{
     gl::{
-        Sampler2d, Sampler2dBinding, Texture2dBinding, UniformBufferBinding, VertexBufferBinding,
+        Sampler2dBinding, Texture2dBinding, UniformBufferBinding, VertexBufferBinding,
     },
     sl, Gl, Numeric, Sl, Uniform,
 };
