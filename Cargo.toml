@@ -8,3 +8,6 @@ bytemuck = "1.12.3"
 crevice = "0.12.0"
 mint = "0.5.9"
 sealed = "0.4.0"
+
+[workspace]
+members = ["derive"]
