@@ -131,5 +131,5 @@ pub trait FragmentDomain: Sized {
 /// A type that can be used as fragment output for shaders.
 pub trait Fragment<D: FragmentDomain> {
     type InGl: Fragment<Gl>;
-    type InSl: Fragment<Sl>;
+    type InSl: Fragment<Sl> + Value;
 }
