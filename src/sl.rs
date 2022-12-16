@@ -16,14 +16,14 @@ pub use posh_derive::Value;
 pub use {
     program_def::ProgramDef,
     sampler::Sampler2d,
-    scalar::Scalar,
+    scalar::{Scalar, F32, I32, U32},
     vec::{Vec2, Vec4},
 };
 
 /// An object that can be represented in [`Posh`](crate::Posh).
 ///
 /// The interface of this trait is a private implementation detail.
-pub trait Object: Copy {
+pub trait Object {
     #[doc(hidden)]
     const TY: Ty;
 
@@ -40,7 +40,7 @@ pub trait Value: Object {
 }
 
 /// A conversion to a [`Value`] in [`Posh`](crate::Posh).
-pub trait ToValue: Copy {
+pub trait ToValue {
     type Value: Value;
 
     fn to_value(self) -> Self::Value;
@@ -48,7 +48,7 @@ pub trait ToValue: Copy {
 
 impl<V> ToValue for V
 where
-    V: Value,
+    V: Value + Clone,
 {
     type Value = Self;
 

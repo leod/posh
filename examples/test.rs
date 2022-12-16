@@ -1,6 +1,11 @@
-use posh::sl::Value;
+use posh::{
+    sl::{self, Value},
+    Numeric,
+};
 
 #[derive(Value)]
-struct Foo {}
+struct Foo<T: Numeric> {
+    x: sl::Scalar<T>,
+}
 
 fn main() {}
