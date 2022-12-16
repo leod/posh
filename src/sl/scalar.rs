@@ -17,6 +17,10 @@ pub struct Scalar<T> {
     _phantom: PhantomData<T>,
 }
 
+pub type F32 = Scalar<f32>;
+pub type I32 = Scalar<i32>;
+pub type U32 = Scalar<u32>;
+
 impl<T: Primitive> Object for Scalar<T> {
     const TY: Ty = Ty::Base(BaseTy::Scalar(T::PRIMITIVE_TY));
 
