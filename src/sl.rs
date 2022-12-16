@@ -11,6 +11,8 @@ use std::rc::Rc;
 
 use super::dag::{Expr, Ty};
 
+pub use posh_derive::Value;
+
 pub use {
     program_def::ProgramDef,
     sampler::Sampler2d,

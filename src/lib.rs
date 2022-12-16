@@ -1,6 +1,8 @@
-mod dag;
 mod interface;
 mod numeric;
+
+#[doc(hidden)]
+pub mod dag;
 
 pub mod gl;
 pub mod sl;
