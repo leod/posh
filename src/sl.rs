@@ -48,7 +48,7 @@ pub trait ToValue {
 
 impl<V> ToValue for V
 where
-    V: Value + Clone,
+    V: Value,
 {
     type Value = Self;
 
