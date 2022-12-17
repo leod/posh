@@ -5,7 +5,10 @@ use sealed::sealed;
 mod gl;
 mod sl;
 
-use crate::{sl::Value, Gl, Numeric, Primitive, Sl};
+use crate::{
+    sl::{Object, Value},
+    Gl, Numeric, Primitive, Sl,
+};
 
 // Uniform interface
 
@@ -33,9 +36,26 @@ pub trait UniformDomain: Sized {
     type Vec2<T: Primitive>: UniformField<Self>;
 }
 
+#[doc(hidden)]
+#[sealed]
+pub trait UniformDomainMacroHelper: Sized {
+    /// A floating-point value.
+    type F32: Object;
+
+    /// A signed integer value.
+    type I32: Object;
+
+    /// An unsigned integer value.
+    type U32: Object;
+
+    /// A two-dimensional vector.
+    type Vec2<T: Primitive>: Object;
+}
+
 /// A type that can be used as uniform input for shaders.
 pub trait Uniform<D: UniformDomain> {
-    type InGl: Uniform<Gl> + AsStd140;
+    //type InGl: Uniform<Gl> + AsStd140;
+    type InGl: Uniform<Gl>;
     type InSl: Uniform<Sl> + Value;
 }
 
