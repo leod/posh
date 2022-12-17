@@ -130,11 +130,9 @@ pub fn call_func_def<R: Value>(def: FuncDef, args: Vec<Rc<Expr>>) -> R {
 
 #[doc(hidden)]
 pub fn simplify_struct_literal(ty: &'static StructTy, args: &[Rc<Expr>]) -> Rc<Expr> {
-    let common_base = common_field_base(
-        BaseTy::Struct(ty),
-        ty.fields.iter().map(|(name, _)| *name),
-        args,
-    );
+    assert!(ty.fields.len() == args.len());
+
+    let common_base = common_field_base(ty, args);
 
     if let Some(common_base) = common_base {
         common_base
@@ -148,11 +146,9 @@ pub fn simplify_struct_literal(ty: &'static StructTy, args: &[Rc<Expr>]) -> Rc<E
     }
 }
 
-pub(crate) fn common_field_base(
-    base_ty: BaseTy,
-    fields: impl Iterator<Item = &'static str>,
-    args: &[Rc<Expr>],
-) -> Option<Rc<Expr>> {
+fn common_field_base(struct_ty: &'static StructTy, args: &[Rc<Expr>]) -> Option<Rc<Expr>> {
+    let ty = Ty::Base(BaseTy::Struct(struct_ty));
+
     let first_expr = args.first()?;
     let first_base = if let Expr::Field { base, .. } = &**first_expr {
         Some(base)
@@ -160,7 +156,7 @@ pub(crate) fn common_field_base(
         None
     }?;
 
-    let is_match = |base: &Rc<Expr>| base.ty() == Ty::Base(base_ty) && base == first_base;
+    let is_match = |base: &Rc<Expr>| base.ty() == ty && base == first_base;
     let given_fields: BTreeSet<_> = args
         .iter()
         .map(|arg| match &**arg {
@@ -169,7 +165,7 @@ pub(crate) fn common_field_base(
         })
         .collect::<Option<_>>()?;
 
-    let needed_fields: BTreeSet<_> = fields.collect();
+    let needed_fields: BTreeSet<_> = struct_ty.fields.iter().map(|(name, _)| *name).collect();
 
     if given_fields == needed_fields {
         Some(first_base.clone())
