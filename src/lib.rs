@@ -13,6 +13,12 @@ pub use interface::{
 };
 pub use numeric::{Numeric, Primitive};
 
+pub use posh_derive::Uniform;
+
+pub mod macro_internal {
+    pub use super::interface::UniformDomainMacroHelper;
+}
+
 /// The graphics library domain.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Gl;

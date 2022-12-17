@@ -24,6 +24,14 @@ impl super::UniformDomain for Sl {
     type Vec2<T: Primitive> = Vec2<T>;
 }
 
+#[sealed]
+impl super::UniformDomainMacroHelper for Sl {
+    type F32 = Scalar<f32>;
+    type I32 = Scalar<i32>;
+    type U32 = Scalar<u32>;
+    type Vec2<T: Primitive> = Vec2<T>;
+}
+
 // Vertex interface
 
 #[sealed]

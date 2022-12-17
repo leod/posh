@@ -9,6 +9,8 @@ pub mod primitives;
 
 use std::rc::Rc;
 
+use crate::dag::StructTy;
+
 use super::dag::{Expr, Ty};
 
 pub use posh_derive::Value;
@@ -37,6 +39,10 @@ pub trait Object {
 pub trait Value: Object {
     #[doc(hidden)]
     fn from_expr(expr: Expr) -> Self;
+}
+
+pub trait Struct: Value {
+    const STRUCT_TY: StructTy;
 }
 
 /// A conversion to a [`Value`] in [`Posh`](crate::Posh).

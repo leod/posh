@@ -1,17 +1,17 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{DeriveInput, Field, Ident, Result};
+use syn::{DeriveInput, Ident, Result};
 
-use crate::utils::StructFields;
+use crate::utils::{validate_generics, StructFields};
 
-fn generate_struct_ty_expr(name: &Ident, fields: &StructFields) -> TokenStream {
-    let name_str = name.to_string();
+pub fn generate_struct_ty_expr(ident: &Ident, fields: &StructFields) -> TokenStream {
+    let ident_str = ident.to_string();
     let field_types = fields.types();
     let field_strings = fields.strings();
 
     quote! {
-        &::posh::dag::StructTy {
-            name: #name_str,
+        ::posh::dag::StructTy {
+            name: #ident_str,
             fields: &[
                 #(
                     (#field_strings, <#field_types as ::posh::sl::Object>::TY)
@@ -23,29 +23,33 @@ fn generate_struct_ty_expr(name: &Ident, fields: &StructFields) -> TokenStream {
 }
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream> {
+    validate_generics(&input.generics)?;
+
     let ident = &input.ident;
+
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+
     let fields = StructFields::new(&input.ident, input.data)?;
     let field_idents = fields.idents();
     let field_types = fields.types();
     let field_strings = fields.strings();
-    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
     let struct_ty_expr = generate_struct_ty_expr(&input.ident, &fields);
-    let ty_expr = quote! {
-        ::posh::dag::Ty::Base(
-            ::posh::dag::BaseTy::Struct(
-                #struct_ty_expr
-            )
-        )
-    };
 
     Ok(quote! {
+        impl #impl_generics ::posh::sl::Struct for #ident #ty_generics #where_clause {
+            const STRUCT_TY: ::posh::dag::StructTy = #struct_ty_expr;
+        }
+
         impl #impl_generics ::posh::sl::Object for #ident #ty_generics #where_clause {
-            const TY: ::posh::dag::Ty = #ty_expr;
+            const TY: ::posh::dag::Ty =
+                ::posh::dag::Ty::Base(::posh::dag::BaseTy::Struct(
+                    &<Self as ::posh::sl::Struct>::STRUCT_TY,
+                ));
 
             fn expr(&self) -> std::rc::Rc<::posh::dag::Expr> {
                 ::posh::sl::primitives::simplify_struct_literal(
-                    #struct_ty_expr,
+                    &<Self as ::posh::sl::Struct>::STRUCT_TY,
                     &[
                         #(
                             self.#field_idents.expr()
@@ -73,7 +77,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         const _: fn() = || {
             fn check_field<V: ::posh::sl::Value>() {}
 
-            fn check_struct #impl_generics () #where_clause {
+            fn check_struct #impl_generics() #where_clause {
                 #(
                     check_field::<#field_types>();
                 )*
