@@ -1,23 +1,28 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{DeriveInput, Ident, Result};
+use syn::{DeriveInput, Generics, Ident, Result};
 
 use crate::utils::{validate_generics, StructFields};
 
-pub fn generate_struct_ty_expr(ident: &Ident, fields: &StructFields) -> TokenStream {
+fn generate_struct_impl(ident: &Ident, generics: &Generics, fields: &StructFields) -> TokenStream {
     let ident_str = ident.to_string();
+
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+
     let field_types = fields.types();
     let field_strings = fields.strings();
 
     quote! {
-        ::posh::dag::StructTy {
-            name: #ident_str,
-            fields: &[
-                #(
-                    (#field_strings, <#field_types as ::posh::sl::Object>::TY)
-                ),*
-            ],
-            is_built_in: false,
+        impl #impl_generics ::posh::sl::Struct for #ident #ty_generics #where_clause {
+            const STRUCT_TY: ::posh::dag::StructTy = ::posh::dag::StructTy {
+                name: #ident_str,
+                fields: &[
+                    #(
+                        (#field_strings, <#field_types as ::posh::sl::Object>::TY)
+                    ),*
+                ],
+                is_built_in: false,
+            };
         }
     }
 }
@@ -29,25 +34,22 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
-    let fields = StructFields::new(&input.ident, input.data)?;
+    let fields = StructFields::new(&input.ident, &input.data)?;
     let field_idents = fields.idents();
     let field_types = fields.types();
     let field_strings = fields.strings();
 
-    let struct_ty_expr = generate_struct_ty_expr(&input.ident, &fields);
+    let struct_impl = generate_struct_impl(&input.ident, &input.generics, &fields);
 
     Ok(quote! {
-        impl #impl_generics ::posh::sl::Struct for #ident #ty_generics #where_clause {
-            const STRUCT_TY: ::posh::dag::StructTy = #struct_ty_expr;
-        }
+        #struct_impl
 
         impl #impl_generics ::posh::sl::Object for #ident #ty_generics #where_clause {
-            const TY: ::posh::dag::Ty =
-                ::posh::dag::Ty::Base(::posh::dag::BaseTy::Struct(
-                    &<Self as ::posh::sl::Struct>::STRUCT_TY,
-                ));
+            const TY: ::posh::dag::Ty = ::posh::dag::Ty::Base(::posh::dag::BaseTy::Struct(
+                &<Self as ::posh::sl::Struct>::STRUCT_TY,
+            ));
 
-            fn expr(&self) -> std::rc::Rc<::posh::dag::Expr> {
+            fn expr(&self) -> ::std::rc::Rc<::posh::dag::Expr> {
                 ::posh::sl::primitives::simplify_struct_literal(
                     &<Self as ::posh::sl::Struct>::STRUCT_TY,
                     &[

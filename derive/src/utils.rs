@@ -10,7 +10,7 @@ pub struct StructFields {
 }
 
 impl StructFields {
-    pub fn new(ident: &Ident, data: Data) -> Result<Self> {
+    pub fn new(ident: &Ident, data: &Data) -> Result<Self> {
         let data = if let Data::Struct(data) = data {
             Ok(data)
         } else {
@@ -20,8 +20,8 @@ impl StructFields {
             ))
         }?;
 
-        let fields = match data.fields {
-            Fields::Named(fields) => Ok(fields.named.into_iter().collect()),
+        let fields = match &data.fields {
+            Fields::Named(fields) => Ok(fields.named.iter().cloned().collect()),
             Fields::Unnamed(_) | Fields::Unit => Err(Error::new_spanned(
                 ident,
                 "posh derive macros do not support tuple or unit structs",
