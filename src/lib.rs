@@ -13,10 +13,13 @@ pub use interface::{
 };
 pub use numeric::{Numeric, Primitive};
 
+pub use crevice;
+
 pub use posh_derive::Uniform;
 
+#[doc(hidden)]
 pub mod macro_internal {
-    pub use super::interface::UniformDomainMacroHelper;
+    pub use super::interface::UniformDomainHelper;
 }
 
 /// The graphics library domain.

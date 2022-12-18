@@ -66,7 +66,7 @@ impl SpecializeDomain {
 
         Ok(Self {
             first_ty,
-            params: generics.params.iter().cloned().skip(1).collect(),
+            params: generics.params.iter().skip(1).cloned().collect(),
         })
     }
 }
@@ -121,7 +121,7 @@ pub fn remove_domain_param(ident: &Ident, generics: &Generics) -> Result<Generic
         ));
     }
 
-    let params = generics.params.iter().cloned().skip(1).collect();
+    let params = generics.params.iter().skip(1).cloned().collect();
 
     Ok(Generics {
         params,

@@ -25,7 +25,7 @@ impl super::UniformDomain for Sl {
 }
 
 #[sealed]
-impl super::UniformDomainMacroHelper for Sl {
+impl super::UniformDomainHelper for Sl {
     type F32 = Scalar<f32>;
     type I32 = Scalar<i32>;
     type U32 = Scalar<u32>;

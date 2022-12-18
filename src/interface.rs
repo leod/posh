@@ -1,11 +1,11 @@
 use bytemuck::Pod;
-use crevice::std140::AsStd140;
 use sealed::sealed;
 
 mod gl;
 mod sl;
 
 use crate::{
+    gl::AsStd140,
     sl::{Object, Value},
     Gl, Numeric, Primitive, Sl,
 };
@@ -38,7 +38,7 @@ pub trait UniformDomain: Sized {
 
 #[doc(hidden)]
 #[sealed]
-pub trait UniformDomainMacroHelper: Sized {
+pub trait UniformDomainHelper: Sized {
     /// A floating-point value.
     type F32: Object;
 
@@ -54,8 +54,7 @@ pub trait UniformDomainMacroHelper: Sized {
 
 /// A type that can be used as uniform input for shaders.
 pub trait Uniform<D: UniformDomain> {
-    //type InGl: Uniform<Gl> + AsStd140;
-    type InGl: Uniform<Gl>;
+    type InGl: Uniform<Gl> + AsStd140;
     type InSl: Uniform<Sl> + Value;
 }
 
