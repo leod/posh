@@ -58,7 +58,10 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         #[derive(::posh::crevice::std140::AsStd140)]
         #visibility struct #as_std140_ident #impl_generics_no_d {
             #(
-                #field_idents: <#ident #ty_generics_gl as #helper_trait_ident>::#field_idents
+                #field_idents: <
+                    <#ident #ty_generics_gl as #helper_trait_ident>::#field_idents
+                    as ::posh::gl::AsStd140
+                >::AsStd140
             ),*
         }
 
