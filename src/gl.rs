@@ -17,7 +17,7 @@ pub use program::Program;
 pub use sampler::{Sampler2d, Sampler2dBinding};
 pub use surface::{DefaultSurface, SurfaceBinding};
 pub use texture::Texture2dBinding;
-pub use uniform_buffer::{UniformBuffer, UniformBufferBinding};
+pub use uniform_buffer::{AsStd140, UniformBuffer, UniformBufferBinding};
 pub use vertex_array::VertexArray;
 pub use vertex_buffer::{VertexBuffer, VertexBufferBinding};
 pub use vertex_stream::{Primitive, VertexStream};

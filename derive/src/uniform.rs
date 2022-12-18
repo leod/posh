@@ -15,7 +15,7 @@ fn generate_helper_fns(
     let generics_helper_d = replace_domain_param_bound(
         &get_domain_param(ident, generics)?,
         generics,
-        parse_quote!(::posh::macro_internal::UniformDomainMacroHelper),
+        parse_quote!(::posh::macro_internal::UniformDomainHelper),
     )?;
     let (impl_generics_helper_d, _, where_clause) = generics_helper_d.split_for_impl();
 
@@ -24,11 +24,17 @@ fn generate_helper_fns(
     let fn_idents: Vec<_> = fields
         .idents()
         .iter()
-        .map(|ident| Ident::new(&format!("_posh_uniform_field_ty_{}", ident), ident.span()))
+        .map(|field_ident| {
+            Ident::new(
+                &format!("_posh_uniform_field_ty_helper_{ident}_{field_ident}"),
+                ident.span(),
+            )
+        })
         .collect();
 
     let fn_defs = quote! {
         #(
+            #[allow(non_snake_case)]
             const fn #fn_idents #impl_generics_helper_d() -> ::posh::dag::Ty
             where #where_clause
             {
@@ -47,7 +53,7 @@ fn generate_struct_ty_expr(
     helper_fn_idents: &[Ident],
 ) -> Result<TokenStream> {
     let name_str = ident.to_string();
-    let ty_generics_sl = SpecializeDomain::new(parse_quote!(::posh::Sl), &ident, &generics)?;
+    let ty_generics_sl = SpecializeDomain::new(parse_quote!(::posh::Sl), ident, generics)?;
     let field_strings = fields.strings();
 
     Ok(quote! {
@@ -65,13 +71,17 @@ fn generate_struct_ty_expr(
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let ident = &input.ident;
+    let as_std140_ident = Ident::new(&format!("_Posh{ident}AsStd140"), ident.span());
+    let helper_trait_ident = Ident::new(&format!("_Posh{ident}UniformHelperTrait"), ident.span());
+
+    let visibility = input.vis;
 
     let generics_no_d = remove_domain_param(ident, &input.generics)?;
     let generics_d_type = get_domain_param(ident, &input.generics)?;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-    let (impl_generics_no_d, _, _) = generics_no_d.split_for_impl();
-    let ty_generics_gl = SpecializeDomain::new(parse_quote!(::posh::Gl), &ident, &input.generics)?;
-    let ty_generics_sl = SpecializeDomain::new(parse_quote!(::posh::Sl), &ident, &input.generics)?;
+    let (impl_generics_no_d, ty_generics_no_d, _) = generics_no_d.split_for_impl();
+    let ty_generics_gl = SpecializeDomain::new(parse_quote!(::posh::Gl), ident, &input.generics)?;
+    let ty_generics_sl = SpecializeDomain::new(parse_quote!(::posh::Sl), ident, &input.generics)?;
 
     let fields = StructFields::new(&input.ident, input.data)?;
     let field_idents = fields.idents();
@@ -91,6 +101,35 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         {
             type InGl = #ident #ty_generics_gl;
             type InSl = #ident #ty_generics_sl;
+        }
+
+        trait #helper_trait_ident {
+            #(
+                #[allow(non_camel_case_types)]
+                type #field_idents;
+            )*
+        }
+
+        impl #impl_generics #helper_trait_ident for #ident #ty_generics
+        #where_clause
+        {
+            #(
+                type #field_idents = #field_types;
+            )*
+        }
+
+        // FIXME: AFAIK, crevice does not support generic types yet.
+        #[derive(::posh::crevice::std140::AsStd140)]
+        #visibility struct #as_std140_ident #impl_generics_no_d {
+            #(
+                #field_idents: <#ident #ty_generics_gl as #helper_trait_ident>::#field_idents
+            ),*
+        }
+
+        impl #impl_generics_no_d ::posh::gl::AsStd140 for #ident #ty_generics_gl
+        #where_clause
+        {
+            type AsStd140 = #as_std140_ident #ty_generics_no_d;
         }
 
         impl #impl_generics_no_d ::posh::sl::Struct for #ident #ty_generics_sl
@@ -139,7 +178,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         const _: fn() = || {
             fn check_field<T: ::posh::sl::Value>(_: &T) {}
 
-            fn check_struct #impl_generics(value: &#ident #ty_generics_sl) #where_clause {
+            fn check_struct #impl_generics_no_d(value: &#ident #ty_generics_sl) #where_clause {
                 #(
                     check_field(&value.#field_idents);
                 )*

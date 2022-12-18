@@ -9,8 +9,8 @@ struct Foo<T: Numeric> {
 }
 
 #[derive(Uniform)]
-struct MyUniform<D: UniformDomain, T: Numeric> {
-    x: D::Vec2<T>,
+struct MyUniform<D: UniformDomain> {
+    x: D::Vec2<f32>,
 }
 
 fn main() {}
