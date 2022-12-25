@@ -1,39 +1,33 @@
 use bytemuck::Pod;
+use crevice::std140::AsStd140;
 use sealed::sealed;
 
 mod gl;
 mod sl;
 
 use crate::{
-    gl::AsStd140,
     sl::{Object, Value},
     Gl, Numeric, Primitive, Sl,
 };
 
 // Uniform interface
 
-/// Allowed types for fields in a [`Uniform`].
-///
-/// The interface of this trait is a private implementation detail.
-#[sealed]
-pub trait UniformField<D: UniformDomain> {}
-
-#[sealed]
-impl<D: UniformDomain, U: Uniform<D>> UniformField<D> for U {}
-
 #[sealed]
 pub trait UniformDomain: Sized {
+    /// A boolean value.
+    type Bool: Uniform<Self>;
+
     /// A floating-point value.
-    type F32: UniformField<Self>;
+    type F32: Uniform<Self>;
 
     /// A signed integer value.
-    type I32: UniformField<Self>;
+    type I32: Uniform<Self>;
 
     /// An unsigned integer value.
-    type U32: UniformField<Self>;
+    type U32: Uniform<Self>;
 
     /// A two-dimensional vector.
-    type Vec2<T: Primitive>: UniformField<Self>;
+    type Vec2<T: Primitive>: Uniform<Self>;
 }
 
 #[doc(hidden)]
@@ -59,6 +53,10 @@ pub trait Uniform<D: UniformDomain> {
 }
 
 // Vertex interface
+
+pub trait AsPod {
+    type Pod: Pod;
+}
 
 /// Allowed types for fields in a [`Vertex`].
 ///
@@ -88,7 +86,7 @@ pub trait VertexDomain: Sized {
 
 /// A type that can be used as vertex input for shaders.
 pub trait Vertex<D: VertexDomain> {
-    type InGl: Vertex<Gl> + Pod;
+    type InGl: Vertex<Gl> + AsPod;
     type InSl: Vertex<Sl> + Value;
 }
 

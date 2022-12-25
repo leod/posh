@@ -3,21 +3,26 @@ use sealed::sealed;
 use crate::{
     gl::{Sampler2dBinding, UniformBufferBinding, VertexBufferBinding},
     sl::{Sampler2d, Scalar, Vec2, Vec4},
-    Numeric, Sl, Uniform,
+    Gl, Numeric, Sl, Uniform,
 };
 
 use super::{Attachment, Attributes, FragmentDomain, Primitive, Resource, ResourceDomain, Vertex};
 
 // Uniform interface
 
-#[sealed]
-impl<T: Primitive> super::UniformField<Sl> for Scalar<T> {}
+impl<T: Primitive> Uniform<Sl> for Scalar<T> {
+    type InGl = T::InGl;
+    type InSl = Self;
+}
 
-#[sealed]
-impl<T: Primitive> super::UniformField<Sl> for Vec2<T> {}
+impl<T: Primitive> Uniform<Sl> for Vec2<T> {
+    type InGl = T::Vec2;
+    type InSl = Self;
+}
 
 #[sealed]
 impl super::UniformDomain for Sl {
+    type Bool = Scalar<bool>;
     type F32 = Scalar<f32>;
     type I32 = Scalar<i32>;
     type U32 = Scalar<u32>;
