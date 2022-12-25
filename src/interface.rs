@@ -41,22 +41,6 @@ pub trait UniformDomain: Sized {
     type U32: Uniform<Self>;
 }
 
-#[doc(hidden)]
-#[sealed]
-pub trait UniformDomainHelper: Sized {
-    /// A floating-point value.
-    type F32: Object;
-
-    /// A signed integer value.
-    type I32: Object;
-
-    /// An unsigned integer value.
-    type U32: Object;
-
-    /// A two-dimensional vector.
-    type Vec2<T: Primitive>: Object;
-}
-
 /// A type that can be used as uniform input for shaders.
 pub trait Uniform<D: UniformDomain> {
     type InGl: Uniform<Gl> + AsStd140;

@@ -1,9 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::ToTokens;
-use syn::{
-    punctuated::Punctuated, Data, Error, Field, Fields, GenericParam, Generics, Ident, Result,
-    Token, Type, TypeParamBound,
-};
+use syn::{Data, Error, Field, Fields, GenericParam, Generics, Ident, Result, Token, Type};
 
 pub struct StructFields {
     fields: Vec<Field>,
@@ -121,41 +118,6 @@ pub fn remove_domain_param(ident: &Ident, generics: &Generics) -> Result<Generic
     }
 
     let params = generics.params.iter().skip(1).cloned().collect();
-
-    Ok(Generics {
-        params,
-        ..generics.clone()
-    })
-}
-
-pub fn replace_domain_param_bound(
-    ident: &Ident,
-    generics: &Generics,
-    bound: TypeParamBound,
-) -> Result<Generics> {
-    if generics.params.is_empty() {
-        return Err(Error::new_spanned(
-            ident,
-            "posh expects type to be generic in domain",
-        ));
-    }
-
-    let mut bounds = Punctuated::new();
-    bounds.push(bound);
-
-    let mut params = generics.params.clone();
-
-    match params.first_mut().unwrap() {
-        GenericParam::Type(ty) => {
-            ty.bounds = bounds;
-        }
-        first_param => {
-            return Err(Error::new_spanned(
-                first_param,
-                "posh expects the first generic parameter to be the domain",
-            ));
-        }
-    }
 
     Ok(Generics {
         params,

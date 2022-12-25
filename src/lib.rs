@@ -17,11 +17,6 @@ pub use crevice;
 
 pub use posh_derive::Uniform;
 
-#[doc(hidden)]
-pub mod macro_internal {
-    pub use super::interface::UniformDomainHelper;
-}
-
 /// The graphics library domain.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Gl;
