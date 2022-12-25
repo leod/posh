@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use crate::{
     dag::{BaseTy, Expr, StructTy, Ty},
-    Numeric, Primitive,
+    Primitive,
 };
 
 use super::{

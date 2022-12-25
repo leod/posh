@@ -5,9 +5,9 @@ use crate::dag::{BaseTy, BinaryOp, Expr, FuncDef, StructTy, Ty};
 use super::{Object, ToValue, Value};
 
 pub(crate) fn binary<U, V, R>(
-    left: impl ToValue<Value = U>,
+    left: impl ToValue<Output = U>,
     op: BinaryOp,
-    right: impl ToValue<Value = V>,
+    right: impl ToValue<Output = V>,
 ) -> R
 where
     U: Value,
@@ -28,7 +28,7 @@ where
     R::from_expr(expr)
 }
 
-pub(crate) fn built_in_1<U, R>(name: &'static str, u: impl ToValue<Value = U>) -> R
+pub(crate) fn built_in_1<U, R>(name: &'static str, u: impl ToValue<Output = U>) -> R
 where
     U: Object,
     R: Value,
@@ -43,8 +43,8 @@ where
 
 pub(crate) fn built_in_2<U, V, R>(
     name: &'static str,
-    u: impl ToValue<Value = U>,
-    v: impl ToValue<Value = V>,
+    u: impl ToValue<Output = U>,
+    v: impl ToValue<Output = V>,
 ) -> R
 where
     U: Object,
@@ -61,9 +61,9 @@ where
 
 pub(crate) fn built_in_3<U, V, W, R>(
     name: &'static str,
-    u: impl ToValue<Value = U>,
-    v: impl ToValue<Value = V>,
-    w: impl ToValue<Value = W>,
+    u: impl ToValue<Output = U>,
+    v: impl ToValue<Output = V>,
+    w: impl ToValue<Output = W>,
 ) -> R
 where
     U: Object,
@@ -85,10 +85,10 @@ where
 
 pub(crate) fn built_in_4<U, V, W, X, R>(
     name: &'static str,
-    u: impl ToValue<Value = U>,
-    v: impl ToValue<Value = V>,
-    w: impl ToValue<Value = W>,
-    x: impl ToValue<Value = X>,
+    u: impl ToValue<Output = U>,
+    v: impl ToValue<Output = V>,
+    w: impl ToValue<Output = W>,
+    x: impl ToValue<Output = X>,
 ) -> R
 where
     U: Object,

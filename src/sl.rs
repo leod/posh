@@ -47,18 +47,18 @@ pub trait Struct: Value {
 
 /// A conversion to a [`Value`] in [`Posh`](crate::Posh).
 pub trait ToValue {
-    type Value: Value;
+    type Output: Value;
 
-    fn to_value(self) -> Self::Value;
+    fn to_value(self) -> Self::Output;
 }
 
 impl<V> ToValue for V
 where
     V: Value,
 {
-    type Value = Self;
+    type Output = Self;
 
-    fn to_value(self) -> Self::Value {
+    fn to_value(self) -> Self::Output {
         self
     }
 }
