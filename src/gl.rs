@@ -20,4 +20,4 @@ pub use texture::Texture2dBinding;
 pub use uniform_buffer::{UniformBuffer, UniformBufferBinding};
 pub use vertex_array::VertexArray;
 pub use vertex_buffer::{VertexBuffer, VertexBufferBinding};
-pub use vertex_stream::{Primitive, VertexStream};
+pub use vertex_stream::{GeometryType, VertexStream};
