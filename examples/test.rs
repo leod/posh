@@ -18,6 +18,7 @@ struct MyThang<T: Primitive, D: FieldDomain = Sl> {
 struct MyThunk<T: Primitive, D: FieldDomain = Sl> {
     x: MyThang<T, D>,
     y: MyThang<f32, D>,
+    z: (D::Scalar<T>, D::Scalar<T>),
 }
 
 #[derive(Clone, Copy, ToValue, Vertex, Uniform)]

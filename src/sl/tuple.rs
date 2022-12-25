@@ -4,7 +4,7 @@ use crate::dag::{BaseType, Expr, StructType, Type};
 
 use super::{
     primitives::{field, simplify_struct_literal},
-    Object, Value,
+    Object, ToValue, Value,
 };
 
 macro_rules! impl_value {
@@ -13,13 +13,15 @@ macro_rules! impl_value {
             const TYPE: Type = Type::Base(BaseType::Struct(&StructType {
                 name: "tuple",
                 fields: &[
-                    $((stringify!($name), $name::TYPE)),*
+                    $(
+                        (stringify!($name), $name::TYPE)
+                    ),*
                 ],
                 is_built_in: false,
             }));
 
-            #[allow(non_snake_case)]
             fn expr(&self) -> Rc<Expr> {
+                #[allow(non_snake_case)]
                 let ($($name),*) = self;
 
                 let struct_type = match &Self::TYPE {
@@ -27,7 +29,13 @@ macro_rules! impl_value {
                     _ => unreachable!(),
                 };
 
-                simplify_struct_literal(struct_type, &[$($name.expr()),*])
+                simplify_struct_literal(
+                    struct_type,
+                    &[
+                        $(
+                            $name.expr()
+                        ),*
+                    ])
             }
         }
 
@@ -39,6 +47,25 @@ macro_rules! impl_value {
                 (
                     $(
                         field(base.clone(), stringify!($name))
+                    ),*
+                )
+            }
+        }
+
+        impl<$($name: ToValue),*> ToValue for ($($name),*) {
+            type Output = (
+                $(
+                    <$name as ToValue>::Output
+                ),*
+            );
+
+            fn to_value(self) -> Self::Output {
+                #[allow(non_snake_case)]
+                let ($($name),*) = self;
+
+                (
+                    $(
+                        $name.to_value()
                     ),*
                 )
             }
