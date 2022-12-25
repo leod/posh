@@ -1,8 +1,8 @@
 use std::rc::Rc;
 
 use super::{
-    ty::{PrimitiveTy, StructTy},
-    BaseTy, Ty,
+    ty::{PrimitiveType, StructType},
+    BaseType, Type,
 };
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -19,26 +19,26 @@ pub enum BinaryOp {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct FuncDef {
     pub name: &'static str,
-    pub params: Vec<(&'static str, Ty)>,
+    pub params: Vec<(&'static str, Type)>,
     pub result: Rc<Expr>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Expr {
     Arg {
-        ty: Ty,
+        ty: Type,
         name: String,
     },
     ScalarLiteral {
-        ty: PrimitiveTy,
+        ty: PrimitiveType,
         value: String,
     },
     StructLiteral {
-        ty: &'static StructTy,
+        ty: &'static StructType,
         args: Vec<Rc<Expr>>,
     },
     Binary {
-        ty: Ty,
+        ty: Type,
         left: Rc<Expr>,
         op: BinaryOp,
         right: Rc<Expr>,
@@ -48,17 +48,17 @@ pub enum Expr {
         args: Vec<Rc<Expr>>,
     },
     CallBuiltIn {
-        ty: Ty,
+        ty: Type,
         name: &'static str,
         args: Vec<Rc<Expr>>,
     },
     Field {
-        ty: Ty,
+        ty: Type,
         base: Rc<Expr>,
         name: &'static str,
     },
     Branch {
-        ty: Ty,
+        ty: Type,
         cond: Rc<Expr>,
         yes: Rc<Expr>,
         no: Rc<Expr>,
@@ -66,11 +66,11 @@ pub enum Expr {
 }
 
 impl Expr {
-    pub fn ty(&self) -> Ty {
+    pub fn ty(&self) -> Type {
         match self {
             Expr::Arg { ty, .. } => ty.clone(),
-            Expr::ScalarLiteral { ty, .. } => Ty::Base(BaseTy::Scalar(*ty)),
-            Expr::StructLiteral { ty, .. } => Ty::Base(BaseTy::Struct(ty)),
+            Expr::ScalarLiteral { ty, .. } => Type::Base(BaseType::Scalar(*ty)),
+            Expr::StructLiteral { ty, .. } => Type::Base(BaseType::Struct(ty)),
             Expr::Binary { ty, .. } => ty.clone(),
             Expr::CallFuncDef { def, .. } => def.result.ty(),
             Expr::CallBuiltIn { ty, .. } => ty.clone(),

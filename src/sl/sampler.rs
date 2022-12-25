@@ -1,7 +1,7 @@
 use std::{marker::PhantomData, rc::Rc};
 
 use crate::{
-    dag::{BaseTy, Expr, Trace, Ty},
+    dag::{BaseType, Expr, Trace, Type},
     Numeric,
 };
 
@@ -14,7 +14,7 @@ pub struct Sampler2d<T: Numeric> {
 }
 
 impl<T: Numeric> Object for Sampler2d<T> {
-    const TY: Ty = Ty::Base(BaseTy::Sampler2d(T::NUMERIC_TY));
+    const TYPE: Type = Type::Base(BaseType::Sampler2d(T::NUMERIC_TYPE));
 
     fn expr(&self) -> Rc<Expr> {
         self.trace.expr()

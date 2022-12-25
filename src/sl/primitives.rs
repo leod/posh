@@ -1,6 +1,6 @@
 use std::{collections::BTreeSet, rc::Rc};
 
-use crate::dag::{BaseTy, BinaryOp, Expr, FuncDef, StructTy, Ty};
+use crate::dag::{BaseType, BinaryOp, Expr, FuncDef, StructType, Type};
 
 use super::{Object, ToValue, Value};
 
@@ -14,7 +14,7 @@ where
     V: Value,
     R: Value,
 {
-    let ty = R::TY;
+    let ty = R::TYPE;
     let left = left.to_value().expr();
     let right = right.to_value().expr();
 
@@ -33,7 +33,7 @@ where
     U: Object,
     R: Value,
 {
-    let ty = R::TY;
+    let ty = R::TYPE;
     let args = vec![u.to_value().expr()];
 
     let expr = Expr::CallBuiltIn { ty, name, args };
@@ -51,7 +51,7 @@ where
     V: Object,
     R: Value,
 {
-    let ty = R::TY;
+    let ty = R::TYPE;
     let args = vec![u.to_value().expr(), v.to_value().expr()];
 
     let expr = Expr::CallBuiltIn { ty, name, args };
@@ -71,7 +71,7 @@ where
     W: Object,
     R: Value,
 {
-    let ty = R::TY;
+    let ty = R::TYPE;
     let args = vec![
         u.to_value().expr(),
         v.to_value().expr(),
@@ -97,7 +97,7 @@ where
     X: Object,
     R: Value,
 {
-    let ty = R::TY;
+    let ty = R::TYPE;
     let args = vec![
         u.to_value().expr(),
         v.to_value().expr(),
@@ -112,7 +112,7 @@ where
 
 #[doc(hidden)]
 pub fn field<R: Value>(base: Rc<Expr>, name: &'static str) -> R {
-    let ty = R::TY;
+    let ty = R::TYPE;
 
     let expr = Expr::Field { ty, base, name };
 
@@ -129,7 +129,7 @@ pub fn call_func_def<R: Value>(def: FuncDef, args: Vec<Rc<Expr>>) -> R {
 }
 
 #[doc(hidden)]
-pub fn simplify_struct_literal(ty: &'static StructTy, args: &[Rc<Expr>]) -> Rc<Expr> {
+pub fn simplify_struct_literal(ty: &'static StructType, args: &[Rc<Expr>]) -> Rc<Expr> {
     assert!(ty.fields.len() == args.len());
 
     let common_base = common_field_base(ty, args);
@@ -146,8 +146,8 @@ pub fn simplify_struct_literal(ty: &'static StructTy, args: &[Rc<Expr>]) -> Rc<E
     }
 }
 
-fn common_field_base(struct_ty: &'static StructTy, args: &[Rc<Expr>]) -> Option<Rc<Expr>> {
-    let ty = Ty::Base(BaseTy::Struct(struct_ty));
+fn common_field_base(struct_ty: &'static StructType, args: &[Rc<Expr>]) -> Option<Rc<Expr>> {
+    let ty = Type::Base(BaseType::Struct(struct_ty));
 
     let first_expr = args.first()?;
     let first_base = if let Expr::Field { base, .. } = &**first_expr {
