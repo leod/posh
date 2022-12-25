@@ -10,8 +10,23 @@ use super::{Attachment, Attributes, FragmentDomain, Primitive, Resource, Resourc
 
 // Uniform interface
 
-impl<T: Primitive> Uniform<Gl> for T {
-    type InGl = Self::InGl;
+impl Uniform<Gl> for bool {
+    type InGl = Self;
+    type InSl = Scalar<Self>;
+}
+
+impl Uniform<Gl> for f32 {
+    type InGl = Self;
+    type InSl = Scalar<Self>;
+}
+
+impl Uniform<Gl> for i32 {
+    type InGl = Self;
+    type InSl = Scalar<Self>;
+}
+
+impl Uniform<Gl> for u32 {
+    type InGl = Self;
     type InSl = Scalar<Self>;
 }
 
