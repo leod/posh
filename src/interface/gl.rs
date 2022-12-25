@@ -1,3 +1,4 @@
+use bytemuck::{Pod, Zeroable};
 use sealed::sealed;
 
 use crate::{
@@ -38,7 +39,7 @@ impl<T: Primitive> Uniform<Gl> for mint::Vector2<T> {
 }
 
 #[sealed]
-impl super::UniformDomain for Gl {
+impl super::FieldDomain for Gl {
     type Scalar<T: Primitive> = T;
     type Vec2<T: Primitive> = mint::Vector2<T>;
 
@@ -49,6 +50,18 @@ impl super::UniformDomain for Gl {
 }
 
 // Vertex interface
+
+#[derive(Clone, Copy, Eq, PartialEq, Pod, Zeroable)]
+#[repr(transparent)]
+pub struct BoolField(u32);
+
+impl ToPod for bool {
+    type Output = BoolField;
+
+    fn to_pod(self) -> Self::Output {
+        BoolField(self as u32)
+    }
+}
 
 impl ToPod for f32 {
     type Output = Self;
@@ -74,12 +87,17 @@ impl ToPod for u32 {
     }
 }
 
-impl<T: Numeric> ToPod for mint::Vector2<T> {
-    type Output = [T; 2];
+impl<T: Primitive> ToPod for mint::Vector2<T> {
+    type Output = [<T as ToPod>::Output; 2];
 
     fn to_pod(self) -> Self::Output {
-        self.into()
+        [self.x.to_pod(), self.y.to_pod()]
     }
+}
+
+impl Vertex<Gl> for bool {
+    type InGl = Self;
+    type InSl = Scalar<Self>;
 }
 
 impl Vertex<Gl> for f32 {
@@ -97,19 +115,9 @@ impl Vertex<Gl> for u32 {
     type InSl = Scalar<Self>;
 }
 
-impl<T: Numeric> Vertex<Gl> for mint::Vector2<T> {
-    type InGl = <T as Numeric>::Vec2;
+impl<T: Primitive> Vertex<Gl> for mint::Vector2<T> {
+    type InGl = T::Vec2;
     type InSl = Vec2<T>;
-}
-
-#[sealed]
-impl super::VertexDomain for Gl {
-    type Scalar<T: Numeric> = T;
-    type Vec2<T: Numeric> = mint::Vector2<T>;
-
-    type F32 = f32;
-    type I32 = i32;
-    type U32 = u32;
 }
 
 // Attributes interface

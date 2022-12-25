@@ -21,7 +21,7 @@ impl<T: Primitive> Uniform<Sl> for Vec2<T> {
 }
 
 #[sealed]
-impl super::UniformDomain for Sl {
+impl super::FieldDomain for Sl {
     type Scalar<T: Primitive> = Scalar<T>;
     type Vec2<T: Primitive> = Vec2<T>;
 
@@ -33,24 +33,14 @@ impl super::UniformDomain for Sl {
 
 // Vertex interface
 
-impl<T: Numeric> Vertex<Sl> for Scalar<T> {
+impl<T: Primitive> Vertex<Sl> for Scalar<T> {
     type InGl = T;
     type InSl = Self;
 }
 
-impl<T: Numeric> Vertex<Sl> for Vec2<T> {
-    type InGl = <T as Numeric>::Vec2;
+impl<T: Primitive> Vertex<Sl> for Vec2<T> {
+    type InGl = T::Vec2;
     type InSl = Self;
-}
-
-#[sealed]
-impl super::VertexDomain for Sl {
-    type Scalar<T: Numeric> = Scalar<T>;
-    type Vec2<T: Numeric> = Vec2<T>;
-
-    type F32 = Scalar<f32>;
-    type I32 = Scalar<i32>;
-    type U32 = Scalar<u32>;
 }
 
 // Attributes interface

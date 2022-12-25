@@ -8,8 +8,8 @@ pub mod gl;
 pub mod sl;
 
 pub use interface::{
-    Attachment, Attributes, AttributesDomain, Fragment, FragmentDomain, Resource, ResourceDomain,
-    ToPod, Uniform, UniformDomain, Vertex, VertexDomain,
+    Attachment, Attributes, AttributesDomain, FieldDomain, Fragment, FragmentDomain, Resource,
+    ResourceDomain, ToPod, Uniform, Vertex,
 };
 pub use numeric::{Numeric, Primitive};
 

@@ -10,11 +10,11 @@ use crate::{
 
 /// A primitive type: one of `bool`, `f32`, `i32`, `u32`.
 #[sealed]
-pub trait Primitive: Copy + ToString + Uniform<Gl> {
+pub trait Primitive: ToPod + ToString + Uniform<Gl> + Vertex<Gl> {
     const PRIMITIVE_TY: PrimitiveTy;
 
     #[doc(hidden)]
-    type Vec2: Uniform<Gl> + AsStd140;
+    type Vec2: Uniform<Gl> + Vertex<Gl> + AsStd140 + ToPod;
 }
 
 #[sealed]

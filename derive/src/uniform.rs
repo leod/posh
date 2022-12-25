@@ -145,7 +145,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
         // Check that all field types implement `Uniform<D>`.
         const _: fn() = || {
-            fn check_field<D: ::posh::UniformDomain, T: ::posh::Uniform<D>>() {}
+            fn check_field<D: ::posh::FieldDomain, T: ::posh::Uniform<D>>() {}
 
             fn check_struct #impl_generics(value: &#ident #ty_generics) #where_clause {
                 #(
