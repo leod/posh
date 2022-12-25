@@ -10,7 +10,7 @@ use crate::{
     Gl, Numeric, Primitive, Sl,
 };
 
-/// A domain in which [`Uniform`] or [`Vertex`] fields can be defined.
+/// A domain in which [`Uniform`] or [`Vertex`] fields can be specified.
 #[sealed]
 pub trait FieldDomain: Copy {
     /// A scalar value.
@@ -44,12 +44,13 @@ pub trait FieldDomain: Copy {
 
 /// A type that can be used as uniform input for shaders.
 pub trait Uniform<D: FieldDomain>: ToValue {
-    type InGl: Uniform<Gl> + AsStd140 + ToValue;
-    type InSl: Uniform<Sl> + Value;
+    type InGl: Uniform<Gl> + AsStd140 + ToValue<Output = Self::InSl>;
+    type InSl: Uniform<Sl> + Value + ToValue<Output = Self::InSl>;
 }
 
 // Vertex interface
 
+/// A conversion to a type that implements [`Pod`].
 pub trait ToPod: Copy {
     type Output: Pod;
 
@@ -58,8 +59,8 @@ pub trait ToPod: Copy {
 
 /// A type that can be used as vertex input for shaders.
 pub trait Vertex<D: FieldDomain>: ToValue {
-    type InGl: Vertex<Gl> + ToPod + ToValue;
-    type InSl: Vertex<Sl> + Value;
+    type InGl: Vertex<Gl> + ToPod + ToValue<Output = Self::InSl>;
+    type InSl: Vertex<Sl> + Value + ToValue<Output = Self::InSl>;
 }
 
 // Attributes interface
@@ -70,6 +71,7 @@ pub trait Attributes<D: AttributesDomain> {
     type InSl: Attributes<Sl>;
 }
 
+/// A domain in which [`Attributes`] fields can be specified.
 #[sealed]
 pub trait AttributesDomain: FieldDomain {
     type Vertex<V: Vertex<Self>>: Attributes<Self>;
@@ -93,6 +95,7 @@ pub trait Resource<D: ResourceDomain> {
     type InSl: Resource<Sl>;
 }
 
+/// A domain in which [`Resource`] fields can be specified.
 pub trait ResourceDomain: FieldDomain {
     type Sampler2d<T: Numeric>: Resource<Self>;
 
@@ -111,10 +114,9 @@ where
 
 // Fragment interface
 
-pub trait Attachment<D: FragmentDomain> {}
-
+/// A domain in which [`Fragment`] fields can be specified.
 pub trait FragmentDomain: Sized {
-    type Attachment2d: Attachment<Self>;
+    type Attachment2d: Fragment<Self>;
 }
 
 /// A type that can be used as fragment output for shaders.

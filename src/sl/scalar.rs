@@ -10,16 +10,23 @@ use crate::{
     Numeric, Primitive,
 };
 
-/// A scalar value in [`Posh`](crate::Posh).
+/// A scalar value in the shading language domain [`Sl`](crate::Sl).
 #[derive(Debug, Copy, Clone)]
 pub struct Scalar<T> {
     trace: Trace,
     _phantom: PhantomData<T>,
 }
 
+/// A boolean value in the shading language domain [`Sl`](crate::Sl).
 pub type Bool = Scalar<bool>;
+
+/// A floating-point value in the shading language domain [`Sl`](crate::Sl).
 pub type F32 = Scalar<f32>;
+
+/// A signed integer value in the shading language domain [`Sl`](crate::Sl).
 pub type I32 = Scalar<i32>;
+
+/// An unsigned integer value in the shading language domain [`Sl`](crate::Sl).
 pub type U32 = Scalar<u32>;
 
 impl<T: Primitive> Object for Scalar<T> {

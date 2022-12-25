@@ -7,6 +7,7 @@ mod vertex;
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput};
 
+/// Derives `Value` for a struct.
 #[proc_macro_derive(Value)]
 pub fn derive_value(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -17,6 +18,7 @@ pub fn derive_value(input: TokenStream) -> TokenStream {
     .into()
 }
 
+/// Derives `ToValue` for a struct that is generic in `FieldDomain`.
 #[proc_macro_derive(ToValue)]
 pub fn derive_to_value(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -27,6 +29,7 @@ pub fn derive_to_value(input: TokenStream) -> TokenStream {
     .into()
 }
 
+/// Derives `Uniform` for a struct that is generic in `FieldDomain`.
 #[proc_macro_derive(Uniform)]
 pub fn derive_uniform(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -37,6 +40,7 @@ pub fn derive_uniform(input: TokenStream) -> TokenStream {
     .into()
 }
 
+/// Derives `Vertex` for a struct that is generic in `FieldDomain`.
 #[proc_macro_derive(Vertex)]
 pub fn derive_vertex(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);

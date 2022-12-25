@@ -3,39 +3,36 @@ use sealed::sealed;
 
 use crate::{
     gl::{Sampler2dBinding, Texture2dBinding, UniformBufferBinding, VertexBufferBinding},
-    sl::{self, Scalar, Vec2},
-    Gl, Numeric, Sl, Uniform,
+    sl, Fragment, Gl, Numeric, Sl, Uniform,
 };
 
-use super::{
-    Attachment, Attributes, FragmentDomain, Primitive, Resource, ResourceDomain, ToPod, Vertex,
-};
+use super::{Attributes, FragmentDomain, Primitive, Resource, ResourceDomain, ToPod, Vertex};
 
 // Uniform interface
 
 impl Uniform<Gl> for bool {
     type InGl = Self;
-    type InSl = Scalar<Self>;
+    type InSl = sl::Scalar<Self>;
 }
 
 impl Uniform<Gl> for f32 {
     type InGl = Self;
-    type InSl = Scalar<Self>;
+    type InSl = sl::Scalar<Self>;
 }
 
 impl Uniform<Gl> for i32 {
     type InGl = Self;
-    type InSl = Scalar<Self>;
+    type InSl = sl::Scalar<Self>;
 }
 
 impl Uniform<Gl> for u32 {
     type InGl = Self;
-    type InSl = Scalar<Self>;
+    type InSl = sl::Scalar<Self>;
 }
 
 impl<T: Primitive> Uniform<Gl> for mint::Vector2<T> {
     type InGl = T::Vec2;
-    type InSl = Vec2<T>;
+    type InSl = sl::Vec2<T>;
 }
 
 #[sealed]
@@ -97,27 +94,27 @@ impl<T: Primitive> ToPod for mint::Vector2<T> {
 
 impl Vertex<Gl> for bool {
     type InGl = Self;
-    type InSl = Scalar<Self>;
+    type InSl = sl::Scalar<Self>;
 }
 
 impl Vertex<Gl> for f32 {
     type InGl = Self;
-    type InSl = Scalar<Self>;
+    type InSl = sl::Scalar<Self>;
 }
 
 impl Vertex<Gl> for i32 {
     type InGl = Self;
-    type InSl = Scalar<Self>;
+    type InSl = sl::Scalar<Self>;
 }
 
 impl Vertex<Gl> for u32 {
     type InGl = Self;
-    type InSl = Scalar<Self>;
+    type InSl = sl::Scalar<Self>;
 }
 
 impl<T: Primitive> Vertex<Gl> for mint::Vector2<T> {
     type InGl = T::Vec2;
-    type InSl = Vec2<T>;
+    type InSl = sl::Vec2<T>;
 }
 
 // Attributes interface
@@ -151,7 +148,10 @@ impl ResourceDomain for Gl {
 
 // Fragment interface
 
-impl Attachment<Gl> for Texture2dBinding {}
+impl Fragment<Gl> for Texture2dBinding {
+    type InGl = Self;
+    type InSl = sl::Vec4<f32>;
+}
 
 impl FragmentDomain for Gl {
     type Attachment2d = Texture2dBinding;
