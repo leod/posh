@@ -1,6 +1,6 @@
 use posh::{
     sl::{self, Value},
-    Numeric, Sl, Uniform, UniformDomain, VertexDomain,
+    Numeric, Sl, Uniform, UniformDomain, Vertex, VertexDomain,
 };
 
 #[derive(Value)]
@@ -19,8 +19,15 @@ struct MyUniform<D: UniformDomain = Sl> {
     y: MyUniform2<D>,
 }
 
+#[derive(Clone, Copy, Vertex)]
 struct MyVertex<D: VertexDomain = Sl> {
     x: D::F32,
+    y: D::Vec2<f32>,
+}
+
+#[derive(Clone, Copy, Vertex)]
+struct MyGenericVertex<D: VertexDomain = Sl> {
+    x: D::Scalar<f32>,
     y: D::Vec2<f32>,
 }
 
