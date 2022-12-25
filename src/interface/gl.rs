@@ -36,7 +36,7 @@ impl<T: Primitive> Uniform<Gl> for mint::Vector2<T> {
 }
 
 #[sealed]
-impl super::FieldDomain for Gl {
+impl super::Domain for Gl {
     type Scalar<T: Primitive> = T;
     type Vec2<T: Primitive> = mint::Vector2<T>;
 

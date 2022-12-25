@@ -11,7 +11,7 @@ pub mod gl;
 pub mod sl;
 
 pub use interface::{
-    Attributes, AttributesDomain, FieldDomain, Fragment, FragmentDomain, Resource, ResourceDomain,
+    Attributes, AttributesDomain, Domain, Fragment, FragmentDomain, Resource, ResourceDomain,
     ToPod, Uniform, Vertex,
 };
 pub use numeric::{Numeric, Primitive};

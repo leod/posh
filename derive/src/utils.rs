@@ -109,7 +109,7 @@ pub fn remove_domain_param(ident: &Ident, generics: &Generics) -> Result<Generic
     if generics.params.is_empty() {
         return Err(Error::new_spanned(
             ident,
-            "posh expects type to be generic in domain",
+            "posh derive macro expects type to be generic in `Domain`",
         ));
     }
 
@@ -124,14 +124,17 @@ pub fn remove_domain_param(ident: &Ident, generics: &Generics) -> Result<Generic
 
 pub fn get_domain_param(ident: &Ident, generics: &Generics) -> Result<Ident> {
     let last_param = generics.params.last().ok_or_else(|| {
-        Error::new_spanned(ident, "posh expects type to be generic in the domain type")
+        Error::new_spanned(
+            ident,
+            "posh derive macro expects type to be generic in `Domain`",
+        )
     })?;
 
     match last_param {
         GenericParam::Type(type_param) => Ok(type_param.ident.clone()),
         _ => Err(Error::new_spanned(
             last_param,
-            "posh expects the last generic parameter to be the domain type",
+            "posh derive macro expects the last generic parameter to be generic in `Domain`",
         )),
     }
 }

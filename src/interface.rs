@@ -10,9 +10,9 @@ use crate::{
     Gl, Numeric, Primitive, Sl,
 };
 
-/// A domain in which [`Uniform`] or [`Vertex`] fields can be specified.
+/// A domain in which fields of a [`Uniform`] or a [`Vertex`] can be specified.
 #[sealed]
-pub trait FieldDomain: Copy {
+pub trait Domain: Copy {
     /// A scalar value.
     type Scalar<T: Primitive>: Uniform<Self> + Vertex<Self> + ToValue<Output = Scalar<T>>;
 
@@ -43,7 +43,7 @@ pub trait FieldDomain: Copy {
 // Uniform interface
 
 /// A type that can be used as uniform input for shaders.
-pub trait Uniform<D: FieldDomain>: ToValue {
+pub trait Uniform<D: Domain>: ToValue {
     type InGl: Uniform<Gl> + AsStd140 + ToValue<Output = Self::InSl>;
     type InSl: Uniform<Sl> + Value + ToValue<Output = Self::InSl>;
 }
@@ -58,7 +58,7 @@ pub trait ToPod: Copy {
 }
 
 /// A type that can be used as vertex input for shaders.
-pub trait Vertex<D: FieldDomain>: ToValue {
+pub trait Vertex<D: Domain>: ToValue {
     type InGl: Vertex<Gl> + ToPod + ToValue<Output = Self::InSl>;
     type InSl: Vertex<Sl> + Value + ToValue<Output = Self::InSl>;
 }
@@ -73,7 +73,7 @@ pub trait Attributes<D: AttributesDomain> {
 
 /// A domain in which [`Attributes`] fields can be specified.
 #[sealed]
-pub trait AttributesDomain: FieldDomain {
+pub trait AttributesDomain: Domain {
     type Vertex<V: Vertex<Self>>: Attributes<Self>;
 }
 
@@ -96,7 +96,7 @@ pub trait Resource<D: ResourceDomain> {
 }
 
 /// A domain in which [`Resource`] fields can be specified.
-pub trait ResourceDomain: FieldDomain {
+pub trait ResourceDomain: Domain {
     type Sampler2d<T: Numeric>: Resource<Self>;
 
     type Uniform<U: Uniform<Self>>: Resource<Self>;
