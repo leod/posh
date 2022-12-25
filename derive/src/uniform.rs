@@ -42,7 +42,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         trait #helper_trait_ident {
             #(
                 #[allow(non_camel_case_types)]
-                type #field_idents;
+                type #field_idents: ::posh::crevice::std140::AsStd140;
             )*
         }
 
@@ -50,7 +50,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         #where_clause
         {
             #(
-                type #field_idents = #field_types;
+                type #field_idents = <#field_types as ::posh::Uniform<#generics_d_type>>::InGl;
             )*
         }
 
@@ -58,10 +58,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         #[derive(::posh::crevice::std140::AsStd140)]
         #visibility struct #as_std140_ident #impl_generics_no_d {
             #(
-                #field_idents: <
-                    <#ident #ty_generics_gl as #helper_trait_ident>::#field_idents
-                    as ::posh::crevice::std140::AsStd140
-                >::Output
+                #field_idents: <#ident #ty_generics_gl as #helper_trait_ident>::#field_idents
             ),*
         }
 
@@ -73,11 +70,22 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             >::Output;
 
             fn as_std140(&self) -> Self::Output {
-                todo!()
+                #as_std140_ident {
+                    #(
+                        #field_idents: self.#field_idents.clone()
+                    ),*
+                }
+                .as_std140()
             }
 
             fn from_std140(val: Self::Output) -> Self {
-                todo!()
+                Self {
+                    #(
+                        #field_idents: ::posh::crevice::std140::AsStd140::from_std140(
+                            val.#field_idents,
+                        )
+                    ),*
+                }
             }
         }
 
