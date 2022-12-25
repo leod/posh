@@ -2,21 +2,13 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{parse_quote, DeriveInput, Ident, Result};
 
-use crate::{
-    utils::{get_domain_param, remove_domain_param, SpecializeDomain, StructFields},
-    value_sl,
-};
+use crate::utils::{get_domain_param, remove_domain_param, SpecializeDomain, StructFields};
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let ident = &input.ident;
-    let ident_str = ident.to_string();
     let as_std140_ident = Ident::new(&format!("PoshInternal{ident}UniformAsStd140"), ident.span());
     let gl_field_types_trait = Ident::new(
         &format!("PoshInternal{ident}UniformGlFieldTypes"),
-        ident.span(),
-    );
-    let sl_field_types_trait = Ident::new(
-        &format!("PoshInternal{ident}UniformSlFieldTypes"),
         ident.span(),
     );
 
@@ -34,9 +26,6 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let fields = StructFields::new(&input.ident, &input.data)?;
     let field_idents = fields.idents();
     let field_types = fields.types();
-    let field_strings = fields.strings();
-
-    let impl_value_sl = value_sl::derive(&input)?;
 
     Ok(quote! {
         // Helper trait for mapping struct field types to `Gl`.
@@ -45,14 +34,6 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             #(
                 #[allow(non_camel_case_types)]
                 type #field_idents: ::posh::crevice::std140::AsStd140;
-            )*
-        }
-
-        // Helper trait for mapping struct field types to `Sl`.
-        trait #sl_field_types_trait {
-            #(
-                #[allow(non_camel_case_types)]
-                type #field_idents: ::posh::sl::Value;
             )*
         }
 
@@ -65,41 +46,9 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             )*
         }
 
-        // Implement the helper trait for mapping struct field types to `Sl`.
-        impl #impl_generics #sl_field_types_trait for #ident #ty_generics
-        #where_clause
-        {
-            #(
-                type #field_idents = <#field_types as ::posh::Uniform<#generics_d_type>>::InSl;
-            )*
-        }
-
-        // Implement `Struct` for the struct in `Sl`.
-        impl #impl_generics_no_d ::posh::sl::Struct for #ident #ty_generics_sl
-        #where_clause
-        {
-            const STRUCT_TY: ::posh::dag::StructTy = ::posh::dag::StructTy {
-                name: #ident_str,
-                fields: &[
-                    #(
-                        (
-                            #field_strings,
-                            <
-                                <#ident #ty_generics_sl as #sl_field_types_trait>::#field_idents
-                                as ::posh::sl::Object
-                            >::TY,
-                        )
-                    ),*
-                ],
-                is_built_in: false,
-            };
-        }
-
-        // Implement `Object` and `Value` for the struct in `Sl`.
-        #impl_value_sl
-
         // Helper type for which we can derive `AsStd140`.
         // FIXME: AFAIK, crevice does not support generic types yet.
+        #[doc(hidden)]
         #[derive(::posh::crevice::std140::AsStd140)]
         #visibility struct #as_std140_ident #impl_generics_no_d {
             #(

@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::dag::{BaseTy, Expr, StructTy, Ty};
+use crate::dag::{BaseType, Expr, StructType, Type};
 
 use super::{
     primitives::{field, simplify_struct_literal},
@@ -10,10 +10,10 @@ use super::{
 macro_rules! impl_value {
     ($($name: ident),*) => {
         impl<$($name: Value),*> Object for ($($name),*) {
-            const TY: Ty = Ty::Base(BaseTy::Struct(&StructTy {
+            const TYPE: Type = Type::Base(BaseType::Struct(&StructType {
                 name: "tuple",
                 fields: &[
-                    $((stringify!($name), $name::TY)),*
+                    $((stringify!($name), $name::TYPE)),*
                 ],
                 is_built_in: false,
             }));
@@ -22,12 +22,12 @@ macro_rules! impl_value {
             fn expr(&self) -> Rc<Expr> {
                 let ($($name),*) = self;
 
-                let struct_ty = match &Self::TY {
-                    Ty::Base(BaseTy::Struct(ref struct_ty)) => struct_ty,
+                let struct_type = match &Self::TYPE {
+                    Type::Base(BaseType::Struct(ref struct_type)) => struct_type,
                     _ => unreachable!(),
                 };
 
-                simplify_struct_literal(struct_ty, &[$($name.expr()),*])
+                simplify_struct_literal(struct_type, &[$($name.expr()),*])
             }
         }
 

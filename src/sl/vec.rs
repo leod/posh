@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use crate::{
-    dag::{BaseTy, Expr, StructTy, Ty},
+    dag::{BaseType, Expr, StructType, Type},
     Primitive,
 };
 
@@ -38,22 +38,22 @@ pub struct Vec4<T> {
 macro_rules! impl_value {
     ($ty:ident, $mint_ty: ident, $name:literal, $($member:ident),+) => {
         impl<T: Primitive> Struct for $ty<T> {
-            const STRUCT_TY: StructTy = StructTy {
+            const STRUCT_TYPE: StructType = StructType {
                 // FIXME: Vec*<T> struct name.
                 name: $name,
                 fields: &[
-                    $((stringify!($member), Ty::Base(BaseTy::Scalar(T::PRIMITIVE_TY)))),+
+                    $((stringify!($member), Type::Base(BaseType::Scalar(T::PRIMITIVE_TYPE)))),+
                 ],
                 is_built_in: true,
             };
         }
 
         impl<T: Primitive> Object for $ty<T> {
-            const TY: Ty = Ty::Base(BaseTy::Struct(&Self::STRUCT_TY));
+            const TYPE: Type = Type::Base(BaseType::Struct(&Self::STRUCT_TYPE));
 
             fn expr(&self) -> Rc<Expr> {
                 simplify_struct_literal(
-                    &Self::STRUCT_TY,
+                    &Self::STRUCT_TYPE,
                     &[$(self.$member.expr()),+],
                 )
             }
@@ -80,6 +80,14 @@ macro_rules! impl_value {
                         $member: self.$member.to_value()
                     ),+
                 }
+            }
+        }
+
+        impl<T: Primitive> ToValue for $ty<T> {
+            type Output = Self;
+
+            fn to_value(self) -> Self::Output {
+                self
             }
         }
     };

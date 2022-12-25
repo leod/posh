@@ -20,11 +20,11 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     Ok(quote! {
         // Implement `Struct` for the struct.
         impl #impl_generics ::posh::sl::Struct for #ident #ty_generics #where_clause {
-            const STRUCT_TY: ::posh::dag::StructTy = ::posh::dag::StructTy {
+            const STRUCT_TYPE: ::posh::dag::StructType = ::posh::dag::StructType {
                 name: #ident_str,
                 fields: &[
                     #(
-                        (#field_strings, <#field_types as ::posh::sl::Object>::TY)
+                        (#field_strings, <#field_types as ::posh::sl::Object>::TYPE)
                     ),*
                 ],
                 is_built_in: false,
@@ -33,13 +33,13 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
         // Implement `Object` for the struct.
         impl #impl_generics ::posh::sl::Object for #ident #ty_generics #where_clause {
-            const TY: ::posh::dag::Ty = ::posh::dag::Ty::Base(::posh::dag::BaseTy::Struct(
-                &<Self as ::posh::sl::Struct>::STRUCT_TY,
+            const TYPE: ::posh::dag::Type = ::posh::dag::Type::Base(::posh::dag::BaseType::Struct(
+                &<Self as ::posh::sl::Struct>::STRUCT_TYPE,
             ));
 
             fn expr(&self) -> ::std::rc::Rc<::posh::dag::Expr> {
                 ::posh::sl::primitives::simplify_struct_literal(
-                    &<Self as ::posh::sl::Struct>::STRUCT_TY,
+                    &<Self as ::posh::sl::Struct>::STRUCT_TYPE,
                     &[
                         #(
                             self.#field_idents.expr()

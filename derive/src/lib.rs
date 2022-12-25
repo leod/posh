@@ -1,7 +1,7 @@
+mod to_value;
 mod uniform;
 mod utils;
 mod value;
-mod value_sl;
 mod vertex;
 
 use proc_macro::TokenStream;
@@ -11,6 +11,16 @@ use syn::{parse_macro_input, DeriveInput};
 pub fn derive_value(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match value::derive(input) {
+        Ok(ts) => ts,
+        Err(e) => e.to_compile_error(),
+    }
+    .into()
+}
+
+#[proc_macro_derive(ToValue)]
+pub fn derive_to_value(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    match to_value::derive(input) {
         Ok(ts) => ts,
         Err(e) => e.to_compile_error(),
     }

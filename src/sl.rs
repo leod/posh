@@ -9,16 +9,16 @@ pub mod primitives;
 
 use std::rc::Rc;
 
-use crate::dag::StructTy;
+use crate::dag::StructType;
 
-use super::dag::{Expr, Ty};
+use super::dag::{Expr, Type};
 
-pub use posh_derive::Value;
+pub use posh_derive::{ToValue, Value};
 
 pub use {
     program_def::ProgramDef,
     sampler::Sampler2d,
-    scalar::{Scalar, F32, I32, U32},
+    scalar::{Bool, Scalar, F32, I32, U32},
     vec::{Vec2, Vec4},
 };
 
@@ -27,7 +27,7 @@ pub use {
 /// The interface of this trait is a private implementation detail.
 pub trait Object {
     #[doc(hidden)]
-    const TY: Ty;
+    const TYPE: Type;
 
     #[doc(hidden)]
     fn expr(&self) -> Rc<Expr>;
@@ -42,25 +42,14 @@ pub trait Value: Object {
 }
 
 pub trait Struct: Value {
-    const STRUCT_TY: StructTy;
+    const STRUCT_TYPE: StructType;
 }
 
 /// A conversion to a [`Value`] in [`Posh`](crate::Posh).
-pub trait ToValue {
+pub trait ToValue: Copy {
     type Output: Value;
 
     fn to_value(self) -> Self::Output;
-}
-
-impl<V> ToValue for V
-where
-    V: Value,
-{
-    type Output = Self;
-
-    fn to_value(self) -> Self::Output {
-        self
-    }
 }
 
 pub trait Varying: Value {}
