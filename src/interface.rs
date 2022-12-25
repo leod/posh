@@ -46,34 +46,34 @@ pub trait Uniform<D: UniformDomain>: Copy {
 
 // Vertex interface
 
-pub trait AsPod {
-    type Pod: Pod;
+pub trait AsPod: Copy {
+    type Pod: Pod + From<Self>;
 }
 
-/// Allowed types for fields in a [`Vertex`].
+/// A domain in which vertex types can be defined.
 ///
 /// According to the specification **GLSL 3.30, 4.3.4**:
 /// > Vertex shader inputs can only be `float`, floating-point vectors,
 /// > matrices, signed and unsigned integers and integer vectors. Vertex shader
 /// > inputs can also form arrays of these types, but not structures.
 ///
-/// The interface of this trait is a private implementation detail.
-#[sealed]
-pub trait VertexField<D: VertexDomain>: Copy {}
-
+/// Note specifically that boolean values are not allowed.
 #[sealed]
 pub trait VertexDomain: Copy {
-    /// A floating-point value.
-    type F32: VertexField<Self>;
-
-    /// A signed integer value.
-    type I32: VertexField<Self>;
-
-    /// An unsigned integer value.
-    type U32: VertexField<Self>;
+    /// A scalar value.
+    type Scalar<T: Numeric>: Vertex<Self>;
 
     /// A two-dimensional vector.
-    type Vec2<T: Numeric>: VertexField<Self>;
+    type Vec2<T: Numeric>: Vertex<Self>;
+
+    /// A floating-point value.
+    type F32: Vertex<Self>;
+
+    /// A signed integer value.
+    type I32: Vertex<Self>;
+
+    /// An unsigned integer value.
+    type U32: Vertex<Self>;
 }
 
 /// A type that can be used as vertex input for shaders.

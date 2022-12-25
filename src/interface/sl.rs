@@ -3,7 +3,7 @@ use sealed::sealed;
 use crate::{
     gl::{Sampler2dBinding, UniformBufferBinding, VertexBufferBinding},
     sl::{Sampler2d, Scalar, Vec2, Vec4},
-    Numeric, Sl, Uniform,
+    Gl, Numeric, Sl, Uniform,
 };
 
 use super::{Attachment, Attributes, FragmentDomain, Primitive, Resource, ResourceDomain, Vertex};
@@ -11,7 +11,7 @@ use super::{Attachment, Attributes, FragmentDomain, Primitive, Resource, Resourc
 // Uniform interface
 
 impl<T: Primitive> Uniform<Sl> for Scalar<T> {
-    type InGl = T::InGl;
+    type InGl = <T as Uniform<Gl>>::InGl;
     type InSl = Self;
 }
 
@@ -33,18 +33,24 @@ impl super::UniformDomain for Sl {
 
 // Vertex interface
 
-#[sealed]
-impl<T: Numeric> super::VertexField<Sl> for Scalar<T> {}
+impl<T: Numeric> Vertex<Sl> for Scalar<T> {
+    type InGl = T;
+    type InSl = Self;
+}
 
-#[sealed]
-impl<T: Numeric> super::VertexField<Sl> for Vec2<T> {}
+impl<T: Numeric> Vertex<Sl> for Vec2<T> {
+    type InGl = <T as Numeric>::Vec2;
+    type InSl = Self;
+}
 
 #[sealed]
 impl super::VertexDomain for Sl {
+    type Scalar<T: Numeric> = Scalar<T>;
+    type Vec2<T: Numeric> = Vec2<T>;
+
     type F32 = Scalar<f32>;
     type I32 = Scalar<i32>;
     type U32 = Scalar<u32>;
-    type Vec2<T: Numeric> = Vec2<T>;
 }
 
 // Attributes interface
