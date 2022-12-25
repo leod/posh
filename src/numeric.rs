@@ -1,16 +1,19 @@
+use bytemuck::Pod;
 use crevice::std140::AsStd140;
 use sealed::sealed;
 
 use crate::{
     dag::{NumericTy, PrimitiveTy},
-    Gl, Uniform,
+    interface::AsPod,
+    Gl, Uniform, Vertex,
 };
 
-/// A primitive type: one of `bool`, `i32`, `u32`, or `f32`.
+/// A primitive type: one of `bool`, `f32`, `i32`, `u32`.
 #[sealed]
 pub trait Primitive: Copy + ToString + Uniform<Gl> {
     const PRIMITIVE_TY: PrimitiveTy;
 
+    #[doc(hidden)]
     type Vec2: Uniform<Gl> + AsStd140;
 }
 
@@ -42,23 +45,32 @@ impl Primitive for f32 {
     type Vec2 = mint::Vector2<f32>;
 }
 
-/// A numeric type: one of `i32`, `u32`, or `f32`.
+/// A numeric type: one of `f32`, `i32`, `u32`.
 #[sealed]
-pub trait Numeric: Primitive {
+pub trait Numeric: Pod + AsPod + Primitive + Vertex<Gl> {
     const NUMERIC_TY: NumericTy;
-}
 
-#[sealed]
-impl Numeric for i32 {
-    const NUMERIC_TY: NumericTy = NumericTy::Int;
-}
-
-#[sealed]
-impl Numeric for u32 {
-    const NUMERIC_TY: NumericTy = NumericTy::UInt;
+    #[doc(hidden)]
+    type Vec2: Vertex<Gl> + AsPod;
 }
 
 #[sealed]
 impl Numeric for f32 {
     const NUMERIC_TY: NumericTy = NumericTy::Float;
+
+    type Vec2 = mint::Vector2<f32>;
+}
+
+#[sealed]
+impl Numeric for i32 {
+    const NUMERIC_TY: NumericTy = NumericTy::Int;
+
+    type Vec2 = mint::Vector2<i32>;
+}
+
+#[sealed]
+impl Numeric for u32 {
+    const NUMERIC_TY: NumericTy = NumericTy::UInt;
+
+    type Vec2 = mint::Vector2<u32>;
 }

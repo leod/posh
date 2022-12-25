@@ -16,6 +16,7 @@ pub fn derive(input: &DeriveInput) -> Result<TokenStream> {
     let field_strings = fields.strings();
 
     Ok(quote! {
+        // Implement `Object` for the struct in `Sl`.
         impl #impl_generics_no_d ::posh::sl::Object for #ident #ty_generics_sl
         #where_clause
         {
@@ -35,6 +36,7 @@ pub fn derive(input: &DeriveInput) -> Result<TokenStream> {
             }
         }
 
+        // Implement `Value` for the struct in `Sl`.
         impl #impl_generics_no_d ::posh::sl::Value for #ident #ty_generics_sl
         #where_clause
         {
@@ -52,6 +54,7 @@ pub fn derive(input: &DeriveInput) -> Result<TokenStream> {
             }
         }
 
+        // Check that all field types implement `Value`.
         const _: fn() = || {
             fn check_field<T: ::posh::sl::Value>(_: &T) {}
 

@@ -6,7 +6,9 @@ use crate::{
     Gl, Numeric, Sl, Uniform,
 };
 
-use super::{Attachment, Attributes, FragmentDomain, Primitive, Resource, ResourceDomain, Vertex};
+use super::{
+    AsPod, Attachment, Attributes, FragmentDomain, Primitive, Resource, ResourceDomain, Vertex,
+};
 
 // Uniform interface
 
@@ -48,18 +50,50 @@ impl super::UniformDomain for Gl {
 
 // Vertex interface
 
-#[sealed]
-impl<T: Numeric> super::VertexField<Gl> for T {}
+impl AsPod for f32 {
+    type Pod = Self;
+}
 
-#[sealed]
-impl<T: Numeric> super::VertexField<Gl> for mint::Vector2<T> {}
+impl AsPod for i32 {
+    type Pod = Self;
+}
+
+impl AsPod for u32 {
+    type Pod = Self;
+}
+
+impl<T: Numeric> AsPod for mint::Vector2<T> {
+    type Pod = [T; 2];
+}
+
+impl Vertex<Gl> for f32 {
+    type InGl = Self;
+    type InSl = Scalar<Self>;
+}
+
+impl Vertex<Gl> for i32 {
+    type InGl = Self;
+    type InSl = Scalar<Self>;
+}
+
+impl Vertex<Gl> for u32 {
+    type InGl = Self;
+    type InSl = Scalar<Self>;
+}
+
+impl<T: Numeric> Vertex<Gl> for mint::Vector2<T> {
+    type InGl = <T as Numeric>::Vec2;
+    type InSl = Vec2<T>;
+}
 
 #[sealed]
 impl super::VertexDomain for Gl {
+    type Scalar<T: Numeric> = T;
+    type Vec2<T: Numeric> = mint::Vector2<T>;
+
     type F32 = f32;
     type I32 = i32;
     type U32 = u32;
-    type Vec2<T: Numeric> = T;
 }
 
 // Attributes interface
