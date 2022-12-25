@@ -9,8 +9,11 @@ use crate::{
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let ident = &input.ident;
-    let as_std140_ident = Ident::new(&format!("_Posh{ident}AsStd140"), ident.span());
-    let helper_trait_ident = Ident::new(&format!("_Posh{ident}UniformHelperTrait"), ident.span());
+    let as_std140_ident = Ident::new(&format!("PoshInternal{ident}AsStd140"), ident.span());
+    let helper_trait_ident = Ident::new(
+        &format!("PoshInternal{ident}UniformHelperTrait"),
+        ident.span(),
+    );
 
     let visibility = input.vis.clone();
 
