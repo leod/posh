@@ -4,7 +4,7 @@ use sealed::sealed;
 
 use crate::{
     dag::{NumericTy, PrimitiveTy},
-    interface::AsPod,
+    interface::ToPod,
     Gl, Uniform, Vertex,
 };
 
@@ -47,11 +47,11 @@ impl Primitive for f32 {
 
 /// A numeric type: one of `f32`, `i32`, `u32`.
 #[sealed]
-pub trait Numeric: Pod + AsPod + Primitive + Vertex<Gl> {
+pub trait Numeric: Pod + ToPod + Primitive + Vertex<Gl> {
     const NUMERIC_TY: NumericTy;
 
     #[doc(hidden)]
-    type Vec2: Vertex<Gl> + AsPod;
+    type Vec2: Vertex<Gl> + ToPod;
 }
 
 #[sealed]

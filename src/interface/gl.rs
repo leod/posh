@@ -7,7 +7,7 @@ use crate::{
 };
 
 use super::{
-    AsPod, Attachment, Attributes, FragmentDomain, Primitive, Resource, ResourceDomain, Vertex,
+    Attachment, Attributes, FragmentDomain, Primitive, Resource, ResourceDomain, ToPod, Vertex,
 };
 
 // Uniform interface
@@ -50,20 +50,36 @@ impl super::UniformDomain for Gl {
 
 // Vertex interface
 
-impl AsPod for f32 {
-    type Pod = Self;
+impl ToPod for f32 {
+    type Output = Self;
+
+    fn to_pod(self) -> Self::Output {
+        self
+    }
 }
 
-impl AsPod for i32 {
-    type Pod = Self;
+impl ToPod for i32 {
+    type Output = Self;
+
+    fn to_pod(self) -> Self::Output {
+        self
+    }
 }
 
-impl AsPod for u32 {
-    type Pod = Self;
+impl ToPod for u32 {
+    type Output = Self;
+
+    fn to_pod(self) -> Self::Output {
+        self
+    }
 }
 
-impl<T: Numeric> AsPod for mint::Vector2<T> {
-    type Pod = [T; 2];
+impl<T: Numeric> ToPod for mint::Vector2<T> {
+    type Output = [T; 2];
+
+    fn to_pod(self) -> Self::Output {
+        self.into()
+    }
 }
 
 impl Vertex<Gl> for f32 {

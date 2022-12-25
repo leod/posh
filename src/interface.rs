@@ -46,8 +46,10 @@ pub trait Uniform<D: UniformDomain>: Copy {
 
 // Vertex interface
 
-pub trait AsPod: Copy {
-    type Pod: Pod + From<Self>;
+pub trait ToPod: Copy {
+    type Output: Pod;
+
+    fn to_pod(self) -> Self::Output;
 }
 
 /// A domain in which vertex types can be defined.
@@ -78,7 +80,7 @@ pub trait VertexDomain: Copy {
 
 /// A type that can be used as vertex input for shaders.
 pub trait Vertex<D: VertexDomain>: Copy {
-    type InGl: Vertex<Gl> + AsPod;
+    type InGl: Vertex<Gl> + ToPod;
     type InSl: Vertex<Sl> + Value;
 }
 

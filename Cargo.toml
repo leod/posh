@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bytemuck = "1.12.3"
+bytemuck = { version = "1.12.3", features = ["derive"] }
 crevice = "0.12.0"
 mint = "0.5.9"
 sealed = "0.4.0"
