@@ -48,21 +48,25 @@ impl<T: Primitive> Scalar<T> {
         })
     }
 
-    pub fn eq(&self, right: impl ToValue<Value = Self>) -> Scalar<bool> {
+    pub fn eq(&self, right: impl ToValue<Output = Self>) -> Scalar<bool> {
         binary(*self, BinaryOp::Eq, right)
     }
 }
 
 impl Scalar<bool> {
-    pub fn and(self, right: impl ToValue<Value = Self>) -> Self {
+    pub fn and(self, right: impl ToValue<Output = Self>) -> Self {
         binary(self, BinaryOp::And, right)
     }
 
-    pub fn or(self, right: impl ToValue<Value = Self>) -> Self {
+    pub fn or(self, right: impl ToValue<Output = Self>) -> Self {
         binary(self, BinaryOp::And, right)
     }
 
-    pub fn branch<V: Value>(self, yes: impl ToValue<Value = V>, no: impl ToValue<Value = V>) -> V {
+    pub fn branch<V: Value>(
+        self,
+        yes: impl ToValue<Output = V>,
+        no: impl ToValue<Output = V>,
+    ) -> V {
         let ty = V::TY;
         let cond = self.expr();
         let yes = yes.to_value().expr();
@@ -81,7 +85,7 @@ macro_rules! impl_binary_op_lhs {
         impl<T, Rhs> $op<Rhs> for Scalar<T>
         where
             T: Numeric,
-            Rhs: ToValue<Value = Scalar<T>>,
+            Rhs: ToValue<Output = Scalar<T>>,
         {
             type Output = Self;
 
@@ -124,9 +128,9 @@ impl_binary_op!(div, Div);
 macro_rules! impl_conversions {
     ($ty:ty) => {
         impl ToValue for $ty {
-            type Value = Scalar<$ty>;
+            type Output = Scalar<$ty>;
 
-            fn to_value(self) -> Self::Value {
+            fn to_value(self) -> Self::Output {
                 Scalar::new(self)
             }
         }
