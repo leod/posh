@@ -5,36 +5,39 @@ use sealed::sealed;
 mod gl;
 mod sl;
 
-use crate::{sl::Value, Gl, Numeric, Primitive, Sl};
+use crate::{
+    sl::{ToValue, Value},
+    Gl, Numeric, Primitive, Sl,
+};
 
 /// A domain in which [`Uniform`] or [`Vertex`] fields can be defined.
 #[sealed]
 pub trait FieldDomain: Copy {
     /// A scalar value.
-    type Scalar<T: Primitive>: Uniform<Self> + Vertex<Self>;
+    type Scalar<T: Primitive>: Uniform<Self> + Vertex<Self> + ToValue;
 
     /// A two-dimensional vector.
-    type Vec2<T: Primitive>: Uniform<Self> + Vertex<Self>;
+    type Vec2<T: Primitive>: Uniform<Self> + Vertex<Self> + ToValue;
 
     /// A boolean value.
     ///
     /// Same as [`Self::Scalar<bool>`].
-    type Bool: Uniform<Self> + Vertex<Self>;
+    type Bool: Uniform<Self> + Vertex<Self> + ToValue;
 
     /// A floating-point value.
     ///
     /// Same as [`Self::Scalar<f32>`].
-    type F32: Uniform<Self> + Vertex<Self>;
+    type F32: Uniform<Self> + Vertex<Self> + ToValue;
 
     /// A signed integer value.
     ///
     /// Same as [`Self::Scalar<i32>`].
-    type I32: Uniform<Self> + Vertex<Self>;
+    type I32: Uniform<Self> + Vertex<Self> + ToValue;
 
     /// An unsigned integer value.
     ///
     /// Same as [`Self::Scalar<u32>`].
-    type U32: Uniform<Self> + Vertex<Self>;
+    type U32: Uniform<Self> + Vertex<Self> + ToValue;
 }
 
 // Uniform interface
