@@ -95,7 +95,6 @@ impl ToTokens for SpecializeDomain {
 
             <Token![,]>::default().to_tokens(tokens);
         }
-
         <Token![>]>::default().to_tokens(tokens);
     }
 }

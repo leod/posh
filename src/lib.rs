@@ -9,7 +9,7 @@ pub mod sl;
 
 pub use interface::{
     Attachment, Attributes, AttributesDomain, Fragment, FragmentDomain, Resource, ResourceDomain,
-    Uniform, UniformDomain, UniformField, Vertex, VertexDomain, VertexField,
+    Uniform, UniformDomain, Vertex, VertexDomain, VertexField,
 };
 pub use numeric::{Numeric, Primitive};
 

@@ -1,14 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::{Gl, Sl, Uniform};
-
-pub trait AsStd140 {
-    type AsStd140: crevice::std140::AsStd140;
-}
-
-impl<T: crevice::std140::AsStd140> AsStd140 for T {
-    type AsStd140 = T;
-}
+use crate::{Sl, Uniform};
 
 pub struct UniformBuffer<U: Uniform<Sl>> {
     _phantom: PhantomData<U>,
