@@ -21,7 +21,7 @@ impl<T: Primitive> Uniform<Sl> for Vec2<T> {
 }
 
 #[sealed]
-impl super::FieldDomain for Sl {
+impl super::Domain for Sl {
     type Scalar<T: Primitive> = Scalar<T>;
     type Vec2<T: Primitive> = Vec2<T>;
 

@@ -28,16 +28,16 @@ language domain `Sl`. In this example, the host will provide vertex data as
 `MyVertex<Sl>`.
 
 ```rust
-use posh::{Sl, Uniform, UniformDomain, Vertex, VertexDomain};
+use posh::{Domain, Sl, Uniform, Vertex, sl::ToValue};
 
-#[derive(Uniform)]
-struct Camera<D: UniformDomain = Sl> {
+#[derive(Clone, Copy, ToValue, Uniform)]
+struct Camera<D: Domain = Sl> {
    view: D::Mat4<f32>,
    projection: D::Mat4<f32>,
 }
 
-#[derive(Vertex)]
-struct MyVertex<D: VertexDomain = Sl> {
+#[derive(Clone, Copy, ToValue, Vertex)]
+struct MyVertex<D: Domain = Sl> {
    pos: D::Vec3<f32>,
    color: D::Vec3<f32>,
 }
