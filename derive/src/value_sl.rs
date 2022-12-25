@@ -1,67 +1,8 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{parse_quote, DeriveInput, Generics, Ident, Result};
+use syn::{parse_quote, DeriveInput, Result};
 
-use crate::utils::{get_domain_param, remove_domain_param, SpecializeDomain, StructFields};
-
-fn generate_struct_impl(
-    ident: &Ident,
-    generics: &Generics,
-    fields: &StructFields,
-) -> Result<TokenStream> {
-    let name_str = ident.to_string();
-
-    let generics_no_d = remove_domain_param(ident, generics)?;
-    let generics_d_type = get_domain_param(ident, generics)?;
-
-    let (impl_generics, _, _) = generics.split_for_impl();
-    let (impl_generics_no_d, _, where_clause) = generics_no_d.split_for_impl();
-
-    let ty_generics_sl = SpecializeDomain::new(parse_quote!(::posh::Sl), ident, generics)?;
-
-    let field_types = fields.types();
-    let field_strings = fields.strings();
-
-    let helper_fn_idents: Vec<_> = fields
-        .idents()
-        .iter()
-        .map(|field_ident| {
-            Ident::new(
-                &format!("_posh_uniform_field_ty_helper_{ident}_{field_ident}"),
-                ident.span(),
-            )
-        })
-        .collect();
-
-    let helper_fn_defs = quote! {
-        #(
-            #[allow(non_snake_case)]
-            const fn #helper_fn_idents #impl_generics() -> ::posh::dag::Ty
-            where #where_clause
-            {
-                <<#field_types as ::posh::Uniform<#generics_d_type>>::InSl as ::posh::sl::Object>::TY
-            }
-        )*
-    };
-
-    Ok(quote! {
-        #helper_fn_defs
-
-        impl #impl_generics_no_d ::posh::sl::Struct for #ident #ty_generics_sl
-        #where_clause
-        {
-            const STRUCT_TY: ::posh::dag::StructTy = ::posh::dag::StructTy {
-                name: #name_str,
-                fields: &[
-                    #(
-                        (#field_strings, #helper_fn_idents ::#ty_generics_sl())
-                    ),*
-                ],
-                is_built_in: false,
-            };
-        }
-    })
-}
+use crate::utils::{remove_domain_param, SpecializeDomain, StructFields};
 
 pub fn derive(input: &DeriveInput) -> Result<TokenStream> {
     let ident = &input.ident;
@@ -74,11 +15,7 @@ pub fn derive(input: &DeriveInput) -> Result<TokenStream> {
     let field_idents = fields.idents();
     let field_strings = fields.strings();
 
-    let struct_impl = generate_struct_impl(&input.ident, &input.generics, &fields)?;
-
     Ok(quote! {
-        #struct_impl
-
         impl #impl_generics_no_d ::posh::sl::Object for #ident #ty_generics_sl
         #where_clause
         {

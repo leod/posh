@@ -9,11 +9,12 @@ use crate::{
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let ident = &input.ident;
+    let ident_str = ident.to_string();
     let as_std140_ident = Ident::new(&format!("PoshInternal{ident}AsStd140"), ident.span());
-    let helper_trait_ident = Ident::new(
-        &format!("PoshInternal{ident}UniformHelperTrait"),
-        ident.span(),
-    );
+    let gl_field_types_trait =
+        Ident::new(&format!("PoshInternal{ident}GlFieldTypes"), ident.span());
+    let sl_field_types_trait =
+        Ident::new(&format!("PoshInternal{ident}SlFieldTypes"), ident.span());
 
     let visibility = input.vis.clone();
 
@@ -29,6 +30,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let fields = StructFields::new(&input.ident, &input.data)?;
     let field_idents = fields.idents();
     let field_types = fields.types();
+    let field_strings = fields.strings();
 
     let impl_value_sl = value_sl::derive(&input)?;
 
@@ -42,14 +44,21 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             type InSl = #ident #ty_generics_sl;
         }
 
-        trait #helper_trait_ident {
+        trait #gl_field_types_trait {
             #(
                 #[allow(non_camel_case_types)]
                 type #field_idents: ::posh::crevice::std140::AsStd140;
             )*
         }
 
-        impl #impl_generics #helper_trait_ident for #ident #ty_generics
+        trait #sl_field_types_trait {
+            #(
+                #[allow(non_camel_case_types)]
+                type #field_idents: ::posh::sl::Value;
+            )*
+        }
+
+        impl #impl_generics #gl_field_types_trait for #ident #ty_generics
         #where_clause
         {
             #(
@@ -57,11 +66,39 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             )*
         }
 
+        impl #impl_generics #sl_field_types_trait for #ident #ty_generics
+        #where_clause
+        {
+            #(
+                type #field_idents = <#field_types as ::posh::Uniform<#generics_d_type>>::InSl;
+            )*
+        }
+
+        impl #impl_generics_no_d ::posh::sl::Struct for #ident #ty_generics_sl
+        #where_clause
+        {
+            const STRUCT_TY: ::posh::dag::StructTy = ::posh::dag::StructTy {
+                name: #ident_str,
+                fields: &[
+                    #(
+                        (
+                            #field_strings,
+                            <
+                                <#ident #ty_generics_sl as #sl_field_types_trait>::#field_idents
+                                as ::posh::sl::Object
+                            >::TY,
+                        )
+                    ),*
+                ],
+                is_built_in: false,
+            };
+        }
+
         // FIXME: AFAIK, crevice does not support generic types yet.
         #[derive(::posh::crevice::std140::AsStd140)]
         #visibility struct #as_std140_ident #impl_generics_no_d {
             #(
-                #field_idents: <#ident #ty_generics_gl as #helper_trait_ident>::#field_idents
+                #field_idents: <#ident #ty_generics_gl as #gl_field_types_trait>::#field_idents
             ),*
         }
 
