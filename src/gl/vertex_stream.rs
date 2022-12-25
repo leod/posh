@@ -5,7 +5,7 @@ use crate::Gl;
 use super::{Element, ElementBufferBinding};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum Primitive {
+pub enum GeometryType {
     Points,
     Lines,
     LineStrip,
@@ -18,6 +18,6 @@ pub enum Primitive {
 #[derive(Clone)]
 pub struct VertexStream<A: Attributes<Gl>, E: Element> {
     pub attribute: A,
-    pub primitive: Primitive,
+    pub geometry_type: GeometryType,
     pub elements: Option<ElementBufferBinding<E>>,
 }

@@ -22,7 +22,7 @@ usual shader code.
 
 First, we need to define the types that will appear in our shader's signature.
 Here, we'll define a `Uniform` and a `Vertex`. In `posh`, such types need to
-have _dual_ representations in the graphics library domain `Gl` and the shader
+have _dual_ representations in the graphics library domain `Gl` and the shading
 language domain `Sl`. In this example, the host will provide vertex data as
 `MyVertex<Gl>`, while the shader will access it through the dual type
 `MyVertex<Sl>`.
@@ -47,9 +47,9 @@ struct MyVertex<D: Domain = Sl> {
 Next, we can use these types to define a simple shader. Notice that the shader
 stages are defined as simple Rust code!
 ```rust
-use posh::sl::{FragmentOutput, Vec3, Vec4, VertexOutput};
+use posh::sl::{self, FragmentOutput, VertexOutput};
 
-fn vertex_stage(camera: Camera, vertex: MyVertex) -> VertexOutput<Vec3<f32>> {
+fn vertex_stage(camera: Camera, vertex: MyVertex) -> VertexOutput<sl::Vec3<f32>> {
    let position = camera.projection * camera.view * vertex.pos.to_vec4();
 
    VertexOutput {
@@ -59,7 +59,7 @@ fn vertex_stage(camera: Camera, vertex: MyVertex) -> VertexOutput<Vec3<f32>> {
    }
 }
 
-fn fragment_stage(varying: Vec3<f32>) -> FragmentOutput<Vec4<f32>> {
+fn fragment_stage(varying: sl::Vec3<f32>) -> FragmentOutput<sl::Vec4<f32>> {
    FragmentOutput {
       fragment: varying,
       ..Default::default()
@@ -74,7 +74,7 @@ type. This makes it possible to check at compile-time that the buffers passed to
 draw calls match the signature of the shader.
 ```rust
 use posh::gl::{
-    Context, DefaultSurface, DrawParams, PrimitiveType, Program, UniformBuffer,
+    Context, DefaultSurface, DrawParams, GeometryType, Program, UniformBuffer,
     VertexArray,
 };
 
@@ -84,15 +84,15 @@ fn main() {
     let camera: UniformBuffer<Camera> = todo!();
     let vertices: VertexArray<MyVertex> = todo!();
 
-    // Compile the shader into a program:
-    let program: Program<Camera, MyVertex, Vec4<f32>> =
+    // Compile the shader into a program.
+    let program: Program<Camera, MyVertex, sl::Vec4<f32>> =
         Program::new(&ctx, vertex_stage, fragment_stage).unwrap();
 
     // Finally, a draw call!
     program.draw(
-        &camera,
-        vertices.vertex_stream_without_elements(PrimitiveType::Triangles),
-        &DefaultSurface,
+        camera.bind(),
+        vertices.bind_without_elements(GeometryType::Triangles),
+        DefaultSurface.bind(),
         &DrawParams::default(),
     );
 }
