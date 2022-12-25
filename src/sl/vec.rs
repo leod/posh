@@ -10,14 +10,14 @@ use super::{
     Object, Scalar, Struct, ToValue, Value,
 };
 
-/// A two-dimensional vector in the shading language domain [`Sl`](crate::Sl).
+/// A two-dimensional vector in the shading language.
 #[derive(Debug, Copy, Clone)]
 pub struct Vec2<T> {
     pub x: Scalar<T>,
     pub y: Scalar<T>,
 }
 
-/// A four-dimensional vector in the shading language domain [`Sl`](crate::Sl).
+/// A four-dimensional vector in the shading language.
 #[derive(Debug, Copy, Clone)]
 pub struct Vec3<T> {
     pub x: Scalar<T>,
@@ -25,7 +25,7 @@ pub struct Vec3<T> {
     pub z: Scalar<T>,
 }
 
-/// A four-dimensional vector in the shading language domain [`Sl`](crate::Sl).
+/// A four-dimensional vector in the shading language.
 #[derive(Debug, Copy, Clone)]
 pub struct Vec4<T> {
     pub x: Scalar<T>,

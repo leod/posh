@@ -10,23 +10,23 @@ use crate::{
     Numeric, Primitive,
 };
 
-/// A scalar value in the shading language domain [`Sl`](crate::Sl).
+/// A scalar value in the shading language.
 #[derive(Debug, Copy, Clone)]
 pub struct Scalar<T> {
     trace: Trace,
     _phantom: PhantomData<T>,
 }
 
-/// A boolean value in the shading language domain [`Sl`](crate::Sl).
+/// A boolean value in the shading language.
 pub type Bool = Scalar<bool>;
 
-/// A floating-point value in the shading language domain [`Sl`](crate::Sl).
+/// A floating-point value in the shading language.
 pub type F32 = Scalar<f32>;
 
-/// A signed integer value in the shading language domain [`Sl`](crate::Sl).
+/// A signed integer value in the shading language.
 pub type I32 = Scalar<i32>;
 
-/// An unsigned integer value in the shading language domain [`Sl`](crate::Sl).
+/// An unsigned integer value in the shading language.
 pub type U32 = Scalar<u32>;
 
 impl<T: Primitive> Object for Scalar<T> {
@@ -108,8 +108,8 @@ impl Scalar<bool> {
     }
 }
 
-/// Implement `Scalar<T> <op> impl ToPosh<Value = Scalar<T>>` for all
-/// `T: Numeric`.
+// Implements `Scalar<T> <op> impl ToPosh<Value = Scalar<T>>` for all `T:
+// Numeric`.
 macro_rules! impl_binary_op_lhs {
     ($fn:ident, $op:ident) => {
         impl<T, Rhs> $op<Rhs> for Scalar<T>
@@ -126,7 +126,7 @@ macro_rules! impl_binary_op_lhs {
     };
 }
 
-/// Implement `$ty <op> Scalar<$ty>` where `$ty: Numeric`.
+// Implements `$ty <op> Scalar<$ty>` where `$ty: Numeric`.
 macro_rules! impl_binary_op_rhs {
     ($fn:ident, $op:ident, $ty:ty) => {
         impl $op<Scalar<Self>> for $ty {
@@ -139,7 +139,7 @@ macro_rules! impl_binary_op_rhs {
     };
 }
 
-/// Implement a binary op for `Scalar<T>` for all `T: Numeric`.
+// Implements a binary op for `Scalar<T>` for all `T: Numeric`.
 macro_rules! impl_binary_op {
     ($fn:ident, $op:ident) => {
         impl_binary_op_lhs!($fn, $op);
