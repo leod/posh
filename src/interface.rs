@@ -14,20 +14,31 @@ use crate::{
 
 #[sealed]
 pub trait UniformDomain: Sized {
-    /// A boolean value.
-    type Bool: Uniform<Self>;
-
-    /// A floating-point value.
-    type F32: Uniform<Self>;
-
-    /// A signed integer value.
-    type I32: Uniform<Self>;
-
-    /// An unsigned integer value.
-    type U32: Uniform<Self>;
+    /// A scalar value.
+    type Scalar<T: Primitive>: Uniform<Self>;
 
     /// A two-dimensional vector.
     type Vec2<T: Primitive>: Uniform<Self>;
+
+    /// A boolean value.
+    ///
+    /// Same as [`Self::Scalar<bool>`].
+    type Bool: Uniform<Self>;
+
+    /// A floating-point value.
+    ///
+    /// Same as [`Self::Scalar<f32>`].
+    type F32: Uniform<Self>;
+
+    /// A signed integer value.
+    ///
+    /// Same as [`Self::Scalar<i32>`].
+    type I32: Uniform<Self>;
+
+    /// An unsigned integer value.
+    ///
+    /// Same as [`Self::Scalar<u32>`].
+    type U32: Uniform<Self>;
 }
 
 #[doc(hidden)]
