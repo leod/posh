@@ -7,39 +7,40 @@ mod sl;
 
 use crate::{sl::Value, Gl, Numeric, Primitive, Sl};
 
-// Uniform interface
-
+/// A domain in which [`Uniform`] or [`Vertex`] fields can be defined.
 #[sealed]
-pub trait UniformDomain: Copy {
+pub trait FieldDomain: Copy {
     /// A scalar value.
-    type Scalar<T: Primitive>: Uniform<Self>;
+    type Scalar<T: Primitive>: Uniform<Self> + Vertex<Self>;
 
     /// A two-dimensional vector.
-    type Vec2<T: Primitive>: Uniform<Self>;
+    type Vec2<T: Primitive>: Uniform<Self> + Vertex<Self>;
 
     /// A boolean value.
     ///
     /// Same as [`Self::Scalar<bool>`].
-    type Bool: Uniform<Self>;
+    type Bool: Uniform<Self> + Vertex<Self>;
 
     /// A floating-point value.
     ///
     /// Same as [`Self::Scalar<f32>`].
-    type F32: Uniform<Self>;
+    type F32: Uniform<Self> + Vertex<Self>;
 
     /// A signed integer value.
     ///
     /// Same as [`Self::Scalar<i32>`].
-    type I32: Uniform<Self>;
+    type I32: Uniform<Self> + Vertex<Self>;
 
     /// An unsigned integer value.
     ///
     /// Same as [`Self::Scalar<u32>`].
-    type U32: Uniform<Self>;
+    type U32: Uniform<Self> + Vertex<Self>;
 }
 
+// Uniform interface
+
 /// A type that can be used as uniform input for shaders.
-pub trait Uniform<D: UniformDomain>: Copy {
+pub trait Uniform<D: FieldDomain>: Copy {
     type InGl: Uniform<Gl> + AsStd140;
     type InSl: Uniform<Sl> + Value;
 }
@@ -52,34 +53,8 @@ pub trait ToPod: Copy {
     fn to_pod(self) -> Self::Output;
 }
 
-/// A domain in which vertex types can be defined.
-///
-/// According to the specification **GLSL 3.30, 4.3.4**:
-/// > Vertex shader inputs can only be `float`, floating-point vectors,
-/// > matrices, signed and unsigned integers and integer vectors. Vertex shader
-/// > inputs can also form arrays of these types, but not structures.
-///
-/// Note specifically that boolean values are not allowed.
-#[sealed]
-pub trait VertexDomain: Copy {
-    /// A scalar value.
-    type Scalar<T: Numeric>: Vertex<Self>;
-
-    /// A two-dimensional vector.
-    type Vec2<T: Numeric>: Vertex<Self>;
-
-    /// A floating-point value.
-    type F32: Vertex<Self>;
-
-    /// A signed integer value.
-    type I32: Vertex<Self>;
-
-    /// An unsigned integer value.
-    type U32: Vertex<Self>;
-}
-
 /// A type that can be used as vertex input for shaders.
-pub trait Vertex<D: VertexDomain>: Copy {
+pub trait Vertex<D: FieldDomain>: Copy {
     type InGl: Vertex<Gl> + ToPod;
     type InSl: Vertex<Sl> + Value;
 }
@@ -93,7 +68,7 @@ pub trait Attributes<D: AttributesDomain> {
 }
 
 #[sealed]
-pub trait AttributesDomain: VertexDomain {
+pub trait AttributesDomain: FieldDomain {
     type Vertex<V: Vertex<Self>>: Attributes<Self>;
 }
 
@@ -115,7 +90,7 @@ pub trait Resource<D: ResourceDomain> {
     type InSl: Resource<Sl>;
 }
 
-pub trait ResourceDomain: UniformDomain {
+pub trait ResourceDomain: FieldDomain {
     type Sampler2d<T: Numeric>: Resource<Self>;
 
     type Uniform<U: Uniform<Self>>: Resource<Self>;
