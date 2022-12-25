@@ -5,10 +5,7 @@ use sealed::sealed;
 mod gl;
 mod sl;
 
-use crate::{
-    sl::{Object, Value},
-    Gl, Numeric, Primitive, Sl,
-};
+use crate::{sl::Value, Gl, Numeric, Primitive, Sl};
 
 // Uniform interface
 
@@ -62,10 +59,10 @@ pub trait AsPod {
 ///
 /// The interface of this trait is a private implementation detail.
 #[sealed]
-pub trait VertexField<D: VertexDomain> {}
+pub trait VertexField<D: VertexDomain>: Copy {}
 
 #[sealed]
-pub trait VertexDomain: Sized {
+pub trait VertexDomain: Copy {
     /// A floating-point value.
     type F32: VertexField<Self>;
 
@@ -80,7 +77,7 @@ pub trait VertexDomain: Sized {
 }
 
 /// A type that can be used as vertex input for shaders.
-pub trait Vertex<D: VertexDomain> {
+pub trait Vertex<D: VertexDomain>: Copy {
     type InGl: Vertex<Gl> + AsPod;
     type InSl: Vertex<Sl> + Value;
 }
