@@ -13,11 +13,13 @@ struct MyUniform2<D: UniformDomain = Sl> {
     x: D::Vec2<f32>,
 }
 
+/*/
 #[derive(Uniform)]
 struct MyUniform<D: UniformDomain = Sl> {
     x: D::Vec2<f32>,
     y: MyUniform2<D>,
 }
+*/
 
 struct MyVertex<D: VertexDomain = Sl> {
     x: D::F32,

@@ -3,7 +3,7 @@ use sealed::sealed;
 use crate::{
     gl::{Sampler2dBinding, UniformBufferBinding, VertexBufferBinding},
     sl::{Sampler2d, Scalar, Vec2, Vec4},
-    Gl, Numeric, Sl, Uniform,
+    Numeric, Sl, Uniform,
 };
 
 use super::{Attachment, Attributes, FragmentDomain, Primitive, Resource, ResourceDomain, Vertex};
@@ -22,11 +22,13 @@ impl<T: Primitive> Uniform<Sl> for Vec2<T> {
 
 #[sealed]
 impl super::UniformDomain for Sl {
+    type Scalar<T: Primitive> = Scalar<T>;
+    type Vec2<T: Primitive> = Vec2<T>;
+
     type Bool = Scalar<bool>;
     type F32 = Scalar<f32>;
     type I32 = Scalar<i32>;
     type U32 = Scalar<u32>;
-    type Vec2<T: Primitive> = Vec2<T>;
 }
 
 #[sealed]

@@ -22,11 +22,13 @@ impl<T: Primitive> Uniform<Gl> for mint::Vector2<T> {
 
 #[sealed]
 impl super::UniformDomain for Gl {
+    type Scalar<T: Primitive> = T;
+    type Vec2<T: Primitive> = mint::Vector2<T>;
+
     type Bool = bool;
     type F32 = f32;
     type I32 = i32;
     type U32 = u32;
-    type Vec2<T: Primitive> = mint::Vector2<T>;
 }
 
 // Vertex interface

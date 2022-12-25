@@ -60,19 +60,29 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             #(
                 #field_idents: <
                     <#ident #ty_generics_gl as #helper_trait_ident>::#field_idents
-                    as ::posh::gl::AsStd140
-                >::AsStd140
+                    as ::posh::crevice::std140::AsStd140
+                >::Output
             ),*
         }
 
-        impl #impl_generics_no_d ::posh::gl::AsStd140 for #ident #ty_generics_gl
+        impl #impl_generics_no_d ::posh::crevice::std140::AsStd140 for #ident #ty_generics_gl
         #where_clause
         {
-            type AsStd140 = #as_std140_ident #ty_generics_no_d;
+            type Output = <
+                #as_std140_ident #ty_generics_no_d as ::posh::crevice::std140::AsStd140
+            >::Output;
+
+            fn as_std140(&self) -> Self::Output {
+                todo!()
+            }
+
+            fn from_std140(val: Self::Output) -> Self {
+                todo!()
+            }
         }
 
         const _: fn() = || {
-            fn check_field<D: ::posh::UniformDomain, T: ::posh::UniformField<D>>() {}
+            fn check_field<D: ::posh::UniformDomain, T: ::posh::Uniform<D>>() {}
 
             fn check_struct #impl_generics(value: &#ident #ty_generics) #where_clause {
                 #(
