@@ -6,7 +6,7 @@ mod gl;
 mod sl;
 
 use crate::{
-    sl::{ToValue, Value},
+    sl::{Bool, Scalar, ToValue, Value, Vec2, F32, I32, U32},
     Gl, Numeric, Primitive, Sl,
 };
 
@@ -14,30 +14,30 @@ use crate::{
 #[sealed]
 pub trait FieldDomain: Copy {
     /// A scalar value.
-    type Scalar<T: Primitive>: Uniform<Self> + Vertex<Self> + ToValue<Output = crate::sl::Scalar<T>>;
+    type Scalar<T: Primitive>: Uniform<Self> + Vertex<Self> + ToValue<Output = Scalar<T>>;
 
     /// A two-dimensional vector.
-    type Vec2<T: Primitive>: Uniform<Self> + Vertex<Self> + ToValue<Output = crate::sl::Vec2<T>>;
+    type Vec2<T: Primitive>: Uniform<Self> + Vertex<Self> + ToValue<Output = Vec2<T>>;
 
     /// A boolean value.
     ///
     /// Same as [`Self::Scalar<bool>`].
-    type Bool: Uniform<Self> + Vertex<Self> + ToValue<Output = crate::sl::Bool>;
+    type Bool: Uniform<Self> + Vertex<Self> + ToValue<Output = Bool>;
 
     /// A floating-point value.
     ///
     /// Same as [`Self::Scalar<f32>`].
-    type F32: Uniform<Self> + Vertex<Self> + ToValue<Output = crate::sl::F32>;
+    type F32: Uniform<Self> + Vertex<Self> + ToValue<Output = F32>;
 
     /// A signed integer value.
     ///
     /// Same as [`Self::Scalar<i32>`].
-    type I32: Uniform<Self> + Vertex<Self> + ToValue<Output = crate::sl::I32>;
+    type I32: Uniform<Self> + Vertex<Self> + ToValue<Output = I32>;
 
     /// An unsigned integer value.
     ///
     /// Same as [`Self::Scalar<u32>`].
-    type U32: Uniform<Self> + Vertex<Self> + ToValue<Output = crate::sl::U32>;
+    type U32: Uniform<Self> + Vertex<Self> + ToValue<Output = U32>;
 }
 
 // Uniform interface
@@ -67,7 +67,7 @@ pub trait Vertex<D: FieldDomain>: ToValue {
 /// A type that can be used as attributes input for shaders.
 pub trait Attributes<D: AttributesDomain> {
     type InGl: Attributes<Gl>;
-    type InSl: Attributes<Sl> + Value;
+    type InSl: Attributes<Sl>;
 }
 
 #[sealed]
