@@ -13,7 +13,7 @@ use crate::{
 // Uniform interface
 
 #[sealed]
-pub trait UniformDomain: Sized {
+pub trait UniformDomain: Copy {
     /// A scalar value.
     type Scalar<T: Primitive>: Uniform<Self>;
 
@@ -42,7 +42,7 @@ pub trait UniformDomain: Sized {
 }
 
 /// A type that can be used as uniform input for shaders.
-pub trait Uniform<D: UniformDomain> {
+pub trait Uniform<D: UniformDomain>: Copy {
     type InGl: Uniform<Gl> + AsStd140;
     type InSl: Uniform<Sl> + Value;
 }
