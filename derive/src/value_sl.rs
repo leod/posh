@@ -2,7 +2,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{parse_quote, DeriveInput, Generics, Ident, Result};
 
-use crate::utils::{remove_domain_param, SpecializeDomain, StructFields};
+use crate::utils::{get_domain_param, remove_domain_param, SpecializeDomain, StructFields};
 
 fn generate_struct_impl(
     ident: &Ident,
@@ -12,6 +12,7 @@ fn generate_struct_impl(
     let name_str = ident.to_string();
 
     let generics_no_d = remove_domain_param(ident, generics)?;
+    let generics_d_type = get_domain_param(ident, generics)?;
 
     let (impl_generics, _, _) = generics.split_for_impl();
     let (impl_generics_no_d, _, where_clause) = generics_no_d.split_for_impl();
@@ -38,7 +39,7 @@ fn generate_struct_impl(
             const fn #helper_fn_idents #impl_generics() -> ::posh::dag::Ty
             where #where_clause
             {
-                <<#field_types as ::posh::Uniform<_>>::InSl as ::posh::sl::Object>::TY
+                <<#field_types as ::posh::Uniform<#generics_d_type>>::InSl as ::posh::sl::Object>::TY
             }
         )*
     };

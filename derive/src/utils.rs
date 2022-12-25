@@ -48,22 +48,18 @@ impl StructFields {
 }
 
 pub struct SpecializeDomain {
-    first_ty: Type,
+    domain: Type,
     params: Vec<GenericParam>,
 }
 
 impl SpecializeDomain {
-    pub fn new(first_ty: Type, ident: &Ident, generics: &Generics) -> Result<Self> {
-        if generics.params.is_empty() {
-            return Err(Error::new_spanned(
-                ident,
-                "posh expects type to be generic in domain",
-            ));
-        }
-
+    pub fn new(domain: Type, ident: &Ident, generics: &Generics) -> Result<Self> {
         Ok(Self {
-            first_ty,
-            params: generics.params.iter().skip(1).cloned().collect(),
+            domain,
+            params: remove_domain_param(ident, generics)?
+                .params
+                .into_iter()
+                .collect(),
         })
     }
 }
@@ -71,9 +67,6 @@ impl SpecializeDomain {
 impl ToTokens for SpecializeDomain {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         <Token![<]>::default().to_tokens(tokens);
-
-        self.first_ty.to_tokens(tokens);
-        <Token![,]>::default().to_tokens(tokens);
 
         for param in &self.params {
             match param {
@@ -92,6 +85,9 @@ impl ToTokens for SpecializeDomain {
 
             <Token![,]>::default().to_tokens(tokens);
         }
+
+        self.domain.to_tokens(tokens);
+
         <Token![>]>::default().to_tokens(tokens);
     }
 }
@@ -117,7 +113,8 @@ pub fn remove_domain_param(ident: &Ident, generics: &Generics) -> Result<Generic
         ));
     }
 
-    let params = generics.params.iter().skip(1).cloned().collect();
+    let mut params = generics.params.clone();
+    params.pop();
 
     Ok(Generics {
         params,
@@ -126,16 +123,15 @@ pub fn remove_domain_param(ident: &Ident, generics: &Generics) -> Result<Generic
 }
 
 pub fn get_domain_param(ident: &Ident, generics: &Generics) -> Result<Ident> {
-    let first_param = generics
-        .params
-        .first()
-        .ok_or_else(|| Error::new_spanned(ident, "posh expects type to be generic in domain"))?;
+    let last_param = generics.params.last().ok_or_else(|| {
+        Error::new_spanned(ident, "posh expects type to be generic in the domain type")
+    })?;
 
-    match first_param {
+    match last_param {
         GenericParam::Type(type_param) => Ok(type_param.ident.clone()),
         _ => Err(Error::new_spanned(
-            first_param,
-            "posh expects the first generic parameter to be the domain",
+            last_param,
+            "posh expects the last generic parameter to be the domain type",
         )),
     }
 }
