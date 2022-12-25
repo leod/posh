@@ -7,8 +7,7 @@ use crate::{
 
 use super::{primitives::built_in_1, Object, Vec2, Vec4};
 
-/// An object which can be sampled in the shading language domain
-/// [`Sl`](crate::Sl).
+/// An object which can be sampled in the shading language.
 #[derive(Debug, Copy, Clone)]
 pub struct Sampler2d<T: Numeric> {
     trace: Trace,

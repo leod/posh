@@ -22,8 +22,7 @@ pub use {
     vec::{Vec2, Vec4},
 };
 
-/// An object that can be represented in the shading language domain
-/// [`Sl`](crate::Sl).
+/// An object that can be represented in the shading language.
 ///
 /// The interface of this trait is a private implementation detail.
 pub trait Object {
@@ -34,8 +33,7 @@ pub trait Object {
     fn expr(&self) -> Rc<Expr>;
 }
 
-/// An object that can be stored as a value in the shading language domain
-/// [`Sl`](crate::Sl).
+/// An object that can be stored as a value in the shading language.
 ///
 /// The interface of this trait is a private implementation detail.
 pub trait Value: Object {
@@ -43,20 +41,20 @@ pub trait Value: Object {
     fn from_expr(expr: Expr) -> Self;
 }
 
-/// A [`Value`] that has a struct type in the shading language domain
-/// [`Sl`](crate::Sl).
+/// A [`Value`] that has a struct type in the shading language.
+///
+/// The interface of this trait is a private implementation detail.
 pub trait Struct: Value {
     #[doc(hidden)]
     const STRUCT_TYPE: StructType;
 }
 
-/// A conversion to a [`Value`] in the shading language domain
-/// [`Sl`](crate::Sl).
+/// A conversion to a [`Value`] in the shading language.
 pub trait ToValue: Copy {
     type Output: Value;
 
     fn to_value(self) -> Self::Output;
 }
 
-/// Data passed from vertex shader to fragment shader.
+/// Data passed from a vertex stage to a fragment stage.
 pub trait Varying: Value {}

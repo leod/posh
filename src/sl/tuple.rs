@@ -4,13 +4,13 @@ use crate::dag::{BaseType, Expr, StructType, Type};
 
 use super::{
     primitives::{field, simplify_struct_literal},
-    Object, ToValue, Value,
+    Object, Struct, ToValue, Value,
 };
 
 macro_rules! impl_value {
     ($($name: ident),*) => {
-        impl<$($name: Value),*> Object for ($($name),*) {
-            const TYPE: Type = Type::Base(BaseType::Struct(&StructType {
+        impl<$($name: Value),*> Struct for ($($name),*) {
+            const STRUCT_TYPE: StructType = StructType {
                 name: "tuple",
                 fields: &[
                     $(
@@ -18,19 +18,18 @@ macro_rules! impl_value {
                     ),*
                 ],
                 is_built_in: false,
-            }));
+            };
+        }
+
+        impl<$($name: Value),*> Object for ($($name),*) {
+            const TYPE: Type = Type::Base(BaseType::Struct(&Self::STRUCT_TYPE));
 
             fn expr(&self) -> Rc<Expr> {
                 #[allow(non_snake_case)]
                 let ($($name),*) = self;
 
-                let struct_type = match &Self::TYPE {
-                    Type::Base(BaseType::Struct(ref struct_type)) => struct_type,
-                    _ => unreachable!(),
-                };
-
                 simplify_struct_literal(
-                    struct_type,
+                    &Self::STRUCT_TYPE,
                     &[
                         $(
                             $name.expr()
@@ -40,6 +39,7 @@ macro_rules! impl_value {
         }
 
         impl<$($name: Value),*> Value for ($($name),*) {
+            #[allow(clippy::unused_unit)]
             fn from_expr(expr: Expr) -> Self {
                 #[allow(unused)]
                 let base = Rc::new(expr);
@@ -59,6 +59,7 @@ macro_rules! impl_value {
                 ),*
             );
 
+            #[allow(clippy::unused_unit)]
             fn to_value(self) -> Self::Output {
                 #[allow(non_snake_case)]
                 let ($($name),*) = self;
