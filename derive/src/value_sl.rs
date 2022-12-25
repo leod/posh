@@ -2,10 +2,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{parse_quote, DeriveInput, Generics, Ident, Result};
 
-use crate::utils::{
-    get_domain_param, remove_domain_param, replace_domain_param_bound, SpecializeDomain,
-    StructFields,
-};
+use crate::utils::{remove_domain_param, SpecializeDomain, StructFields};
 
 fn generate_struct_impl(
     ident: &Ident,
@@ -15,13 +12,8 @@ fn generate_struct_impl(
     let name_str = ident.to_string();
 
     let generics_no_d = remove_domain_param(ident, generics)?;
-    let generics_helper_d = replace_domain_param_bound(
-        &get_domain_param(ident, generics)?,
-        generics,
-        parse_quote!(::posh::macro_internal::UniformDomainHelper),
-    )?;
 
-    let (impl_generics_helper_d, _, _) = generics_helper_d.split_for_impl();
+    let (impl_generics, _, _) = generics.split_for_impl();
     let (impl_generics_no_d, _, where_clause) = generics_no_d.split_for_impl();
 
     let ty_generics_sl = SpecializeDomain::new(parse_quote!(::posh::Sl), ident, generics)?;
@@ -43,10 +35,10 @@ fn generate_struct_impl(
     let helper_fn_defs = quote! {
         #(
             #[allow(non_snake_case)]
-            const fn #helper_fn_idents #impl_generics_helper_d() -> ::posh::dag::Ty
+            const fn #helper_fn_idents #impl_generics() -> ::posh::dag::Ty
             where #where_clause
             {
-                <#field_types as ::posh::sl::Object>::TY
+                <<#field_types as ::posh::Uniform<_>>::InSl as ::posh::sl::Object>::TY
             }
         )*
     };
