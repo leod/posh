@@ -7,7 +7,7 @@ use crate::{
 
 use super::{
     primitives::{field, simplify_struct_literal},
-    Object, Scalar, Value,
+    Object, Scalar, Struct, ToValue, Value,
 };
 
 /// A two-dimensional vector in [`Posh`](crate::Posh).
@@ -36,7 +36,18 @@ pub struct Vec4<T> {
 
 /// Implement `Object` and `Value` for `$ty<T>`.
 macro_rules! impl_value {
-    ($ty:ident, $name:literal, $($member:ident),+) => {
+    ($ty:ident, $mint_ty: ident, $name:literal, $($member:ident),+) => {
+        impl<T: Primitive> Struct for $ty<T> {
+            const STRUCT_TY: StructTy = StructTy {
+                // FIXME: Vec*<T> struct name.
+                name: $name,
+                fields: &[
+                    $((stringify!($member), Ty::Base(BaseTy::Scalar(T::PRIMITIVE_TY)))),+
+                ],
+                is_built_in: true,
+            };
+        }
+
         impl<T: Primitive> Object for $ty<T> {
             const TY: Ty = Ty::Base(BaseTy::Struct(&Self::STRUCT_TY));
 
@@ -60,19 +71,20 @@ macro_rules! impl_value {
             }
         }
 
-        impl<T: Primitive> $ty<T> {
-            const STRUCT_TY: StructTy = StructTy {
-                // FIXME: Vec*<T> struct name.
-                name: $name,
-                fields: &[
-                    $((stringify!($member), Ty::Base(BaseTy::Scalar(T::PRIMITIVE_TY)))),+
-                ],
-                is_built_in: true,
-            };
+        impl<T: Primitive> ToValue for mint::$mint_ty<T> {
+            type Output = $ty<T>;
+
+            fn to_value(self) -> Self::Output {
+                Self::Output {
+                    $(
+                        $member: self.$member.to_value()
+                    ),+
+                }
+            }
         }
     };
 }
 
-impl_value!(Vec2, "vec2", x, y);
-impl_value!(Vec3, "vec3", x, y, z);
-impl_value!(Vec4, "vec4", x, y, z, w);
+impl_value!(Vec2, Vector2, "vec2", x, y);
+impl_value!(Vec3, Vector3, "vec3", x, y, z);
+impl_value!(Vec4, Vector4, "vec4", x, y, z, w);

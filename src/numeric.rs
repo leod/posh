@@ -5,12 +5,15 @@ use sealed::sealed;
 use crate::{
     dag::{NumericTy, PrimitiveTy},
     interface::ToPod,
+    sl::{Scalar, ToValue},
     Gl, Uniform, Vertex,
 };
 
 /// A primitive type: one of `bool`, `f32`, `i32`, `u32`.
 #[sealed]
-pub trait Primitive: ToPod + ToString + Uniform<Gl> + Vertex<Gl> {
+pub trait Primitive:
+    ToPod + ToString + Uniform<Gl> + Vertex<Gl> + ToValue<Output = Scalar<Self>>
+{
     const PRIMITIVE_TY: PrimitiveTy;
 
     #[doc(hidden)]
