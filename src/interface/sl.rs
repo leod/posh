@@ -1,17 +1,17 @@
 use sealed::sealed;
 
 use crate::{
-    gl::{Sampler2dBinding, UniformBufferBinding, VertexBufferBinding},
+    gl,
     sl::{Sampler2d, Scalar, Vec2, Vec4},
-    Gl, Numeric, Sl, Uniform,
+    Fragment, Numeric, Sl, Uniform,
 };
 
-use super::{Attachment, Attributes, FragmentDomain, Primitive, Resource, ResourceDomain, Vertex};
+use super::{Attributes, FragmentDomain, Primitive, Resource, ResourceDomain, Vertex};
 
 // Uniform interface
 
 impl<T: Primitive> Uniform<Sl> for Scalar<T> {
-    type InGl = <T as Uniform<Gl>>::InGl;
+    type InGl = T;
     type InSl = Self;
 }
 
@@ -46,7 +46,7 @@ impl<T: Primitive> Vertex<Sl> for Vec2<T> {
 // Attributes interface
 
 impl<V: Vertex<Sl>> Attributes<Sl> for V {
-    type InGl = VertexBufferBinding<V::InGl>;
+    type InGl = gl::VertexBufferBinding<V::InGl>;
     type InSl = V::InSl;
 }
 
@@ -58,12 +58,12 @@ impl super::AttributesDomain for Sl {
 // Resource interface
 
 impl<T: Numeric> Resource<Sl> for Sampler2d<T> {
-    type InGl = Sampler2dBinding<T>;
+    type InGl = gl::Sampler2dBinding<T>;
     type InSl = Self;
 }
 
 impl<U: Uniform<Sl>> Resource<Sl> for U {
-    type InGl = UniformBufferBinding<U>;
+    type InGl = gl::UniformBufferBinding<U>;
     type InSl = Self;
 }
 
@@ -74,7 +74,10 @@ impl ResourceDomain for Sl {
 
 // Fragment interface
 
-impl Attachment<Sl> for Vec4<f32> {}
+impl Fragment<Sl> for Vec4<f32> {
+    type InGl = gl::Texture2dBinding;
+    type InSl = Self;
+}
 
 impl FragmentDomain for Sl {
     type Attachment2d = Vec4<f32>;

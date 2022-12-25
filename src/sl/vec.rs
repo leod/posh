@@ -10,14 +10,14 @@ use super::{
     Object, Scalar, Struct, ToValue, Value,
 };
 
-/// A two-dimensional vector in [`Posh`](crate::Posh).
+/// A two-dimensional vector in the shading language domain [`Sl`](crate::Sl).
 #[derive(Debug, Copy, Clone)]
 pub struct Vec2<T> {
     pub x: Scalar<T>,
     pub y: Scalar<T>,
 }
 
-/// A four-dimensional vector in [`Posh`](crate::Posh).
+/// A four-dimensional vector in the shading language domain [`Sl`](crate::Sl).
 #[derive(Debug, Copy, Clone)]
 pub struct Vec3<T> {
     pub x: Scalar<T>,
@@ -25,7 +25,7 @@ pub struct Vec3<T> {
     pub z: Scalar<T>,
 }
 
-/// A four-dimensional vector in [`Posh`](crate::Posh).
+/// A four-dimensional vector in the shading language domain [`Sl`](crate::Sl).
 #[derive(Debug, Copy, Clone)]
 pub struct Vec4<T> {
     pub x: Scalar<T>,
@@ -34,7 +34,7 @@ pub struct Vec4<T> {
     pub w: Scalar<T>,
 }
 
-/// Implement `Object` and `Value` for `$ty<T>`.
+// Implements `Object` and `Value` for `$ty<T>`.
 macro_rules! impl_value {
     ($ty:ident, $mint_ty: ident, $name:literal, $($member:ident),+) => {
         impl<T: Primitive> Struct for $ty<T> {

@@ -5,19 +5,20 @@ use sealed::sealed;
 use crate::{
     dag::{NumericType, PrimitiveType},
     interface::ToPod,
-    sl::{Scalar, ToValue},
+    sl::{Scalar, ToValue, Vec2},
     Gl, Uniform, Vertex,
 };
 
-/// A primitive type: one of `bool`, `f32`, `i32`, `u32`.
+/// A primitive type: one of `bool`, `f32`, `i32`, or `u32`.
 #[sealed]
 pub trait Primitive:
-    ToPod + ToString + Uniform<Gl> + Vertex<Gl> + ToValue<Output = Scalar<Self>>
+    AsStd140 + ToPod + ToString + Uniform<Gl> + Vertex<Gl> + ToValue<Output = Scalar<Self>>
 {
+    #[doc(hidden)]
     const PRIMITIVE_TYPE: PrimitiveType;
 
     #[doc(hidden)]
-    type Vec2: Uniform<Gl> + Vertex<Gl> + AsStd140 + ToPod + ToValue;
+    type Vec2: Uniform<Gl> + Vertex<Gl> + AsStd140 + ToPod + ToValue<Output = Vec2<Self>>;
 }
 
 #[sealed]
@@ -48,7 +49,7 @@ impl Primitive for f32 {
     type Vec2 = mint::Vector2<f32>;
 }
 
-/// A numeric type: one of `f32`, `i32`, `u32`.
+/// A numeric type: one of `f32`, `i32`, or `u32`.
 #[sealed]
 pub trait Numeric: Pod + ToPod + Primitive + Vertex<Gl> {
     const NUMERIC_TYPE: NumericType;
