@@ -77,27 +77,31 @@ pub trait Vertex<D: Domain>: ToValue {
 
 #[doc(hidden)]
 pub trait VertexInterfaceVisitor<D: VertexDomain> {
-    fn accept<V: Vertex<D>>(&mut self, path: &[&str], vertex: &D::Vertex<V>);
+    fn accept<V: Vertex<D>>(&mut self, name: &str, vertex: &D::Vertex<V>);
 }
 
-/// Types that declare a shader input vertex interface.
+/// Types that are allowed to occur in a [`VertexInterface`].
+#[sealed]
+pub trait VertexInterfaceField<D: VertexDomain> {}
+
+/// Types that declare the vertex input interface of a shader.
 pub trait VertexInterface<D: VertexDomain> {
     type InGl: VertexInterface<Gl>;
     type InSl: VertexInterface<Sl>;
 
     #[doc(hidden)]
-    fn visit(&self, path: &mut Vec<&'static str>, visitor: &mut impl VertexInterfaceVisitor<D>);
+    fn visit(&self, visitor: &mut impl VertexInterfaceVisitor<D>);
 }
 
 /// Provides types for declaring fields in a [`VertexInterface`].
 #[sealed]
 pub trait VertexDomain: Domain {
-    type Vertex<V: Vertex<Self>>: VertexInterface<Self>;
+    type Vertex<V: Vertex<Self>>: VertexInterfaceField<Self>;
 }
 
 // Resource interface
 
-/// Types that declare a shader input resource interface.
+/// Types that declare the resource input interface of a shader.
 pub trait ResourceInterface<D: ResourceDomain> {
     type InGl: ResourceInterface<Gl>;
     type InSl: ResourceInterface<Sl>;
@@ -113,7 +117,7 @@ pub trait ResourceDomain: Domain {
 
 // Fragment interface
 
-/// Types that declare a shader output fragment interface.
+/// Types that declare the fragment output interface of a shader.
 pub trait FragmentInterface<D: FragmentDomain> {
     type InGl: FragmentInterface<Gl>;
     type InSl: FragmentInterface<Sl>;

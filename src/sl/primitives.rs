@@ -146,6 +146,14 @@ pub fn simplify_struct_literal(ty: &'static StructType, args: &[Rc<Expr>]) -> Rc
     }
 }
 
+#[doc(hidden)]
+pub fn input<R: Value>(name: &str) -> R {
+    R::from_expr(Expr::Arg {
+        ty: R::TYPE,
+        name: name.into(),
+    })
+}
+
 fn common_field_base(struct_ty: &'static StructType, args: &[Rc<Expr>]) -> Option<Rc<Expr>> {
     let ty = Type::Base(BaseType::Struct(struct_ty));
 

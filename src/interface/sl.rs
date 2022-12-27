@@ -3,12 +3,12 @@ use sealed::sealed;
 use crate::{
     gl::{self, Texture2dBinding},
     sl::{Sampler2d, Scalar, Vec2, Vec4},
-    Gl, Numeric, Sl,
+    Numeric, Sl, VertexInterfaceVisitor,
 };
 
 use super::{
     FragmentInterface, Primitive, ResourceInterface, Uniform, Vertex, VertexAttribute,
-    VertexInterface, VertexInterfaceVisitor,
+    VertexInterface,
 };
 
 // Uniform interface
@@ -60,10 +60,13 @@ impl<V: Vertex<Sl>> VertexInterface<Sl> for V {
     type InGl = gl::VertexBufferBinding<V::InGl>;
     type InSl = V::InSl;
 
-    fn visit(&self, path: &mut Vec<&'static str>, visitor: &mut impl VertexInterfaceVisitor<Sl>) {
-        visitor.accept(path, self)
+    fn visit(&self, visitor: &mut impl VertexInterfaceVisitor<Sl>) {
+        visitor.accept("vertex", self);
     }
 }
+
+#[sealed]
+impl<V: Vertex<Sl>> super::VertexInterfaceField<Sl> for V {}
 
 #[sealed]
 impl super::VertexDomain for Sl {
