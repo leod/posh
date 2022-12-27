@@ -85,7 +85,8 @@ pub trait VertexInterface<D: VertexDomain> {
     type InGl: VertexInterface<Gl>;
     type InSl: VertexInterface<Sl>;
 
-    fn visit(&self, visitor: &mut impl VertexInterfaceVisitor<D>);
+    #[doc(hidden)]
+    fn visit(&self, path: &mut Vec<&'static str>, visitor: &mut impl VertexInterfaceVisitor<D>);
 }
 
 /// Provides types for declaring fields in a [`VertexInterface`].
