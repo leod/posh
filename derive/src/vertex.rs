@@ -13,10 +13,6 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         &format!("PoshInternal{ident}VertexGlFieldTypes"),
         ident.span(),
     );
-    let sl_field_types_trait = Ident::new(
-        &format!("PoshInternal{ident}VertexSlFieldTypes"),
-        ident.span(),
-    );
 
     let generics_no_d = remove_domain_param(ident, &input.generics)?;
     let generics_d_type = get_domain_param(ident, &input.generics)?;
@@ -48,24 +44,6 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         {
             #(
                 type #field_idents = <#field_types as ::posh::Vertex<#generics_d_type>>::InGl;
-            )*
-        }
-
-        // Helper trait for mapping struct field types to `Sl`.
-        #[doc(hidden)]
-        trait #sl_field_types_trait {
-            #(
-                #[allow(non_camel_case_types)]
-                type #field_idents: ::posh::sl::Object;
-            )*
-        }
-
-        // Implement the helper trait for mapping struct field types to `Gl`.
-        impl #impl_generics #sl_field_types_trait for #ident #ty_generics
-        #where_clause
-        {
-            #(
-                type #field_idents = <#field_types as ::posh::Vertex<#generics_d_type>>::InSl;
             )*
         }
 

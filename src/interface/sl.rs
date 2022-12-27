@@ -60,8 +60,8 @@ impl<V: Vertex<Sl>> VertexInterface<Sl> for V {
     type InGl = gl::VertexBufferBinding<V::InGl>;
     type InSl = V::InSl;
 
-    fn visit(&self, visitor: &mut impl VertexInterfaceVisitor<Sl>) {
-        visitor.accept(&["vertex"], self)
+    fn visit(&self, path: &mut Vec<&'static str>, visitor: &mut impl VertexInterfaceVisitor<Sl>) {
+        visitor.accept(path, self)
     }
 }
 
