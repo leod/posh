@@ -1,6 +1,6 @@
 use posh::{
     sl::{self, ToValue, Value},
-    Domain, Numeric, Primitive, Sl, Uniform, Vertex,
+    Domain, Numeric, Primitive, Sl, Uniform, Vertex, VertexDomain, VertexInterface,
 };
 
 #[derive(Value)]
@@ -10,7 +10,7 @@ struct Foo<T: Numeric> {
 
 #[derive(Clone, Copy, ToValue)]
 struct MyThang<T: Primitive, D: Domain = Sl> {
-    x: D::Vec2<f32>,
+    x: sl::F32,
     y: D::Scalar<T>,
 }
 
@@ -44,6 +44,20 @@ struct MyNestedVertex<D: Domain = Sl> {
     x: D::Scalar<f32>,
     zzz: MyUniform1<D>,
     y: D::Vec2<f32>,
+}
+
+#[derive(VertexInterface)]
+struct MyVertexIface<D: VertexDomain = Sl> {
+    vertex: D::Vertex<MyVertex<D>>,
+    instance: D::Vertex<MyNestedVertex<D>>,
+}
+
+struct MyVisitor {}
+
+impl posh::VertexInterfaceVisitor<Sl> for MyVisitor {
+    fn accept<V: Vertex<Sl>>(&mut self, name: &str, vertex: &V) {
+        todo!()
+    }
 }
 
 fn main() {

@@ -12,14 +12,15 @@ pub mod sl;
 
 pub use interface::{
     Domain, FragmentDomain, FragmentInterface, ResourceDomain, ResourceInterface, ToPod, Uniform,
-    Vertex, VertexAttribute, VertexDomain, VertexInterface, VertexInterfaceVisitor,
+    Vertex, VertexAttribute, VertexDomain, VertexInterface, VertexInterfaceField,
+    VertexInterfaceVisitor,
 };
 pub use numeric::{Numeric, Primitive};
 
 pub use bytemuck;
 pub use crevice;
 
-pub use posh_derive::{Uniform, Vertex};
+pub use posh_derive::{Uniform, Vertex, VertexInterface};
 
 /// The graphics library domain.
 ///

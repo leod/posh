@@ -173,10 +173,13 @@ impl<V: Vertex<Gl>> VertexInterface<Gl> for VertexBufferBinding<V> {
     type InGl = Self;
     type InSl = V::InSl;
 
-    fn visit(&self, path: &mut Vec<&'static str>, visitor: &mut impl VertexInterfaceVisitor<Gl>) {
-        visitor.accept(path, self)
+    fn visit(&self, visitor: &mut impl VertexInterfaceVisitor<Gl>) {
+        visitor.accept("vertex", self)
     }
 }
+
+#[sealed]
+impl<V: Vertex<Gl>> super::VertexInterfaceField<Gl> for VertexBufferBinding<V> {}
 
 #[sealed]
 impl super::VertexDomain for Gl {
