@@ -10,7 +10,8 @@ use crate::{
     Gl, Numeric, Primitive, Sl,
 };
 
-/// A domain in which fields of a [`Uniform`] or a [`Vertex`] can be specified.
+/// Provides types for defining fields in custom [`Uniform`] or [`Vertex`]
+/// structs.
 #[sealed]
 pub trait Domain: Copy {
     /// A scalar value.
@@ -21,28 +22,28 @@ pub trait Domain: Copy {
 
     /// A boolean value.
     ///
-    /// Same as [`Self::Scalar<bool>`].
+    /// Shorthand for [`Self::Scalar<bool>`].
     type Bool: Uniform<Self> + Vertex<Self> + ToValue<Output = Bool>;
 
     /// A floating-point value.
     ///
-    /// Same as [`Self::Scalar<f32>`].
+    /// Shorthand for [`Self::Scalar<f32>`].
     type F32: Uniform<Self> + Vertex<Self> + ToValue<Output = F32>;
 
     /// A signed integer value.
     ///
-    /// Same as [`Self::Scalar<i32>`].
+    /// Shorthand for [`Self::Scalar<i32>`].
     type I32: Uniform<Self> + Vertex<Self> + ToValue<Output = I32>;
 
     /// An unsigned integer value.
     ///
-    /// Same as [`Self::Scalar<u32>`].
+    /// Shorthand for [`Self::Scalar<u32>`].
     type U32: Uniform<Self> + Vertex<Self> + ToValue<Output = U32>;
 }
 
 // Uniform interface
 
-/// A type that can be used as uniform input for shaders.
+/// Uniform types.
 pub trait Uniform<D: Domain>: ToValue {
     type InGl: Uniform<Gl> + AsStd140 + ToValue<Output = Self::InSl>;
     type InSl: Uniform<Sl> + Value + ToValue<Output = Self::InSl>;
@@ -57,45 +58,33 @@ pub trait ToPod: Copy {
     fn to_pod(self) -> Self::Output;
 }
 
-/// A type that can be used as vertex input for shaders.
+/// Vertex types.
 pub trait Vertex<D: Domain>: ToValue {
     type InGl: Vertex<Gl> + ToPod + ToValue<Output = Self::InSl>;
     type InSl: Vertex<Sl> + Value + ToValue<Output = Self::InSl>;
 }
 
-// Attributes interface
-
-/// A type that can be used as attributes input for shaders.
-pub trait Attributes<D: AttributesDomain> {
-    type InGl: Attributes<Gl>;
-    type InSl: Attributes<Sl>;
-}
-
-/// A domain in which [`Attributes`] fields can be specified.
+/// Provides types for defining fields in custom [`VertexInterface`] structs.
 #[sealed]
-pub trait AttributesDomain: Domain {
-    type Vertex<V: Vertex<Self>>: Attributes<Self>;
+pub trait VertexDomain: Domain {
+    type Vertex<V: Vertex<Self>>;
 }
 
-impl<D, V, W> Attributes<D> for (V, W)
-where
-    D: AttributesDomain,
-    V: Attributes<D>,
-    W: Attributes<D>,
-{
-    type InGl = (V::InGl, W::InGl);
-    type InSl = (V::InSl, W::InSl);
+/// Types that define a shader vertex input interface.
+pub trait VertexInterface<D: VertexDomain> {
+    type InGl: VertexInterface<Gl>;
+    type InSl: VertexInterface<Sl>;
 }
 
 // Resource interface
 
-/// A type that can be used as resource input for shaders.
+/// Resource types.
 pub trait Resource<D: ResourceDomain> {
     type InGl: Resource<Gl>;
     type InSl: Resource<Sl>;
 }
 
-/// A domain in which [`Resource`] fields can be specified.
+/// Provides types for defining fields in custom [`ResourceInterface`] structs.
 pub trait ResourceDomain: Domain {
     type Sampler2d<T: Numeric>: Resource<Self>;
 
@@ -112,15 +101,27 @@ where
     type InSl = (V::InSl, W::InSl);
 }
 
+/// Types that define a shader resource input interface.
+pub trait ResourceInterface<D: ResourceDomain> {
+    type InGl: ResourceInterface<Gl>;
+    type InSl: ResourceInterface<Sl>;
+}
+
 // Fragment interface
 
-/// A domain in which [`Fragment`] fields can be specified.
+/// Provides types for defining fields in custom [`FragmentInterface`] structs.
 pub trait FragmentDomain: Sized {
     type Attachment2d: Fragment<Self>;
 }
 
-/// A type that can be used as fragment output for shaders.
+/// Fragment types.
 pub trait Fragment<D: FragmentDomain> {
     type InGl: Fragment<Gl>;
-    type InSl: Fragment<Sl> + Value;
+    type InSl: Fragment<Sl>;
+}
+
+/// Types that define a shader fragment output interface.
+pub trait FragmentInterface<D: FragmentDomain> {
+    type InGl: FragmentInterface<Gl>;
+    type InSl: FragmentInterface<Sl>;
 }

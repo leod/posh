@@ -3,10 +3,13 @@ use sealed::sealed;
 
 use crate::{
     gl::{Sampler2dBinding, Texture2dBinding, UniformBufferBinding, VertexBufferBinding},
-    sl, Fragment, Gl, Numeric, Sl, Uniform,
+    sl, Gl, Numeric, Sl,
 };
 
-use super::{Attributes, FragmentDomain, Primitive, Resource, ResourceDomain, ToPod, Vertex};
+use super::{
+    Fragment, FragmentDomain, Primitive, Resource, ResourceDomain, ToPod, Uniform, Vertex,
+    VertexInterface,
+};
 
 // Uniform interface
 
@@ -117,15 +120,13 @@ impl<T: Primitive> Vertex<Gl> for mint::Vector2<T> {
     type InSl = sl::Vec2<T>;
 }
 
-// Attributes interface
-
-impl<V: Vertex<Gl>> Attributes<Gl> for VertexBufferBinding<V> {
+impl<V: Vertex<Gl>> VertexInterface<Gl> for VertexBufferBinding<V> {
     type InGl = Self;
     type InSl = V::InSl;
 }
 
 #[sealed]
-impl super::AttributesDomain for Gl {
+impl super::VertexDomain for Gl {
     type Vertex<V: Vertex<Gl>> = VertexBufferBinding<V>;
 }
 
