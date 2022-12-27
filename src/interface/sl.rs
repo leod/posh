@@ -40,8 +40,8 @@ impl<T: Primitive> Vertex<Sl> for Scalar<T> {
     type InGl = T;
     type InSl = Self;
 
-    fn attributes() -> Vec<VertexAttribute> {
-        Self::InGl::attributes()
+    fn attributes(path: &mut Vec<&'static str>) -> Vec<VertexAttribute> {
+        Self::InGl::attributes(path)
     }
 }
 
@@ -49,8 +49,8 @@ impl<T: Primitive> Vertex<Sl> for Vec2<T> {
     type InGl = T::Vec2;
     type InSl = Self;
 
-    fn attributes() -> Vec<VertexAttribute> {
-        Self::InGl::attributes()
+    fn attributes(path: &mut Vec<&'static str>) -> Vec<VertexAttribute> {
+        Self::InGl::attributes(path)
     }
 }
 

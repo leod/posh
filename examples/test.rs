@@ -40,9 +40,13 @@ struct MyVertex<D: Domain = Sl> {
 }
 
 #[derive(Clone, Copy, ToValue, Vertex)]
-struct MyGenericVertex<D: Domain = Sl> {
+struct MyNestedVertex<D: Domain = Sl> {
     x: D::Scalar<f32>,
+    zzz: MyUniform1<D>,
     y: D::Vec2<f32>,
 }
 
-fn main() {}
+fn main() {
+    println!("{:#?}", MyVertex::<Sl>::attributes(&mut Vec::new()));
+    println!("{:#?}", MyNestedVertex::<Sl>::attributes(&mut Vec::new()));
+}

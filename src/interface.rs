@@ -59,8 +59,9 @@ pub trait ToPod: Copy {
 }
 
 #[doc(hidden)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VertexAttribute {
-    pub name: &'static str,
+    pub name: String,
     pub ty: Type,
     pub offset: usize,
 }
@@ -71,7 +72,7 @@ pub trait Vertex<D: Domain>: ToValue {
     type InSl: Vertex<Sl> + Value + ToValue<Output = Self::InSl>;
 
     #[doc(hidden)]
-    fn attributes() -> Vec<VertexAttribute>;
+    fn attributes(path: &mut Vec<&'static str>) -> Vec<VertexAttribute>;
 }
 
 #[doc(hidden)]
