@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::{Attributes, Fragment, Resource, Sl};
+use crate::{Fragment, Resource, Sl, Vertex};
 
 use super::Varying;
 
@@ -11,7 +11,7 @@ pub struct ProgramDef<R, A, F> {
 impl<R, A, F> ProgramDef<R, A, F>
 where
     R: Resource<Sl>,
-    A: Attributes<Sl>,
+    A: Vertex<Sl>,
     F: Fragment<Sl>,
 {
     pub fn new<V>(vertex_shader: fn(R, A) -> V, fragment_shader: fn(R, V) -> F) -> Self

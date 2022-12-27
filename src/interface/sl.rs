@@ -3,10 +3,12 @@ use sealed::sealed;
 use crate::{
     gl,
     sl::{Sampler2d, Scalar, Vec2, Vec4},
-    Fragment, Numeric, Sl, Uniform,
+    Numeric, Sl,
 };
 
-use super::{Attributes, FragmentDomain, Primitive, Resource, ResourceDomain, Vertex};
+use super::{
+    Fragment, FragmentDomain, Primitive, Resource, ResourceDomain, Uniform, Vertex, VertexInterface,
+};
 
 // Uniform interface
 
@@ -45,13 +47,13 @@ impl<T: Primitive> Vertex<Sl> for Vec2<T> {
 
 // Attributes interface
 
-impl<V: Vertex<Sl>> Attributes<Sl> for V {
+impl<V: Vertex<Sl>> VertexInterface<Sl> for V {
     type InGl = gl::VertexBufferBinding<V::InGl>;
     type InSl = V::InSl;
 }
 
 #[sealed]
-impl super::AttributesDomain for Sl {
+impl super::VertexDomain for Sl {
     type Vertex<V: Vertex<Sl>> = V;
 }
 

@@ -1,4 +1,4 @@
-use crate::Attributes;
+use crate::Vertex;
 
 use crate::Gl;
 
@@ -16,7 +16,7 @@ pub enum GeometryType {
 }
 
 #[derive(Clone)]
-pub struct VertexStream<A: Attributes<Gl>, E: Element> {
+pub struct VertexStream<A: Vertex<Gl>, E: Element> {
     pub attribute: A,
     pub geometry_type: GeometryType,
     pub elements: Option<ElementBufferBinding<E>>,
