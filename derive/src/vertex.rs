@@ -38,7 +38,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         trait #gl_field_types_trait {
             #(
                 #[allow(non_camel_case_types)]
-                type #field_idents: ::posh::ToPod;
+                type #field_idents: ::posh::Vertex<::posh::Gl> + ::posh::ToPod;
             )*
         }
 
@@ -105,23 +105,34 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             type InGl = #ident #ty_generics_gl;
             type InSl = #ident #ty_generics_sl;
 
-            fn attributes() -> Vec<::posh::VertexAttribute>{
-                ::std::vec![
-                    #(
-                        ::posh::VertexAttribute {
-                            name: #field_strings,
-                            ty: <
-                                <#ident #ty_generics_sl as #sl_field_types_trait>::#field_idents
-                                as ::posh::sl::Object
-                            >::TYPE,
-                            offset: ::posh::bytemuck::offset_of!(
-                                ::posh::bytemuck::Zeroable::zeroed(),
-                                #to_pod_ident #ty_generics_no_d,
-                                #field_idents
-                            ),
-                        }
-                    ),*
-                ]
+            fn attributes(path: &mut Vec<&'static str>) -> Vec<::posh::VertexAttribute> {
+                let mut result = Vec::new();
+
+                #(
+                    path.push(#field_strings);
+
+                    let offset = ::posh::bytemuck::offset_of!(
+                        ::posh::bytemuck::Zeroable::zeroed(),
+                        #to_pod_ident #ty_generics_no_d,
+                        #field_idents
+                    );
+
+                    let attrs = <
+                        <#ident #ty_generics_gl as #gl_field_types_trait>::#field_idents
+                        as ::posh::Vertex<::posh::Gl>
+                    >::attributes(path);
+
+                    for attr in attrs {
+                        result.push(::posh::VertexAttribute {
+                            offset: attr.offset + offset,
+                            ..attr
+                        });
+                    }
+
+                    path.pop();
+                )*
+
+                result
             }
         }
 

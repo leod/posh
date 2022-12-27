@@ -100,9 +100,9 @@ impl Vertex<Gl> for bool {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
 
-    fn attributes() -> Vec<VertexAttribute> {
+    fn attributes(path: &mut Vec<&'static str>) -> Vec<VertexAttribute> {
         vec![VertexAttribute {
-            name: "attr",
+            name: path.join("_") + "_attr",
             ty: Type::Base(BaseType::Scalar(PrimitiveType::Numeric(
                 <Self as Primitive>::NUMERIC_REPR_TYPE,
             ))),
@@ -115,9 +115,9 @@ impl Vertex<Gl> for f32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
 
-    fn attributes() -> Vec<VertexAttribute> {
+    fn attributes(path: &mut Vec<&'static str>) -> Vec<VertexAttribute> {
         vec![VertexAttribute {
-            name: "attr",
+            name: path.join("_") + "_attr",
             ty: Type::Base(BaseType::Scalar(PrimitiveType::Numeric(
                 <Self as Primitive>::NUMERIC_REPR_TYPE,
             ))),
@@ -130,9 +130,9 @@ impl Vertex<Gl> for i32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
 
-    fn attributes() -> Vec<VertexAttribute> {
+    fn attributes(path: &mut Vec<&'static str>) -> Vec<VertexAttribute> {
         vec![VertexAttribute {
-            name: "attr",
+            name: path.join("_") + "_attr",
             ty: Type::Base(BaseType::Scalar(PrimitiveType::Numeric(
                 <Self as Primitive>::NUMERIC_REPR_TYPE,
             ))),
@@ -145,9 +145,9 @@ impl Vertex<Gl> for u32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
 
-    fn attributes() -> Vec<VertexAttribute> {
+    fn attributes(path: &mut Vec<&'static str>) -> Vec<VertexAttribute> {
         vec![VertexAttribute {
-            name: "attr",
+            name: path.join("_") + "_attr",
             ty: Type::Base(BaseType::Scalar(PrimitiveType::Numeric(
                 <Self as Primitive>::NUMERIC_REPR_TYPE,
             ))),
@@ -160,9 +160,9 @@ impl<T: Primitive> Vertex<Gl> for mint::Vector2<T> {
     type InGl = T::Vec2;
     type InSl = sl::Vec2<T>;
 
-    fn attributes() -> Vec<VertexAttribute> {
+    fn attributes(path: &mut Vec<&'static str>) -> Vec<VertexAttribute> {
         vec![VertexAttribute {
-            name: "attr",
+            name: path.join("_") + "_attr",
             ty: Type::Base(BaseType::Vec2(PrimitiveType::Numeric(T::NUMERIC_REPR_TYPE))),
             offset: 0,
         }]
