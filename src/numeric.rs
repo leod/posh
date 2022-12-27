@@ -18,12 +18,16 @@ pub trait Primitive:
     const PRIMITIVE_TYPE: PrimitiveType;
 
     #[doc(hidden)]
+    const NUMERIC_REPR_TYPE: NumericType;
+
+    #[doc(hidden)]
     type Vec2: Uniform<Gl> + Vertex<Gl> + AsStd140 + ToPod + ToValue<Output = Vec2<Self>>;
 }
 
 #[sealed]
 impl Primitive for bool {
     const PRIMITIVE_TYPE: PrimitiveType = PrimitiveType::Bool;
+    const NUMERIC_REPR_TYPE: NumericType = NumericType::UInt;
 
     type Vec2 = mint::Vector2<bool>;
 }
@@ -31,6 +35,7 @@ impl Primitive for bool {
 #[sealed]
 impl Primitive for i32 {
     const PRIMITIVE_TYPE: PrimitiveType = PrimitiveType::Numeric(NumericType::Int);
+    const NUMERIC_REPR_TYPE: NumericType = NumericType::Int;
 
     type Vec2 = mint::Vector2<i32>;
 }
@@ -38,6 +43,7 @@ impl Primitive for i32 {
 #[sealed]
 impl Primitive for u32 {
     const PRIMITIVE_TYPE: PrimitiveType = PrimitiveType::Numeric(NumericType::UInt);
+    const NUMERIC_REPR_TYPE: NumericType = NumericType::UInt;
 
     type Vec2 = mint::Vector2<u32>;
 }
@@ -45,6 +51,7 @@ impl Primitive for u32 {
 #[sealed]
 impl Primitive for f32 {
     const PRIMITIVE_TYPE: PrimitiveType = PrimitiveType::Numeric(NumericType::Float);
+    const NUMERIC_REPR_TYPE: NumericType = NumericType::Float;
 
     type Vec2 = mint::Vector2<f32>;
 }

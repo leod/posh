@@ -6,12 +6,12 @@ mod gl;
 mod sl;
 
 use crate::{
+    dag::Type,
     sl::{Bool, Scalar, ToValue, Value, Vec2, F32, I32, U32},
     Gl, Numeric, Primitive, Sl,
 };
 
-/// Provides types for defining fields in custom [`Uniform`] or [`Vertex`]
-/// structs.
+/// Provides types for declaring fields in a [`Uniform`] or a [`Vertex`].
 #[sealed]
 pub trait Domain: Copy {
     /// A scalar value.
@@ -58,70 +58,67 @@ pub trait ToPod: Copy {
     fn to_pod(self) -> Self::Output;
 }
 
+#[doc(hidden)]
+pub struct VertexAttribute {
+    pub name: &'static str,
+    pub ty: Type,
+    pub offset: usize,
+}
+
 /// Vertex types.
 pub trait Vertex<D: Domain>: ToValue {
     type InGl: Vertex<Gl> + ToPod + ToValue<Output = Self::InSl>;
     type InSl: Vertex<Sl> + Value + ToValue<Output = Self::InSl>;
+
+    #[doc(hidden)]
+    fn attributes() -> Vec<VertexAttribute>;
 }
 
-/// Provides types for defining fields in custom [`VertexInterface`] structs.
-#[sealed]
-pub trait VertexDomain: Domain {
-    type Vertex<V: Vertex<Self>>;
+#[doc(hidden)]
+pub trait VertexInterfaceVisitor<D: VertexDomain> {
+    fn accept<V: Vertex<D>>(&mut self, path: &[&str], vertex: &D::Vertex<V>);
 }
 
-/// Types that define a shader vertex input interface.
+/// Types that declare a shader input vertex interface.
 pub trait VertexInterface<D: VertexDomain> {
     type InGl: VertexInterface<Gl>;
     type InSl: VertexInterface<Sl>;
+
+    fn visit(&self, visitor: &mut impl VertexInterfaceVisitor<D>);
+}
+
+/// Provides types for declaring fields in a [`VertexInterface`].
+#[sealed]
+pub trait VertexDomain: Domain {
+    type Vertex<V: Vertex<Self>>: VertexInterface<Self>;
 }
 
 // Resource interface
 
-/// Resource types.
-pub trait Resource<D: ResourceDomain> {
-    type InGl: Resource<Gl>;
-    type InSl: Resource<Sl>;
-}
-
-/// Provides types for defining fields in custom [`ResourceInterface`] structs.
-pub trait ResourceDomain: Domain {
-    type Sampler2d<T: Numeric>: Resource<Self>;
-
-    type Uniform<U: Uniform<Self>>: Resource<Self>;
-}
-
-impl<D, V, W> Resource<D> for (V, W)
-where
-    D: ResourceDomain,
-    V: Resource<D>,
-    W: Resource<D>,
-{
-    type InGl = (V::InGl, W::InGl);
-    type InSl = (V::InSl, W::InSl);
-}
-
-/// Types that define a shader resource input interface.
+/// Types that declare a shader input resource interface.
 pub trait ResourceInterface<D: ResourceDomain> {
     type InGl: ResourceInterface<Gl>;
     type InSl: ResourceInterface<Sl>;
 }
 
+/// Provides types for declaring fields in a [`ResourceInterface`].
+#[sealed]
+pub trait ResourceDomain: Domain {
+    type Sampler2d<T: Numeric>: ResourceInterface<Self>;
+
+    type Uniform<U: Uniform<Self>>: ResourceInterface<Self>;
+}
+
 // Fragment interface
 
-/// Provides types for defining fields in custom [`FragmentInterface`] structs.
-pub trait FragmentDomain: Sized {
-    type Attachment2d: Fragment<Self>;
-}
-
-/// Fragment types.
-pub trait Fragment<D: FragmentDomain> {
-    type InGl: Fragment<Gl>;
-    type InSl: Fragment<Sl>;
-}
-
-/// Types that define a shader fragment output interface.
+/// Types that declare a shader output fragment interface.
 pub trait FragmentInterface<D: FragmentDomain> {
     type InGl: FragmentInterface<Gl>;
     type InSl: FragmentInterface<Sl>;
+}
+
+/// Provides types for declaring fields in a [`FragmentInterface`].
+#[sealed]
+pub trait FragmentDomain: Sized {
+    type Attachment2d: FragmentInterface<Self>;
 }

@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
-use crate::{Fragment, Gl};
+use crate::{FragmentInterface, Gl};
 
-pub struct SurfaceBinding<F: Fragment<Gl>>(PhantomData<F>);
+pub struct SurfaceBinding<F: FragmentInterface<Gl>>(PhantomData<F>);
 
 pub struct DefaultSurface;

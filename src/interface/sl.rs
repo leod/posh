@@ -1,13 +1,14 @@
 use sealed::sealed;
 
 use crate::{
-    gl,
+    gl::{self, Texture2dBinding},
     sl::{Sampler2d, Scalar, Vec2, Vec4},
-    Numeric, Sl,
+    Gl, Numeric, Sl,
 };
 
 use super::{
-    Fragment, FragmentDomain, Primitive, Resource, ResourceDomain, Uniform, Vertex, VertexInterface,
+    FragmentInterface, Primitive, ResourceInterface, Uniform, Vertex, VertexAttribute,
+    VertexInterface, VertexInterfaceVisitor,
 };
 
 // Uniform interface
@@ -38,18 +39,30 @@ impl super::Domain for Sl {
 impl<T: Primitive> Vertex<Sl> for Scalar<T> {
     type InGl = T;
     type InSl = Self;
+
+    fn attributes() -> Vec<VertexAttribute> {
+        Self::InGl::attributes()
+    }
 }
 
 impl<T: Primitive> Vertex<Sl> for Vec2<T> {
     type InGl = T::Vec2;
     type InSl = Self;
+
+    fn attributes() -> Vec<VertexAttribute> {
+        Self::InGl::attributes()
+    }
 }
 
-// Attributes interface
+// Vertex interface
 
 impl<V: Vertex<Sl>> VertexInterface<Sl> for V {
     type InGl = gl::VertexBufferBinding<V::InGl>;
     type InSl = V::InSl;
+
+    fn visit(&self, visitor: &mut impl VertexInterfaceVisitor<Sl>) {
+        visitor.accept(&["vertex"], self)
+    }
 }
 
 #[sealed]
@@ -59,28 +72,30 @@ impl super::VertexDomain for Sl {
 
 // Resource interface
 
-impl<T: Numeric> Resource<Sl> for Sampler2d<T> {
+impl<T: Numeric> ResourceInterface<Sl> for Sampler2d<T> {
     type InGl = gl::Sampler2dBinding<T>;
     type InSl = Self;
 }
 
-impl<U: Uniform<Sl>> Resource<Sl> for U {
+impl<U: Uniform<Sl>> ResourceInterface<Sl> for U {
     type InGl = gl::UniformBufferBinding<U>;
     type InSl = Self;
 }
 
-impl ResourceDomain for Sl {
+#[sealed]
+impl super::ResourceDomain for Sl {
     type Sampler2d<T: Numeric> = Sampler2d<T>;
     type Uniform<U: Uniform<Sl>> = U;
 }
 
 // Fragment interface
 
-impl Fragment<Sl> for Vec4<f32> {
-    type InGl = gl::Texture2dBinding;
+impl FragmentInterface<Sl> for Vec4<f32> {
+    type InGl = Texture2dBinding;
     type InSl = Self;
 }
 
-impl FragmentDomain for Sl {
+#[sealed]
+impl super::FragmentDomain for Sl {
     type Attachment2d = Vec4<f32>;
 }

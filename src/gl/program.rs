@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::{sl::Varying, Fragment, Gl, Resource, Sl, Vertex};
+use crate::{sl::Varying, FragmentInterface, Gl, ResourceInterface, Sl, Vertex, VertexInterface};
 
 use super::{DrawParams, Element, SurfaceBinding, VertexStream};
 
@@ -8,31 +8,31 @@ pub struct Program<R, A, F> {
     _phantom: PhantomData<(R, A, F)>,
 }
 
-impl<R, A, F> Program<R, A, F>
+impl<R, V, F> Program<R, V, F>
 where
-    R: Resource<Sl>,
-    A: Vertex<Sl>,
-    F: Fragment<Sl>,
+    R: ResourceInterface<Sl>,
+    V: VertexInterface<Sl>,
+    F: FragmentInterface<Sl>,
 {
-    pub fn new<V>(vertex_shader: fn(R, A) -> V, fragment_shader: fn(R, V) -> F) -> Self
+    pub fn new<W>(vertex_shader: fn(R, V) -> W, fragment_shader: fn(R, W) -> F) -> Self
     where
-        V: Varying,
+        W: Varying,
     {
         Program {
             _phantom: PhantomData,
         }
     }
 
-    pub fn draw<BindR, BindA, BindF, E>(
+    pub fn draw<BindR, BindV, BindF, E>(
         &self,
         resource: BindR,
-        vertices: VertexStream<BindA, E>,
+        vertices: VertexStream<BindV, E>,
         surface: SurfaceBinding<BindF>,
         draw_params: &DrawParams,
     ) where
-        BindR: Resource<Gl, InSl = R>,
-        BindA: Vertex<Gl, InSl = A>,
-        BindF: Fragment<Gl, InSl = F>,
+        BindR: ResourceInterface<Gl, InSl = R>,
+        BindV: VertexInterface<Gl, InSl = V>,
+        BindF: FragmentInterface<Gl, InSl = F>,
         E: Element,
     {
     }
