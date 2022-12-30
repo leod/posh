@@ -2,21 +2,16 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{parse_quote, DeriveInput, Ident, Result};
 
-use crate::utils::{get_domain_param, remove_domain_param, SpecializeDomain, StructFields};
+use crate::utils::{
+    get_domain_param, remove_domain_param, specialize_field_types, SpecializeFieldTypesConfig,
+    SpecializedTypeGenerics, StructFields,
+};
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let ident = &input.ident;
     let visibility = input.vis;
 
     let to_pod_ident = Ident::new(&format!("PoshInternal{ident}VertexToPod"), ident.span());
-    let gl_field_types_trait = Ident::new(
-        &format!("PoshInternal{ident}VertexGlFieldTypes"),
-        ident.span(),
-    );
-    let sl_field_types_trait = Ident::new(
-        &format!("PoshInternal{ident}VertexSlFieldTypes"),
-        ident.span(),
-    );
 
     let generics_no_d = remove_domain_param(ident, &input.generics)?;
     let generics_d_type = get_domain_param(ident, &input.generics)?;
@@ -24,50 +19,44 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
     let (impl_generics_no_d, ty_generics_no_d, _) = generics_no_d.split_for_impl();
 
-    let ty_generics_gl = SpecializeDomain::new(parse_quote!(::posh::Gl), ident, &input.generics)?;
-    let ty_generics_sl = SpecializeDomain::new(parse_quote!(::posh::Sl), ident, &input.generics)?;
+    let ty_generics_gl =
+        SpecializedTypeGenerics::new(parse_quote!(::posh::Gl), ident, &input.generics)?;
+    let ty_generics_sl =
+        SpecializedTypeGenerics::new(parse_quote!(::posh::Sl), ident, &input.generics)?;
 
     let fields = StructFields::new(&input.ident, &input.data)?;
     let field_idents = fields.idents();
     let field_types = fields.types();
     let field_strings = fields.strings();
 
+    let (field_types_gl_setup, field_types_gl) = specialize_field_types(
+        SpecializeFieldTypesConfig {
+            context: "VertexGl",
+            domain: parse_quote!(::posh::Gl),
+            bounds: parse_quote!(::posh::Vertex<::posh::Gl> + ::posh::ToPod),
+            map_trait: parse_quote!(::posh::Vertex<#generics_d_type>),
+            map_type: parse_quote!(InGl),
+        },
+        ident,
+        &input.generics,
+        &fields,
+    )?;
+    let (field_types_sl_setup, field_types_sl) = specialize_field_types(
+        SpecializeFieldTypesConfig {
+            context: "VertexSl",
+            domain: parse_quote!(::posh::Sl),
+            bounds: parse_quote!(::posh::derive_internal::VertexInSl),
+            map_trait: parse_quote!(::posh::Vertex<#generics_d_type>),
+            map_type: parse_quote!(InSl),
+        },
+        ident,
+        &input.generics,
+        &fields,
+    )?;
+
     Ok(quote! {
-        // Helper trait for mapping struct field types to `Gl`.
-        #[doc(hidden)]
-        trait #gl_field_types_trait {
-            #(
-                #[allow(non_camel_case_types)]
-                type #field_idents: ::posh::Vertex<::posh::Gl> + ::posh::ToPod;
-            )*
-        }
-
-        // Implement the helper trait for mapping struct field types to `Gl`.
-        impl #impl_generics #gl_field_types_trait for #ident #ty_generics
-        #where_clause
-        {
-            #(
-                type #field_idents = <#field_types as ::posh::Vertex<#generics_d_type>>::InGl;
-            )*
-        }
-
-        // Helper trait for mapping struct field types to `Sl`.
-        #[doc(hidden)]
-        trait #sl_field_types_trait {
-            #(
-                #[allow(non_camel_case_types)]
-                type #field_idents: ::posh::derive_internal::VertexInSl;
-            )*
-        }
-
-        // Implement the helper trait for mapping struct field types to `Sl`.
-        impl #impl_generics #sl_field_types_trait for #ident #ty_generics
-        #where_clause
-        {
-            #(
-                type #field_idents = <#field_types as ::posh::Vertex<#generics_d_type>>::InSl;
-            )*
-        }
+        #field_types_gl_setup
+        #field_types_sl_setup
 
         // Helper type for which we can derive `Pod`.
         // FIXME: `Pod` derive does not support generic types and likely never will.
@@ -76,10 +65,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         #[repr(C)]
         #visibility struct #to_pod_ident #impl_generics_no_d {
             #(
-                #field_idents: <
-                    <#ident #ty_generics_gl as #gl_field_types_trait>::#field_idents
-                    as ::posh::ToPod
-                >::Output
+                #field_idents: <#field_types_gl as ::posh::ToPod>::Output
             ),*
         }
 
@@ -121,8 +107,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                     );
 
                     let attrs = <
-                        <#ident #ty_generics_sl as #sl_field_types_trait>::#field_idents
-                        as ::posh::derive_internal::VertexInSl
+                        #field_types_sl as ::posh::derive_internal::VertexInSl
                     >::attributes(&::posh::derive_internal::join_ident_path(path, #field_strings));
 
                     for attr in attrs {
@@ -140,8 +125,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                 Self {
                     #(
                         #field_idents: <
-                            <#ident #ty_generics_sl as #sl_field_types_trait>::#field_idents
-                            as ::posh::derive_internal::VertexInSl
+                            #field_types_sl as ::posh::derive_internal::VertexInSl
                         >::shader_input(
                             &::posh::derive_internal::join_ident_path(path, #field_strings),
                         ),

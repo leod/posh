@@ -2,7 +2,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{parse_quote, DeriveInput, Result};
 
-use crate::utils::{get_domain_param, SpecializeDomain, StructFields};
+use crate::utils::{get_domain_param, SpecializedTypeGenerics, StructFields};
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let ident = &input.ident;
@@ -11,8 +11,10 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
-    let ty_generics_gl = SpecializeDomain::new(parse_quote!(::posh::Gl), ident, &input.generics)?;
-    let ty_generics_sl = SpecializeDomain::new(parse_quote!(::posh::Sl), ident, &input.generics)?;
+    let ty_generics_gl =
+        SpecializedTypeGenerics::new(parse_quote!(::posh::Gl), ident, &input.generics)?;
+    let ty_generics_sl =
+        SpecializedTypeGenerics::new(parse_quote!(::posh::Sl), ident, &input.generics)?;
 
     let fields = StructFields::new(&input.ident, &input.data)?;
     let field_idents = fields.idents();
