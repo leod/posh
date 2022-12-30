@@ -2,7 +2,7 @@ use bytemuck::{Pod, Zeroable};
 use sealed::sealed;
 
 use crate::{
-    dag::{BaseType, NumericType, PrimitiveType, Type},
+    dag::{BaseType, PrimitiveType, Type},
     gl::{Sampler2dBinding, Texture2dBinding, UniformBufferBinding, VertexBufferBinding},
     sl, Gl, Numeric, Sl,
 };
@@ -96,18 +96,23 @@ impl<T: Primitive> ToPod for mint::Vector2<T> {
     }
 }
 
+fn vertex_attribute(path: &str, base_type: BaseType) -> Vec<VertexAttribute> {
+    vec![VertexAttribute {
+        name: super::join_ident_path(path, "attr"),
+        ty: Type::Base(base_type),
+        offset: 0,
+    }]
+}
+
 impl Vertex<Gl> for bool {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
 
-    fn attributes(path: &mut Vec<&'static str>) -> Vec<VertexAttribute> {
-        vec![VertexAttribute {
-            name: path.join("_") + "_attr",
-            ty: Type::Base(BaseType::Scalar(PrimitiveType::Numeric(
-                <Self as Primitive>::NUMERIC_REPR_TYPE,
-            ))),
-            offset: 0,
-        }]
+    fn attributes(path: &str) -> Vec<VertexAttribute> {
+        vertex_attribute(
+            path,
+            BaseType::Scalar(PrimitiveType::Numeric(Self::NUMERIC_REPR_TYPE)),
+        )
     }
 }
 
@@ -115,14 +120,11 @@ impl Vertex<Gl> for f32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
 
-    fn attributes(path: &mut Vec<&'static str>) -> Vec<VertexAttribute> {
-        vec![VertexAttribute {
-            name: path.join("_") + "_attr",
-            ty: Type::Base(BaseType::Scalar(PrimitiveType::Numeric(
-                <Self as Primitive>::NUMERIC_REPR_TYPE,
-            ))),
-            offset: 0,
-        }]
+    fn attributes(path: &str) -> Vec<VertexAttribute> {
+        vertex_attribute(
+            path,
+            BaseType::Scalar(PrimitiveType::Numeric(Self::NUMERIC_REPR_TYPE)),
+        )
     }
 }
 
@@ -130,14 +132,11 @@ impl Vertex<Gl> for i32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
 
-    fn attributes(path: &mut Vec<&'static str>) -> Vec<VertexAttribute> {
-        vec![VertexAttribute {
-            name: path.join("_") + "_attr",
-            ty: Type::Base(BaseType::Scalar(PrimitiveType::Numeric(
-                <Self as Primitive>::NUMERIC_REPR_TYPE,
-            ))),
-            offset: 0,
-        }]
+    fn attributes(path: &str) -> Vec<VertexAttribute> {
+        vertex_attribute(
+            path,
+            BaseType::Scalar(PrimitiveType::Numeric(Self::NUMERIC_REPR_TYPE)),
+        )
     }
 }
 
@@ -145,14 +144,11 @@ impl Vertex<Gl> for u32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
 
-    fn attributes(path: &mut Vec<&'static str>) -> Vec<VertexAttribute> {
-        vec![VertexAttribute {
-            name: path.join("_") + "_attr",
-            ty: Type::Base(BaseType::Scalar(PrimitiveType::Numeric(
-                <Self as Primitive>::NUMERIC_REPR_TYPE,
-            ))),
-            offset: 0,
-        }]
+    fn attributes(path: &str) -> Vec<VertexAttribute> {
+        vertex_attribute(
+            path,
+            BaseType::Scalar(PrimitiveType::Numeric(Self::NUMERIC_REPR_TYPE)),
+        )
     }
 }
 
@@ -160,12 +156,11 @@ impl<T: Primitive> Vertex<Gl> for mint::Vector2<T> {
     type InGl = T::Vec2;
     type InSl = sl::Vec2<T>;
 
-    fn attributes(path: &mut Vec<&'static str>) -> Vec<VertexAttribute> {
-        vec![VertexAttribute {
-            name: path.join("_") + "_attr",
-            ty: Type::Base(BaseType::Vec2(PrimitiveType::Numeric(T::NUMERIC_REPR_TYPE))),
-            offset: 0,
-        }]
+    fn attributes(path: &str) -> Vec<VertexAttribute> {
+        vertex_attribute(
+            path,
+            BaseType::Vec2(PrimitiveType::Numeric(T::NUMERIC_REPR_TYPE)),
+        )
     }
 }
 

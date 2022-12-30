@@ -11,8 +11,8 @@ pub mod gl;
 pub mod sl;
 
 pub use interface::{
-    Domain, FragmentDomain, FragmentInterface, ResourceDomain, ResourceInterface, ToPod, Uniform,
-    Vertex, VertexAttribute, VertexDomain, VertexInterface, VertexInterfaceField,
+    join_ident_path, Domain, FragmentDomain, FragmentInterface, ResourceDomain, ResourceInterface,
+    ToPod, Uniform, Vertex, VertexAttribute, VertexDomain, VertexInterface, VertexInterfaceField,
     VertexInterfaceVisitor,
 };
 pub use numeric::{Numeric, Primitive};

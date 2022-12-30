@@ -41,6 +41,11 @@ pub trait Domain: Copy {
     type U32: Uniform<Self> + Vertex<Self> + ToValue<Output = U32>;
 }
 
+#[doc(hidden)]
+pub fn join_ident_path(lhs: &str, rhs: &str) -> String {
+    format!("{lhs}_{rhs}")
+}
+
 // Uniform interface
 
 /// Uniform types.
@@ -72,7 +77,7 @@ pub trait Vertex<D: Domain>: ToValue {
     type InSl: Vertex<Sl> + Value + ToValue<Output = Self::InSl>;
 
     #[doc(hidden)]
-    fn attributes(path: &mut Vec<&'static str>) -> Vec<VertexAttribute>;
+    fn attributes(path: &str) -> Vec<VertexAttribute>;
 }
 
 #[doc(hidden)]
