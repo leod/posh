@@ -13,6 +13,10 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         &format!("PoshInternal{ident}VertexGlFieldTypes"),
         ident.span(),
     );
+    let sl_field_types_trait = Ident::new(
+        &format!("PoshInternal{ident}VertexSlFieldTypes"),
+        ident.span(),
+    );
 
     let generics_no_d = remove_domain_param(ident, &input.generics)?;
     let generics_d_type = get_domain_param(ident, &input.generics)?;
@@ -44,6 +48,24 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         {
             #(
                 type #field_idents = <#field_types as ::posh::Vertex<#generics_d_type>>::InGl;
+            )*
+        }
+
+        // Helper trait for mapping struct field types to `Sl`.
+        #[doc(hidden)]
+        trait #sl_field_types_trait {
+            #(
+                #[allow(non_camel_case_types)]
+                type #field_idents: ::posh::derive_internal::VertexInSl;
+            )*
+        }
+
+        // Implement the helper trait for mapping struct field types to `Sl`.
+        impl #impl_generics #sl_field_types_trait for #ident #ty_generics
+        #where_clause
+        {
+            #(
+                type #field_idents = <#field_types as ::posh::Vertex<#generics_d_type>>::InSl;
             )*
         }
 
@@ -82,8 +104,13 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         {
             type InGl = #ident #ty_generics_gl;
             type InSl = #ident #ty_generics_sl;
+        }
 
-            fn attributes(path: &str) -> Vec<::posh::VertexAttribute> {
+        // Implement `VertexInSl` for the struct in `Sl`.
+        impl #impl_generics_no_d ::posh::derive_internal::VertexInSl for #ident #ty_generics_sl
+        #where_clause
+        {
+            fn attributes(path: &str) -> Vec<::posh::derive_internal::VertexAttribute> {
                 let mut result = Vec::new();
 
                 #(
@@ -94,12 +121,12 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                     );
 
                     let attrs = <
-                        <#ident #ty_generics_gl as #gl_field_types_trait>::#field_idents
-                        as ::posh::Vertex<::posh::Gl>
-                    >::attributes(&::posh::join_ident_path(path, #field_strings));
+                        <#ident #ty_generics_sl as #sl_field_types_trait>::#field_idents
+                        as ::posh::derive_internal::VertexInSl
+                    >::attributes(&::posh::derive_internal::join_ident_path(path, #field_strings));
 
                     for attr in attrs {
-                        result.push(::posh::VertexAttribute {
+                        result.push(::posh::derive_internal::VertexAttribute {
                             offset: attr.offset + offset,
                             ..attr
                         });
@@ -107,6 +134,19 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                 )*
 
                 result
+            }
+
+            fn shader_input(path: &str) -> Self {
+                Self {
+                    #(
+                        #field_idents: <
+                            <#ident #ty_generics_sl as #sl_field_types_trait>::#field_idents
+                            as ::posh::derive_internal::VertexInSl
+                        >::shader_input(
+                            &::posh::derive_internal::join_ident_path(path, #field_strings),
+                        ),
+                    )*
+                }
             }
         }
 

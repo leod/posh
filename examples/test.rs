@@ -1,4 +1,5 @@
 use posh::{
+    derive_internal::VertexInSl,
     sl::{self, ToValue, Value},
     Domain, Numeric, Primitive, Sl, Uniform, Vertex, VertexDomain, VertexInterface,
 };
@@ -54,13 +55,16 @@ struct MyVertexIface<D: VertexDomain = Sl> {
 
 struct MyVisitor {}
 
-impl posh::VertexInterfaceVisitor<Sl> for MyVisitor {
+impl posh::derive_internal::VertexInterfaceVisitor<Sl> for MyVisitor {
     fn accept<V: Vertex<Sl>>(&mut self, name: &str, vertex: &V) {
         todo!()
     }
 }
 
 fn main() {
-    println!("{:#?}", MyVertex::<Sl>::attributes(""));
-    println!("{:#?}", MyNestedVertex::<Sl>::attributes(""));
+    println!("{:#?}", <MyVertex::<Sl> as VertexInSl>::attributes("foo"));
+    println!(
+        "{:#?}",
+        <MyNestedVertex::<Sl> as VertexInSl>::attributes("bar")
+    );
 }

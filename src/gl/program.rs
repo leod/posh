@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::{sl::Varying, FragmentInterface, Gl, ResourceInterface, Sl, Vertex, VertexInterface};
+use crate::{sl::Varying, FragmentInterface, Gl, ResourceInterface, Sl, VertexInterface};
 
 use super::{DrawParams, Element, SurfaceBinding, VertexStream};
 

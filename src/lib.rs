@@ -11,16 +11,24 @@ pub mod gl;
 pub mod sl;
 
 pub use interface::{
-    join_ident_path, Domain, FragmentDomain, FragmentInterface, ResourceDomain, ResourceInterface,
-    ToPod, Uniform, Vertex, VertexAttribute, VertexDomain, VertexInterface, VertexInterfaceField,
-    VertexInterfaceVisitor,
+    Domain, FragmentDomain, FragmentInterface, ResourceDomain, ResourceInterface, ToPod, Uniform,
+    Vertex, VertexDomain, VertexInterface, VertexInterfaceField,
 };
 pub use numeric::{Numeric, Primitive};
+
+pub use posh_derive::{Uniform, Vertex, VertexInterface};
 
 pub use bytemuck;
 pub use crevice;
 
-pub use posh_derive::{Uniform, Vertex, VertexInterface};
+// Hidden re-exports, needed for `posh-derive`:
+#[doc(hidden)]
+pub mod derive_internal {
+    pub use super::{
+        interface::{join_ident_path, VertexAttribute, VertexInSl, VertexInterfaceVisitor},
+        sl::primitives,
+    };
+}
 
 /// The graphics library domain.
 ///

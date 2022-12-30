@@ -21,7 +21,8 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
     Ok(quote! {
         // Implement `VertexInterface<D>` for the struct.
-        impl #impl_generics ::posh::VertexInterface<#generics_d_type> for #ident #ty_generics
+        impl #impl_generics ::posh::VertexInterface<#generics_d_type>
+        for #ident #ty_generics
         #where_clause
         {
             type InGl = #ident #ty_generics_gl;
@@ -29,7 +30,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
             fn visit(
                 &self,
-                visitor: &mut impl ::posh::VertexInterfaceVisitor<D>,
+                visitor: &mut impl ::posh::derive_internal::VertexInterfaceVisitor<D>,
             ) {
                 #(
                     visitor.accept(#field_strings, &self.#field_idents);

@@ -1,14 +1,15 @@
 use sealed::sealed;
 
 use crate::{
+    dag::{BaseType, PrimitiveType, Type},
     gl::{self, Texture2dBinding},
-    sl::{Sampler2d, Scalar, Vec2, Vec4},
-    Numeric, Sl, VertexInterfaceVisitor,
+    sl::{primitives::input, Sampler2d, Scalar, Vec2, Vec4},
+    Numeric, Sl,
 };
 
 use super::{
-    FragmentInterface, Primitive, ResourceInterface, Uniform, Vertex, VertexAttribute,
-    VertexInterface,
+    join_ident_path, FragmentInterface, Primitive, ResourceInterface, Uniform, Vertex,
+    VertexAttribute, VertexInSl, VertexInterface, VertexInterfaceVisitor,
 };
 
 // Uniform interface
@@ -36,21 +37,47 @@ impl super::Domain for Sl {
 
 // Vertex interface
 
+fn vertex_attribute(path: &str, base_type: BaseType) -> Vec<VertexAttribute> {
+    vec![VertexAttribute {
+        name: super::join_ident_path(path, "attr"),
+        ty: Type::Base(base_type),
+        offset: 0,
+    }]
+}
+
 impl<T: Primitive> Vertex<Sl> for Scalar<T> {
     type InGl = T;
     type InSl = Self;
+}
 
+impl<T: Primitive> VertexInSl for Scalar<T> {
     fn attributes(path: &str) -> Vec<VertexAttribute> {
-        Self::InGl::attributes(path)
+        vertex_attribute(
+            path,
+            BaseType::Scalar(PrimitiveType::Numeric(T::NUMERIC_REPR_TYPE)),
+        )
+    }
+
+    fn shader_input(path: &str) -> Self {
+        input(&join_ident_path(path, "attr"))
     }
 }
 
 impl<T: Primitive> Vertex<Sl> for Vec2<T> {
     type InGl = T::Vec2;
     type InSl = Self;
+}
 
+impl<T: Primitive> VertexInSl for Vec2<T> {
     fn attributes(path: &str) -> Vec<VertexAttribute> {
-        Self::InGl::attributes(path)
+        vertex_attribute(
+            path,
+            BaseType::Vec2(PrimitiveType::Numeric(T::NUMERIC_REPR_TYPE)),
+        )
+    }
+
+    fn shader_input(path: &str) -> Self {
+        input(&join_ident_path(path, "attr"))
     }
 }
 
