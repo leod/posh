@@ -21,7 +21,11 @@ pub trait Primitive:
     const NUMERIC_REPR_TYPE: NumericType;
 
     #[doc(hidden)]
-    type Vec2: Uniform<Gl> + Vertex<Gl> + AsStd140 + ToPod + ToValue<Output = Vec2<Self>>;
+    type Vec2: Uniform<Gl, InGl = Self::Vec2, InSl = Vec2<Self>>
+        + Vertex<Gl, InGl = Self::Vec2, InSl = Vec2<Self>>
+        + AsStd140
+        + ToPod
+        + ToValue<Output = Vec2<Self>>;
 }
 
 #[sealed]

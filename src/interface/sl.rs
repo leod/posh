@@ -9,7 +9,7 @@ use crate::{
 
 use super::{
     join_ident_path, FragmentInterface, Primitive, ResourceInterface, Uniform, Vertex,
-    VertexAttribute, VertexInSl, VertexInterface, VertexInterfaceVisitor,
+    VertexAttribute, VertexInSl, VertexInterface, VertexInterfaceInSl, VertexInterfaceVisitor,
 };
 
 // Uniform interface
@@ -89,6 +89,13 @@ impl<V: Vertex<Sl>> VertexInterface<Sl> for V {
 
     fn visit(&self, visitor: &mut impl VertexInterfaceVisitor<Sl>) {
         visitor.accept("vertex", self);
+    }
+}
+
+impl<V: Vertex<Sl>> VertexInterfaceInSl for V {
+    fn shader_input(path: &str) -> Self {
+        //<V::InSl as VertexInSl>::shader_input(path)
+        todo!()
     }
 }
 

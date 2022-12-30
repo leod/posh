@@ -95,10 +95,16 @@ pub trait VertexInterfaceVisitor<D: VertexDomain> {
 #[sealed]
 pub trait VertexInterfaceField<D: VertexDomain> {}
 
+#[doc(hidden)]
+pub trait VertexInterfaceInSl {
+    #[doc(hidden)]
+    fn shader_input(path: &str) -> Self;
+}
+
 /// Types that declare the vertex input interface of a shader.
 pub trait VertexInterface<D: VertexDomain> {
     type InGl: VertexInterface<Gl>;
-    type InSl: VertexInterface<Sl>;
+    type InSl: VertexInterface<Sl> + VertexInterfaceInSl;
 
     #[doc(hidden)]
     fn visit(&self, visitor: &mut impl VertexInterfaceVisitor<D>);
