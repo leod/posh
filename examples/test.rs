@@ -61,6 +61,6 @@ impl posh::VertexInterfaceVisitor<Sl> for MyVisitor {
 }
 
 fn main() {
-    println!("{:#?}", MyVertex::<Sl>::attributes(&mut Vec::new()));
-    println!("{:#?}", MyNestedVertex::<Sl>::attributes(&mut Vec::new()));
+    println!("{:#?}", MyVertex::<Sl>::attributes(""));
+    println!("{:#?}", MyNestedVertex::<Sl>::attributes(""));
 }

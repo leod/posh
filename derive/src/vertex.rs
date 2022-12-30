@@ -83,12 +83,10 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             type InGl = #ident #ty_generics_gl;
             type InSl = #ident #ty_generics_sl;
 
-            fn attributes(path: &mut Vec<&'static str>) -> Vec<::posh::VertexAttribute> {
+            fn attributes(path: &str) -> Vec<::posh::VertexAttribute> {
                 let mut result = Vec::new();
 
                 #(
-                    path.push(#field_strings);
-
                     let offset = ::posh::bytemuck::offset_of!(
                         ::posh::bytemuck::Zeroable::zeroed(),
                         #to_pod_ident #ty_generics_no_d,
@@ -98,7 +96,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                     let attrs = <
                         <#ident #ty_generics_gl as #gl_field_types_trait>::#field_idents
                         as ::posh::Vertex<::posh::Gl>
-                    >::attributes(path);
+                    >::attributes(&::posh::join_ident_path(path, #field_strings));
 
                     for attr in attrs {
                         result.push(::posh::VertexAttribute {
@@ -106,8 +104,6 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                             ..attr
                         });
                     }
-
-                    path.pop();
                 )*
 
                 result
