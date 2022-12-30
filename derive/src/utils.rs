@@ -1,7 +1,11 @@
 use proc_macro2::TokenStream;
-use quote::ToTokens;
-use syn::{Data, Error, Field, Fields, GenericParam, Generics, Ident, Result, Token, Type};
+use quote::{quote, ToTokens};
+use syn::{
+    parse_quote, punctuated::Punctuated, Data, Error, Field, Fields, GenericParam, Generics, Ident,
+    Result, Token, Type, TypeParamBound,
+};
 
+#[derive(Clone)]
 pub struct StructFields {
     fields: Vec<Field>,
 }
@@ -47,12 +51,12 @@ impl StructFields {
     }
 }
 
-pub struct SpecializeDomain {
+pub struct SpecializedTypeGenerics {
     domain: Type,
     params: Vec<GenericParam>,
 }
 
-impl SpecializeDomain {
+impl SpecializedTypeGenerics {
     pub fn new(domain: Type, ident: &Ident, generics: &Generics) -> Result<Self> {
         Ok(Self {
             domain,
@@ -64,7 +68,7 @@ impl SpecializeDomain {
     }
 }
 
-impl ToTokens for SpecializeDomain {
+impl ToTokens for SpecializedTypeGenerics {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         <Token![<]>::default().to_tokens(tokens);
 
@@ -90,6 +94,71 @@ impl ToTokens for SpecializeDomain {
 
         <Token![>]>::default().to_tokens(tokens);
     }
+}
+
+pub struct SpecializeFieldTypesConfig {
+    pub context: &'static str,
+    pub domain: Type,
+    pub bounds: Punctuated<TypeParamBound, Token![+]>,
+    pub map_trait: Type,
+    pub map_type: Type,
+}
+
+pub fn specialize_field_types(
+    config: SpecializeFieldTypesConfig,
+    ident: &Ident,
+    generics: &Generics,
+    fields: &StructFields,
+) -> Result<(TokenStream, Vec<Type>)> {
+    let context = config.context;
+    let helper_trait = Ident::new(
+        &format!("PoshInternal{ident}{context}SpecializeFields"),
+        ident.span(),
+    );
+
+    let bounds = &config.bounds;
+    let map_trait = &config.map_trait;
+    let map_type = &config.map_type;
+
+    let ident = ident;
+    let helper_trait_ident = &helper_trait;
+
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+    let specialized_ty_generics = SpecializedTypeGenerics::new(config.domain, ident, generics)?;
+
+    let field_idents = fields.idents();
+    let field_types = fields.types();
+
+    let setup = quote! {
+        // Helper trait for specializing struct field types for the given domain.
+        #[doc(hidden)]
+        trait #helper_trait_ident {
+            #(
+                #[allow(non_camel_case_types)]
+                type #field_idents: #bounds;
+            )*
+        }
+
+        // Implement the helper trait.
+        impl #impl_generics #helper_trait_ident for #ident #ty_generics
+        #where_clause
+        {
+            #(
+                type #field_idents = <#field_types as #map_trait>::#map_type;
+            )*
+        }
+    };
+
+    let specialized_types = field_idents
+        .iter()
+        .map(|field_ident| {
+            parse_quote! {
+                <#ident #specialized_ty_generics as #helper_trait_ident>::#field_ident
+            }
+        })
+        .collect();
+
+    Ok((setup, specialized_types))
 }
 
 pub fn validate_generics(generics: &Generics) -> Result<()> {

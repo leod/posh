@@ -1,6 +1,6 @@
 use posh::{
     derive_internal::VertexInSl,
-    sl::{self, ToValue, Value},
+    sl::{self, Object, ToValue, Value},
     Domain, Numeric, Primitive, Sl, Uniform, Vertex, VertexDomain, VertexInterface,
 };
 
@@ -67,4 +67,8 @@ fn main() {
         "{:#?}",
         <MyNestedVertex::<Sl> as VertexInSl>::attributes("bar")
     );
+
+    let vertex = <MyNestedVertex<Sl> as VertexInSl>::shader_input("bar");
+
+    println!("{:#?}", vertex.y.x.expr());
 }

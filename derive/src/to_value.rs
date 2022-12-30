@@ -1,47 +1,43 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{parse_quote, DeriveInput, Ident, Result};
+use syn::{parse_quote, DeriveInput, Result};
 
-use crate::utils::{remove_domain_param, SpecializeDomain, StructFields};
+use crate::utils::{
+    remove_domain_param, specialize_field_types, SpecializeFieldTypesConfig,
+    SpecializedTypeGenerics, StructFields,
+};
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let ident = &input.ident;
     let ident_str = ident.to_string();
-
-    let sl_field_types_trait = Ident::new(
-        &format!("PoshInternal{ident}ToValueSlFieldTypes"),
-        ident.span(),
-    );
 
     let generics_no_d = remove_domain_param(ident, &input.generics)?;
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
     let (impl_generics_no_d, _, where_clause_no_d) = generics_no_d.split_for_impl();
 
-    let ty_generics_sl = SpecializeDomain::new(parse_quote!(::posh::Sl), ident, &input.generics)?;
+    let ty_generics_sl =
+        SpecializedTypeGenerics::new(parse_quote!(::posh::Sl), ident, &input.generics)?;
 
     let fields = StructFields::new(&input.ident, &input.data)?;
     let field_idents = fields.idents();
-    let field_types = fields.types();
     let field_strings = fields.strings();
 
-    Ok(quote! {
-        // Helper trait for mapping struct field types to `Sl`.
-        trait #sl_field_types_trait {
-            #(
-                #[allow(non_camel_case_types)]
-                type #field_idents: ::posh::sl::Value;
-            )*
-        }
+    let (field_types_sl_setup, field_types_sl) = specialize_field_types(
+        SpecializeFieldTypesConfig {
+            context: "ToValueSl",
+            domain: parse_quote!(::posh::Sl),
+            bounds: parse_quote!(::posh::sl::Value),
+            map_trait: parse_quote!(::posh::sl::ToValue),
+            map_type: parse_quote!(Output),
+        },
+        ident,
+        &input.generics,
+        &fields,
+    )?;
 
-        // Implement the helper trait for mapping struct field types to `Sl`.
-        impl #impl_generics #sl_field_types_trait for #ident #ty_generics
-        #where_clause
-        {
-            #(
-                type #field_idents = <#field_types as ::posh::sl::ToValue>::Output;
-            )*
-        }
+    Ok(quote! {
+        #field_types_sl_setup
 
         // Implement `Struct` for the struct in `Sl`.
         impl #impl_generics_no_d ::posh::sl::Struct for #ident #ty_generics_sl
@@ -53,10 +49,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                     #(
                         (
                             #field_strings,
-                            <
-                                <#ident #ty_generics_sl as #sl_field_types_trait>::#field_idents
-                                as ::posh::sl::Object
-                            >::TYPE,
+                            <#field_types_sl as ::posh::sl::Object>::TYPE,
                         )
                     ),*
                 ],
