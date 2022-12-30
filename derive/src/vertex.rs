@@ -17,7 +17,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let generics_d_type = get_domain_param(ident, &input.generics)?;
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-    let (impl_generics_no_d, ty_generics_no_d, _) = generics_no_d.split_for_impl();
+    let (impl_generics_no_d, ty_generics_no_d, where_clause_no_d) = generics_no_d.split_for_impl();
 
     let ty_generics_gl =
         SpecializedTypeGenerics::new(parse_quote!(::posh::Gl), ident, &input.generics)?;
@@ -71,7 +71,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
         // Implement `ToPod` for the struct in `Gl` via the helper type above.
         impl #impl_generics_no_d ::posh::ToPod for #ident #ty_generics_gl
-        #where_clause
+        #where_clause_no_d
         {
             type Output = #to_pod_ident #ty_generics_no_d;
 
@@ -94,7 +94,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
         // Implement `VertexInSl` for the struct in `Sl`.
         impl #impl_generics_no_d ::posh::derive_internal::VertexInSl for #ident #ty_generics_sl
-        #where_clause
+        #where_clause_no_d
         {
             fn attributes(path: &str) -> Vec<::posh::derive_internal::VertexAttribute> {
                 let mut result = Vec::new();
