@@ -74,10 +74,16 @@ pub struct VertexAttribute {
 /// Vertex types.
 pub trait Vertex<D: Domain>: ToValue {
     type InGl: Vertex<Gl> + ToPod + ToValue<Output = Self::InSl>;
-    type InSl: Vertex<Sl> + Value + ToValue<Output = Self::InSl>;
+    type InSl: Vertex<Sl> + Value + ToValue<Output = Self::InSl> + VertexInSl;
+}
 
+#[doc(hidden)]
+pub trait VertexInSl {
     #[doc(hidden)]
     fn attributes(path: &str) -> Vec<VertexAttribute>;
+
+    #[doc(hidden)]
+    fn shader_input(path: &str) -> Self;
 }
 
 #[doc(hidden)]
