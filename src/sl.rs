@@ -31,6 +31,9 @@ pub trait Object {
 
     #[doc(hidden)]
     fn expr(&self) -> Rc<Expr>;
+
+    #[doc(hidden)]
+    fn from_arg(name: &str) -> Self;
 }
 
 /// An object that can be stored as a value in the shading language.
