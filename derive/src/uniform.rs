@@ -88,6 +88,10 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         {
             type InGl = #ident #ty_generics_gl;
             type InSl = #ident #ty_generics_sl;
+
+            fn shader_input(path: &str) -> Self {
+                todo!()
+            }
         }
 
         // Check that all field types implement `Uniform<D>`.

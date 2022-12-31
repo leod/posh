@@ -3,7 +3,8 @@ use sealed::sealed;
 
 use crate::{
     gl::{Sampler2dBinding, Texture2dBinding, UniformBufferBinding, VertexBufferBinding},
-    sl, Gl, Numeric, Sl,
+    sl::{self, Object},
+    Gl, Numeric, Sl,
 };
 
 use super::{

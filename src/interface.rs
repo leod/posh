@@ -7,7 +7,7 @@ mod sl;
 
 use crate::{
     dag::Type,
-    sl::{Bool, Scalar, ToValue, Value, Vec2, F32, I32, U32},
+    sl::{Bool, Object, Scalar, ToValue, Value, Vec2, F32, I32, U32},
     Gl, Numeric, Primitive, Sl,
 };
 
