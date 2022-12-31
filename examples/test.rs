@@ -1,7 +1,6 @@
 use posh::{
-    derive_internal::VertexInSl,
     sl::{self, Object, ToValue, Value},
-    Domain, Numeric, Primitive, Sl, Uniform, Vertex, VertexDomain, VertexInterface,
+    Domain, Gl, Numeric, Primitive, Sl, Uniform, Vertex, VertexDomain, VertexInterface,
 };
 
 #[derive(Value)]
@@ -22,7 +21,7 @@ struct MyThunk<T: Primitive, D: Domain = Sl> {
     z: (D::Scalar<T>, D::Scalar<T>),
 }
 
-#[derive(Clone, Copy, ToValue, Vertex, Uniform)]
+#[derive(Clone, Copy, ToValue, Uniform, Vertex)]
 struct MyUniform1<D: Domain = Sl> {
     x: D::Vec2<f32>,
     y: D::Bool,
@@ -47,11 +46,13 @@ struct MyNestedVertex<D: Domain = Sl> {
     y: D::Vec2<f32>,
 }
 
+/*
 #[derive(VertexInterface)]
 struct MyVertexIface<D: VertexDomain = Sl> {
     vertex: D::Vertex<MyVertex<D>>,
     instance: D::Vertex<MyNestedVertex<D>>,
 }
+*/
 
 struct MyVisitor {}
 
@@ -62,13 +63,15 @@ impl posh::derive_internal::VertexInterfaceVisitor<Sl> for MyVisitor {
 }
 
 fn main() {
-    println!("{:#?}", <MyVertex::<Sl> as VertexInSl>::attributes("foo"));
+    println!("{:#?}", <MyVertex::<Sl> as Vertex<Sl>>::attributes("foo"));
     println!(
         "{:#?}",
-        <MyNestedVertex::<Sl> as VertexInSl>::attributes("bar")
+        <MyNestedVertex::<Gl> as Vertex<Gl>>::attributes("bar")
     );
 
-    let vertex = <MyNestedVertex<Sl> as VertexInSl>::shader_input("bar");
+    let vertex = <MyNestedVertex<Sl> as Vertex<Sl>>::shader_input("bar");
 
     println!("{:#?}", vertex.y.x.expr());
+
+    //let vertex = <MyNestedVertex<Gl> as Vertex<Gl>>::shader_input("bar");
 }

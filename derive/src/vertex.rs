@@ -41,22 +41,9 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         &input.generics,
         &fields,
     )?;
-    let (field_types_sl_setup, field_types_sl) = specialize_field_types(
-        SpecializeFieldTypesConfig {
-            context: "VertexSl",
-            domain: parse_quote!(::posh::Sl),
-            bounds: parse_quote!(::posh::derive_internal::VertexInSl),
-            map_trait: parse_quote!(::posh::Vertex<#generics_d_type>),
-            map_type: parse_quote!(InSl),
-        },
-        ident,
-        &input.generics,
-        &fields,
-    )?;
 
     Ok(quote! {
         #field_types_gl_setup
-        #field_types_sl_setup
 
         // Helper type for which we can derive `Pod`.
         // FIXME: `Pod` derive does not support generic types and likely never will.
@@ -90,12 +77,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         {
             type InGl = #ident #ty_generics_gl;
             type InSl = #ident #ty_generics_sl;
-        }
 
-        // Implement `VertexInSl` for the struct in `Sl`.
-        impl #impl_generics_no_d ::posh::derive_internal::VertexInSl for #ident #ty_generics_sl
-        #where_clause_no_d
-        {
             fn attributes(path: &str) -> Vec<::posh::derive_internal::VertexAttribute> {
                 let mut result = Vec::new();
 
@@ -107,7 +89,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                     );
 
                     let attrs = <
-                        #field_types_sl as ::posh::derive_internal::VertexInSl
+                        #field_types as ::posh::Vertex<#generics_d_type>
                     >::attributes(&::posh::derive_internal::join_ident_path(path, #field_strings));
 
                     for attr in attrs {
@@ -125,7 +107,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                 Self {
                     #(
                         #field_idents: <
-                            #field_types_sl as ::posh::derive_internal::VertexInSl
+                            #field_types as ::posh::Vertex<#generics_d_type>
                         >::shader_input(
                             &::posh::derive_internal::join_ident_path(path, #field_strings),
                         ),

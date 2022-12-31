@@ -25,7 +25,7 @@ pub use crevice;
 #[doc(hidden)]
 pub mod derive_internal {
     pub use super::{
-        interface::{join_ident_path, VertexAttribute, VertexInSl, VertexInterfaceVisitor},
+        interface::{join_ident_path, VertexAttribute, VertexInterfaceVisitor},
         sl::primitives,
     };
 }
