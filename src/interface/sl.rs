@@ -93,7 +93,11 @@ impl<V: Vertex<Sl>> VertexInterface<Sl> for V {
 }
 
 #[sealed]
-impl<V: Vertex<Sl>> super::VertexInterfaceField<Sl> for V {}
+impl<V: Vertex<Sl>> super::VertexInterfaceField<Sl> for V {
+    fn shader_input(path: &str) -> Self {
+        V::shader_input(path)
+    }
+}
 
 #[sealed]
 impl super::VertexDomain for Sl {

@@ -85,12 +85,15 @@ pub trait Vertex<D: Domain>: ToValue {
 
 #[doc(hidden)]
 pub trait VertexInterfaceVisitor<D: VertexDomain> {
-    fn accept<V: Vertex<D>>(&mut self, name: &str, vertex: &D::Vertex<V>);
+    fn accept<V: Vertex<D>>(&mut self, path: &str, vertex: &D::Vertex<V>);
 }
 
 /// Types that are allowed to occur in a [`VertexInterface`].
 #[sealed]
-pub trait VertexInterfaceField<D: VertexDomain> {}
+pub trait VertexInterfaceField<D: VertexDomain> {
+    #[doc(hidden)]
+    fn shader_input(path: &str) -> Self;
+}
 
 /// Types that declare the vertex input interface of a shader.
 pub trait VertexInterface<D: VertexDomain> {
