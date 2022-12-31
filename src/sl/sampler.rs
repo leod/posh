@@ -20,6 +20,16 @@ impl<T: Numeric> Object for Sampler2d<T> {
     fn expr(&self) -> Rc<Expr> {
         self.trace.expr()
     }
+
+    fn from_arg(name: &str) -> Self {
+        Self {
+            trace: Trace::new(Expr::Arg {
+                ty: Self::TYPE,
+                name: name.into(),
+            }),
+            _phantom: PhantomData,
+        }
+    }
 }
 
 impl<T: Numeric> Sampler2d<T> {

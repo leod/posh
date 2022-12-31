@@ -3,7 +3,7 @@ use sealed::sealed;
 use crate::{
     dag::{BaseType, PrimitiveType, Type},
     gl::{self, Texture2dBinding},
-    sl::{primitives::input, Sampler2d, Scalar, Vec2, Vec4},
+    sl::{Object, Sampler2d, Scalar, Vec2, Vec4},
     Numeric, Sl,
 };
 
@@ -17,11 +17,19 @@ use super::{
 impl<T: Primitive> Uniform<Sl> for Scalar<T> {
     type InGl = T;
     type InSl = Self;
+
+    fn shader_input(path: &str) -> Self {
+        <Self as Object>::from_arg(path)
+    }
 }
 
 impl<T: Primitive> Uniform<Sl> for Vec2<T> {
     type InGl = T::Vec2;
     type InSl = Self;
+
+    fn shader_input(path: &str) -> Self {
+        <Self as Object>::from_arg(path)
+    }
 }
 
 #[sealed]
@@ -57,7 +65,7 @@ impl<T: Primitive> Vertex<Sl> for Scalar<T> {
     }
 
     fn shader_input(path: &str) -> Self {
-        input(&join_ident_path(path, "attr"))
+        <Self as Object>::from_arg(&join_ident_path(path, "attr"))
     }
 }
 
@@ -73,7 +81,7 @@ impl<T: Primitive> Vertex<Sl> for Vec2<T> {
     }
 
     fn shader_input(path: &str) -> Self {
-        input(&join_ident_path(path, "attr"))
+        <Self as Object>::from_arg(&join_ident_path(path, "attr"))
     }
 }
 
@@ -109,11 +117,27 @@ impl super::VertexDomain for Sl {
 impl<T: Numeric> ResourceInterface<Sl> for Sampler2d<T> {
     type InGl = gl::Sampler2dBinding<T>;
     type InSl = Self;
+
+    fn visit(&self, path: &str, visitor: &mut impl super::ResourceInterfaceVisitor<Sl>) {
+        visitor.accept_sampler2d(path, self)
+    }
+
+    fn shader_input(path: &str) -> Self {
+        <Self as Object>::from_arg(path)
+    }
 }
 
 impl<U: Uniform<Sl>> ResourceInterface<Sl> for U {
-    type InGl = gl::UniformBufferBinding<U>;
+    type InGl = gl::UniformBufferBinding<U::InGl>;
     type InSl = Self;
+
+    fn visit(&self, path: &str, visitor: &mut impl super::ResourceInterfaceVisitor<Sl>) {
+        visitor.accept_uniform(path, self)
+    }
+
+    fn shader_input(path: &str) -> Self {
+        <U as Uniform<Sl>>::shader_input(path)
+    }
 }
 
 #[sealed]

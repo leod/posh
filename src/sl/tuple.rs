@@ -3,7 +3,7 @@ use std::rc::Rc;
 use crate::dag::{BaseType, Expr, StructType, Type};
 
 use super::{
-    primitives::{field, simplify_struct_literal},
+    primitives::{field, simplify_struct_literal, value_arg},
     Object, Struct, ToValue, Value,
 };
 
@@ -35,6 +35,10 @@ macro_rules! impl_value {
                             $name.expr()
                         ),*
                     ])
+            }
+
+            fn from_arg(path: &str) -> Self {
+                value_arg(path)
             }
         }
 

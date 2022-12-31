@@ -16,26 +16,46 @@ use super::{
 impl Uniform<Gl> for bool {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
+
+    fn shader_input(_: &str) -> Self {
+        unimplemented!()
+    }
 }
 
 impl Uniform<Gl> for f32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
+
+    fn shader_input(_: &str) -> Self {
+        unimplemented!()
+    }
 }
 
 impl Uniform<Gl> for i32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
+
+    fn shader_input(_: &str) -> Self {
+        unimplemented!()
+    }
 }
 
 impl Uniform<Gl> for u32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
+
+    fn shader_input(_: &str) -> Self {
+        unimplemented!()
+    }
 }
 
 impl<T: Primitive> Uniform<Gl> for mint::Vector2<T> {
     type InGl = T::Vec2;
     type InSl = sl::Vec2<T>;
+
+    fn shader_input(_: &str) -> Self {
+        unimplemented!()
+    }
 }
 
 #[sealed]
@@ -190,17 +210,33 @@ impl super::VertexDomain for Gl {
 impl<T: Numeric> ResourceInterface<Gl> for Sampler2dBinding<T> {
     type InGl = Self;
     type InSl = sl::Sampler2d<T>;
+
+    fn visit(&self, path: &str, visitor: &mut impl super::ResourceInterfaceVisitor<Gl>) {
+        visitor.accept_sampler2d(path, self);
+    }
+
+    fn shader_input(_: &str) -> Self {
+        unimplemented!()
+    }
 }
 
-impl<U: Uniform<Sl>> ResourceInterface<Gl> for UniformBufferBinding<U> {
+impl<U: Uniform<Gl>> ResourceInterface<Gl> for UniformBufferBinding<U> {
     type InGl = Self;
     type InSl = U::InSl;
+
+    fn visit(&self, path: &str, visitor: &mut impl super::ResourceInterfaceVisitor<Gl>) {
+        visitor.accept_uniform::<U>(path, self);
+    }
+
+    fn shader_input(_: &str) -> Self {
+        todo!()
+    }
 }
 
 #[sealed]
 impl super::ResourceDomain for Gl {
     type Sampler2d<T: Numeric> = Sampler2dBinding<T>;
-    type Uniform<U: Uniform<Gl>> = UniformBufferBinding<U::InSl>;
+    type Uniform<U: Uniform<Gl>> = UniformBufferBinding<U>;
 }
 
 // Fragment interface

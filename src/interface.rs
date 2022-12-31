@@ -52,6 +52,9 @@ pub fn join_ident_path(lhs: &str, rhs: &str) -> String {
 pub trait Uniform<D: Domain>: ToValue {
     type InGl: Uniform<Gl> + AsStd140 + ToValue<Output = Self::InSl>;
     type InSl: Uniform<Sl> + Value + ToValue<Output = Self::InSl>;
+
+    #[doc(hidden)]
+    fn shader_input(path: &str) -> Self;
 }
 
 // Vertex interface
@@ -115,10 +118,23 @@ pub trait VertexDomain: Domain {
 
 // Resource interface
 
+#[doc(hidden)]
+pub trait ResourceInterfaceVisitor<D: ResourceDomain> {
+    fn accept_sampler2d<T: Numeric>(&mut self, path: &str, vertex: &D::Sampler2d<T>);
+
+    fn accept_uniform<U: Uniform<D>>(&mut self, path: &str, vertex: &D::Uniform<U>);
+}
+
 /// Types that declare the resource input interface of a shader.
 pub trait ResourceInterface<D: ResourceDomain> {
     type InGl: ResourceInterface<Gl>;
     type InSl: ResourceInterface<Sl>;
+
+    #[doc(hidden)]
+    fn visit(&self, path: &str, visitor: &mut impl ResourceInterfaceVisitor<D>);
+
+    #[doc(hidden)]
+    fn shader_input(path: &str) -> Self;
 }
 
 /// Provides types for declaring fields in a [`ResourceInterface`].

@@ -4,7 +4,10 @@ use std::{
     rc::Rc,
 };
 
-use super::{primitives::binary, Object, ToValue, Value};
+use super::{
+    primitives::{binary, value_arg},
+    Object, ToValue, Value,
+};
 use crate::{
     dag::{BaseType, BinaryOp, Expr, Trace, Type},
     Numeric, Primitive,
@@ -34,6 +37,10 @@ impl<T: Primitive> Object for Scalar<T> {
 
     fn expr(&self) -> Rc<Expr> {
         self.trace.expr()
+    }
+
+    fn from_arg(path: &str) -> Self {
+        value_arg(path)
     }
 }
 

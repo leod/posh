@@ -147,7 +147,7 @@ pub fn simplify_struct_literal(ty: &'static StructType, args: &[Rc<Expr>]) -> Rc
 }
 
 #[doc(hidden)]
-pub fn input<R: Value>(name: &str) -> R {
+pub fn value_arg<R: Value>(name: &str) -> R {
     R::from_expr(Expr::Arg {
         ty: R::TYPE,
         name: name.into(),

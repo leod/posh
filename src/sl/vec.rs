@@ -6,7 +6,7 @@ use crate::{
 };
 
 use super::{
-    primitives::{field, simplify_struct_literal},
+    primitives::{field, simplify_struct_literal, value_arg},
     Object, Scalar, Struct, ToValue, Value,
 };
 
@@ -56,6 +56,10 @@ macro_rules! impl_value {
                     &Self::STRUCT_TYPE,
                     &[$(self.$member.expr()),+],
                 )
+            }
+
+            fn from_arg(path: &str) -> Self {
+                value_arg(path)
             }
         }
 

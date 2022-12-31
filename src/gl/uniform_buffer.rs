@@ -1,12 +1,12 @@
 use std::marker::PhantomData;
 
-use crate::{Sl, Uniform};
+use crate::{Gl, Sl, Uniform};
 
 pub struct UniformBuffer<U: Uniform<Sl>> {
     _phantom: PhantomData<U>,
 }
 
 #[derive(Clone)]
-pub struct UniformBufferBinding<U: Uniform<Sl>> {
+pub struct UniformBufferBinding<U: Uniform<Gl>> {
     _phantom: PhantomData<U>,
 }
