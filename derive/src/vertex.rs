@@ -106,11 +106,10 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             fn shader_input(path: &str) -> Self {
                 Self {
                     #(
-                        #field_idents: <
-                            #field_types as ::posh::Vertex<#generics_d_type>
-                        >::shader_input(
-                            &::posh::derive_internal::join_ident_path(path, #field_strings),
-                        ),
+                        #field_idents: <#field_types as ::posh::Vertex<#generics_d_type>>::
+                            shader_input(
+                                &::posh::derive_internal::join_ident_path(path, #field_strings),
+                            ),
                     )*
                 }
             }

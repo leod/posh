@@ -46,19 +46,17 @@ struct MyNestedVertex<D: Domain = Sl> {
     y: D::Vec2<f32>,
 }
 
-/*
 #[derive(VertexInterface)]
 struct MyVertexIface<D: VertexDomain = Sl> {
     vertex: D::Vertex<MyVertex<D>>,
     instance: D::Vertex<MyNestedVertex<D>>,
 }
-*/
 
-struct MyVisitor {}
+struct MyVisitor;
 
 impl posh::derive_internal::VertexInterfaceVisitor<Sl> for MyVisitor {
-    fn accept<V: Vertex<Sl>>(&mut self, name: &str, vertex: &V) {
-        todo!()
+    fn accept<V: Vertex<Sl>>(&mut self, path: &str, vertex: &V) {
+        println!("vertex iface path={path}: {:?}", V::attributes(path));
     }
 }
 
@@ -74,4 +72,6 @@ fn main() {
     println!("{:#?}", vertex.y.x.expr());
 
     //let vertex = <MyNestedVertex<Gl> as Vertex<Gl>>::shader_input("bar");
+
+    MyVertexIface::shader_input("blub").visit(&mut MyVisitor);
 }
