@@ -12,7 +12,12 @@ use crate::{
 /// A primitive type: one of `bool`, `f32`, `i32`, or `u32`.
 #[sealed]
 pub trait Primitive:
-    AsStd140 + ToPod + ToString + Uniform<Gl> + Vertex<Gl> + ToValue<Output = Scalar<Self>>
+    AsStd140
+    + ToPod
+    + ToString
+    + Uniform<Gl, InGl = Self, InSl = Scalar<Self>>
+    + Vertex<Gl, InGl = Self, InSl = Scalar<Self>>
+    + ToValue<Output = Scalar<Self>>
 {
     #[doc(hidden)]
     const PRIMITIVE_TYPE: PrimitiveType;

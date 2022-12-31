@@ -74,11 +74,8 @@ pub struct VertexAttribute {
 /// Vertex types.
 pub trait Vertex<D: Domain>: ToValue {
     type InGl: Vertex<Gl> + ToPod + ToValue<Output = Self::InSl>;
-    type InSl: Vertex<Sl> + Value + ToValue<Output = Self::InSl> + VertexInSl;
-}
+    type InSl: Vertex<Sl> + Value + ToValue<Output = Self::InSl>;
 
-#[doc(hidden)]
-pub trait VertexInSl {
     #[doc(hidden)]
     fn attributes(path: &str) -> Vec<VertexAttribute>;
 
@@ -95,19 +92,16 @@ pub trait VertexInterfaceVisitor<D: VertexDomain> {
 #[sealed]
 pub trait VertexInterfaceField<D: VertexDomain> {}
 
-#[doc(hidden)]
-pub trait VertexInterfaceInSl {
-    #[doc(hidden)]
-    fn shader_input(path: &str) -> Self;
-}
-
 /// Types that declare the vertex input interface of a shader.
 pub trait VertexInterface<D: VertexDomain> {
     type InGl: VertexInterface<Gl>;
-    type InSl: VertexInterface<Sl> + VertexInterfaceInSl;
+    type InSl: VertexInterface<Sl>;
 
     #[doc(hidden)]
     fn visit(&self, visitor: &mut impl VertexInterfaceVisitor<D>);
+
+    #[doc(hidden)]
+    fn shader_input(path: &str) -> Self;
 }
 
 /// Provides types for declaring fields in a [`VertexInterface`].

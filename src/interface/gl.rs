@@ -7,8 +7,8 @@ use crate::{
 };
 
 use super::{
-    FragmentInterface, Primitive, ResourceInterface, ToPod, Uniform, Vertex, VertexInterface,
-    VertexInterfaceVisitor,
+    FragmentInterface, Primitive, ResourceInterface, ToPod, Uniform, Vertex, VertexAttribute,
+    VertexInterface, VertexInterfaceVisitor,
 };
 
 // Uniform interface
@@ -98,26 +98,76 @@ impl<T: Primitive> ToPod for mint::Vector2<T> {
 impl Vertex<Gl> for bool {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
+
+    #[doc(hidden)]
+    fn attributes(path: &str) -> Vec<VertexAttribute> {
+        <Self::InSl as Vertex<Sl>>::attributes(path)
+    }
+
+    #[doc(hidden)]
+    fn shader_input(_: &str) -> Self {
+        unimplemented!()
+    }
 }
 
 impl Vertex<Gl> for f32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
+
+    #[doc(hidden)]
+    fn attributes(path: &str) -> Vec<VertexAttribute> {
+        <Self::InSl as Vertex<Sl>>::attributes(path)
+    }
+
+    #[doc(hidden)]
+    fn shader_input(_: &str) -> Self {
+        unimplemented!()
+    }
 }
 
 impl Vertex<Gl> for i32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
+
+    #[doc(hidden)]
+    fn attributes(path: &str) -> Vec<VertexAttribute> {
+        <Self::InSl as Vertex<Sl>>::attributes(path)
+    }
+
+    #[doc(hidden)]
+    fn shader_input(_: &str) -> Self {
+        unimplemented!()
+    }
 }
 
 impl Vertex<Gl> for u32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
+
+    #[doc(hidden)]
+    fn attributes(path: &str) -> Vec<VertexAttribute> {
+        <Self::InSl as Vertex<Sl>>::attributes(path)
+    }
+
+    #[doc(hidden)]
+    fn shader_input(_: &str) -> Self {
+        unimplemented!()
+    }
 }
 
 impl<T: Primitive> Vertex<Gl> for mint::Vector2<T> {
     type InGl = T::Vec2;
     type InSl = sl::Vec2<T>;
+
+    #[doc(hidden)]
+    fn attributes(path: &str) -> Vec<VertexAttribute> {
+        <Self::InSl as Vertex<Sl>>::attributes(path)
+    }
+
+    #[doc(hidden)]
+    fn shader_input(_: &str) -> Self {
+        unimplemented!()
+    }
 }
 
 impl<V: Vertex<Gl>> VertexInterface<Gl> for VertexBufferBinding<V> {
@@ -126,6 +176,10 @@ impl<V: Vertex<Gl>> VertexInterface<Gl> for VertexBufferBinding<V> {
 
     fn visit(&self, visitor: &mut impl VertexInterfaceVisitor<Gl>) {
         visitor.accept("vertex", self)
+    }
+
+    fn shader_input(_: &str) -> Self {
+        unimplemented!()
     }
 }
 
