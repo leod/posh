@@ -1,4 +1,5 @@
 mod context;
+mod buffer;
 mod draw_params;
 mod element_buffer;
 mod program;
@@ -23,5 +24,6 @@ pub use uniform_buffer::{UniformBuffer, UniformBufferBinding};
 pub use vertex_buffer::{VertexBuffer, VertexBufferBinding};
 pub use vertex_data::VertexData;
 pub use vertex_stream::{GeometryType, VertexStream};
+pub use buffer::{BufferUsage, CreateBufferError};
 
 pub(crate) use context::ContextShared;
