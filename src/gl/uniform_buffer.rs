@@ -7,6 +7,6 @@ pub struct UniformBuffer<U: Uniform<Sl>> {
 }
 
 #[derive(Clone)]
-pub struct UniformBufferBinding<U: Uniform<Gl>> {
+pub struct UniformBufferBinding<U: Uniform<Sl>> {
     _phantom: PhantomData<U>,
 }

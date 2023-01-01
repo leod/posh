@@ -1,9 +1,8 @@
 use posh::{
     sl::{self, Object, ToValue, Value},
-    Domain, Gl, Numeric, Primitive, ResourceDomain, Sl, Uniform, Vertex, VertexDomain,
-    VertexInterface,
+    Domain, Gl, Numeric, Primitive, ResourceDomain, ResourceInterface, Sl, Uniform, Vertex,
+    VertexDomain, VertexInterface,
 };
-use posh_derive::ResourceInterface;
 
 /*
 #[derive(Value)]
@@ -56,7 +55,14 @@ struct MyVertexIface<D: VertexDomain = Sl> {
 
 #[derive(ResourceInterface)]
 struct MyResourceIface<D: ResourceDomain = Sl> {
-    uniform: D::Uniform<MyUniform1<D>>,
+    uniform: D::Uniform<MyUniform1>,
+}
+
+#[derive(ResourceInterface)]
+struct MyResourceIface2<D: ResourceDomain = Sl> {
+    uniformxy: D::Uniform<MyUniform1>,
+    bla: MyResourceIface<D>,
+    zzz: D::Uniform<MyUniform1>,
 }
 
 struct MyVisitor;
@@ -64,6 +70,23 @@ struct MyVisitor;
 impl posh::derive_internal::VertexInterfaceVisitor<Sl> for MyVisitor {
     fn accept<V: Vertex<Sl>>(&mut self, path: &str, vertex: &V) {
         println!("vertex iface path={path}: {:?}", V::attributes(path));
+    }
+}
+
+impl posh::derive_internal::ResourceInterfaceVisitor<Sl> for MyVisitor {
+    fn accept_sampler2d<T: Numeric>(
+        &mut self,
+        path: &str,
+        vertex: &<Sl as ResourceDomain>::Sampler2d<T>,
+    ) {
+    }
+
+    fn accept_uniform<U: Uniform<Sl, InSl = U>>(
+        &mut self,
+        path: &str,
+        vertex: &<Sl as ResourceDomain>::Uniform<U>,
+    ) {
+        println!("resource uniform path={path}");
     }
 }
 
@@ -81,4 +104,5 @@ fn main() {
     //let vertex = <MyNestedVertex<Gl> as Vertex<Gl>>::shader_input("bar");
 
     MyVertexIface::shader_input("blub").visit(&mut MyVisitor);
+    MyResourceIface2::shader_input("blab").visit("blee", &mut MyVisitor);
 }
