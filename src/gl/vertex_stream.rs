@@ -1,4 +1,4 @@
-use crate::{Gl, VertexInterface};
+use crate::{Gl, Sl, VertexInterface};
 
 use super::{Element, ElementBufferBinding};
 
@@ -14,7 +14,7 @@ pub enum GeometryType {
 }
 
 #[derive(Clone)]
-pub struct VertexStream<V: VertexInterface<Gl>, E: Element> {
+pub struct VertexStream<V: VertexInterface<Sl>, E: Element> {
     pub vertices: V,
     pub geometry_type: GeometryType,
     pub elements: Option<ElementBufferBinding<E>>,

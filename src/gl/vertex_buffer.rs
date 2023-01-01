@@ -7,6 +7,6 @@ pub struct VertexBuffer<V: Vertex<Sl>> {
 }
 
 #[derive(Clone)]
-pub struct VertexBufferBinding<V: Vertex<Gl>> {
+pub struct VertexBufferBinding<V: Vertex<Sl>> {
     _phantom: PhantomData<V>,
 }

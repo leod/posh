@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::{sl::Varying, FragmentInterface, Gl, ResourceInterface, Sl, VertexInterface};
+use crate::{sl::Varying, FragmentInterface, ResourceInterface, Sl, VertexInterface};
 
 use super::{DrawParams, Element, SurfaceBinding, VertexStream};
 
@@ -23,17 +23,12 @@ where
         }
     }
 
-    pub fn draw<BindR, BindV, BindF, E>(
+    pub fn draw<E: Element>(
         &self,
-        resource: BindR,
-        vertices: VertexStream<BindV, E>,
-        surface: SurfaceBinding<BindF>,
+        resource: R::InGl,
+        vertices: VertexStream<V, E>,
+        surface: SurfaceBinding<F>,
         draw_params: &DrawParams,
-    ) where
-        BindR: ResourceInterface<Gl, InSl = R>,
-        BindV: VertexInterface<Gl, InSl = V>,
-        BindF: FragmentInterface<Gl, InSl = F>,
-        E: Element,
-    {
+    ) {
     }
 }

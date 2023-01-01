@@ -181,7 +181,7 @@ impl<T: Primitive> Vertex<Gl> for mint::Vector2<T> {
     }
 }
 
-impl<V: Vertex<Gl>> VertexInterface<Gl> for VertexBufferBinding<V> {
+impl<V: Vertex<Sl>> VertexInterface<Gl> for VertexBufferBinding<V> {
     type InGl = Self;
     type InSl = V::InSl;
 
@@ -195,7 +195,7 @@ impl<V: Vertex<Gl>> VertexInterface<Gl> for VertexBufferBinding<V> {
 }
 
 #[sealed]
-impl<V: Vertex<Gl>> super::VertexInterfaceField<Gl> for VertexBufferBinding<V> {
+impl<V: Vertex<Sl>> super::VertexInterfaceField<Gl> for VertexBufferBinding<V> {
     fn shader_input(_: &str) -> Self {
         unimplemented!()
     }
@@ -203,7 +203,7 @@ impl<V: Vertex<Gl>> super::VertexInterfaceField<Gl> for VertexBufferBinding<V> {
 
 #[sealed]
 impl super::VertexDomain for Gl {
-    type Vertex<V: Vertex<Gl>> = VertexBufferBinding<V>;
+    type Vertex<V: Vertex<Sl>> = VertexBufferBinding<V>;
 }
 
 // Resource interface
@@ -238,6 +238,7 @@ impl<U: Uniform<Sl, InSl = U>> ResourceInterface<Gl> for UniformBufferBinding<U>
 impl super::ResourceDomain for Gl {
     type Sampler2d<T: Numeric> = Sampler2dBinding<T>;
     type Uniform<U: Uniform<Sl, InSl = U>> = UniformBufferBinding<U>;
+    type Compose<R: ResourceInterface<Sl>> = R::InGl;
 }
 
 // Fragment interface

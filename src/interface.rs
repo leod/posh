@@ -7,7 +7,7 @@ mod sl;
 
 use crate::{
     dag::Type,
-    sl::{Bool, Object, Scalar, ToValue, Value, Vec2, F32, I32, U32},
+    sl::{Bool, Scalar, ToValue, Value, Vec2, F32, I32, U32},
     Gl, Numeric, Primitive, Sl,
 };
 
@@ -88,7 +88,7 @@ pub trait Vertex<D: Domain>: ToValue {
 
 #[doc(hidden)]
 pub trait VertexInterfaceVisitor<D: VertexDomain> {
-    fn accept<V: Vertex<D>>(&mut self, path: &str, vertex: &D::Vertex<V>);
+    fn accept<V: Vertex<Sl>>(&mut self, path: &str, vertex: &D::Vertex<V>);
 }
 
 /// Types that are allowed to occur in a [`VertexInterface`].
@@ -113,7 +113,7 @@ pub trait VertexInterface<D: VertexDomain> {
 /// Provides types for declaring fields in a [`VertexInterface`].
 #[sealed]
 pub trait VertexDomain: Domain {
-    type Vertex<V: Vertex<Self>>: VertexInterfaceField<Self>;
+    type Vertex<V: Vertex<Sl>>: VertexInterfaceField<Self>;
 }
 
 // Resource interface
@@ -137,12 +137,23 @@ pub trait ResourceInterface<D: ResourceDomain> {
     fn shader_input(path: &str) -> Self;
 }
 
+impl<D: ResourceDomain> ResourceInterface<D> for () {
+    type InGl = ();
+    type InSl = ();
+
+    fn visit(&self, _: &str, _: &mut impl ResourceInterfaceVisitor<D>) {}
+
+    fn shader_input(_: &str) -> Self {}
+}
+
 /// Provides types for declaring fields in a [`ResourceInterface`].
 #[sealed]
 pub trait ResourceDomain: Domain {
     type Sampler2d<T: Numeric>: ResourceInterface<Self>;
 
-    type Uniform<U: Uniform<Sl, InSl = U>>: ResourceInterface<Self, InSl = U>;
+    type Uniform<U: Uniform<Sl, InSl = U>>: ResourceInterface<Self>;
+
+    type Compose<R: ResourceInterface<Sl>>: ResourceInterface<Self>;
 }
 
 // Fragment interface
