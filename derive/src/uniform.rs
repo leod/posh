@@ -17,7 +17,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let generics_d_type = get_domain_param(ident, &input.generics)?;
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-    let (impl_generics_no_d, ty_generics_no_d, _) = generics_no_d.split_for_impl();
+    let (impl_generics_no_d, ty_generics_no_d, where_clause_no_d) = generics_no_d.split_for_impl();
 
     let ty_generics_gl =
         SpecializedTypeGenerics::new(parse_quote!(::posh::Gl), ident, &input.generics)?;
@@ -26,10 +26,11 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
     let fields = StructFields::new(&input.ident, &input.data)?;
     let field_idents = fields.idents();
-    let field_types = fields.types();
 
     let field_types_gl =
         specialize_field_types(parse_quote!(::posh::Gl), ident, &input.generics, &fields)?;
+    let field_types_sl =
+        specialize_field_types(parse_quote!(::posh::Sl), ident, &input.generics, &fields)?;
 
     Ok(quote! {
         // Helper type for which we can derive `AsStd140`.
@@ -70,9 +71,9 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             }
         }
 
-        // Implement `Uniform<D>` for the struct.
-        impl #impl_generics ::posh::Uniform<#generics_d_type> for #ident #ty_generics
-        #where_clause
+        // Implement `Uniform<Gl>` for the struct in `Gl`.
+        impl #impl_generics_no_d ::posh::Uniform<::posh::Gl> for #ident #ty_generics_gl
+        #where_clause_no_d
         {
             type InGl = #ident #ty_generics_gl;
             type InSl = #ident #ty_generics_sl;
@@ -82,13 +83,36 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             }
         }
 
-        // Check that all field types implement `Uniform<D>`.
+        // Implement `Uniform<Sl>` for the struct in `Sl`.
+        impl #impl_generics_no_d ::posh::Uniform<::posh::Sl> for #ident #ty_generics_sl
+        #where_clause_no_d
+        {
+            type InGl = #ident #ty_generics_gl;
+            type InSl = #ident #ty_generics_sl;
+
+            fn shader_input(path: &str) -> Self {
+                ::posh::derive_internal::primitives::value_arg(path)
+            }
+        }
+
+        // Check that all field types in `Gl` implement `Uniform<Gl>`.
         const _: fn() = || {
-            fn check_field<D: ::posh::Domain, T: ::posh::Uniform<D>>() {}
+            fn check_field<T: ::posh::Uniform<::posh::Gl>>() {}
 
             fn check_struct #impl_generics(value: &#ident #ty_generics) #where_clause {
                 #(
-                    check_field::<#generics_d_type, #field_types>();
+                    check_field::<#field_types_gl>();
+                )*
+            }
+        };
+
+        // Check that all field types in `Sl` implement `Uniform<Sl>`.
+        const _: fn() = || {
+            fn check_field<T: ::posh::Uniform<::posh::Sl>>() {}
+
+            fn check_struct #impl_generics(value: &#ident #ty_generics) #where_clause {
+                #(
+                    check_field::<#field_types_sl>();
                 )*
             }
         };

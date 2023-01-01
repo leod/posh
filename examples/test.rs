@@ -27,8 +27,6 @@ struct MyUniform1<D: Domain = Sl> {
     y: D::Bool,
 }
 
-/*
-
 #[derive(Clone, Copy, ToValue, Uniform)]
 struct MyUniform2<D: Domain = Sl> {
     x: D::Vec2<f32>,
@@ -61,7 +59,6 @@ impl posh::derive_internal::VertexInterfaceVisitor<Sl> for MyVisitor {
         println!("vertex iface path={path}: {:?}", V::attributes(path));
     }
 }
-*/
 
 fn main() {
     /*
