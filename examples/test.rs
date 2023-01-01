@@ -2,7 +2,7 @@ use posh::{
     gl::{DrawParams, Program, UniformBufferBinding, VertexStream},
     sl::{self, Object, ToValue, Value},
     Domain, Gl, Numeric, Primitive, ResourceDomain, ResourceInterface, Sl, Uniform, Vertex,
-    VertexDomain, VertexInterface,
+    VertexDomain, VertexInterface, FragmentInterface,
 };
 
 /*
@@ -111,6 +111,15 @@ impl posh::derive_internal::ResourceInterfaceVisitor<Sl> for MyVisitor {
     }
 }
 
+fn create_program<R, V, F>() -> Program<R, V, F>
+where
+    R: ResourceInterface<Sl>,
+    V: VertexInterface<Sl>,
+    F: FragmentInterface<Sl>,
+{
+    Program::new::<sl::Vec4<f32>>(todo!(), todo!())
+}
+
 fn main() {
     println!("{:#?}", <MyVertex::<Sl> as Vertex<Sl>>::attributes("foo"));
     println!(
@@ -129,6 +138,9 @@ fn main() {
 
     let program: Program<MyResourceIface2, MyVertexIface, sl::Vec4<f32>> =
         Program::new::<sl::Vec4<f32>>(todo!(), todo!());
+
+    let program: Program<MyResourceIface2, MyVertexIface, sl::Vec4<f32>> =
+        create_program();
 
     let resources: MyResourceIface2<Gl> = todo!();
     let vertices: VertexStream<MyVertexIface, u16> = todo!();
