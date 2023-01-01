@@ -221,12 +221,12 @@ impl<T: Numeric> ResourceInterface<Gl> for Sampler2dBinding<T> {
     }
 }
 
-impl<U: Uniform<Gl>> ResourceInterface<Gl> for UniformBufferBinding<U> {
+impl<U: Uniform<Sl, InSl = U>> ResourceInterface<Gl> for UniformBufferBinding<U> {
     type InGl = Self;
-    type InSl = U::InSl;
+    type InSl = U;
 
     fn visit(&self, path: &str, visitor: &mut impl super::ResourceInterfaceVisitor<Gl>) {
-        visitor.accept_uniform::<U>(path, self);
+        visitor.accept_uniform::<U::InSl>(path, self);
     }
 
     fn shader_input(_: &str) -> Self {
@@ -237,7 +237,7 @@ impl<U: Uniform<Gl>> ResourceInterface<Gl> for UniformBufferBinding<U> {
 #[sealed]
 impl super::ResourceDomain for Gl {
     type Sampler2d<T: Numeric> = Sampler2dBinding<T>;
-    type Uniform<U: Uniform<Gl>> = UniformBufferBinding<U>;
+    type Uniform<U: Uniform<Sl, InSl = U>> = UniformBufferBinding<U>;
 }
 
 // Fragment interface
