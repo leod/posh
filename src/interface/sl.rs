@@ -4,7 +4,7 @@ use crate::{
     dag::{BaseType, PrimitiveType, Type},
     gl::{self, Texture2dBinding},
     sl::{Object, Sampler2d, Scalar, Vec2, Vec4},
-    Numeric, Sl,
+    Numeric, Sl, ToPod, VertexInputRate,
 };
 
 use super::{
@@ -56,6 +56,7 @@ fn vertex_attribute(path: &str, base_type: BaseType) -> Vec<VertexAttribute> {
 impl<T: Primitive> Vertex<Sl> for Scalar<T> {
     type InGl = T;
     type InSl = Self;
+    type Pod = <Self::InGl as ToPod>::Output;
 
     fn attributes(path: &str) -> Vec<VertexAttribute> {
         vertex_attribute(
@@ -72,6 +73,7 @@ impl<T: Primitive> Vertex<Sl> for Scalar<T> {
 impl<T: Primitive> Vertex<Sl> for Vec2<T> {
     type InGl = T::Vec2;
     type InSl = Self;
+    type Pod = <Self::InGl as ToPod>::Output;
 
     fn attributes(path: &str) -> Vec<VertexAttribute> {
         vertex_attribute(
@@ -92,7 +94,7 @@ impl<V: Vertex<Sl>> VertexInterface<Sl> for V {
     type InSl = V::InSl;
 
     fn visit(&self, visitor: &mut impl VertexInterfaceVisitor<Sl>) {
-        visitor.accept("vertex", self);
+        visitor.accept("vertex", VertexInputRate::Vertex, self);
     }
 
     fn shader_input(path: &str) -> Self {

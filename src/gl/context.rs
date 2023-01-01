@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use bytemuck::Pod;
 
-use super::{BufferUsage, untyped, CreateBufferError};
+use super::{untyped, BufferUsage, CreateBufferError};
 
 pub(crate) struct ContextShared {}
 
@@ -20,7 +20,11 @@ impl Context {
         &self.gl
     }
 
-    pub fn untyped_create_buffer<T: Pod>(&self, data: &[T], usage: BufferUsage) -> Result<untyped::Buffer, CreateBufferError> {
+    pub fn untyped_create_buffer<T: Pod>(
+        &self,
+        data: &[T],
+        usage: BufferUsage,
+    ) -> Result<untyped::Buffer, CreateBufferError> {
         untyped::Buffer::new(self.gl.clone(), data, usage)
     }
 }

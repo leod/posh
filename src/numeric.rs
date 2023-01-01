@@ -1,4 +1,4 @@
-use bytemuck::Pod;
+use bytemuck::{Pod, Zeroable};
 use crevice::std140::AsStd140;
 use sealed::sealed;
 
@@ -36,31 +36,31 @@ pub trait Primitive:
 #[sealed]
 impl Primitive for bool {
     const PRIMITIVE_TYPE: PrimitiveType = PrimitiveType::Bool;
-    const NUMERIC_REPR_TYPE: NumericType = NumericType::UInt;
+    const NUMERIC_REPR_TYPE: NumericType = NumericType::U32;
 
     type Vec2 = mint::Vector2<bool>;
 }
 
 #[sealed]
 impl Primitive for i32 {
-    const PRIMITIVE_TYPE: PrimitiveType = PrimitiveType::Numeric(NumericType::Int);
-    const NUMERIC_REPR_TYPE: NumericType = NumericType::Int;
+    const PRIMITIVE_TYPE: PrimitiveType = PrimitiveType::Numeric(NumericType::I32);
+    const NUMERIC_REPR_TYPE: NumericType = NumericType::I32;
 
     type Vec2 = mint::Vector2<i32>;
 }
 
 #[sealed]
 impl Primitive for u32 {
-    const PRIMITIVE_TYPE: PrimitiveType = PrimitiveType::Numeric(NumericType::UInt);
-    const NUMERIC_REPR_TYPE: NumericType = NumericType::UInt;
+    const PRIMITIVE_TYPE: PrimitiveType = PrimitiveType::Numeric(NumericType::U32);
+    const NUMERIC_REPR_TYPE: NumericType = NumericType::U32;
 
     type Vec2 = mint::Vector2<u32>;
 }
 
 #[sealed]
 impl Primitive for f32 {
-    const PRIMITIVE_TYPE: PrimitiveType = PrimitiveType::Numeric(NumericType::Float);
-    const NUMERIC_REPR_TYPE: NumericType = NumericType::Float;
+    const PRIMITIVE_TYPE: PrimitiveType = PrimitiveType::Numeric(NumericType::F32);
+    const NUMERIC_REPR_TYPE: NumericType = NumericType::F32;
 
     type Vec2 = mint::Vector2<f32>;
 }
@@ -76,21 +76,65 @@ pub trait Numeric: Pod + ToPod + Primitive + Vertex<Gl> {
 
 #[sealed]
 impl Numeric for f32 {
-    const NUMERIC_TYPE: NumericType = NumericType::Float;
+    const NUMERIC_TYPE: NumericType = NumericType::F32;
 
     type Vec2 = mint::Vector2<f32>;
 }
 
 #[sealed]
 impl Numeric for i32 {
-    const NUMERIC_TYPE: NumericType = NumericType::Int;
+    const NUMERIC_TYPE: NumericType = NumericType::I32;
 
     type Vec2 = mint::Vector2<i32>;
 }
 
 #[sealed]
 impl Numeric for u32 {
-    const NUMERIC_TYPE: NumericType = NumericType::UInt;
+    const NUMERIC_TYPE: NumericType = NumericType::U32;
 
     type Vec2 = mint::Vector2<u32>;
+}
+
+#[derive(Clone, Copy, Eq, PartialEq, Pod, Zeroable)]
+#[repr(transparent)]
+pub struct BoolField(u32);
+
+impl ToPod for bool {
+    type Output = BoolField;
+
+    fn to_pod(self) -> Self::Output {
+        BoolField(self as u32)
+    }
+}
+
+impl ToPod for f32 {
+    type Output = Self;
+
+    fn to_pod(self) -> Self::Output {
+        self
+    }
+}
+
+impl ToPod for i32 {
+    type Output = Self;
+
+    fn to_pod(self) -> Self::Output {
+        self
+    }
+}
+
+impl ToPod for u32 {
+    type Output = Self;
+
+    fn to_pod(self) -> Self::Output {
+        self
+    }
+}
+
+impl<T: Primitive> ToPod for mint::Vector2<T> {
+    type Output = [<T as ToPod>::Output; 2];
+
+    fn to_pod(self) -> Self::Output {
+        [self.x.to_pod(), self.y.to_pod()]
+    }
 }

@@ -1,8 +1,8 @@
 use posh::{
     gl::{DrawParams, Program, UniformBufferBinding, VertexStream},
     sl::{self, Object, ToValue, Value},
-    Domain, Gl, Numeric, Primitive, ResourceDomain, ResourceInterface, Sl, Uniform, Vertex,
-    VertexDomain, VertexInterface, FragmentInterface,
+    Domain, FragmentInterface, Gl, Numeric, Primitive, ResourceDomain, ResourceInterface, Sl,
+    Uniform, Vertex, VertexDomain, VertexInputRate, VertexInterface,
 };
 
 /*
@@ -89,7 +89,7 @@ fn draw<R: ResourceInterface<Sl>>(
 struct MyVisitor;
 
 impl posh::derive_internal::VertexInterfaceVisitor<Sl> for MyVisitor {
-    fn accept<V: Vertex<Sl>>(&mut self, path: &str, vertex: &V) {
+    fn accept<V: Vertex<Sl>>(&mut self, path: &str, input_rate: VertexInputRate, vertex: &V) {
         println!("vertex iface path={path}: {:?}", V::attributes(path));
     }
 }
@@ -139,8 +139,7 @@ fn main() {
     let program: Program<MyResourceIface2, MyVertexIface, sl::Vec4<f32>> =
         Program::new::<sl::Vec4<f32>>(todo!(), todo!());
 
-    let program: Program<MyResourceIface2, MyVertexIface, sl::Vec4<f32>> =
-        create_program();
+    let program: Program<MyResourceIface2, MyVertexIface, sl::Vec4<f32>> = create_program();
 
     let resources: MyResourceIface2<Gl> = todo!();
     let vertices: VertexStream<MyVertexIface, u16> = todo!();
