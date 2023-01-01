@@ -1,3 +1,4 @@
+mod resource_interface;
 mod to_value;
 mod uniform;
 mod utils;
@@ -7,6 +8,17 @@ mod vertex_interface;
 
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput};
+
+/// Derives `ResourceInterface` for a struct that is generic in `ResourceDomain`.
+#[proc_macro_derive(ResourceInterface)]
+pub fn derive_resource_interface(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    match resource_interface::derive(input) {
+        Ok(ts) => ts,
+        Err(e) => e.to_compile_error(),
+    }
+    .into()
+}
 
 /// Derives `ToValue` for a struct that is generic in `Domain`.
 #[proc_macro_derive(ToValue)]

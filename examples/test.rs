@@ -1,7 +1,9 @@
 use posh::{
     sl::{self, Object, ToValue, Value},
-    Domain, Gl, Numeric, Primitive, Sl, Uniform, Vertex, VertexDomain, VertexInterface,
+    Domain, Gl, Numeric, Primitive, ResourceDomain, Sl, Uniform, Vertex, VertexDomain,
+    VertexInterface,
 };
+use posh_derive::ResourceInterface;
 
 /*
 #[derive(Value)]
@@ -52,6 +54,11 @@ struct MyVertexIface<D: VertexDomain = Sl> {
     instance: D::Vertex<MyNestedVertex<D>>,
 }
 
+#[derive(ResourceInterface)]
+struct MyResourceIface<D: ResourceDomain = Sl> {
+    uniform: D::Uniform<MyUniform1<D>>,
+}
+
 struct MyVisitor;
 
 impl posh::derive_internal::VertexInterfaceVisitor<Sl> for MyVisitor {
@@ -61,7 +68,6 @@ impl posh::derive_internal::VertexInterfaceVisitor<Sl> for MyVisitor {
 }
 
 fn main() {
-    /*
     println!("{:#?}", <MyVertex::<Sl> as Vertex<Sl>>::attributes("foo"));
     println!(
         "{:#?}",
@@ -75,5 +81,4 @@ fn main() {
     //let vertex = <MyNestedVertex<Gl> as Vertex<Gl>>::shader_input("bar");
 
     MyVertexIface::shader_input("blub").visit(&mut MyVisitor);
-    */
 }

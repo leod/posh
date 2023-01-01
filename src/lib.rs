@@ -16,7 +16,7 @@ pub use interface::{
 };
 pub use numeric::{Numeric, Primitive};
 
-pub use posh_derive::{Uniform, Vertex, VertexInterface};
+pub use posh_derive::{ResourceInterface, Uniform, Vertex, VertexInterface};
 
 pub use bytemuck;
 pub use crevice;
