@@ -1,8 +1,11 @@
 use proc_macro2::TokenStream;
-use quote::{quote, ToTokens};
+use quote::ToTokens;
 use syn::{
-    parse_quote, punctuated::Punctuated, Data, Error, Field, Fields, GenericParam, Generics, Ident,
-    Result, Token, Type, TypeParamBound,
+    parse_quote,
+    spanned::Spanned,
+    visit_mut::{visit_type_mut, VisitMut},
+    Data, Error, Field, Fields, GenericParam, Generics, Ident, Path, QSelf, Result, Token, Type,
+    TypePath,
 };
 
 #[derive(Clone)]
@@ -96,69 +99,95 @@ impl ToTokens for SpecializedTypeGenerics {
     }
 }
 
-pub struct SpecializeFieldTypesConfig {
-    pub context: &'static str,
-    pub domain: Type,
-    pub bounds: Punctuated<TypeParamBound, Token![+]>,
-    pub map_trait: Type,
-    pub map_type: Type,
+pub fn associated_type_to_trait(ty: &str) -> Option<Path> {
+    if ty == "Scalar"
+        || ty == "Vec2"
+        || ty == "Vec3"
+        || ty == "Bool"
+        || ty == "F32"
+        || ty == "I32"
+        || ty == "U32"
+    {
+        Some(parse_quote!(::posh::Domain))
+    } else {
+        None
+    }
 }
 
 pub fn specialize_field_types(
-    config: SpecializeFieldTypesConfig,
+    domain: Path,
     ident: &Ident,
     generics: &Generics,
     fields: &StructFields,
-) -> Result<(TokenStream, Vec<Type>)> {
-    let context = config.context;
-    let helper_trait = Ident::new(
-        &format!("PoshInternal{ident}{context}SpecializeFields"),
-        ident.span(),
-    );
+) -> Result<Vec<Type>> {
+    struct Visitor {
+        domain: Path,
+        generics_d_ident: Ident,
+    }
 
-    let bounds = &config.bounds;
-    let map_trait = &config.map_trait;
-    let map_type = &config.map_type;
+    impl VisitMut for Visitor {
+        fn visit_type_path_mut(&mut self, i: &mut TypePath) {
+            self.visit_path_mut(&mut i.path);
 
-    let ident = ident;
-    let helper_trait_ident = &helper_trait;
+            if let Some(qself) = i.qself.as_mut() {
+                self.visit_qself_mut(qself);
+                return;
+            }
 
-    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
-    let specialized_ty_generics = SpecializedTypeGenerics::new(config.domain, ident, generics)?;
+            if i.path.segments.is_empty() {
+                return;
+            }
 
-    let field_idents = fields.idents();
-    let field_types = fields.types();
+            let first_segment = &i.path.segments[0];
 
-    let setup = quote! {
-        // Helper trait for specializing struct field types for the given domain.
-        #[doc(hidden)]
-        trait #helper_trait_ident {
-            #(
-                #[allow(non_camel_case_types)]
-                type #field_idents: #bounds;
-            )*
+            if first_segment.ident != self.generics_d_ident {
+                return;
+            }
+
+            if i.path.segments.len() == 1 {
+                i.path = self.domain.clone();
+                return;
+            }
+
+            let Some(trait_path) = associated_type_to_trait(&i.path.segments[1].ident.to_string())
+            else { return; };
+
+            i.qself = Some(QSelf {
+                lt_token: Token![<](first_segment.span()),
+                ty: Box::new(Type::Path(TypePath {
+                    qself: None,
+                    path: self.domain.clone(),
+                })),
+                position: trait_path.segments.len(),
+                as_token: Some(Token![as](first_segment.span())),
+                gt_token: Token![>](first_segment.span()),
+            });
+
+            i.path.segments = trait_path
+                .segments
+                .into_iter()
+                .chain(i.path.segments.clone().into_iter().skip(1))
+                .collect();
         }
+    }
 
-        // Implement the helper trait.
-        impl #impl_generics #helper_trait_ident for #ident #ty_generics
-        #where_clause
-        {
-            #(
-                type #field_idents = <#field_types as #map_trait>::#map_type;
-            )*
-        }
+    let mut visitor = Visitor {
+        domain: domain.clone(),
+        generics_d_ident: get_domain_param(ident, generics)?,
     };
 
-    let specialized_types = field_idents
-        .iter()
-        .map(|field_ident| {
-            parse_quote! {
-                <#ident #specialized_ty_generics as #helper_trait_ident>::#field_ident
-            }
-        })
-        .collect();
+    let mut types = fields.types().into_iter().cloned().collect();
 
-    Ok((setup, specialized_types))
+    for ty in &mut types {
+        //println!("{:#?}", ty);
+        visit_type_mut(&mut visitor, ty);
+    }
+
+    for ty in &mut types {
+        //println!("x {:#?}", ty);
+    }
+
+    Ok(types)
 }
 
 pub fn validate_generics(generics: &Generics) -> Result<()> {

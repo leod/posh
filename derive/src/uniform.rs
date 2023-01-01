@@ -3,8 +3,8 @@ use quote::quote;
 use syn::{parse_quote, DeriveInput, Ident, Result};
 
 use crate::utils::{
-    get_domain_param, remove_domain_param, specialize_field_types, SpecializeFieldTypesConfig,
-    SpecializedTypeGenerics, StructFields,
+    get_domain_param, remove_domain_param, specialize_field_types, SpecializedTypeGenerics,
+    StructFields,
 };
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream> {
@@ -28,22 +28,10 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let field_idents = fields.idents();
     let field_types = fields.types();
 
-    let (field_types_gl_setup, field_types_gl) = specialize_field_types(
-        SpecializeFieldTypesConfig {
-            context: "UniformGl",
-            domain: parse_quote!(::posh::Gl),
-            bounds: parse_quote!(::posh::crevice::std140::AsStd140),
-            map_trait: parse_quote!(::posh::Uniform<#generics_d_type>),
-            map_type: parse_quote!(InGl),
-        },
-        ident,
-        &input.generics,
-        &fields,
-    )?;
+    let field_types_gl =
+        specialize_field_types(parse_quote!(::posh::Gl), ident, &input.generics, &fields)?;
 
     Ok(quote! {
-        #field_types_gl_setup
-
         // Helper type for which we can derive `AsStd140`.
         // FIXME: AFAIK, crevice does not support generic types yet.
         #[doc(hidden)]

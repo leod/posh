@@ -3,8 +3,7 @@ use quote::quote;
 use syn::{parse_quote, DeriveInput, Result};
 
 use crate::utils::{
-    remove_domain_param, specialize_field_types, SpecializeFieldTypesConfig,
-    SpecializedTypeGenerics, StructFields,
+    remove_domain_param, specialize_field_types, SpecializedTypeGenerics, StructFields,
 };
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream> {
@@ -23,22 +22,10 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let field_idents = fields.idents();
     let field_strings = fields.strings();
 
-    let (field_types_sl_setup, field_types_sl) = specialize_field_types(
-        SpecializeFieldTypesConfig {
-            context: "ToValueSl",
-            domain: parse_quote!(::posh::Sl),
-            bounds: parse_quote!(::posh::sl::Value),
-            map_trait: parse_quote!(::posh::sl::ToValue),
-            map_type: parse_quote!(Output),
-        },
-        ident,
-        &input.generics,
-        &fields,
-    )?;
+    let field_types_sl =
+        specialize_field_types(parse_quote!(::posh::Sl), ident, &input.generics, &fields)?;
 
     Ok(quote! {
-        #field_types_sl_setup
-
         // Implement `Struct` for the struct in `Sl`.
         impl #impl_generics_no_d ::posh::sl::Struct for #ident #ty_generics_sl
         #where_clause
