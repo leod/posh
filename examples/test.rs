@@ -1,4 +1,5 @@
 use posh::{
+    gl::{DrawParams, Program, UniformBufferBinding, VertexStream},
     sl::{self, Object, ToValue, Value},
     Domain, Gl, Numeric, Primitive, ResourceDomain, ResourceInterface, Sl, Uniform, Vertex,
     VertexDomain, VertexInterface,
@@ -49,8 +50,8 @@ struct MyNestedVertex<D: Domain = Sl> {
 
 #[derive(VertexInterface)]
 struct MyVertexIface<D: VertexDomain = Sl> {
-    vertex: D::Vertex<MyVertex<D>>,
-    instance: D::Vertex<MyNestedVertex<D>>,
+    vertex: D::Vertex<MyVertex>,
+    instance: D::Vertex<MyNestedVertex>,
 }
 
 #[derive(ResourceInterface)]
@@ -63,6 +64,26 @@ struct MyResourceIface2<D: ResourceDomain = Sl> {
     uniformxy: D::Uniform<MyUniform1>,
     bla: MyResourceIface<D>,
     zzz: D::Uniform<MyUniform1>,
+}
+
+#[derive(ResourceInterface)]
+struct GenericResourceIface<R, D: ResourceDomain = Sl>
+where
+    R: ResourceInterface<Sl>,
+{
+    uniformxy: D::Uniform<MyUniform1>,
+    x: D::Compose<R>,
+}
+
+fn draw<R: ResourceInterface<Sl>>(
+    program: &Program<GenericResourceIface<R>, sl::Vec2<f32>, sl::Vec4<f32>>,
+    xy: UniformBufferBinding<MyUniform1>,
+    x: R::InGl,
+) {
+    let resources = GenericResourceIface { uniformxy: xy, x };
+    let vertices: VertexStream<sl::Vec2<f32>, u16> = todo!();
+
+    program.draw(resources, vertices, todo!(), &DrawParams {});
 }
 
 struct MyVisitor;
@@ -105,4 +126,12 @@ fn main() {
 
     MyVertexIface::shader_input("blub").visit(&mut MyVisitor);
     MyResourceIface2::shader_input("blab").visit("blee", &mut MyVisitor);
+
+    let program: Program<MyResourceIface2, MyVertexIface, sl::Vec4<f32>> =
+        Program::new::<sl::Vec4<f32>>(todo!(), todo!());
+
+    let resources: MyResourceIface2<Gl> = todo!();
+    let vertices: VertexStream<MyVertexIface, u16> = todo!();
+
+    program.draw(resources, vertices, todo!(), &DrawParams {});
 }

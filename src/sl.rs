@@ -61,3 +61,6 @@ pub trait ToValue: Copy {
 
 /// Data passed from a vertex stage to a fragment stage.
 pub trait Varying: Value {}
+
+// TODO: Impl Varying.
+impl Varying for Vec4<f32> {}

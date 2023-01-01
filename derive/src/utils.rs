@@ -172,19 +172,14 @@ pub fn specialize_field_types(
     }
 
     let mut visitor = Visitor {
-        domain: domain.clone(),
+        domain,
         generics_d_ident: get_domain_param(ident, generics)?,
     };
 
     let mut types = fields.types().into_iter().cloned().collect();
 
     for ty in &mut types {
-        //println!("{:#?}", ty);
         visit_type_mut(&mut visitor, ty);
-    }
-
-    for ty in &mut types {
-        //println!("x {:#?}", ty);
     }
 
     Ok(types)

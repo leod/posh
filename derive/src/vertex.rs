@@ -59,7 +59,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             }
         }
 
-        // Implement `Vertex<Gl>` for the struct in `Gl`.
+        // Implement `Vertex<D>` for the struct.
         impl #impl_generics ::posh::Vertex<#generics_d_type> for #ident #ty_generics
         #where_clause
         {

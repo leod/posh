@@ -88,7 +88,7 @@ impl<T: Primitive> Vertex<Sl> for Vec2<T> {
 // Vertex interface
 
 impl<V: Vertex<Sl>> VertexInterface<Sl> for V {
-    type InGl = gl::VertexBufferBinding<V::InGl>;
+    type InGl = gl::VertexBufferBinding<V>;
     type InSl = V::InSl;
 
     fn visit(&self, visitor: &mut impl VertexInterfaceVisitor<Sl>) {
@@ -144,6 +144,7 @@ impl<U: Uniform<Sl, InSl = U>> ResourceInterface<Sl> for U {
 impl super::ResourceDomain for Sl {
     type Sampler2d<T: Numeric> = Sampler2d<T>;
     type Uniform<U: Uniform<Sl, InSl = U>> = U;
+    type Compose<R: ResourceInterface<Sl>> = R;
 }
 
 // Fragment interface

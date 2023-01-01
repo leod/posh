@@ -3,8 +3,7 @@ use quote::quote;
 use syn::{parse_quote, DeriveInput, Ident, Result};
 
 use crate::utils::{
-    get_domain_param, remove_domain_param, specialize_field_types, SpecializedTypeGenerics,
-    StructFields,
+    remove_domain_param, specialize_field_types, SpecializedTypeGenerics, StructFields,
 };
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream> {
@@ -14,7 +13,6 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let as_std140_ident = Ident::new(&format!("PoshInternal{ident}UniformAsStd140"), ident.span());
 
     let generics_no_d = remove_domain_param(ident, &input.generics)?;
-    let generics_d_type = get_domain_param(ident, &input.generics)?;
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
     let (impl_generics_no_d, ty_generics_no_d, where_clause_no_d) = generics_no_d.split_for_impl();
