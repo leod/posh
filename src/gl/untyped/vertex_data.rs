@@ -10,8 +10,8 @@ use crate::{
 
 use super::{Buffer, BufferShared};
 
-pub struct VertexDataEntry<'a> {
-    pub buffer: &'a Buffer,
+#[derive(Debug, Clone)]
+pub struct VertexDataEntryInfo {
     pub input_rate: VertexInputRate,
     pub stride: usize,
     pub attributes: Vec<VertexAttribute>,
@@ -20,6 +20,7 @@ pub struct VertexDataEntry<'a> {
 pub struct VertexData {
     gl: Rc<glow::Context>,
     id: glow::VertexArray,
+    entries: Vec<VertexDataEntryInfo>,
 
     // Keep the referenced vertex buffers alive so that we do not end up with
     // dangling pointers in our vertex array.
@@ -34,7 +35,7 @@ impl VertexData {
     /// a mismatched size.
     pub fn new(
         gl: Rc<glow::Context>,
-        entries: &[VertexDataEntry],
+        buffer_entry_infos: &[(&Buffer, VertexDataEntryInfo)],
     ) -> Result<Self, CreateVertexDataError> {
         // TODO: How do we want to handle `buffers.is_empty()`?
 
@@ -46,12 +47,13 @@ impl VertexData {
 
         let mut index = 0;
 
-        for entry in entries {
+        for (buffer, entry) in buffer_entry_infos {
             assert!(entry.stride > 0);
-            assert_eq!(entry.buffer.len() % entry.stride, 0);
+            assert_eq!(buffer.len() % entry.stride, 0);
+            assert!(Rc::ptr_eq(buffer.gl(), &gl));
 
             unsafe {
-                gl.bind_buffer(glow::ARRAY_BUFFER, Some(entry.buffer.id()));
+                gl.bind_buffer(glow::ARRAY_BUFFER, Some(buffer.id()));
             }
 
             for attribute in &entry.attributes {
@@ -97,16 +99,26 @@ impl VertexData {
             gl.bind_buffer(glow::ARRAY_BUFFER, None);
         }
 
-        let buffers = entries
+        let entries = buffer_entry_infos
+            .into_iter()
+            .map(|(_, entry)| entry.clone())
+            .collect();
+
+        let buffers = buffer_entry_infos
             .iter()
-            .map(|entry| entry.buffer.shared().clone())
+            .map(|(buffer, _)| buffer.shared().clone())
             .collect();
 
         Ok(Self {
             gl,
             id,
+            entries,
             _buffers: buffers,
         })
+    }
+
+    pub fn entry_infos(&self) -> &[VertexDataEntryInfo] {
+        &&self.entries
     }
 }
 

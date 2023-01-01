@@ -42,7 +42,7 @@ impl Buffer {
         &self.shared
     }
 
-    pub fn gc(&self) -> &Rc<glow::Context> {
+    pub fn gl(&self) -> &Rc<glow::Context> {
         &self.shared.gl
     }
 

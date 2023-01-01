@@ -2,7 +2,9 @@ use std::rc::Rc;
 
 use bytemuck::Pod;
 
-use super::{untyped, BufferUsage, CreateBufferError};
+use crate::{Sl, Vertex};
+
+use super::{untyped, BufferUsage, CreateBufferError, VertexBuffer};
 
 pub(crate) struct ContextShared {}
 
@@ -18,6 +20,16 @@ impl Context {
 
     pub fn gl(&self) -> &Rc<glow::Context> {
         &self.gl
+    }
+
+    pub fn create_buffer<V: Vertex<Sl>>(
+        &self,
+        data: &[V::Pod],
+        usage: BufferUsage,
+    ) -> Result<VertexBuffer<V>, CreateBufferError> {
+        let buffer = self.untyped_create_buffer(data, usage)?;
+
+        Ok(VertexBuffer::from_untyped(buffer))
     }
 
     pub fn untyped_create_buffer<T: Pod>(
