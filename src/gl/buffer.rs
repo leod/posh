@@ -21,6 +21,3 @@ impl BufferUsage {
         }
     }
 }
-
-#[derive(Debug, Clone)]
-pub struct CreateBufferError(pub String);

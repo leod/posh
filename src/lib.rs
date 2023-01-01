@@ -12,7 +12,7 @@ pub mod sl;
 
 pub use interface::{
     Domain, FragmentDomain, FragmentInterface, ResourceDomain, ResourceInterface, ToPod, Uniform,
-    Vertex, VertexDomain, VertexInterface, VertexInterfaceField,
+    Vertex, VertexAttribute, VertexDomain, VertexInputRate, VertexInterface, VertexInterfaceField,
 };
 pub use numeric::{Numeric, Primitive};
 
@@ -25,9 +25,7 @@ pub use crevice;
 #[doc(hidden)]
 pub mod derive_internal {
     pub use super::{
-        interface::{
-            join_ident_path, ResourceInterfaceVisitor, VertexAttribute, VertexInterfaceVisitor,
-        },
+        interface::{join_ident_path, ResourceInterfaceVisitor, VertexInterfaceVisitor},
         sl::primitives,
     };
 }

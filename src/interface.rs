@@ -76,8 +76,11 @@ pub struct VertexAttribute {
 
 /// Vertex types.
 pub trait Vertex<D: Domain>: ToValue {
-    type InGl: Vertex<Gl> + ToPod + ToValue<Output = Self::InSl>;
+    type InGl: Vertex<Gl> + ToPod<Output = Self::Pod> + ToValue<Output = Self::InSl>;
+
     type InSl: Vertex<Sl> + Value + ToValue<Output = Self::InSl>;
+
+    type Pod: Pod;
 
     #[doc(hidden)]
     fn attributes(path: &str) -> Vec<VertexAttribute>;
@@ -87,8 +90,20 @@ pub trait Vertex<D: Domain>: ToValue {
 }
 
 #[doc(hidden)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum VertexInputRate {
+    Vertex,
+    Instance,
+}
+
+#[doc(hidden)]
 pub trait VertexInterfaceVisitor<D: VertexDomain> {
-    fn accept<V: Vertex<Sl>>(&mut self, path: &str, vertex: &D::Vertex<V>);
+    fn accept<V: Vertex<Sl>>(
+        &mut self,
+        path: &str,
+        input_rate: VertexInputRate,
+        vertex: &D::Vertex<V>,
+    );
 }
 
 /// Types that are allowed to occur in a [`VertexInterface`].

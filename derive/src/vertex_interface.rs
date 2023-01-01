@@ -35,7 +35,11 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                 visitor: &mut impl ::posh::derive_internal::VertexInterfaceVisitor<D>,
             ) {
                 #(
-                    visitor.accept(#field_strings, &self.#field_idents);
+                    visitor.accept(
+                        #field_strings,
+                        ::posh::VertexInputRate::Vertex,
+                        &self.#field_idents,
+                    );
                 )*
             }
 

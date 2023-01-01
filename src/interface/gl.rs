@@ -1,10 +1,12 @@
+use std::process::Output;
+
 use bytemuck::{Pod, Zeroable};
 use sealed::sealed;
 
 use crate::{
     gl::{Sampler2dBinding, Texture2dBinding, UniformBufferBinding, VertexBufferBinding},
     sl::{self, Object},
-    Gl, Numeric, Sl,
+    Gl, Numeric, Sl, VertexInputRate,
 };
 
 use super::{
@@ -72,53 +74,10 @@ impl super::Domain for Gl {
 
 // Vertex interface
 
-#[derive(Clone, Copy, Eq, PartialEq, Pod, Zeroable)]
-#[repr(transparent)]
-pub struct BoolField(u32);
-
-impl ToPod for bool {
-    type Output = BoolField;
-
-    fn to_pod(self) -> Self::Output {
-        BoolField(self as u32)
-    }
-}
-
-impl ToPod for f32 {
-    type Output = Self;
-
-    fn to_pod(self) -> Self::Output {
-        self
-    }
-}
-
-impl ToPod for i32 {
-    type Output = Self;
-
-    fn to_pod(self) -> Self::Output {
-        self
-    }
-}
-
-impl ToPod for u32 {
-    type Output = Self;
-
-    fn to_pod(self) -> Self::Output {
-        self
-    }
-}
-
-impl<T: Primitive> ToPod for mint::Vector2<T> {
-    type Output = [<T as ToPod>::Output; 2];
-
-    fn to_pod(self) -> Self::Output {
-        [self.x.to_pod(), self.y.to_pod()]
-    }
-}
-
 impl Vertex<Gl> for bool {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
+    type Pod = <Self::InGl as ToPod>::Output;
 
     fn attributes(path: &str) -> Vec<VertexAttribute> {
         <Self::InSl as Vertex<Sl>>::attributes(path)
@@ -132,6 +91,7 @@ impl Vertex<Gl> for bool {
 impl Vertex<Gl> for f32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
+    type Pod = <Self::InGl as ToPod>::Output;
 
     fn attributes(path: &str) -> Vec<VertexAttribute> {
         <Self::InSl as Vertex<Sl>>::attributes(path)
@@ -145,6 +105,7 @@ impl Vertex<Gl> for f32 {
 impl Vertex<Gl> for i32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
+    type Pod = <Self::InGl as ToPod>::Output;
 
     fn attributes(path: &str) -> Vec<VertexAttribute> {
         <Self::InSl as Vertex<Sl>>::attributes(path)
@@ -158,6 +119,7 @@ impl Vertex<Gl> for i32 {
 impl Vertex<Gl> for u32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
+    type Pod = <Self::InGl as ToPod>::Output;
 
     fn attributes(path: &str) -> Vec<VertexAttribute> {
         <Self::InSl as Vertex<Sl>>::attributes(path)
@@ -171,6 +133,7 @@ impl Vertex<Gl> for u32 {
 impl<T: Primitive> Vertex<Gl> for mint::Vector2<T> {
     type InGl = T::Vec2;
     type InSl = sl::Vec2<T>;
+    type Pod = <Self::InGl as ToPod>::Output;
 
     fn attributes(path: &str) -> Vec<VertexAttribute> {
         <Self::InSl as Vertex<Sl>>::attributes(path)
@@ -186,7 +149,7 @@ impl<V: Vertex<Sl>> VertexInterface<Gl> for VertexBufferBinding<V> {
     type InSl = V::InSl;
 
     fn visit(&self, visitor: &mut impl VertexInterfaceVisitor<Gl>) {
-        visitor.accept("vertex", self)
+        visitor.accept("vertex", VertexInputRate::Vertex, self)
     }
 
     fn shader_input(_: &str) -> Self {

@@ -1,15 +1,19 @@
-use std::{rc::Rc, cell::Cell};
+use std::{cell::Cell, rc::Rc};
 
 use bytemuck::Pod;
 use glow::HasContext;
 
 use crate::gl::{BufferUsage, CreateBufferError};
 
-pub struct Buffer {
+pub(crate) struct BufferShared {
     gl: Rc<glow::Context>,
     id: glow::Buffer,
     usage: BufferUsage,
     len: Cell<usize>,
+}
+
+pub struct Buffer {
+    shared: Rc<BufferShared>,
 }
 
 impl Buffer {
@@ -20,36 +24,42 @@ impl Buffer {
     ) -> Result<Self, CreateBufferError> {
         let id = unsafe { gl.create_buffer() }.map_err(CreateBufferError)?;
 
-        let buffer = Buffer {
+        let shared = Rc::new(BufferShared {
             gl,
             id,
             usage,
             len: Cell::new(0),
-        };
+        });
 
+        let buffer = Buffer { shared };
 
         buffer.set(data);
 
         Ok(buffer)
     }
 
+    pub(crate) fn shared(&self) -> &Rc<BufferShared> {
+        &self.shared
+    }
+
     pub fn gc(&self) -> &Rc<glow::Context> {
-        &self.gl
+        &self.shared.gl
     }
 
     pub fn id(&self) -> glow::Buffer {
-        self.id
+        self.shared.id
     }
 
     pub fn usage(&self) -> BufferUsage {
-        self.usage
+        self.shared.usage
     }
 
     pub fn len(&self) -> usize {
-        self.len.get()
+        self.shared.len.get()
     }
 
     pub fn set<T: Pod>(&self, data: &[T]) {
+        let gl = &self.shared.gl;
         let raw_data = bytemuck::cast_slice(data);
 
         // We can get away with always using `ARRAY_BUFFER` as the target here,
@@ -58,18 +68,18 @@ impl Buffer {
         let target = glow::ARRAY_BUFFER;
 
         unsafe {
-            self.gl.bind_buffer(target, Some(self.id));
-            self.gl.buffer_data_u8_slice(target, raw_data, self.usage.to_gl());
+            gl.bind_buffer(target, Some(self.shared.id));
+            gl.buffer_data_u8_slice(target, raw_data, self.shared.usage.to_gl());
 
             // TODO: Could avoid unbinding here by using `ContextShared`.
-            self.gl.bind_buffer(target, None);
+            gl.bind_buffer(target, None);
         }
 
-        self.len.set(raw_data.len());
+        self.shared.len.set(raw_data.len());
     }
 }
 
-impl Drop for Buffer {
+impl Drop for BufferShared {
     fn drop(&mut self) {
         unsafe {
             self.gl.delete_buffer(self.id);

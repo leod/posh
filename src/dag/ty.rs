@@ -1,8 +1,8 @@
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum NumericType {
-    Int,
-    UInt,
-    Float,
+    F32,
+    I32,
+    U32,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
