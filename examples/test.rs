@@ -3,10 +3,12 @@ use posh::{
     Domain, Gl, Numeric, Primitive, Sl, Uniform, Vertex, VertexDomain, VertexInterface,
 };
 
+/*
 #[derive(Value)]
 struct Foo<T: Numeric> {
     x: sl::Scalar<T>,
 }
+*/
 
 #[derive(Clone, Copy, ToValue)]
 struct MyThang<T: Primitive, D: Domain = Sl> {
@@ -17,8 +19,6 @@ struct MyThang<T: Primitive, D: Domain = Sl> {
 #[derive(Clone, Copy, ToValue)]
 struct MyThunk<T: Primitive, D: Domain = Sl> {
     x: MyThang<T, D>,
-    y: MyThang<f32, D>,
-    z: (D::Scalar<T>, D::Scalar<T>),
 }
 
 #[derive(Clone, Copy, ToValue, Uniform, Vertex)]
@@ -26,6 +26,8 @@ struct MyUniform1<D: Domain = Sl> {
     x: D::Vec2<f32>,
     y: D::Bool,
 }
+
+/*
 
 #[derive(Clone, Copy, ToValue, Uniform)]
 struct MyUniform2<D: Domain = Sl> {
@@ -59,8 +61,10 @@ impl posh::derive_internal::VertexInterfaceVisitor<Sl> for MyVisitor {
         println!("vertex iface path={path}: {:?}", V::attributes(path));
     }
 }
+*/
 
 fn main() {
+    /*
     println!("{:#?}", <MyVertex::<Sl> as Vertex<Sl>>::attributes("foo"));
     println!(
         "{:#?}",
@@ -74,4 +78,5 @@ fn main() {
     //let vertex = <MyNestedVertex<Gl> as Vertex<Gl>>::shader_input("bar");
 
     MyVertexIface::shader_input("blub").visit(&mut MyVisitor);
+    */
 }
