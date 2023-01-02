@@ -38,7 +38,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             ));
 
             fn expr(&self) -> ::std::rc::Rc<::posh::dag::Expr> {
-                ::posh::derive_internal::primitives::simplify_struct_literal(
+                ::posh::internal::primitives::simplify_struct_literal(
                     &<Self as ::posh::sl::Struct>::STRUCT_TYPE,
                     &[
                         #(
@@ -49,7 +49,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             }
 
             fn from_arg(name: &str) -> Self {
-                ::posh::derive_internal::primitives::value_arg(name)
+                ::posh::internal::primitives::value_arg(name)
             }
         }
 
@@ -60,7 +60,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
                 Self {
                     #(
-                        #field_idents: ::posh::derive_internal::primitives::field(
+                        #field_idents: ::posh::internal::primitives::field(
                             base.clone(),
                             #field_strings,
                         )

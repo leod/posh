@@ -32,7 +32,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
             fn visit(
                 &self,
-                visitor: &mut impl ::posh::derive_internal::VertexInterfaceVisitor<D>,
+                visitor: &mut impl ::posh::internal::VertexInterfaceVisitor<D>,
             ) {
                 #(
                     visitor.accept(
@@ -49,7 +49,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                         #field_idents:
                             <#field_types as ::posh::VertexInterfaceField<#generics_d_type>>::
                                 shader_input(
-                                    &::posh::derive_internal::join_ident_path(path, #field_strings),
+                                    &::posh::internal::join_ident_path(path, #field_strings),
                                 ),
                     )*
                 }

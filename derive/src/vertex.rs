@@ -79,7 +79,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
                     let attrs = <
                         #field_types as ::posh::Vertex<#generics_d_type>
-                    >::attributes(&::posh::derive_internal::join_ident_path(path, #field_strings));
+                    >::attributes(&::posh::internal::join_ident_path(path, #field_strings));
 
                     for attr in attrs {
                         result.push(::posh::VertexAttribute {
@@ -97,7 +97,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                     #(
                         #field_idents: <#field_types as ::posh::Vertex<#generics_d_type>>::
                             shader_input(
-                                &::posh::derive_internal::join_ident_path(path, #field_strings),
+                                &::posh::internal::join_ident_path(path, #field_strings),
                             ),
                     )*
                 }
