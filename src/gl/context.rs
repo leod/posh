@@ -1,7 +1,5 @@
 use std::rc::Rc;
 
-use bytemuck::Pod;
-
 use crate::{Sl, Vertex, VertexInterface};
 
 use super::{

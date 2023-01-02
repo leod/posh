@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::{Gl, Sl, ToPod, Vertex};
+use crate::{Sl, ToPod, Vertex};
 
 use super::untyped;
 

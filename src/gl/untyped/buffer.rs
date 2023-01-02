@@ -59,6 +59,10 @@ impl Buffer {
         self.shared.len.get()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     pub fn set<T: Pod>(&self, data: &[T]) {
         let gl = &self.shared.gl;
         let raw_data = bytemuck::cast_slice(data);
@@ -98,6 +102,10 @@ impl BufferBinding {
 
     pub fn len(&self) -> usize {
         self.shared.len.get()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 }
 

@@ -1,12 +1,8 @@
-use std::process::Output;
-
-use bytemuck::{Pod, Zeroable};
 use sealed::sealed;
 
 use crate::{
     gl::{Sampler2dBinding, Texture2dBinding, UniformBufferBinding, VertexBufferBinding},
-    sl::{self, Object},
-    Gl, Numeric, Sl, VertexInputRate,
+    sl, Gl, Numeric, Sl, VertexInputRate,
 };
 
 use super::{

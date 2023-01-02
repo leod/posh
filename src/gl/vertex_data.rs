@@ -15,13 +15,13 @@ pub struct VertexData<V: VertexInterface<Sl>> {
 impl<V: VertexInterface<Sl>> VertexData<V> {
     // TODO: Allow construction from `untyped::VertexData`?
 
-    pub fn new(context: &Context, bindings: V::InGl) -> Result<Self, CreateVertexDataError> {
+    pub fn new(context: &Context, vertex_bindings: V::InGl) -> Result<Self, CreateVertexDataError> {
         let mut visitor = BindingVisitor::default();
-        bindings.visit(&mut visitor);
+        vertex_bindings.visit(&mut visitor);
 
         let untyped = context
             .untyped()
-            .create_vertex_data(&visitor.bindings_and_entry_infos)?;
+            .create_vertex_data(&visitor.vertex_bindings_and_entry_infos)?;
 
         Ok(VertexData {
             untyped,
@@ -32,7 +32,7 @@ impl<V: VertexInterface<Sl>> VertexData<V> {
 
 #[derive(Default)]
 struct BindingVisitor {
-    bindings_and_entry_infos: Vec<(untyped::BufferBinding, VertexDataEntryInfo)>,
+    vertex_bindings_and_entry_infos: Vec<(untyped::BufferBinding, VertexDataEntryInfo)>,
 }
 
 impl VertexInterfaceVisitor<Gl> for BindingVisitor {
@@ -50,7 +50,7 @@ impl VertexInterfaceVisitor<Gl> for BindingVisitor {
             attributes,
         };
 
-        self.bindings_and_entry_infos
+        self.vertex_bindings_and_entry_infos
             .push((vertex.untyped.clone(), entry_info));
     }
 }
