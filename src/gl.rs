@@ -27,5 +27,3 @@ pub use uniform_buffer::{UniformBuffer, UniformBufferBinding};
 pub use vertex_buffer::{VertexBuffer, VertexBufferBinding};
 pub use vertex_data::VertexData;
 pub use vertex_stream::{GeometryType, VertexStream};
-
-pub(crate) use context::ContextShared;
