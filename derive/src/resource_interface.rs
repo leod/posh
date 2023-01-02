@@ -33,11 +33,11 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             fn visit(
                 &self,
                 path: &str,
-                visitor: &mut impl ::posh::derive_internal::ResourceInterfaceVisitor<D>,
+                visitor: &mut impl ::posh::internal::ResourceInterfaceVisitor<D>,
             ) {
                 #(
                     self.#field_idents.visit(
-                        &::posh::derive_internal::join_ident_path(path, #field_strings),
+                        &::posh::internal::join_ident_path(path, #field_strings),
                         visitor,
                     );
                 )*
@@ -49,7 +49,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                         #field_idents:
                             <#field_types as ::posh::ResourceInterface<#generics_d_type>>::
                                 shader_input(
-                                    &::posh::derive_internal::join_ident_path(path, #field_strings),
+                                    &::posh::internal::join_ident_path(path, #field_strings),
                                 ),
                     )*
                 }

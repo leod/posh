@@ -88,13 +88,13 @@ fn draw<R: ResourceInterface<Sl>>(
 
 struct MyVisitor;
 
-impl posh::derive_internal::VertexInterfaceVisitor<Sl> for MyVisitor {
+impl posh::internal::VertexInterfaceVisitor<Sl> for MyVisitor {
     fn accept<V: Vertex<Sl>>(&mut self, path: &str, input_rate: VertexInputRate, vertex: &V) {
         println!("vertex iface path={path}: {:?}", V::attributes(path));
     }
 }
 
-impl posh::derive_internal::ResourceInterfaceVisitor<Sl> for MyVisitor {
+impl posh::internal::ResourceInterfaceVisitor<Sl> for MyVisitor {
     fn accept_sampler2d<T: Numeric>(
         &mut self,
         path: &str,

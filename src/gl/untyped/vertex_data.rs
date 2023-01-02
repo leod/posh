@@ -31,8 +31,8 @@ impl VertexData {
     /// # Panics
     ///
     /// Panics if any of the buffers do not belong to `gl`, or if any of the
-    /// vertex attribute types are not supported, or if any of the buffers have
-    /// a mismatched size.
+    /// vertex attribute types are not supported by `posh`, or if any of the
+    /// buffers have a mismatched size.
     pub fn new(
         gl: Rc<glow::Context>,
         buffer_entry_infos: &[(&Buffer, VertexDataEntryInfo)],
@@ -47,16 +47,16 @@ impl VertexData {
 
         let mut index = 0;
 
-        for (buffer, entry) in buffer_entry_infos {
-            assert!(entry.stride > 0);
-            assert_eq!(buffer.len() % entry.stride, 0);
+        for (buffer, entry_info) in buffer_entry_infos {
+            assert!(entry_info.stride > 0);
+            assert_eq!(buffer.len() % entry_info.stride, 0);
             assert!(Rc::ptr_eq(buffer.gl(), &gl));
 
             unsafe {
                 gl.bind_buffer(glow::ARRAY_BUFFER, Some(buffer.id()));
             }
 
-            for attribute in &entry.attributes {
+            for attribute in &entry_info.attributes {
                 let info = VertexDataAttributeInfo::new(&attribute.name, &attribute.ty);
 
                 for i in 0..info.num_locations {
@@ -65,7 +65,7 @@ impl VertexData {
                     let data_type = numeric_type_to_gl(info.ty);
                     let offset = attribute.offset + i * info.location_size();
 
-                    assert!(offset + info.location_size() <= entry.stride);
+                    assert!(offset + info.location_size() <= entry_info.stride);
 
                     match info.ty {
                         F32 => unsafe {
@@ -74,7 +74,7 @@ impl VertexData {
                                 info.num_components as i32,
                                 data_type,
                                 false,
-                                entry.stride as i32,
+                                entry_info.stride as i32,
                                 offset as i32,
                             )
                         },
@@ -83,7 +83,7 @@ impl VertexData {
                                 index,
                                 info.num_components as i32,
                                 data_type,
-                                entry.stride as i32,
+                                entry_info.stride as i32,
                                 offset as i32,
                             )
                         },
@@ -168,8 +168,8 @@ impl VertexDataAttributeInfo {
                     num_components: 4,
                     num_locations: 1,
                 },
-                Struct(_) => panic!("VertexData does not support struct types"),
-                Sampler2d(_) => panic!("VertexData does not support sampler types"),
+                Struct(_) => panic!("`VertexData` does not support struct types"),
+                Sampler2d(_) => panic!("`VertexData` does not support sampler types"),
             },
             Array(_, _) => unimplemented!(),
         }
@@ -205,6 +205,6 @@ fn get_numeric_type(ty: PrimitiveType) -> NumericType {
 
     match ty {
         Numeric(ty) => ty,
-        Bool => panic!("VertexData does not support `bool`"),
+        Bool => panic!("`VertexData` does not support `bool`"),
     }
 }

@@ -23,7 +23,7 @@ pub use crevice;
 
 // Hidden re-exports, needed for `posh-derive`:
 #[doc(hidden)]
-pub mod derive_internal {
+pub mod internal {
     pub use super::{
         interface::{join_ident_path, ResourceInterfaceVisitor, VertexInterfaceVisitor},
         sl::primitives,

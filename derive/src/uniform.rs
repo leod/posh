@@ -89,7 +89,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             type InSl = #ident #ty_generics_sl;
 
             fn shader_input(path: &str) -> Self {
-                ::posh::derive_internal::primitives::value_arg(path)
+                ::posh::internal::primitives::value_arg(path)
             }
         }
 
