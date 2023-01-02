@@ -12,12 +12,8 @@ struct BufferShared {
     len: Cell<usize>,
 }
 
-pub struct Buffer {
-    shared: Rc<BufferShared>,
-}
-
 #[derive(Clone)]
-pub struct BufferBinding {
+pub struct Buffer {
     shared: Rc<BufferShared>,
 }
 
@@ -81,31 +77,6 @@ impl Buffer {
         }
 
         self.shared.len.set(raw_data.len());
-    }
-
-    #[must_use]
-    pub fn bind(&self) -> BufferBinding {
-        BufferBinding {
-            shared: self.shared.clone(),
-        }
-    }
-}
-
-impl BufferBinding {
-    pub fn gl(&self) -> &Rc<glow::Context> {
-        &self.shared.gl
-    }
-
-    pub fn id(&self) -> glow::Buffer {
-        self.shared.id
-    }
-
-    pub fn len(&self) -> usize {
-        self.shared.len.get()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
     }
 }
 

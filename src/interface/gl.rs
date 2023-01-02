@@ -1,7 +1,7 @@
 use sealed::sealed;
 
 use crate::{
-    gl::{Sampler2dBinding, Texture2dBinding, UniformBufferBinding, VertexBufferBinding},
+    gl::{Sampler2dBinding, Texture2dBinding, UniformBufferBinding, VertexBuffer},
     sl, Gl, Numeric, Sl, VertexInputRate,
 };
 
@@ -140,7 +140,7 @@ impl<T: Primitive> Vertex<Gl> for mint::Vector2<T> {
     }
 }
 
-impl<V: Vertex<Sl>> VertexInterface<Gl> for VertexBufferBinding<V> {
+impl<V: Vertex<Sl>> VertexInterface<Gl> for VertexBuffer<V> {
     type InGl = Self;
     type InSl = V::InSl;
 
@@ -154,7 +154,7 @@ impl<V: Vertex<Sl>> VertexInterface<Gl> for VertexBufferBinding<V> {
 }
 
 #[sealed]
-impl<V: Vertex<Sl>> super::VertexInterfaceField<Gl> for VertexBufferBinding<V> {
+impl<V: Vertex<Sl>> super::VertexInterfaceField<Gl> for VertexBuffer<V> {
     fn shader_input(_: &str) -> Self {
         unimplemented!()
     }
@@ -162,7 +162,7 @@ impl<V: Vertex<Sl>> super::VertexInterfaceField<Gl> for VertexBufferBinding<V> {
 
 #[sealed]
 impl super::VertexDomain for Gl {
-    type Vertex<V: Vertex<Sl>> = VertexBufferBinding<V>;
+    type Vertex<V: Vertex<Sl>> = VertexBuffer<V>;
 }
 
 // Resource interface

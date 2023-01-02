@@ -5,13 +5,7 @@ use crate::{Sl, ToPod, Vertex};
 use super::untyped;
 
 pub struct VertexBuffer<V: Vertex<Sl>> {
-    untyped: untyped::Buffer,
-    _phantom: PhantomData<V>,
-}
-
-#[derive(Clone)]
-pub struct VertexBufferBinding<V: Vertex<Sl>> {
-    pub(crate) untyped: untyped::BufferBinding,
+    pub(crate) untyped: untyped::Buffer,
     _phantom: PhantomData<V>,
 }
 
@@ -35,13 +29,4 @@ impl<V: Vertex<Sl>> VertexBuffer<V> {
     pub fn set(&self, data: &[V::Pod]) {
         self.untyped.set(data);
     }
-
-    pub fn bind(&self) -> VertexBufferBinding<V> {
-        VertexBufferBinding {
-            untyped: self.untyped.bind(),
-            _phantom: PhantomData,
-        }
-    }
 }
-
-impl<V: Vertex<Sl>> VertexBufferBinding<V> {}

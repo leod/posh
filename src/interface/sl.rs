@@ -90,7 +90,7 @@ impl<T: Primitive> Vertex<Sl> for Vec2<T> {
 // Vertex interface
 
 impl<V: Vertex<Sl>> VertexInterface<Sl> for V {
-    type InGl = gl::VertexBufferBinding<V>;
+    type InGl = gl::VertexBuffer<V>;
     type InSl = V::InSl;
 
     fn visit(&self, visitor: &mut impl VertexInterfaceVisitor<Sl>) {
