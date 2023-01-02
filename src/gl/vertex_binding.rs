@@ -3,33 +3,28 @@ use std::marker::PhantomData;
 use crate::{internal::VertexInterfaceVisitor, Gl, Sl, Vertex, VertexInputRate, VertexInterface};
 
 use super::{
-    untyped::{self, VertexDataEntryInfo},
-    Context, CreateVertexDataError, GeometryType, VertexBuffer,
+    untyped::{self, VertexBindingBufferInfo},
+    Context, CreateVertexDataError, VertexBuffer,
 };
 
-pub struct VertexData<V: VertexInterface<Sl>> {
-    untyped: untyped::VertexData,
+pub struct VertexBinding<V: VertexInterface<Sl>> {
+    untyped: untyped::VertexBinding,
     vertex_buffers: V::InGl,
     _phantom: PhantomData<V>,
 }
 
-pub struct VertexDataBinding<V: VertexInterface<Sl>> {
-    untyped: untyped::VertexDataBinding,
-    _phantom: PhantomData<V>,
-}
-
-impl<V: VertexInterface<Sl>> VertexData<V> {
+impl<V: VertexInterface<Sl>> VertexBinding<V> {
     // TODO: Allow construction from `untyped::VertexData`?
 
     pub fn new(context: &Context, vertex_buffers: V::InGl) -> Result<Self, CreateVertexDataError> {
-        let mut visitor = BufferVisitor::default();
+        let mut visitor = VertexBufferVisitor::default();
         vertex_buffers.visit(&mut visitor);
 
         let untyped = context
             .untyped()
-            .create_vertex_data(&visitor.vertex_buffers_and_entry_infos)?;
+            .create_vertex_binding(&visitor.vertex_buffers)?;
 
-        Ok(VertexData {
+        Ok(VertexBinding {
             untyped,
             vertex_buffers,
             _phantom: PhantomData,
@@ -39,21 +34,14 @@ impl<V: VertexInterface<Sl>> VertexData<V> {
     pub fn vertex_buffers(&self) -> &V::InGl {
         &self.vertex_buffers
     }
-
-    pub fn bind(&self, geometry_type: GeometryType) -> VertexDataBinding<V> {
-        VertexDataBinding {
-            untyped: self.untyped.bind(geometry_type),
-            _phantom: PhantomData,
-        }
-    }
 }
 
 #[derive(Default)]
-struct BufferVisitor {
-    vertex_buffers_and_entry_infos: Vec<(untyped::Buffer, VertexDataEntryInfo)>,
+struct VertexBufferVisitor {
+    vertex_buffers: Vec<(untyped::Buffer, VertexBindingBufferInfo)>,
 }
 
-impl VertexInterfaceVisitor<Gl> for BufferVisitor {
+impl VertexInterfaceVisitor<Gl> for VertexBufferVisitor {
     fn accept<V: Vertex<Sl>>(
         &mut self,
         path: &str,
@@ -62,13 +50,13 @@ impl VertexInterfaceVisitor<Gl> for BufferVisitor {
     ) {
         let stride = std::mem::size_of::<V::Pod>();
         let attributes = V::attributes(path);
-        let entry_info = VertexDataEntryInfo {
+        let entry_info = VertexBindingBufferInfo {
             input_rate,
             stride,
             attributes,
         };
 
-        self.vertex_buffers_and_entry_infos
+        self.vertex_buffers
             .push((vertex.untyped.clone(), entry_info));
     }
 }

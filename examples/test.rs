@@ -1,16 +1,14 @@
 use posh::{
-    gl::{DrawParams, Program, UniformBufferBinding, VertexDataBinding},
+    gl::{DrawParams, Program, UniformBufferBinding, VertexBinding},
     sl::{self, Object, ToValue, Value},
     Domain, FragmentInterface, Gl, Numeric, Primitive, ResourceDomain, ResourceInterface, Sl,
     Uniform, Vertex, VertexDomain, VertexInputRate, VertexInterface,
 };
 
-/*
 #[derive(Value)]
 struct Foo<T: Numeric> {
     x: sl::Scalar<T>,
 }
-*/
 
 #[derive(Clone, Copy, ToValue)]
 struct MyThang<T: Primitive, D: Domain = Sl> {
@@ -81,7 +79,7 @@ fn draw<R: ResourceInterface<Sl>>(
     x: R::InGl,
 ) {
     let resources = GenericResourceIface { uniformxy: xy, x };
-    let vertices: VertexDataBinding<sl::Vec2<f32>> = todo!();
+    let vertices: VertexBinding<sl::Vec2<f32>> = todo!();
 
     program.draw(resources, vertices, todo!(), &DrawParams {});
 }
@@ -142,7 +140,7 @@ fn main() {
     let program: Program<MyResourceIface2, MyVertexIface, sl::Vec4<f32>> = create_program();
 
     let resources: MyResourceIface2<Gl> = todo!();
-    let vertices: VertexDataBinding<MyVertexIface> = todo!();
+    let vertices: VertexBinding<MyVertexIface> = todo!();
 
     program.draw(resources, vertices, todo!(), &DrawParams {});
 }

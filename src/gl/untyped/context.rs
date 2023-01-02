@@ -4,7 +4,7 @@ use bytemuck::Pod;
 
 use crate::gl::{BufferUsage, CreateBufferError, CreateVertexDataError};
 
-use super::{Buffer, VertexData, VertexDataEntryInfo};
+use super::{Buffer, VertexBinding, VertexBindingBufferInfo};
 
 pub struct Context {
     gl: Rc<glow::Context>,
@@ -23,10 +23,10 @@ impl Context {
         Buffer::new(self.gl.clone(), data, usage)
     }
 
-    pub fn create_vertex_data(
+    pub fn create_vertex_binding(
         &self,
-        vertex_buffers_and_entry_infos: &[(Buffer, VertexDataEntryInfo)],
-    ) -> Result<VertexData, CreateVertexDataError> {
-        VertexData::new(self.gl.clone(), vertex_buffers_and_entry_infos)
+        vertex_buffers: &[(Buffer, VertexBindingBufferInfo)],
+    ) -> Result<VertexBinding, CreateVertexDataError> {
+        VertexBinding::new(self.gl.clone(), vertex_buffers)
     }
 }

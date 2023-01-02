@@ -9,8 +9,8 @@ mod sampler;
 mod surface;
 mod texture;
 mod uniform_buffer;
+mod vertex_binding;
 mod vertex_buffer;
-mod vertex_data;
 
 pub mod untyped;
 
@@ -25,5 +25,5 @@ pub use sampler::{Sampler2d, Sampler2dBinding};
 pub use surface::{DefaultSurface, SurfaceBinding};
 pub use texture::Texture2dBinding;
 pub use uniform_buffer::{UniformBuffer, UniformBufferBinding};
+pub use vertex_binding::VertexBinding;
 pub use vertex_buffer::VertexBuffer;
-pub use vertex_data::{VertexData, VertexDataBinding};
