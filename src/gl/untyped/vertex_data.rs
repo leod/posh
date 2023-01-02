@@ -24,7 +24,7 @@ struct VertexDataShared {
 
     // Safety: Keep the referenced vertex buffers alive, so that we do not end
     // up with dangling pointers in our vertex array.
-    _bindings: Vec<Buffer>,
+    _buffers: Vec<Buffer>,
 }
 
 pub struct VertexData {
@@ -45,7 +45,7 @@ impl VertexData {
     /// buffers have a mismatched size.
     pub fn new(
         gl: Rc<glow::Context>,
-        vertex_bindings_and_entry_infos: &[(Buffer, VertexDataEntryInfo)],
+        vertex_buffers_and_entry_infos: &[(Buffer, VertexDataEntryInfo)],
     ) -> Result<Self, CreateVertexDataError> {
         // TODO: How do we want to handle `buffers.is_empty()`?
 
@@ -57,13 +57,13 @@ impl VertexData {
 
         let mut index = 0;
 
-        for (binding, entry_info) in vertex_bindings_and_entry_infos {
+        for (buffer, entry_info) in vertex_buffers_and_entry_infos {
             assert!(entry_info.stride > 0);
-            assert_eq!(binding.len() % entry_info.stride, 0);
-            assert!(Rc::ptr_eq(binding.gl(), &gl));
+            assert_eq!(buffer.len() % entry_info.stride, 0);
+            assert!(Rc::ptr_eq(buffer.gl(), &gl));
 
             unsafe {
-                gl.bind_buffer(glow::ARRAY_BUFFER, Some(binding.id()));
+                gl.bind_buffer(glow::ARRAY_BUFFER, Some(buffer.id()));
             }
 
             for attribute in &entry_info.attributes {
@@ -109,12 +109,12 @@ impl VertexData {
             gl.bind_buffer(glow::ARRAY_BUFFER, None);
         }
 
-        let entry_infos = vertex_bindings_and_entry_infos
+        let entry_infos = vertex_buffers_and_entry_infos
             .iter()
             .map(|(_, entry)| entry.clone())
             .collect();
 
-        let bindings = vertex_bindings_and_entry_infos
+        let buffers = vertex_buffers_and_entry_infos
             .iter()
             .map(|(buffer, _)| buffer.clone())
             .collect();
@@ -123,7 +123,7 @@ impl VertexData {
             gl,
             id,
             entry_infos,
-            _bindings: bindings,
+            _buffers: buffers,
         });
 
         Ok(Self { shared })
