@@ -4,7 +4,7 @@ use glow::HasContext;
 
 use crate::{
     dag::{BaseType, NumericType, PrimitiveType, Type},
-    gl::CreateVertexDataError,
+    gl::{CreateVertexDataError, GeometryType},
     VertexAttribute, VertexInputRate,
 };
 
@@ -17,7 +17,7 @@ pub struct VertexDataEntryInfo {
     pub attributes: Vec<VertexAttribute>,
 }
 
-pub struct VertexData {
+struct VertexDataShared {
     gl: Rc<glow::Context>,
     id: glow::VertexArray,
     entry_infos: Vec<VertexDataEntryInfo>,
@@ -25,6 +25,16 @@ pub struct VertexData {
     // Safety: Keep the referenced vertex buffers alive, so that we do not end
     // up with dangling pointers in our vertex array.
     _bindings: Vec<BufferBinding>,
+}
+
+pub struct VertexData {
+    shared: Rc<VertexDataShared>,
+}
+
+#[derive(Clone)]
+pub struct VertexDataBinding {
+    shared: Rc<VertexDataShared>,
+    geometry_type: GeometryType,
 }
 
 impl VertexData {
@@ -109,20 +119,29 @@ impl VertexData {
             .map(|(buffer, _)| buffer.clone())
             .collect();
 
-        Ok(Self {
+        let shared = Rc::new(VertexDataShared {
             gl,
             id,
             entry_infos,
             _bindings: bindings,
-        })
+        });
+
+        Ok(Self { shared })
     }
 
     pub fn entry_infos(&self) -> &[VertexDataEntryInfo] {
-        &self.entry_infos
+        &self.shared.entry_infos
+    }
+
+    pub fn bind(&self, geometry_type: GeometryType) -> VertexDataBinding {
+        VertexDataBinding {
+            shared: self.shared.clone(),
+            geometry_type,
+        }
     }
 }
 
-impl Drop for VertexData {
+impl Drop for VertexDataShared {
     fn drop(&mut self) {
         unsafe {
             self.gl.delete_vertex_array(self.id);
