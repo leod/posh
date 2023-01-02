@@ -1,35 +1,54 @@
-use std::{marker::PhantomData, rc::Rc};
+use std::marker::PhantomData;
 
-use crate::{internal::VertexInterfaceVisitor, Gl, Sl, VertexInterface};
+use crate::{internal::VertexInterfaceVisitor, Gl, Sl, Vertex, VertexInputRate, VertexInterface};
 
 use super::{
     untyped::{self, VertexDataEntryInfo},
-    CreateVertexDataError, VertexBuffer, VertexBufferBinding,
+    Context, CreateVertexDataError, VertexBufferBinding,
 };
 
 pub struct VertexData<V: VertexInterface<Sl>> {
+    untyped: untyped::VertexData,
     _phantom: PhantomData<V>,
 }
 
 impl<V: VertexInterface<Sl>> VertexData<V> {
-    pub fn new(gl: Rc<glow::Context>, bindings: V::InGl) -> Result<Self, CreateVertexDataError> {
-        //let buffer_entry_infos = todo();
+    // TODO: Allow construction from `untyped::VertexData`?
 
-        todo!()
+    pub fn new(context: &Context, bindings: V::InGl) -> Result<Self, CreateVertexDataError> {
+        let mut visitor = BindingVisitor::default();
+        bindings.visit(&mut visitor);
+
+        let untyped = context.untyped_create_vertex_data(&visitor.bindings_and_entry_infos)?;
+
+        Ok(VertexData {
+            untyped,
+            _phantom: PhantomData,
+        })
     }
 }
 
-struct BindingVisitor<'a> {
-    buffer_entry_infos: Vec<(&'a untyped::Buffer, VertexDataEntryInfo)>,
+#[derive(Default)]
+struct BindingVisitor {
+    bindings_and_entry_infos: Vec<(untyped::BufferBinding, VertexDataEntryInfo)>,
 }
 
-impl<'a> VertexInterfaceVisitor<Gl> for BindingVisitor<'a> {
-    fn accept<V: crate::Vertex<Sl>>(
+impl VertexInterfaceVisitor<Gl> for BindingVisitor {
+    fn accept<V: Vertex<Sl>>(
         &mut self,
         path: &str,
-        input_rate: crate::VertexInputRate,
+        input_rate: VertexInputRate,
         vertex: &VertexBufferBinding<V>,
     ) {
-        todo!()
+        let stride = std::mem::size_of::<V::Pod>();
+        let attributes = V::attributes(path);
+        let entry_info = VertexDataEntryInfo {
+            input_rate,
+            stride,
+            attributes,
+        };
+
+        self.bindings_and_entry_infos
+            .push((vertex.untyped.clone(), entry_info));
     }
 }

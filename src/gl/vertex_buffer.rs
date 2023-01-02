@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, rc::Rc};
+use std::marker::PhantomData;
 
 use crate::{Gl, Sl, ToPod, Vertex};
 
@@ -11,7 +11,7 @@ pub struct VertexBuffer<V: Vertex<Sl>> {
 
 #[derive(Clone)]
 pub struct VertexBufferBinding<V: Vertex<Sl>> {
-    untyped: Rc<untyped::BufferShared>,
+    pub(crate) untyped: untyped::BufferBinding,
     _phantom: PhantomData<V>,
 }
 
@@ -38,8 +38,10 @@ impl<V: Vertex<Sl>> VertexBuffer<V> {
 
     pub fn bind(&self) -> VertexBufferBinding<V> {
         VertexBufferBinding {
-            untyped: self.untyped.shared().clone(),
+            untyped: self.untyped.bind(),
             _phantom: PhantomData,
         }
     }
 }
+
+impl<V: Vertex<Sl>> VertexBufferBinding<V> {}
