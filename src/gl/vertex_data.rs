@@ -9,6 +9,7 @@ use super::{
 
 pub struct VertexData<V: VertexInterface<Sl>> {
     untyped: untyped::VertexData,
+    vertex_buffers: V::InGl,
     _phantom: PhantomData<V>,
 }
 
@@ -20,18 +21,23 @@ pub struct VertexDataBinding<V: VertexInterface<Sl>> {
 impl<V: VertexInterface<Sl>> VertexData<V> {
     // TODO: Allow construction from `untyped::VertexData`?
 
-    pub fn new(context: &Context, vertex_bindings: V::InGl) -> Result<Self, CreateVertexDataError> {
-        let mut visitor = BindingVisitor::default();
-        vertex_bindings.visit(&mut visitor);
+    pub fn new(context: &Context, vertex_buffers: V::InGl) -> Result<Self, CreateVertexDataError> {
+        let mut visitor = BufferVisitor::default();
+        vertex_buffers.visit(&mut visitor);
 
         let untyped = context
             .untyped()
-            .create_vertex_data(&visitor.vertex_bindings_and_entry_infos)?;
+            .create_vertex_data(&visitor.vertex_buffers_and_entry_infos)?;
 
         Ok(VertexData {
             untyped,
+            vertex_buffers,
             _phantom: PhantomData,
         })
+    }
+
+    pub fn vertex_buffers(&self) -> &V::InGl {
+        &self.vertex_buffers
     }
 
     pub fn bind(&self, geometry_type: GeometryType) -> VertexDataBinding<V> {
@@ -43,11 +49,11 @@ impl<V: VertexInterface<Sl>> VertexData<V> {
 }
 
 #[derive(Default)]
-struct BindingVisitor {
-    vertex_bindings_and_entry_infos: Vec<(untyped::Buffer, VertexDataEntryInfo)>,
+struct BufferVisitor {
+    vertex_buffers_and_entry_infos: Vec<(untyped::Buffer, VertexDataEntryInfo)>,
 }
 
-impl VertexInterfaceVisitor<Gl> for BindingVisitor {
+impl VertexInterfaceVisitor<Gl> for BufferVisitor {
     fn accept<V: Vertex<Sl>>(
         &mut self,
         path: &str,
@@ -62,7 +68,7 @@ impl VertexInterfaceVisitor<Gl> for BindingVisitor {
             attributes,
         };
 
-        self.vertex_bindings_and_entry_infos
+        self.vertex_buffers_and_entry_infos
             .push((vertex.untyped.clone(), entry_info));
     }
 }

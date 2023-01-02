@@ -25,8 +25,8 @@ impl Context {
 
     pub fn create_vertex_data(
         &self,
-        vertex_bindings_and_entry_infos: &[(Buffer, VertexDataEntryInfo)],
+        vertex_buffers_and_entry_infos: &[(Buffer, VertexDataEntryInfo)],
     ) -> Result<VertexData, CreateVertexDataError> {
-        VertexData::new(self.gl.clone(), vertex_bindings_and_entry_infos)
+        VertexData::new(self.gl.clone(), vertex_buffers_and_entry_infos)
     }
 }

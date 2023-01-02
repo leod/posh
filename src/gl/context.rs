@@ -34,9 +34,9 @@ impl Context {
 
     pub fn create_vertex_data<V: VertexInterface<Sl>>(
         &self,
-        bindings: V::InGl,
+        buffers: V::InGl,
     ) -> Result<VertexData<V>, CreateVertexDataError> {
-        VertexData::new(self, bindings)
+        VertexData::new(self, buffers)
     }
 
     pub fn untyped(&self) -> &untyped::Context {
