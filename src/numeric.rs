@@ -99,6 +99,14 @@ impl Numeric for u32 {
 #[repr(transparent)]
 pub struct BoolField(u32);
 
+impl ToPod for BoolField {
+    type Output = Self;
+
+    fn to_pod(self) -> Self::Output {
+        self
+    }
+}
+
 impl ToPod for bool {
     type Output = BoolField;
 
@@ -124,6 +132,14 @@ impl ToPod for i32 {
 }
 
 impl ToPod for u32 {
+    type Output = Self;
+
+    fn to_pod(self) -> Self::Output {
+        self
+    }
+}
+
+impl<T: Pod + ToPod> ToPod for [T; 2] {
     type Output = Self;
 
     fn to_pod(self) -> Self::Output {

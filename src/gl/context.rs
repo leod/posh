@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::{Sl, Vertex, VertexInterface};
+use crate::{Sl, ToPod, Vertex, VertexInterface};
 
 use super::{
     untyped, BufferUsage, CreateBufferError, CreateVertexDataError, VertexBuffer, VertexData,
@@ -16,12 +16,18 @@ impl Context {
         &self.gl
     }
 
-    pub fn create_buffer<V: Vertex<Sl>>(
+    pub fn create_vertex_buffer<V: Vertex<Sl>>(
         &self,
-        data: &[V::Pod],
+        data: &[V::InGl],
         usage: BufferUsage,
     ) -> Result<VertexBuffer<V>, CreateBufferError> {
-        let buffer = self.untyped.create_buffer(data, usage)?;
+        // TODO: This extra allocation for converting to `V::Pod` could be
+        // eliminated if we see the need.
+        let data: Vec<_> = data.iter().copied().map(ToPod::to_pod).collect();
+
+        // TODO: We should also allow passing `V::Pod` directly.
+
+        let buffer = self.untyped.create_buffer(&data, usage)?;
 
         Ok(VertexBuffer::from_untyped(buffer))
     }
