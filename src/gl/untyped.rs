@@ -2,7 +2,7 @@ mod buffer;
 mod context;
 mod vertex_data;
 
-pub use buffer::{Buffer, BufferBinding};
+pub use buffer::Buffer;
 pub use context::Context;
 pub use vertex_data::{VertexData, VertexDataBinding, VertexDataEntryInfo};
 

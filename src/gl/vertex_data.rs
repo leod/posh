@@ -4,7 +4,7 @@ use crate::{internal::VertexInterfaceVisitor, Gl, Sl, Vertex, VertexInputRate, V
 
 use super::{
     untyped::{self, VertexDataEntryInfo},
-    Context, CreateVertexDataError, GeometryType, VertexBufferBinding,
+    Context, CreateVertexDataError, GeometryType, VertexBuffer,
 };
 
 pub struct VertexData<V: VertexInterface<Sl>> {
@@ -44,7 +44,7 @@ impl<V: VertexInterface<Sl>> VertexData<V> {
 
 #[derive(Default)]
 struct BindingVisitor {
-    vertex_bindings_and_entry_infos: Vec<(untyped::BufferBinding, VertexDataEntryInfo)>,
+    vertex_bindings_and_entry_infos: Vec<(untyped::Buffer, VertexDataEntryInfo)>,
 }
 
 impl VertexInterfaceVisitor<Gl> for BindingVisitor {
@@ -52,7 +52,7 @@ impl VertexInterfaceVisitor<Gl> for BindingVisitor {
         &mut self,
         path: &str,
         input_rate: VertexInputRate,
-        vertex: &VertexBufferBinding<V>,
+        vertex: &VertexBuffer<V>,
     ) {
         let stride = std::mem::size_of::<V::Pod>();
         let attributes = V::attributes(path);

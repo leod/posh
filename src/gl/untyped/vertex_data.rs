@@ -8,7 +8,7 @@ use crate::{
     VertexAttribute, VertexInputRate,
 };
 
-use super::BufferBinding;
+use super::Buffer;
 
 #[derive(Debug, Clone)]
 pub struct VertexDataEntryInfo {
@@ -24,7 +24,7 @@ struct VertexDataShared {
 
     // Safety: Keep the referenced vertex buffers alive, so that we do not end
     // up with dangling pointers in our vertex array.
-    _bindings: Vec<BufferBinding>,
+    _bindings: Vec<Buffer>,
 }
 
 pub struct VertexData {
@@ -45,7 +45,7 @@ impl VertexData {
     /// buffers have a mismatched size.
     pub fn new(
         gl: Rc<glow::Context>,
-        vertex_bindings_and_entry_infos: &[(BufferBinding, VertexDataEntryInfo)],
+        vertex_bindings_and_entry_infos: &[(Buffer, VertexDataEntryInfo)],
     ) -> Result<Self, CreateVertexDataError> {
         // TODO: How do we want to handle `buffers.is_empty()`?
 
