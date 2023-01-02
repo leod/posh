@@ -4,40 +4,34 @@ use glow::HasContext;
 
 use crate::{
     dag::{BaseType, NumericType, PrimitiveType, Type},
-    gl::{CreateVertexDataError, GeometryType},
+    gl::CreateVertexDataError,
     VertexAttribute, VertexInputRate,
 };
 
 use super::Buffer;
 
 #[derive(Debug, Clone)]
-pub struct VertexDataEntryInfo {
+pub struct VertexBindingBufferInfo {
     pub input_rate: VertexInputRate,
     pub stride: usize,
     pub attributes: Vec<VertexAttribute>,
 }
 
-struct VertexDataShared {
+struct VertexBindingShared {
     gl: Rc<glow::Context>,
     id: glow::VertexArray,
-    entry_infos: Vec<VertexDataEntryInfo>,
+    buffer_infos: Vec<VertexBindingBufferInfo>,
 
     // Safety: Keep the referenced vertex buffers alive, so that we do not end
     // up with dangling pointers in our vertex array.
     _buffers: Vec<Buffer>,
 }
 
-pub struct VertexData {
-    shared: Rc<VertexDataShared>,
+pub struct VertexBinding {
+    shared: Rc<VertexBindingShared>,
 }
 
-#[derive(Clone)]
-pub struct VertexDataBinding {
-    shared: Rc<VertexDataShared>,
-    geometry_type: GeometryType,
-}
-
-impl VertexData {
+impl VertexBinding {
     /// # Panics
     ///
     /// Panics if any of the buffers do not belong to `gl`, or if any of the
@@ -45,7 +39,7 @@ impl VertexData {
     /// buffers have a mismatched size.
     pub fn new(
         gl: Rc<glow::Context>,
-        vertex_buffers_and_entry_infos: &[(Buffer, VertexDataEntryInfo)],
+        vertex_buffers: &[(Buffer, VertexBindingBufferInfo)],
     ) -> Result<Self, CreateVertexDataError> {
         // TODO: How do we want to handle `buffers.is_empty()`?
 
@@ -57,17 +51,17 @@ impl VertexData {
 
         let mut index = 0;
 
-        for (buffer, entry_info) in vertex_buffers_and_entry_infos {
-            assert!(entry_info.stride > 0);
-            assert_eq!(buffer.len() % entry_info.stride, 0);
+        for (buffer, buffer_info) in vertex_buffers {
+            assert!(buffer_info.stride > 0);
+            assert_eq!(buffer.len() % buffer_info.stride, 0);
             assert!(Rc::ptr_eq(buffer.gl(), &gl));
 
             unsafe {
                 gl.bind_buffer(glow::ARRAY_BUFFER, Some(buffer.id()));
             }
 
-            for attribute in &entry_info.attributes {
-                let info = VertexDataAttributeInfo::new(&attribute.name, &attribute.ty);
+            for attribute in &buffer_info.attributes {
+                let info = VertexBindingAttributeInfo::new(&attribute.name, &attribute.ty);
 
                 for i in 0..info.num_locations {
                     use NumericType::*;
@@ -75,7 +69,7 @@ impl VertexData {
                     let data_type = numeric_type_to_gl(info.ty);
                     let offset = attribute.offset + i * info.location_size();
 
-                    assert!(offset + info.location_size() <= entry_info.stride);
+                    assert!(offset + info.location_size() <= buffer_info.stride);
 
                     match info.ty {
                         F32 => unsafe {
@@ -84,7 +78,7 @@ impl VertexData {
                                 info.num_components as i32,
                                 data_type,
                                 false,
-                                entry_info.stride as i32,
+                                buffer_info.stride as i32,
                                 offset as i32,
                             )
                         },
@@ -93,7 +87,7 @@ impl VertexData {
                                 index,
                                 info.num_components as i32,
                                 data_type,
-                                entry_info.stride as i32,
+                                buffer_info.stride as i32,
                                 offset as i32,
                             )
                         },
@@ -109,39 +103,32 @@ impl VertexData {
             gl.bind_buffer(glow::ARRAY_BUFFER, None);
         }
 
-        let entry_infos = vertex_buffers_and_entry_infos
+        let buffer_infos = vertex_buffers
             .iter()
             .map(|(_, entry)| entry.clone())
             .collect();
 
-        let buffers = vertex_buffers_and_entry_infos
+        let buffers = vertex_buffers
             .iter()
             .map(|(buffer, _)| buffer.clone())
             .collect();
 
-        let shared = Rc::new(VertexDataShared {
+        let shared = Rc::new(VertexBindingShared {
             gl,
             id,
-            entry_infos,
+            buffer_infos,
             _buffers: buffers,
         });
 
         Ok(Self { shared })
     }
 
-    pub fn entry_infos(&self) -> &[VertexDataEntryInfo] {
-        &self.shared.entry_infos
-    }
-
-    pub fn bind(&self, geometry_type: GeometryType) -> VertexDataBinding {
-        VertexDataBinding {
-            shared: self.shared.clone(),
-            geometry_type,
-        }
+    pub fn buffer_infos(&self) -> &[VertexBindingBufferInfo] {
+        &self.shared.buffer_infos
     }
 }
 
-impl Drop for VertexDataShared {
+impl Drop for VertexBindingShared {
     fn drop(&mut self) {
         unsafe {
             self.gl.delete_vertex_array(self.id);
@@ -149,14 +136,14 @@ impl Drop for VertexDataShared {
     }
 }
 
-pub(crate) struct VertexDataAttributeInfo {
+pub(crate) struct VertexBindingAttributeInfo {
     pub name: String,
     pub ty: NumericType,
     pub num_components: usize,
     pub num_locations: usize,
 }
 
-impl VertexDataAttributeInfo {
+impl VertexBindingAttributeInfo {
     pub fn new(name: &str, ty: &Type) -> Self {
         use BaseType::*;
         use Type::*;

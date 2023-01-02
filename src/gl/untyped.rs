@@ -1,9 +1,9 @@
 mod buffer;
 mod context;
-mod vertex_data;
+mod vertex_binding;
 
 pub use buffer::Buffer;
 pub use context::Context;
-pub use vertex_data::{VertexData, VertexDataBinding, VertexDataEntryInfo};
+pub use vertex_binding::{VertexBinding, VertexBindingBufferInfo};
 
-pub(crate) use vertex_data::VertexDataAttributeInfo;
+pub(crate) use vertex_binding::VertexBindingAttributeInfo;
