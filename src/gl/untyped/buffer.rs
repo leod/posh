@@ -5,7 +5,7 @@ use glow::HasContext;
 
 use crate::gl::{BufferUsage, CreateBufferError};
 
-pub(crate) struct BufferShared {
+struct BufferShared {
     gl: Rc<glow::Context>,
     id: glow::Buffer,
     usage: BufferUsage,
@@ -13,6 +13,11 @@ pub(crate) struct BufferShared {
 }
 
 pub struct Buffer {
+    shared: Rc<BufferShared>,
+}
+
+#[derive(Clone)]
+pub struct BufferBinding {
     shared: Rc<BufferShared>,
 }
 
@@ -36,10 +41,6 @@ impl Buffer {
         buffer.set(data);
 
         Ok(buffer)
-    }
-
-    pub(crate) fn shared(&self) -> &Rc<BufferShared> {
-        &self.shared
     }
 
     pub fn gl(&self) -> &Rc<glow::Context> {
@@ -76,6 +77,27 @@ impl Buffer {
         }
 
         self.shared.len.set(raw_data.len());
+    }
+
+    #[must_use]
+    pub fn bind(&self) -> BufferBinding {
+        BufferBinding {
+            shared: self.shared.clone(),
+        }
+    }
+}
+
+impl BufferBinding {
+    pub fn gl(&self) -> &Rc<glow::Context> {
+        &self.shared.gl
+    }
+
+    pub fn id(&self) -> glow::Buffer {
+        self.shared.id
+    }
+
+    pub fn len(&self) -> usize {
+        self.shared.len.get()
     }
 }
 

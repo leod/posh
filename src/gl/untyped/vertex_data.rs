@@ -8,7 +8,7 @@ use crate::{
     VertexAttribute, VertexInputRate,
 };
 
-use super::{Buffer, BufferShared};
+use super::BufferBinding;
 
 #[derive(Debug, Clone)]
 pub struct VertexDataEntryInfo {
@@ -20,11 +20,11 @@ pub struct VertexDataEntryInfo {
 pub struct VertexData {
     gl: Rc<glow::Context>,
     id: glow::VertexArray,
-    entries: Vec<VertexDataEntryInfo>,
+    entry_infos: Vec<VertexDataEntryInfo>,
 
-    // Keep the referenced vertex buffers alive so that we do not end up with
-    // dangling pointers in our vertex array.
-    _buffers: Vec<Rc<BufferShared>>,
+    // Safety: Keep the referenced vertex buffers alive, so that we do not end
+    // up with dangling pointers in our vertex array.
+    _bindings: Vec<BufferBinding>,
 }
 
 impl VertexData {
@@ -35,7 +35,7 @@ impl VertexData {
     /// buffers have a mismatched size.
     pub fn new(
         gl: Rc<glow::Context>,
-        buffer_entry_infos: &[(&Buffer, VertexDataEntryInfo)],
+        bindings_and_entry_infos: &[(BufferBinding, VertexDataEntryInfo)],
     ) -> Result<Self, CreateVertexDataError> {
         // TODO: How do we want to handle `buffers.is_empty()`?
 
@@ -47,13 +47,13 @@ impl VertexData {
 
         let mut index = 0;
 
-        for (buffer, entry_info) in buffer_entry_infos {
+        for (binding, entry_info) in bindings_and_entry_infos {
             assert!(entry_info.stride > 0);
-            assert_eq!(buffer.len() % entry_info.stride, 0);
-            assert!(Rc::ptr_eq(buffer.gl(), &gl));
+            assert_eq!(binding.len() % entry_info.stride, 0);
+            assert!(Rc::ptr_eq(binding.gl(), &gl));
 
             unsafe {
-                gl.bind_buffer(glow::ARRAY_BUFFER, Some(buffer.id()));
+                gl.bind_buffer(glow::ARRAY_BUFFER, Some(binding.id()));
             }
 
             for attribute in &entry_info.attributes {
@@ -99,26 +99,26 @@ impl VertexData {
             gl.bind_buffer(glow::ARRAY_BUFFER, None);
         }
 
-        let entries = buffer_entry_infos
+        let entry_infos = bindings_and_entry_infos
             .into_iter()
             .map(|(_, entry)| entry.clone())
             .collect();
 
-        let buffers = buffer_entry_infos
+        let bindings = bindings_and_entry_infos
             .iter()
-            .map(|(buffer, _)| buffer.shared().clone())
+            .map(|(buffer, _)| buffer.clone())
             .collect();
 
         Ok(Self {
             gl,
             id,
-            entries,
-            _buffers: buffers,
+            entry_infos,
+            _bindings: bindings,
         })
     }
 
     pub fn entry_infos(&self) -> &[VertexDataEntryInfo] {
-        &&self.entries
+        &&self.entry_infos
     }
 }
 
