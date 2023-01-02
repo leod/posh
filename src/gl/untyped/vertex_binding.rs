@@ -4,7 +4,7 @@ use glow::HasContext;
 
 use crate::{
     dag::{BaseType, NumericType, PrimitiveType, Type},
-    gl::CreateVertexDataError,
+    gl::{CreateVertexDataError, ElementType},
     VertexAttribute, VertexInputRate,
 };
 
@@ -20,11 +20,13 @@ pub struct VertexBindingBufferInfo {
 struct VertexBindingShared {
     gl: Rc<glow::Context>,
     id: glow::VertexArray,
-    buffer_infos: Vec<VertexBindingBufferInfo>,
+    vertex_buffer_infos: Vec<VertexBindingBufferInfo>,
+    element_buffer_type: Option<ElementType>,
 
     // Safety: Keep the referenced vertex buffers alive, so that we do not end
     // up with dangling pointers in our vertex array.
-    _buffers: Vec<Buffer>,
+    _vertex_buffers: Vec<Buffer>,
+    _element_buffer: Option<Buffer>,
 }
 
 pub struct VertexBinding {
@@ -40,6 +42,7 @@ impl VertexBinding {
     pub fn new(
         gl: Rc<glow::Context>,
         vertex_buffers: &[(Buffer, VertexBindingBufferInfo)],
+        element_buffer: Option<(Buffer, ElementType)>,
     ) -> Result<Self, CreateVertexDataError> {
         // TODO: How do we want to handle `buffers.is_empty()`?
 
@@ -103,28 +106,34 @@ impl VertexBinding {
             gl.bind_buffer(glow::ARRAY_BUFFER, None);
         }
 
-        let buffer_infos = vertex_buffers
+        let vertex_buffer_infos = vertex_buffers
             .iter()
             .map(|(_, entry)| entry.clone())
             .collect();
 
-        let buffers = vertex_buffers
+        let element_buffer_type = element_buffer.map(|(_, ty)| ty);
+
+        let vertex_buffers = vertex_buffers
             .iter()
             .map(|(buffer, _)| buffer.clone())
             .collect();
 
+        let element_buffer = element_buffer.map(|(buffer, _)| buffer);
+
         let shared = Rc::new(VertexBindingShared {
             gl,
             id,
-            buffer_infos,
-            _buffers: buffers,
+            vertex_buffer_infos,
+            element_buffer_type,
+            _vertex_buffers: vertex_buffers,
+            _element_buffer: element_buffer,
         });
 
         Ok(Self { shared })
     }
 
     pub fn buffer_infos(&self) -> &[VertexBindingBufferInfo] {
-        &self.shared.buffer_infos
+        &self.shared.vertex_buffer_infos
     }
 }
 
