@@ -8,18 +8,12 @@ use super::{
     untyped, BufferUsage, CreateBufferError, CreateVertexDataError, VertexBuffer, VertexData,
 };
 
-pub(crate) struct ContextShared {}
-
 pub struct Context {
-    shared: Rc<ContextShared>,
     gl: Rc<glow::Context>,
+    untyped: untyped::Context,
 }
 
 impl Context {
-    pub(crate) fn shared(&self) -> &Rc<ContextShared> {
-        &self.shared
-    }
-
     pub fn gl(&self) -> &Rc<glow::Context> {
         &self.gl
     }
@@ -29,7 +23,7 @@ impl Context {
         data: &[V::Pod],
         usage: BufferUsage,
     ) -> Result<VertexBuffer<V>, CreateBufferError> {
-        let buffer = self.untyped_create_buffer(data, usage)?;
+        let buffer = self.untyped.create_buffer(data, usage)?;
 
         Ok(VertexBuffer::from_untyped(buffer))
     }
@@ -41,18 +35,7 @@ impl Context {
         VertexData::new(self, bindings)
     }
 
-    pub fn untyped_create_buffer<T: Pod>(
-        &self,
-        data: &[T],
-        usage: BufferUsage,
-    ) -> Result<untyped::Buffer, CreateBufferError> {
-        untyped::Buffer::new(self.gl.clone(), data, usage)
-    }
-
-    pub fn untyped_create_vertex_data(
-        &self,
-        bindings_and_entry_infos: &[(untyped::BufferBinding, untyped::VertexDataEntryInfo)],
-    ) -> Result<untyped::VertexData, CreateVertexDataError> {
-        untyped::VertexData::new(self.gl.clone(), bindings_and_entry_infos)
+    pub fn untyped(&self) -> &untyped::Context {
+        &self.untyped
     }
 }

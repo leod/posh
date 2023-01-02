@@ -19,7 +19,9 @@ impl<V: VertexInterface<Sl>> VertexData<V> {
         let mut visitor = BindingVisitor::default();
         bindings.visit(&mut visitor);
 
-        let untyped = context.untyped_create_vertex_data(&visitor.bindings_and_entry_infos)?;
+        let untyped = context
+            .untyped()
+            .create_vertex_data(&visitor.bindings_and_entry_infos)?;
 
         Ok(VertexData {
             untyped,

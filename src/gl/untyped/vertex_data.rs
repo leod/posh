@@ -171,7 +171,7 @@ impl VertexDataAttributeInfo {
                 Struct(_) => panic!("`VertexData` does not support struct types"),
                 Sampler2d(_) => panic!("`VertexData` does not support sampler types"),
             },
-            Array(_, _) => unimplemented!(),
+            Array(_, _) => todo!(),
         }
     }
 
