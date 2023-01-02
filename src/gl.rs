@@ -1,9 +1,8 @@
-mod buffer;
 mod context;
 mod draw_params;
 mod element_buffer;
+mod enums;
 mod error;
-mod geometry_type;
 mod program;
 mod sampler;
 mod surface;
@@ -14,12 +13,11 @@ mod vertex_buffer;
 
 pub mod untyped;
 
-pub use buffer::BufferUsage;
 pub use context::Context;
 pub use draw_params::DrawParams;
 pub use element_buffer::{Element, ElementBuffer, ElementBufferBinding};
+pub use enums::{BufferUsage, ElementType, GeometryType};
 pub use error::{CreateBufferError, CreateVertexDataError};
-pub use geometry_type::GeometryType;
 pub use program::Program;
 pub use sampler::{Sampler2d, Sampler2dBinding};
 pub use surface::{DefaultSurface, SurfaceBinding};

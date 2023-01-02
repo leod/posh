@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::{sl::Varying, FragmentInterface, ResourceInterface, Sl, VertexInterface};
 
-use super::{DrawParams, SurfaceBinding, VertexBinding};
+use super::{DrawParams, GeometryType, SurfaceBinding, VertexBinding};
 
 pub struct Program<R, A, F> {
     _phantom: PhantomData<(R, A, F)>,
@@ -27,6 +27,7 @@ where
         &self,
         resource: R::InGl,
         vertices: VertexBinding<V>,
+        geometry_type: GeometryType,
         surface: SurfaceBinding<F>,
         draw_params: &DrawParams,
     ) {

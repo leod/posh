@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use bytemuck::Pod;
 
-use crate::gl::{BufferUsage, CreateBufferError, CreateVertexDataError};
+use crate::gl::{BufferUsage, CreateBufferError, CreateVertexDataError, ElementType};
 
 use super::{Buffer, VertexBinding, VertexBindingBufferInfo};
 
@@ -26,7 +26,8 @@ impl Context {
     pub fn create_vertex_binding(
         &self,
         vertex_buffers: &[(Buffer, VertexBindingBufferInfo)],
+        element_buffer: Option<(Buffer, ElementType)>,
     ) -> Result<VertexBinding, CreateVertexDataError> {
-        VertexBinding::new(self.gl.clone(), vertex_buffers)
+        VertexBinding::new(self.gl.clone(), vertex_buffers, element_buffer)
     }
 }

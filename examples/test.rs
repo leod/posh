@@ -1,5 +1,5 @@
 use posh::{
-    gl::{DrawParams, Program, UniformBufferBinding, VertexBinding},
+    gl::{DrawParams, GeometryType, Program, UniformBufferBinding, VertexBinding},
     sl::{self, Object, ToValue, Value},
     Domain, FragmentInterface, Gl, Numeric, Primitive, ResourceDomain, ResourceInterface, Sl,
     Uniform, Vertex, VertexDomain, VertexInputRate, VertexInterface,
@@ -81,7 +81,13 @@ fn draw<R: ResourceInterface<Sl>>(
     let resources = GenericResourceIface { uniformxy: xy, x };
     let vertices: VertexBinding<sl::Vec2<f32>> = todo!();
 
-    program.draw(resources, vertices, todo!(), &DrawParams {});
+    program.draw(
+        resources,
+        vertices,
+        GeometryType::Triangles,
+        todo!(),
+        &DrawParams {},
+    );
 }
 
 struct MyVisitor;
@@ -142,5 +148,11 @@ fn main() {
     let resources: MyResourceIface2<Gl> = todo!();
     let vertices: VertexBinding<MyVertexIface> = todo!();
 
-    program.draw(resources, vertices, todo!(), &DrawParams {});
+    program.draw(
+        resources,
+        vertices,
+        GeometryType::Lines,
+        todo!(),
+        &DrawParams {},
+    );
 }

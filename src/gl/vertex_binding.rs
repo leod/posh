@@ -4,7 +4,7 @@ use crate::{internal::VertexInterfaceVisitor, Gl, Sl, Vertex, VertexInputRate, V
 
 use super::{
     untyped::{self, VertexBindingBufferInfo},
-    Context, CreateVertexDataError, VertexBuffer,
+    Context, CreateVertexDataError, Element, ElementBuffer, VertexBuffer,
 };
 
 pub struct VertexBinding<V: VertexInterface<Sl>> {
@@ -16,13 +16,18 @@ pub struct VertexBinding<V: VertexInterface<Sl>> {
 impl<V: VertexInterface<Sl>> VertexBinding<V> {
     // TODO: Allow construction from `untyped::VertexData`?
 
-    pub fn new(context: &Context, vertex_buffers: V::InGl) -> Result<Self, CreateVertexDataError> {
+    pub fn new<E: Element>(
+        context: &Context,
+        vertex_buffers: V::InGl,
+        element_buffer: Option<ElementBuffer<E>>,
+    ) -> Result<Self, CreateVertexDataError> {
         let mut visitor = VertexBufferVisitor::default();
         vertex_buffers.visit(&mut visitor);
 
-        let untyped = context
-            .untyped()
-            .create_vertex_binding(&visitor.vertex_buffers)?;
+        let untyped = context.untyped().create_vertex_binding(
+            &visitor.vertex_buffers,
+            element_buffer.map(|buffer| todo!()),
+        )?;
 
         Ok(VertexBinding {
             untyped,
