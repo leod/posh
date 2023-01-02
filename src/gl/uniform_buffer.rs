@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::{Gl, Sl, Uniform};
+use crate::{Sl, Uniform};
 
 pub struct UniformBuffer<U: Uniform<Sl>> {
     _phantom: PhantomData<U>,

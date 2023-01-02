@@ -1,4 +1,4 @@
-use crate::{Gl, Sl, VertexInterface};
+use crate::{Sl, VertexInterface};
 
 use super::{Element, ElementBufferBinding};
 

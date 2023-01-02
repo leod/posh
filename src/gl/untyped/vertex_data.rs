@@ -35,7 +35,7 @@ impl VertexData {
     /// buffers have a mismatched size.
     pub fn new(
         gl: Rc<glow::Context>,
-        bindings_and_entry_infos: &[(BufferBinding, VertexDataEntryInfo)],
+        vertex_bindings_and_entry_infos: &[(BufferBinding, VertexDataEntryInfo)],
     ) -> Result<Self, CreateVertexDataError> {
         // TODO: How do we want to handle `buffers.is_empty()`?
 
@@ -47,7 +47,7 @@ impl VertexData {
 
         let mut index = 0;
 
-        for (binding, entry_info) in bindings_and_entry_infos {
+        for (binding, entry_info) in vertex_bindings_and_entry_infos {
             assert!(entry_info.stride > 0);
             assert_eq!(binding.len() % entry_info.stride, 0);
             assert!(Rc::ptr_eq(binding.gl(), &gl));
@@ -99,12 +99,12 @@ impl VertexData {
             gl.bind_buffer(glow::ARRAY_BUFFER, None);
         }
 
-        let entry_infos = bindings_and_entry_infos
-            .into_iter()
+        let entry_infos = vertex_bindings_and_entry_infos
+            .iter()
             .map(|(_, entry)| entry.clone())
             .collect();
 
-        let bindings = bindings_and_entry_infos
+        let bindings = vertex_bindings_and_entry_infos
             .iter()
             .map(|(buffer, _)| buffer.clone())
             .collect();
@@ -118,7 +118,7 @@ impl VertexData {
     }
 
     pub fn entry_infos(&self) -> &[VertexDataEntryInfo] {
-        &&self.entry_infos
+        &self.entry_infos
     }
 }
 
