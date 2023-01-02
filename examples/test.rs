@@ -1,5 +1,5 @@
 use posh::{
-    gl::{DrawParams, Program, UniformBufferBinding, VertexStream},
+    gl::{DrawParams, Program, UniformBufferBinding, VertexDataBinding},
     sl::{self, Object, ToValue, Value},
     Domain, FragmentInterface, Gl, Numeric, Primitive, ResourceDomain, ResourceInterface, Sl,
     Uniform, Vertex, VertexDomain, VertexInputRate, VertexInterface,
@@ -81,7 +81,7 @@ fn draw<R: ResourceInterface<Sl>>(
     x: R::InGl,
 ) {
     let resources = GenericResourceIface { uniformxy: xy, x };
-    let vertices: VertexStream<sl::Vec2<f32>, u16> = todo!();
+    let vertices: VertexDataBinding<sl::Vec2<f32>> = todo!();
 
     program.draw(resources, vertices, todo!(), &DrawParams {});
 }
@@ -142,7 +142,7 @@ fn main() {
     let program: Program<MyResourceIface2, MyVertexIface, sl::Vec4<f32>> = create_program();
 
     let resources: MyResourceIface2<Gl> = todo!();
-    let vertices: VertexStream<MyVertexIface, u16> = todo!();
+    let vertices: VertexDataBinding<MyVertexIface> = todo!();
 
     program.draw(resources, vertices, todo!(), &DrawParams {});
 }

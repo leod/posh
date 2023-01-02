@@ -4,11 +4,16 @@ use crate::{internal::VertexInterfaceVisitor, Gl, Sl, Vertex, VertexInputRate, V
 
 use super::{
     untyped::{self, VertexDataEntryInfo},
-    Context, CreateVertexDataError, VertexBufferBinding,
+    Context, CreateVertexDataError, GeometryType, VertexBufferBinding,
 };
 
 pub struct VertexData<V: VertexInterface<Sl>> {
     untyped: untyped::VertexData,
+    _phantom: PhantomData<V>,
+}
+
+pub struct VertexDataBinding<V: VertexInterface<Sl>> {
+    untyped: untyped::VertexDataBinding,
     _phantom: PhantomData<V>,
 }
 
@@ -27,6 +32,13 @@ impl<V: VertexInterface<Sl>> VertexData<V> {
             untyped,
             _phantom: PhantomData,
         })
+    }
+
+    pub fn bind(&self, geometry_type: GeometryType) -> VertexDataBinding<V> {
+        VertexDataBinding {
+            untyped: self.untyped.bind(geometry_type),
+            _phantom: PhantomData,
+        }
     }
 }
 
