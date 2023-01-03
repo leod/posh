@@ -47,7 +47,7 @@ impl super::Domain for Sl {
 
 fn vertex_attribute(path: &str, base_type: BaseType) -> Vec<VertexAttribute> {
     vec![VertexAttribute {
-        name: super::join_ident_path(path, "attr"),
+        name: path.to_string(),
         ty: Type::Base(base_type),
         offset: 0,
     }]
@@ -66,7 +66,7 @@ impl<T: Primitive> Vertex<Sl> for Scalar<T> {
     }
 
     fn shader_input(path: &str) -> Self {
-        <Self as Object>::from_arg(&join_ident_path(path, "attr"))
+        <Self as Object>::from_arg(path)
     }
 }
 
@@ -83,7 +83,7 @@ impl<T: Primitive> Vertex<Sl> for Vec2<T> {
     }
 
     fn shader_input(path: &str) -> Self {
-        <Self as Object>::from_arg(&join_ident_path(path, "attr"))
+        <Self as Object>::from_arg(path)
     }
 }
 

@@ -64,11 +64,23 @@ impl VertexArray {
 
                 for i in 0..attribute_info.num_locations {
                     use NumericType::*;
+                    use VertexInputRate::*;
 
                     let data_type = numeric_type_to_gl(attribute_info.ty);
                     let offset = attribute.offset + i * attribute_info.location_size();
 
                     assert!(offset + attribute_info.location_size() <= vertex_info.stride);
+
+                    unsafe {
+                        gl.enable_vertex_attrib_array(index);
+                    }
+
+                    match vertex_info.input_rate {
+                        Vertex => (),
+                        Instance => unsafe {
+                            gl.vertex_attrib_divisor(index, 1);
+                        },
+                    }
 
                     match attribute_info.ty {
                         F32 => unsafe {
