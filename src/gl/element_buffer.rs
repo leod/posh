@@ -36,7 +36,7 @@ impl<E: Element> ElementBuffer<E> {
     ///
     /// Panics if the length of `untyped` is not a multiple of the size of
     /// `E`.
-    pub fn from_untyped(untyped: untyped::Buffer) -> Self {
+    pub(crate) fn from_untyped(untyped: untyped::Buffer) -> Self {
         assert_eq!(untyped.len() % std::mem::size_of::<E>(), 0);
 
         Self {

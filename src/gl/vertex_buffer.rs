@@ -24,7 +24,7 @@ impl<V: Vertex<Sl>> VertexBuffer<V> {
     ///
     /// Since `untyped::Buffer` is `Rc`-cloneable, the underlying buffer can
     /// still be modified. Check if we want to allow this.
-    pub fn from_untyped(untyped: untyped::Buffer) -> Self {
+    pub(crate) fn from_untyped(untyped: untyped::Buffer) -> Self {
         assert!(vertex_size::<V>() > 0);
         assert_eq!(untyped.len() % vertex_size::<V>(), 0);
 
