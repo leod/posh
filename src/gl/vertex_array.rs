@@ -4,28 +4,32 @@ use crate::{internal::VertexInterfaceVisitor, Gl, Sl, Vertex, VertexInputRate, V
 
 use super::{
     untyped::{self, VertexInfo},
-    Context, CreateVertexArrayError, Element, ElementBuffer, ElementSource, GeometryStream,
+    Context, CreateVertexArrayError, Element, ElementOrUnit, ElementSource, GeometryStream,
     GeometryType, VertexBuffer,
 };
 
 #[derive(Clone)]
-pub struct VertexArray<V: VertexInterface<Sl>, E> {
+pub struct VertexArray<V: VertexInterface<Sl>, E>
+where
+    V: VertexInterface<Sl>,
+    E: ElementOrUnit,
+{
     untyped: untyped::VertexArray,
     vertex_buffers: V::InGl,
-    element_source: E,
+    element_source: E::Source,
     _phantom: PhantomData<V>,
 }
 
 impl<V, E> VertexArray<V, E>
 where
     V: VertexInterface<Sl>,
-    E: ElementSource,
+    E: ElementOrUnit,
 {
     // TODO: Allow construction from `untyped::VertexData`?
     pub(crate) fn new(
         context: &Context,
         vertex_buffers: V::InGl,
-        element_source: E,
+        element_source: E::Source,
     ) -> Result<Self, CreateVertexArrayError> {
         let mut visitor = VertexBufferVisitor::default();
         vertex_buffers.visit(&mut visitor);
@@ -46,7 +50,7 @@ where
         &self.vertex_buffers
     }
 
-    pub fn element_source(&self) -> &E {
+    pub fn element_source(&self) -> &E::Source {
         &self.element_source
     }
 
@@ -62,7 +66,7 @@ where
     }
 }
 
-impl<V, E> VertexArray<V, ElementBuffer<E>>
+impl<V, E> VertexArray<V, E>
 where
     V: VertexInterface<Sl>,
     E: Element,

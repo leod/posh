@@ -19,7 +19,7 @@ pub mod untyped;
 
 pub use context::Context;
 pub use draw_params::DrawParams;
-pub use element_buffer::{Element, ElementBuffer, ElementSource};
+pub use element_buffer::{Element, ElementBuffer, ElementOrUnit, ElementSource};
 pub use enums::{BufferUsage, ElementType, GeometryType};
 pub use error::{CreateBufferError, CreateProgramError, CreateVertexArrayError};
 pub use geometry_stream::GeometryStream;
