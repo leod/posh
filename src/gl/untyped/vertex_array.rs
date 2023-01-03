@@ -1,14 +1,14 @@
-use std::{mem::size_of, rc::Rc};
+use std::{mem::size_of, ops::Range, rc::Rc};
 
 use glow::HasContext;
 
 use crate::{
     dag::{BaseType, NumericType, PrimitiveType, Type},
-    gl::{CreateVertexArrayError, ElementType},
+    gl::{CreateVertexArrayError, ElementType, GeometryType},
     VertexAttribute, VertexInputRate,
 };
 
-use super::Buffer;
+use super::{Buffer, GeometryStream};
 
 #[derive(Debug, Clone)]
 pub struct VertexInfo {
@@ -134,6 +134,18 @@ impl VertexArray {
 
     pub fn element_buffer(&self) -> Option<&(Buffer, ElementType)> {
         self.shared.element_buffer.as_ref()
+    }
+
+    pub fn stream(
+        &self,
+        element_range: Range<usize>,
+        geometry_type: GeometryType,
+    ) -> GeometryStream {
+        GeometryStream {
+            vertex_array: self.clone(),
+            element_range,
+            geometry_type,
+        }
     }
 }
 

@@ -9,9 +9,9 @@ use super::VertexArray;
 // TODO: Instancing.
 
 pub struct GeometryStream {
-    vertex_array: VertexArray,
-    element_range: Range<usize>,
-    geometry_type: GeometryType,
+    pub(crate) vertex_array: VertexArray,
+    pub(crate) element_range: Range<usize>,
+    pub(crate) geometry_type: GeometryType,
 }
 
 impl GeometryStream {

@@ -2,9 +2,11 @@ use std::rc::Rc;
 
 use bytemuck::Pod;
 
-use crate::gl::{BufferUsage, CreateBufferError, CreateVertexArrayError, ElementType};
+use crate::gl::{
+    BufferUsage, CreateBufferError, CreateProgramError, CreateVertexArrayError, ElementType,
+};
 
-use super::{Buffer, VertexArray, VertexInfo};
+use super::{Buffer, Program, ProgramDef, VertexArray, VertexInfo};
 
 pub struct Context {
     gl: Rc<glow::Context>,
@@ -33,5 +35,9 @@ impl Context {
         element_buffer: Option<(Buffer, ElementType)>,
     ) -> Result<VertexArray, CreateVertexArrayError> {
         VertexArray::new(self.gl.clone(), vertex_buffers, element_buffer)
+    }
+
+    pub fn create_program(&self, def: ProgramDef) -> Result<Program, CreateProgramError> {
+        Program::new(self.gl.clone(), def)
     }
 }

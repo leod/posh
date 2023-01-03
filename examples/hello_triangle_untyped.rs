@@ -1,4 +1,5 @@
 use glow::HasContext;
+use posh::gl::{untyped, GeometryType};
 
 fn main() {
     let sdl = sdl2::init().unwrap();
@@ -22,15 +23,14 @@ fn main() {
 
     let mut event_loop = sdl.event_pump().unwrap();
 
-    unsafe {
-        let vertex_array = gl
-            .create_vertex_array()
-            .expect("Cannot create vertex array");
-        gl.bind_vertex_array(Some(vertex_array));
+    let context = untyped::Context::new(gl);
 
-        let program = gl.create_program().expect("Cannot create program");
+    let vertex_array = context
+        .create_vertex_array(&[], None)
+        .expect("Cannot create vertex array");
 
-        let vertex_shader_source = r#"
+    let program_def = untyped::ProgramDef {
+        vertex_shader_source: r#"
             #version 330
             const vec2 verts[3] = vec2[3](
                 vec2(0.5f, 1.0f),
@@ -42,9 +42,9 @@ fn main() {
                 vert = verts[gl_VertexID];
                 gl_Position = vec4(vert - 0.5, 0.0, 1.0);
             }
-        "#;
-
-        let fragment_shader_source = r#"
+        "#
+        .to_string(),
+        fragment_shader_source: r#"
             #version 330
             precision mediump float;
             in vec2 vert;
@@ -52,60 +52,33 @@ fn main() {
             void main() {
                 color = vec4(vert, 0.5, 1.0);
             }
-        "#;
+        "#
+        .to_string(),
+        ..Default::default()
+    };
 
-        let shader_sources = [
-            (glow::VERTEX_SHADER, vertex_shader_source),
-            (glow::FRAGMENT_SHADER, fragment_shader_source),
-        ];
+    let program = context
+        .create_program(program_def)
+        .expect("Cannot create program");
 
-        let mut shaders = Vec::with_capacity(shader_sources.len());
+    unsafe {
+        context.gl().clear_color(0.1, 0.2, 0.3, 1.0);
+    }
 
-        for (shader_type, shader_source) in shader_sources.iter() {
-            let shader = gl
-                .create_shader(*shader_type)
-                .expect("Cannot create shader");
-            gl.shader_source(shader, shader_source);
-            gl.compile_shader(shader);
-            if !gl.get_shader_compile_status(shader) {
-                panic!("{}", gl.get_shader_info_log(shader));
-            }
-            gl.attach_shader(program, shader);
-            shaders.push(shader);
-        }
-
-        gl.link_program(program);
-        if !gl.get_program_link_status(program) {
-            panic!("{}", gl.get_program_info_log(program));
-        }
-
-        for shader in shaders {
-            gl.detach_shader(program, shader);
-            gl.delete_shader(shader);
-        }
-
-        gl.use_program(Some(program));
-        gl.clear_color(0.1, 0.2, 0.3, 1.0);
-
-        let mut running = true;
-        while running {
-            {
-                for event in event_loop.poll_iter() {
-                    match event {
-                        sdl2::event::Event::Quit { .. } => running = false,
-                        _ => {}
-                    }
-                }
-            }
-
-            gl.clear(glow::COLOR_BUFFER_BIT);
-            gl.draw_arrays(glow::TRIANGLES, 0, 3);
-            window.gl_swap_window();
-
-            if !running {
-                gl.delete_program(program);
-                gl.delete_vertex_array(vertex_array);
+    let mut running = true;
+    while running {
+        for event in event_loop.poll_iter() {
+            match event {
+                sdl2::event::Event::Quit { .. } => running = false,
+                _ => {}
             }
         }
+
+        unsafe {
+            context.gl().clear(glow::COLOR_BUFFER_BIT);
+            program.draw(&[], vertex_array.stream(0..3, GeometryType::Triangles));
+        }
+
+        window.gl_swap_window();
     }
 }

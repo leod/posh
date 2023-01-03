@@ -5,7 +5,7 @@ pub struct CreateBufferError(pub String);
 pub struct CreateVertexArrayError(pub String);
 
 #[derive(Debug, Clone)]
-pub enum CreateShaderError {
+pub enum CreateProgramError {
     CreateShader(String),
     CreateProgram(String),
     CompilationError {
