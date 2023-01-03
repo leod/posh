@@ -79,7 +79,7 @@ fn draw<R: ResourceInterface<Sl>>(
     x: R::InGl,
 ) {
     let resources = GenericResourceIface { uniformxy: xy, x };
-    let vertices: VertexBinding<sl::Vec2<f32>> = todo!();
+    let vertices: VertexBinding<sl::Vec2<f32>, ()> = todo!();
 
     program.draw(
         resources,
@@ -146,7 +146,7 @@ fn main() {
     let program: Program<MyResourceIface2, MyVertexIface, sl::Vec4<f32>> = create_program();
 
     let resources: MyResourceIface2<Gl> = todo!();
-    let vertices: VertexBinding<MyVertexIface> = todo!();
+    let vertices: VertexBinding<MyVertexIface, ()> = todo!();
 
     program.draw(
         resources,

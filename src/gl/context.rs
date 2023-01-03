@@ -3,7 +3,8 @@ use std::rc::Rc;
 use crate::{Sl, ToPod, Vertex, VertexInterface};
 
 use super::{
-    untyped, BufferUsage, CreateBufferError, CreateVertexDataError, VertexBinding, VertexBuffer,
+    untyped, BufferUsage, CreateBufferError, CreateVertexDataError, ElementSource, VertexBinding,
+    VertexBuffer,
 };
 
 pub struct Context {
@@ -32,11 +33,12 @@ impl Context {
         Ok(VertexBuffer::from_untyped(buffer))
     }
 
-    pub fn create_vertex_binding<V: VertexInterface<Sl>>(
+    pub fn create_vertex_binding<V: VertexInterface<Sl>, E: ElementSource>(
         &self,
         vertex_buffers: V::InGl,
-    ) -> Result<VertexBinding<V>, CreateVertexDataError> {
-        VertexBinding::new(self, vertex_buffers)
+        element_source: E,
+    ) -> Result<VertexBinding<V, E>, CreateVertexDataError> {
+        VertexBinding::new(self, vertex_buffers, element_source)
     }
 
     pub fn untyped(&self) -> &untyped::Context {

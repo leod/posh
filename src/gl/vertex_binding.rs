@@ -4,40 +4,44 @@ use crate::{internal::VertexInterfaceVisitor, Gl, Sl, Vertex, VertexInputRate, V
 
 use super::{
     untyped::{self, VertexBindingBufferInfo},
-    Context, CreateVertexDataError, Element, ElementBuffer, VertexBuffer,
+    Context, CreateVertexDataError, ElementSource, VertexBuffer,
 };
 
-pub struct VertexBinding<V: VertexInterface<Sl>> {
+pub struct VertexBinding<V: VertexInterface<Sl>, E: ElementSource> {
     untyped: untyped::VertexBinding,
     vertex_buffers: V::InGl,
+    element_source: E,
     _phantom: PhantomData<V>,
 }
 
-impl<V: VertexInterface<Sl>> VertexBinding<V> {
+impl<V: VertexInterface<Sl>, E: ElementSource> VertexBinding<V, E> {
     // TODO: Allow construction from `untyped::VertexData`?
-
-    pub fn new<E: Element>(
+    pub fn new(
         context: &Context,
         vertex_buffers: V::InGl,
-        element_buffer: Option<ElementBuffer<E>>,
+        element_source: E,
     ) -> Result<Self, CreateVertexDataError> {
         let mut visitor = VertexBufferVisitor::default();
         vertex_buffers.visit(&mut visitor);
 
-        let untyped = context.untyped().create_vertex_binding(
-            &visitor.vertex_buffers,
-            element_buffer.map(|buffer| todo!()),
-        )?;
+        let untyped = context
+            .untyped()
+            .create_vertex_binding(&visitor.vertex_buffers, element_source.buffer())?;
 
         Ok(VertexBinding {
             untyped,
             vertex_buffers,
+            element_source,
             _phantom: PhantomData,
         })
     }
 
     pub fn vertex_buffers(&self) -> &V::InGl {
         &self.vertex_buffers
+    }
+
+    pub fn element_source(&self) -> &E {
+        &&self.element_source
     }
 }
 
