@@ -1,5 +1,8 @@
 use glow::HasContext;
-use posh::gl::{untyped, GeometryType};
+use posh::{
+    gl::{untyped, BufferUsage, GeometryType},
+    Gl, Vertex, VertexAttribute, VertexInputRate,
+};
 
 fn main() {
     let sdl = sdl2::init().unwrap();
@@ -25,22 +28,32 @@ fn main() {
 
     let context = untyped::Context::new(gl);
 
+    let vertex_info = untyped::VertexInfo {
+        input_rate: VertexInputRate::Vertex,
+        stride: std::mem::size_of::<mint::Vector2<f32>>(),
+        attributes: <mint::Vector2<f32> as Vertex<Gl>>::attributes("pos"),
+    };
+
+    let vertex_buffer = context
+        .create_buffer(
+            &[[0.5f32, 1.0], [0.0, 0.0], [1.0, 0.0]],
+            BufferUsage::StaticDraw,
+        )
+        .expect("Cannot create vertex buffer");
+
     let vertex_array = context
-        .create_vertex_array(&[], None)
+        .create_vertex_array(&[(vertex_buffer, vertex_info.clone())], None)
         .expect("Cannot create vertex array");
 
     let program_def = untyped::ProgramDef {
+        vertex_infos: vec![vertex_info],
         vertex_shader_source: r#"
             #version 330
-            const vec2 verts[3] = vec2[3](
-                vec2(0.5f, 1.0f),
-                vec2(0.0f, 0.0f),
-                vec2(1.0f, 0.0f)
-            );
+            in vec2 pos;
             out vec2 vert;
             void main() {
-                vert = verts[gl_VertexID];
-                gl_Position = vec4(vert - 0.5, 0.0, 1.0);
+                vert = pos;
+                gl_Position = vec4(pos - 0.5, 0.0, 1.0);
             }
         "#
         .to_string(),
