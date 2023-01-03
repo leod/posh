@@ -20,8 +20,8 @@ pub struct VertexBindingBufferInfo {
 struct VertexBindingShared {
     gl: Rc<glow::Context>,
     id: glow::VertexArray,
-    vertex_buffer_infos: Vec<VertexBindingBufferInfo>,
-    element_buffer_type: Option<ElementType>,
+    vertex_infos: Vec<VertexBindingBufferInfo>,
+    element_type: Option<ElementType>,
 
     // Safety: Keep the referenced vertex buffers alive, so that we do not end
     // up with dangling pointers in our vertex array.
@@ -106,12 +106,12 @@ impl VertexBinding {
             gl.bind_buffer(glow::ARRAY_BUFFER, None);
         }
 
-        let vertex_buffer_infos = vertex_buffers
+        let vertex_infos = vertex_buffers
             .iter()
             .map(|(_, entry)| entry.clone())
             .collect();
 
-        let element_buffer_type = element_buffer.map(|(_, ty)| ty);
+        let element_type = element_buffer.as_ref().map(|(_, ty)| *ty);
 
         let vertex_buffers = vertex_buffers
             .iter()
@@ -123,8 +123,8 @@ impl VertexBinding {
         let shared = Rc::new(VertexBindingShared {
             gl,
             id,
-            vertex_buffer_infos,
-            element_buffer_type,
+            vertex_infos,
+            element_type,
             _vertex_buffers: vertex_buffers,
             _element_buffer: element_buffer,
         });
@@ -132,8 +132,8 @@ impl VertexBinding {
         Ok(Self { shared })
     }
 
-    pub fn buffer_infos(&self) -> &[VertexBindingBufferInfo] {
-        &self.shared.vertex_buffer_infos
+    pub fn vertex_infos(&self) -> &[VertexBindingBufferInfo] {
+        &self.shared.vertex_infos
     }
 }
 
