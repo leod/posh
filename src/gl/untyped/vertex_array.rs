@@ -20,13 +20,8 @@ pub struct VertexInfo {
 struct VertexArrayShared {
     gl: Rc<glow::Context>,
     id: glow::VertexArray,
-    vertex_infos: Vec<VertexInfo>,
-    element_type: Option<ElementType>,
-
-    // Safety: Keep the referenced vertex buffers alive, so that we do not end
-    // up with dangling pointers in our vertex array.
-    _vertex_buffers: Vec<Buffer>,
-    _element_buffer: Option<Buffer>,
+    vertex_buffers: Vec<(Buffer, VertexInfo)>,
+    element_buffer: Option<(Buffer, ElementType)>,
 }
 
 #[derive(Clone)]
@@ -102,14 +97,10 @@ impl VertexArray {
             }
         }
 
-        let (element_buffer, element_type) = if let Some((buffer, ty)) = element_buffer {
+        if let Some((buffer, ty)) = element_buffer.as_ref() {
             unsafe {
                 gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(buffer.id()));
             }
-
-            (Some(buffer), Some(ty))
-        } else {
-            (None, None)
         };
 
         unsafe {
@@ -117,34 +108,32 @@ impl VertexArray {
             gl.bind_buffer(glow::ARRAY_BUFFER, None);
         }
 
-        let vertex_infos = vertex_buffers
-            .iter()
-            .map(|(_, entry)| entry.clone())
-            .collect();
-
-        let vertex_buffers = vertex_buffers
-            .iter()
-            .map(|(buffer, _)| buffer.clone())
-            .collect();
+        let vertex_buffers = vertex_buffers.to_vec();
 
         let shared = Rc::new(VertexArrayShared {
             gl,
             id,
-            vertex_infos,
-            element_type,
-            _vertex_buffers: vertex_buffers,
-            _element_buffer: element_buffer,
+            vertex_buffers,
+            element_buffer,
         });
 
         Ok(Self { shared })
     }
 
-    pub fn vertex_infos(&self) -> &[VertexInfo] {
-        &self.shared.vertex_infos
+    pub fn gl(&self) -> &Rc<glow::Context> {
+        &self.shared.gl
     }
 
-    pub fn element_type(&self) -> Option<ElementType> {
-        self.shared.element_type
+    pub fn id(&self) -> glow::VertexArray {
+        self.shared.id
+    }
+
+    pub fn vertex_buffers(&self) -> &[(Buffer, VertexInfo)] {
+        &self.shared.vertex_buffers
+    }
+
+    pub fn element_buffer(&self) -> Option<&(Buffer, ElementType)> {
+        self.shared.element_buffer.as_ref()
     }
 }
 
