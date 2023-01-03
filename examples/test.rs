@@ -81,11 +81,11 @@ fn draw<R: ResourceInterface<Sl>>(
     x: R::InGl,
 ) {
     let resources = GenericResourceIface { uniformxy: xy, x };
-    let vertices: VertexArray<sl::Vec2<f32>, ()> = todo!();
+    let vertices: VertexArray<sl::Vec2<f32>, u32> = todo!();
 
     program.draw(
         resources,
-        vertices.stream_range(0..3, GeometryType::TriangleFan),
+        vertices.stream(GeometryType::TriangleFan),
         &DefaultFramebuffer,
         &DrawParams::default(),
     );

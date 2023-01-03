@@ -11,7 +11,27 @@ pub trait ElementSource {
 }
 
 #[sealed]
-pub trait Element: Pod {
+pub trait ElementOrUnit {
+    type Source: ElementSource;
+}
+
+#[sealed]
+impl ElementOrUnit for u16 {
+    type Source = ElementBuffer<Self>;
+}
+
+#[sealed]
+impl ElementOrUnit for u32 {
+    type Source = ElementBuffer<Self>;
+}
+
+#[sealed]
+impl ElementOrUnit for () {
+    type Source = ();
+}
+
+#[sealed]
+pub trait Element: Pod + ElementOrUnit<Source = ElementBuffer<Self>> {
     const TYPE: ElementType;
 }
 
