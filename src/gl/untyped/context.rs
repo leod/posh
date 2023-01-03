@@ -4,7 +4,7 @@ use bytemuck::Pod;
 
 use crate::gl::{BufferUsage, CreateBufferError, CreateVertexStreamError, ElementType};
 
-use super::{Buffer, VertexStream, VertexStreamBufferInfo};
+use super::{Buffer, VertexStream, VertexStreamVertexInfo};
 
 pub struct Context {
     gl: Rc<glow::Context>,
@@ -25,7 +25,7 @@ impl Context {
 
     pub fn create_vertex_stream(
         &self,
-        vertex_buffers: &[(Buffer, VertexStreamBufferInfo)],
+        vertex_buffers: &[(Buffer, VertexStreamVertexInfo)],
         element_buffer: Option<(Buffer, ElementType)>,
     ) -> Result<VertexStream, CreateVertexStreamError> {
         VertexStream::new(self.gl.clone(), vertex_buffers, element_buffer)

@@ -88,7 +88,7 @@ fn draw<R: ResourceInterface<Sl>>(
         &vertices,
         GeometryType::Triangles,
         &DefaultFramebuffer,
-        &DrawParams {},
+        &DrawParams::default(),
     );
 }
 
@@ -155,6 +155,6 @@ fn main() {
         &vertices,
         GeometryType::Lines,
         &DefaultFramebuffer,
-        &DrawParams {},
+        &DrawParams::default(),
     );
 }
