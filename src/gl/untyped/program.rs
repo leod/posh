@@ -24,9 +24,9 @@ pub struct UniformBlockInfo {
 
 #[derive(Default)]
 pub struct ProgramDef {
-    pub vertex_infos: Vec<VertexInfo>,
-    pub sampler_infos: Vec<SamplerInfo>,
     pub uniform_block_infos: Vec<UniformBlockInfo>,
+    pub sampler_infos: Vec<SamplerInfo>,
+    pub vertex_infos: Vec<VertexInfo>,
     pub vertex_shader_source: String,
     pub fragment_shader_source: String,
 }
