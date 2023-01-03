@@ -6,6 +6,7 @@ use sealed::sealed;
 use super::{untyped, ElementType};
 
 pub trait ElementSource {
+    #[doc(hidden)]
     fn buffer(&self) -> Option<(untyped::Buffer, ElementType)>;
 }
 
@@ -32,9 +33,11 @@ pub struct ElementBuffer<E: Element> {
 impl<E: Element> ElementBuffer<E> {
     /// # Panics
     ///
-    /// Panics if the length of `buffer` is not a multiple of the size of
-    /// `V::Pod`.
+    /// Panics if the length of `untyped` is not a multiple of the size of
+    /// `E`.
     pub fn from_untyped(untyped: untyped::Buffer) -> Self {
+        assert_eq!(untyped.len() % std::mem::size_of::<E>(), 0);
+
         Self {
             untyped,
             _phantom: PhantomData,
