@@ -17,7 +17,7 @@ pub struct VertexArray<V: VertexInterface<Sl>, E: ElementSource> {
 
 impl<V: VertexInterface<Sl>, E: ElementSource> VertexArray<V, E> {
     // TODO: Allow construction from `untyped::VertexData`?
-    pub fn new(
+    pub(crate) fn new(
         context: &Context,
         vertex_buffers: V::InGl,
         element_source: E,
