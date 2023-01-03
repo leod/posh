@@ -1,11 +1,11 @@
 mod buffer;
 mod context;
 mod program;
-mod vertex_stream;
+mod vertex_array;
 
 pub use buffer::Buffer;
 pub use context::Context;
 pub use program::Program;
-pub use vertex_stream::{VertexStream, VertexStreamVertexInfo};
+pub use vertex_array::{VertexArray, VertexInfo};
 
-pub(crate) use vertex_stream::VertexBindingAttributeInfo;
+pub(crate) use vertex_array::VertexAttributeLayout;
