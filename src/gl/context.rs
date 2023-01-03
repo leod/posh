@@ -3,8 +3,8 @@ use std::rc::Rc;
 use crate::{Sl, ToPod, Vertex, VertexInterface};
 
 use super::{
-    untyped, BufferUsage, CreateBufferError, CreateVertexDataError, Element, ElementBuffer,
-    ElementSource, VertexBinding, VertexBuffer,
+    untyped, BufferUsage, CreateBufferError, CreateVertexStreamError, Element, ElementBuffer,
+    ElementSource, VertexBuffer, VertexStream,
 };
 
 pub struct Context {
@@ -38,17 +38,17 @@ impl Context {
         data: &[E],
         usage: BufferUsage,
     ) -> Result<ElementBuffer<E>, CreateBufferError> {
-        let untyped = self.untyped.create_buffer(&data, usage)?;
+        let untyped = self.untyped.create_buffer(data, usage)?;
 
         Ok(ElementBuffer::from_untyped(untyped))
     }
 
-    pub fn create_vertex_binding<V: VertexInterface<Sl>, E: ElementSource>(
+    pub fn create_vertex_stream<V: VertexInterface<Sl>, E: ElementSource>(
         &self,
         vertex_buffers: V::InGl,
         element_source: E,
-    ) -> Result<VertexBinding<V, E>, CreateVertexDataError> {
-        VertexBinding::new(self, vertex_buffers, element_source)
+    ) -> Result<VertexStream<V, E>, CreateVertexStreamError> {
+        VertexStream::new(self, vertex_buffers, element_source)
     }
 
     pub fn untyped(&self) -> &untyped::Context {

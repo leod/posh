@@ -4,23 +4,23 @@ use glow::HasContext;
 
 use crate::{
     dag::{BaseType, NumericType, PrimitiveType, Type},
-    gl::{CreateVertexDataError, ElementType},
+    gl::{CreateVertexStreamError, ElementType},
     VertexAttribute, VertexInputRate,
 };
 
 use super::Buffer;
 
 #[derive(Debug, Clone)]
-pub struct VertexBindingBufferInfo {
+pub struct VertexStreamBufferInfo {
     pub input_rate: VertexInputRate,
     pub stride: usize,
     pub attributes: Vec<VertexAttribute>,
 }
 
-struct VertexBindingShared {
+struct VertexStreamShared {
     gl: Rc<glow::Context>,
     id: glow::VertexArray,
-    vertex_infos: Vec<VertexBindingBufferInfo>,
+    vertex_infos: Vec<VertexStreamBufferInfo>,
     element_type: Option<ElementType>,
 
     // Safety: Keep the referenced vertex buffers alive, so that we do not end
@@ -29,11 +29,11 @@ struct VertexBindingShared {
     _element_buffer: Option<Buffer>,
 }
 
-pub struct VertexBinding {
-    shared: Rc<VertexBindingShared>,
+pub struct VertexStream {
+    shared: Rc<VertexStreamShared>,
 }
 
-impl VertexBinding {
+impl VertexStream {
     /// # Panics
     ///
     /// Panics if any of the buffers do not belong to `gl`, or if any of the
@@ -41,12 +41,12 @@ impl VertexBinding {
     /// buffers have a mismatched size.
     pub fn new(
         gl: Rc<glow::Context>,
-        vertex_buffers: &[(Buffer, VertexBindingBufferInfo)],
+        vertex_buffers: &[(Buffer, VertexStreamBufferInfo)],
         element_buffer: Option<(Buffer, ElementType)>,
-    ) -> Result<Self, CreateVertexDataError> {
+    ) -> Result<Self, CreateVertexStreamError> {
         // TODO: How do we want to handle `buffers.is_empty()`?
 
-        let id = unsafe { gl.create_vertex_array() }.map_err(CreateVertexDataError)?;
+        let id = unsafe { gl.create_vertex_array() }.map_err(CreateVertexStreamError)?;
 
         unsafe {
             gl.bind_vertex_array(Some(id));
@@ -120,7 +120,7 @@ impl VertexBinding {
 
         let element_buffer = element_buffer.map(|(buffer, _)| buffer);
 
-        let shared = Rc::new(VertexBindingShared {
+        let shared = Rc::new(VertexStreamShared {
             gl,
             id,
             vertex_infos,
@@ -132,12 +132,12 @@ impl VertexBinding {
         Ok(Self { shared })
     }
 
-    pub fn vertex_infos(&self) -> &[VertexBindingBufferInfo] {
+    pub fn vertex_infos(&self) -> &[VertexStreamBufferInfo] {
         &self.shared.vertex_infos
     }
 }
 
-impl Drop for VertexBindingShared {
+impl Drop for VertexStreamShared {
     fn drop(&mut self) {
         unsafe {
             self.gl.delete_vertex_array(self.id);
