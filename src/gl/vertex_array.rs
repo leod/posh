@@ -4,18 +4,23 @@ use crate::{internal::VertexInterfaceVisitor, Gl, Sl, Vertex, VertexInputRate, V
 
 use super::{
     untyped::{self, VertexInfo},
-    Context, CreateVertexArrayError, ElementSource, GeometryStream, GeometryType, VertexBuffer,
+    Context, CreateVertexArrayError, Element, ElementBuffer, ElementSource, GeometryStream,
+    GeometryType, VertexBuffer,
 };
 
 #[derive(Clone)]
-pub struct VertexArray<V: VertexInterface<Sl>, E: ElementSource> {
+pub struct VertexArray<V: VertexInterface<Sl>, E> {
     untyped: untyped::VertexArray,
     vertex_buffers: V::InGl,
     element_source: E,
     _phantom: PhantomData<V>,
 }
 
-impl<V: VertexInterface<Sl>, E: ElementSource> VertexArray<V, E> {
+impl<V, E> VertexArray<V, E>
+where
+    V: VertexInterface<Sl>,
+    E: ElementSource,
+{
     // TODO: Allow construction from `untyped::VertexData`?
     pub(crate) fn new(
         context: &Context,
@@ -45,15 +50,25 @@ impl<V: VertexInterface<Sl>, E: ElementSource> VertexArray<V, E> {
         &self.element_source
     }
 
-    pub fn stream(
+    pub fn stream_range(
         &self,
         element_range: Range<usize>,
         geometry_type: GeometryType,
     ) -> GeometryStream<V> {
         GeometryStream {
-            untyped: self.untyped.stream(element_range, geometry_type),
+            untyped: self.untyped.stream_range(element_range, geometry_type),
             _phantom: PhantomData,
         }
+    }
+}
+
+impl<V, E> VertexArray<V, ElementBuffer<E>>
+where
+    V: VertexInterface<Sl>,
+    E: Element,
+{
+    pub fn stream(&self, geometry_type: GeometryType) -> GeometryStream<V> {
+        self.stream_range(0..self.element_source().len(), geometry_type)
     }
 }
 

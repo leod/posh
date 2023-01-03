@@ -109,7 +109,7 @@ impl VertexArray {
             }
         }
 
-        if let Some((buffer, ty)) = element_buffer.as_ref() {
+        if let Some((buffer, _)) = element_buffer.as_ref() {
             unsafe {
                 gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(buffer.id()));
             }
@@ -148,7 +148,7 @@ impl VertexArray {
         self.shared.element_buffer.as_ref()
     }
 
-    pub fn stream(
+    pub fn stream_range(
         &self,
         element_range: Range<usize>,
         geometry_type: GeometryType,

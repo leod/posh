@@ -129,7 +129,7 @@ fn main() {
             context.gl().clear(glow::COLOR_BUFFER_BIT);
             program.draw(
                 &[uniform_buffer.clone()],
-                vertex_array.stream(0..3, GeometryType::Triangles),
+                vertex_array.stream_range(0..3, GeometryType::Triangles),
             );
         }
 
