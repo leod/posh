@@ -13,3 +13,6 @@ glow = "0.11.2"
 
 [workspace]
 members = ["derive"]
+
+[dev-dependencies]
+sdl2 = "0.35.2"
