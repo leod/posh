@@ -20,7 +20,7 @@ pub use enums::{BufferUsage, ElementType, GeometryType};
 pub use error::{CreateBufferError, CreateVertexStreamError};
 pub use program::Program;
 pub use sampler::{Sampler2d, Sampler2dBinding};
-pub use surface::{DefaultSurface, SurfaceBinding};
+pub use surface::{DefaultFramebuffer, Surface};
 pub use texture::Texture2dBinding;
 pub use uniform_buffer::{UniformBuffer, UniformBufferBinding};
 pub use vertex_buffer::VertexBuffer;
