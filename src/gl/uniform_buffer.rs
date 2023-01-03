@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 
 use crate::{Sl, Uniform};
 
+#[derive(Clone)]
 pub struct UniformBuffer<U: Uniform<Sl>> {
     _phantom: PhantomData<U>,
 }

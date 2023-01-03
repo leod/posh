@@ -4,6 +4,7 @@ use crate::{Sl, ToPod, Vertex};
 
 use super::untyped;
 
+#[derive(Clone)]
 pub struct VertexBuffer<V: Vertex<Sl>> {
     pub(crate) untyped: untyped::Buffer,
     _phantom: PhantomData<V>,

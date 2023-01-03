@@ -25,6 +25,7 @@ impl Element for u32 {
     const TYPE: ElementType = ElementType::U32;
 }
 
+#[derive(Clone)]
 pub struct ElementBuffer<E: Element> {
     pub(crate) untyped: untyped::Buffer,
     _phantom: PhantomData<E>,
@@ -42,10 +43,6 @@ impl<E: Element> ElementBuffer<E> {
             untyped,
             _phantom: PhantomData,
         }
-    }
-
-    pub(crate) fn untyped(&self) -> &untyped::Buffer {
-        &self.untyped
     }
 
     pub fn set(&self, data: &[E]) {
