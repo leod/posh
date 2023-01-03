@@ -59,3 +59,19 @@ pub enum GeometryType {
     TriangleStrip,
     TriangleFan,
 }
+
+impl GeometryType {
+    pub fn to_gl(self) -> u32 {
+        use GeometryType::*;
+
+        match self {
+            Points => glow::POINTS,
+            Lines => glow::LINES,
+            LineStrip => glow::LINE_STRIP,
+            LineLoop => glow::LINE_LOOP,
+            Triangles => glow::TRIANGLES,
+            TriangleStrip => glow::TRIANGLE_STRIP,
+            TriangleFan => glow::TRIANGLE_FAN,
+        }
+    }
+}
