@@ -2,4 +2,4 @@
 pub struct CreateBufferError(pub String);
 
 #[derive(Debug, Clone)]
-pub struct CreateVertexDataError(pub String);
+pub struct CreateVertexStreamError(pub String);
