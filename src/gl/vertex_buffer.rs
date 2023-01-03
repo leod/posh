@@ -12,16 +12,16 @@ pub struct VertexBuffer<V: Vertex<Sl>> {
 impl<V: Vertex<Sl>> VertexBuffer<V> {
     /// # Panics
     ///
-    /// Panics if the length of `buffer` is not a multiple of the size of
+    /// Panics if the length of `untyped` is not a multiple of the size of
     /// `V::Pod`.
-    pub fn from_untyped(buffer: untyped::Buffer) -> Self {
+    pub fn from_untyped(untyped: untyped::Buffer) -> Self {
         assert_eq!(
-            buffer.len() % std::mem::size_of::<<V::InGl as ToPod>::Output>(),
+            untyped.len() % std::mem::size_of::<<V::InGl as ToPod>::Output>(),
             0
         );
 
         Self {
-            untyped: buffer,
+            untyped,
             _phantom: PhantomData,
         }
     }
