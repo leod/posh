@@ -1,4 +1,4 @@
-use std::{cell::Cell, marker::PhantomData, rc::Rc};
+use std::{marker::PhantomData, rc::Rc};
 
 use crate::{Sl, ToPod, Vertex};
 

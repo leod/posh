@@ -1,4 +1,4 @@
-use std::ops::Range;
+use std::{ops::Range, rc::Rc};
 
 use glow::HasContext;
 
@@ -15,6 +15,10 @@ pub struct GeometryStream {
 }
 
 impl GeometryStream {
+    pub fn gl(&self) -> &Rc<glow::Context> {
+        self.vertex_array.gl()
+    }
+
     /// # Panics
     ///
     /// TODO
@@ -72,6 +76,7 @@ impl GeometryStream {
             }
         }
 
+        // TODO: Remove overly conservative unbinding.
         unsafe {
             gl.bind_vertex_array(None);
         }
