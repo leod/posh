@@ -4,7 +4,7 @@ use glow::HasContext;
 
 use crate::gl::CreateShaderError;
 
-use super::{VertexAttributeLayout, VertexInfo};
+use super::{Buffer, GeometryStream, VertexAttributeLayout, VertexInfo};
 
 pub struct SamplerInfo {
     /// The name of the sampler uniform.
@@ -52,10 +52,7 @@ impl Program {
         let shared = Rc::new(ProgramShared {
             gl: gl.clone(),
             def,
-            id: unsafe {
-                gl.create_program()
-                    .map_err(CreateShaderError::CreateProgram)
-            }?,
+            id: unsafe { gl.create_program() }.map_err(CreateShaderError::CreateProgram)?,
         });
 
         // Compile and attach shaders.
@@ -137,7 +134,7 @@ impl Program {
         for info in &shared.def.uniform_block_infos {
             let index = unsafe { gl.get_uniform_block_index(shared.id, &info.name) };
 
-            // As for texture units, we silently ignore uniform block index
+            // As with texture units, we silently ignore uniform block index
             // lookup failures here.
             if let Some(index) = index {
                 unsafe {
@@ -153,10 +150,53 @@ impl Program {
         Ok(Program { shared })
     }
 
+    /// # Panics
+    ///
+    /// Panics if any of the supplied objects do not belong to the same
+    /// `glow::Context`, or if the wrong number of uniform buffers is supplied.
+    ///
     /// # Safety
     ///
     /// TODO
-    pub unsafe fn draw(&self) {}
+    pub unsafe fn draw(&self, uniform_buffers: &[Buffer], geometry: GeometryStream) {
+        let shared = &self.shared;
+        let gl = &shared.gl;
+
+        assert_eq!(uniform_buffers.len(), shared.def.uniform_block_infos.len());
+        for buffer in uniform_buffers {
+            assert!(Rc::ptr_eq(buffer.gl(), gl));
+        }
+        assert!(Rc::ptr_eq(geometry.gl(), gl));
+
+        unsafe {
+            gl.use_program(Some(shared.id));
+        }
+
+        for (buffer, block_info) in uniform_buffers.iter().zip(&shared.def.uniform_block_infos) {
+            let location = u32::try_from(block_info.location).unwrap();
+
+            unsafe {
+                gl.bind_buffer_base(glow::UNIFORM_BUFFER, location, Some(buffer.id()));
+            }
+        }
+
+        geometry.draw();
+
+        // TODO: Remove overly conservative unbinding.
+        for (_, block_info) in uniform_buffers.iter().zip(&shared.def.uniform_block_infos) {
+            let location = u32::try_from(block_info.location).unwrap();
+
+            unsafe {
+                gl.bind_buffer_base(glow::UNIFORM_BUFFER, location, None);
+            }
+        }
+
+        gl.bind_buffer(glow::UNIFORM_BUFFER, None);
+
+        unsafe {
+            gl.use_program(None);
+        }
+    }
 }
 
 impl Drop for ProgramShared {

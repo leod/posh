@@ -11,6 +11,10 @@ pub struct Context {
 }
 
 impl Context {
+    pub fn new(gl: glow::Context) -> Self {
+        Self { gl: Rc::new(gl) }
+    }
+
     pub fn gl(&self) -> &Rc<glow::Context> {
         &self.gl
     }
