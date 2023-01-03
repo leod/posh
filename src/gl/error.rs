@@ -2,7 +2,7 @@
 pub struct CreateBufferError(pub String);
 
 #[derive(Debug, Clone)]
-pub struct CreateVertexStreamError(pub String);
+pub struct CreateVertexArrayError(pub String);
 
 #[derive(Debug, Clone)]
 pub enum CreateShaderError {

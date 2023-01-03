@@ -4,23 +4,23 @@ use glow::HasContext;
 
 use crate::{
     dag::{BaseType, NumericType, PrimitiveType, Type},
-    gl::{CreateVertexStreamError, ElementType},
+    gl::{CreateVertexArrayError, ElementType},
     VertexAttribute, VertexInputRate,
 };
 
 use super::Buffer;
 
 #[derive(Debug, Clone)]
-pub struct VertexStreamVertexInfo {
+pub struct VertexInfo {
     pub input_rate: VertexInputRate,
     pub stride: usize,
     pub attributes: Vec<VertexAttribute>,
 }
 
-struct VertexStreamShared {
+struct VertexArrayShared {
     gl: Rc<glow::Context>,
     id: glow::VertexArray,
-    vertex_infos: Vec<VertexStreamVertexInfo>,
+    vertex_infos: Vec<VertexInfo>,
     element_type: Option<ElementType>,
 
     // Safety: Keep the referenced vertex buffers alive, so that we do not end
@@ -30,11 +30,11 @@ struct VertexStreamShared {
 }
 
 #[derive(Clone)]
-pub struct VertexStream {
-    shared: Rc<VertexStreamShared>,
+pub struct VertexArray {
+    shared: Rc<VertexArrayShared>,
 }
 
-impl VertexStream {
+impl VertexArray {
     /// # Panics
     ///
     /// Panics if any of the buffers do not belong to `gl`, or if any of the
@@ -42,12 +42,12 @@ impl VertexStream {
     /// buffers have a mismatched size.
     pub fn new(
         gl: Rc<glow::Context>,
-        vertex_buffers: &[(Buffer, VertexStreamVertexInfo)],
+        vertex_buffers: &[(Buffer, VertexInfo)],
         element_buffer: Option<(Buffer, ElementType)>,
-    ) -> Result<Self, CreateVertexStreamError> {
+    ) -> Result<Self, CreateVertexArrayError> {
         // TODO: How do we want to handle `buffers.is_empty()`?
 
-        let id = unsafe { gl.create_vertex_array() }.map_err(CreateVertexStreamError)?;
+        let id = unsafe { gl.create_vertex_array() }.map_err(CreateVertexArrayError)?;
 
         unsafe {
             gl.bind_vertex_array(Some(id));
@@ -65,7 +65,7 @@ impl VertexStream {
             }
 
             for attribute in &vertex_info.attributes {
-                let attribute_info = VertexBindingAttributeInfo::new(&attribute.ty);
+                let attribute_info = VertexAttributeLayout::new(&attribute.ty);
 
                 for i in 0..attribute_info.num_locations {
                     use NumericType::*;
@@ -127,7 +127,7 @@ impl VertexStream {
             .map(|(buffer, _)| buffer.clone())
             .collect();
 
-        let shared = Rc::new(VertexStreamShared {
+        let shared = Rc::new(VertexArrayShared {
             gl,
             id,
             vertex_infos,
@@ -139,7 +139,7 @@ impl VertexStream {
         Ok(Self { shared })
     }
 
-    pub fn vertex_infos(&self) -> &[VertexStreamVertexInfo] {
+    pub fn vertex_infos(&self) -> &[VertexInfo] {
         &self.shared.vertex_infos
     }
 
@@ -148,7 +148,7 @@ impl VertexStream {
     }
 }
 
-impl Drop for VertexStreamShared {
+impl Drop for VertexArrayShared {
     fn drop(&mut self) {
         unsafe {
             self.gl.delete_vertex_array(self.id);
@@ -156,13 +156,13 @@ impl Drop for VertexStreamShared {
     }
 }
 
-pub(crate) struct VertexBindingAttributeInfo {
+pub(crate) struct VertexAttributeLayout {
     pub ty: NumericType,
     pub num_components: usize,
     pub num_locations: usize,
 }
 
-impl VertexBindingAttributeInfo {
+impl VertexAttributeLayout {
     pub fn new(ty: &Type) -> Self {
         use BaseType::*;
         use Type::*;
@@ -189,8 +189,8 @@ impl VertexBindingAttributeInfo {
                     num_components: 4,
                     num_locations: 1,
                 },
-                Struct(_) => panic!("`VertexData` does not support struct types"),
-                Sampler2d(_) => panic!("`VertexData` does not support sampler types"),
+                Struct(_) => panic!("`VertexArray` does not support struct types"),
+                Sampler2d(_) => panic!("`VertexArray` does not support sampler types"),
             },
             Array(_, _) => todo!(),
         }
@@ -226,6 +226,6 @@ fn get_numeric_type(ty: PrimitiveType) -> NumericType {
 
     match ty {
         Numeric(ty) => ty,
-        Bool => panic!("`VertexData` does not support `bool`"),
+        Bool => panic!("`VertexArray` does not support `bool`"),
     }
 }

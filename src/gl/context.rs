@@ -3,8 +3,8 @@ use std::rc::Rc;
 use crate::{Sl, ToPod, Vertex, VertexInterface};
 
 use super::{
-    untyped, BufferUsage, CreateBufferError, CreateVertexStreamError, Element, ElementBuffer,
-    ElementSource, VertexBuffer, VertexStream,
+    untyped, BufferUsage, CreateBufferError, CreateVertexArrayError, Element, ElementBuffer,
+    ElementSource, VertexArray, VertexBuffer,
 };
 
 pub struct Context {
@@ -43,12 +43,12 @@ impl Context {
         Ok(ElementBuffer::from_untyped(untyped))
     }
 
-    pub fn create_vertex_stream<V: VertexInterface<Sl>, E: ElementSource>(
+    pub fn create_vertex_array<V: VertexInterface<Sl>, E: ElementSource>(
         &self,
         vertex_buffers: V::InGl,
         element_source: E,
-    ) -> Result<VertexStream<V, E>, CreateVertexStreamError> {
-        VertexStream::new(self, vertex_buffers, element_source)
+    ) -> Result<VertexArray<V, E>, CreateVertexArrayError> {
+        VertexArray::new(self, vertex_buffers, element_source)
     }
 
     pub fn untyped(&self) -> &untyped::Context {

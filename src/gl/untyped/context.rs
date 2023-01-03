@@ -2,9 +2,9 @@ use std::rc::Rc;
 
 use bytemuck::Pod;
 
-use crate::gl::{BufferUsage, CreateBufferError, CreateVertexStreamError, ElementType};
+use crate::gl::{BufferUsage, CreateBufferError, CreateVertexArrayError, ElementType};
 
-use super::{Buffer, VertexStream, VertexStreamVertexInfo};
+use super::{Buffer, VertexArray, VertexInfo};
 
 pub struct Context {
     gl: Rc<glow::Context>,
@@ -23,11 +23,11 @@ impl Context {
         Buffer::new(self.gl.clone(), data, usage)
     }
 
-    pub fn create_vertex_stream(
+    pub fn create_vertex_array(
         &self,
-        vertex_buffers: &[(Buffer, VertexStreamVertexInfo)],
+        vertex_buffers: &[(Buffer, VertexInfo)],
         element_buffer: Option<(Buffer, ElementType)>,
-    ) -> Result<VertexStream, CreateVertexStreamError> {
-        VertexStream::new(self.gl.clone(), vertex_buffers, element_buffer)
+    ) -> Result<VertexArray, CreateVertexArrayError> {
+        VertexArray::new(self.gl.clone(), vertex_buffers, element_buffer)
     }
 }

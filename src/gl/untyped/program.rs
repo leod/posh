@@ -4,7 +4,7 @@ use glow::HasContext;
 
 use crate::gl::CreateShaderError;
 
-use super::{VertexBindingAttributeInfo, VertexStreamVertexInfo};
+use super::{VertexAttributeLayout, VertexInfo};
 
 pub struct SamplerInfo {
     /// The name of the sampler uniform.
@@ -23,7 +23,7 @@ pub struct UniformBlockInfo {
 }
 
 pub struct ProgramDef {
-    pub vertex_infos: Vec<VertexStreamVertexInfo>,
+    pub vertex_infos: Vec<VertexInfo>,
     pub sampler_infos: Vec<SamplerInfo>,
     pub uniform_block_infos: Vec<UniformBlockInfo>,
     pub vertex_shader_source: String,
@@ -87,7 +87,7 @@ impl Program {
                         );
                     }
 
-                    let attribute_info = VertexBindingAttributeInfo::new(&attribute.ty);
+                    let attribute_info = VertexAttributeLayout::new(&attribute.ty);
 
                     // Some attributes (e.g. matrices) take up multiple
                     // locations. We only need to bind to the first location,
@@ -152,6 +152,11 @@ impl Program {
 
         Ok(Program { shared })
     }
+
+    /// # Safety
+    ///
+    /// TODO
+    pub unsafe fn draw(&self) {}
 }
 
 impl Drop for ProgramShared {

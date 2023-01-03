@@ -3,33 +3,33 @@ use std::marker::PhantomData;
 use crate::{internal::VertexInterfaceVisitor, Gl, Sl, Vertex, VertexInputRate, VertexInterface};
 
 use super::{
-    untyped::{self, VertexStreamVertexInfo},
-    Context, CreateVertexStreamError, ElementSource, VertexBuffer,
+    untyped::{self, VertexInfo},
+    Context, CreateVertexArrayError, ElementSource, VertexBuffer,
 };
 
 #[derive(Clone)]
-pub struct VertexStream<V: VertexInterface<Sl>, E: ElementSource> {
-    untyped: untyped::VertexStream,
+pub struct VertexArray<V: VertexInterface<Sl>, E: ElementSource> {
+    untyped: untyped::VertexArray,
     vertex_buffers: V::InGl,
     element_source: E,
     _phantom: PhantomData<V>,
 }
 
-impl<V: VertexInterface<Sl>, E: ElementSource> VertexStream<V, E> {
+impl<V: VertexInterface<Sl>, E: ElementSource> VertexArray<V, E> {
     // TODO: Allow construction from `untyped::VertexData`?
     pub fn new(
         context: &Context,
         vertex_buffers: V::InGl,
         element_source: E,
-    ) -> Result<Self, CreateVertexStreamError> {
+    ) -> Result<Self, CreateVertexArrayError> {
         let mut visitor = VertexBufferVisitor::default();
         vertex_buffers.visit(&mut visitor);
 
         let untyped = context
             .untyped()
-            .create_vertex_stream(&visitor.vertex_buffers, element_source.buffer())?;
+            .create_vertex_array(&visitor.vertex_buffers, element_source.buffer())?;
 
-        Ok(VertexStream {
+        Ok(VertexArray {
             untyped,
             vertex_buffers,
             element_source,
@@ -48,7 +48,7 @@ impl<V: VertexInterface<Sl>, E: ElementSource> VertexStream<V, E> {
 
 #[derive(Default)]
 struct VertexBufferVisitor {
-    vertex_buffers: Vec<(untyped::Buffer, VertexStreamVertexInfo)>,
+    vertex_buffers: Vec<(untyped::Buffer, VertexInfo)>,
 }
 
 impl VertexInterfaceVisitor<Gl> for VertexBufferVisitor {
@@ -60,7 +60,7 @@ impl VertexInterfaceVisitor<Gl> for VertexBufferVisitor {
     ) {
         let stride = std::mem::size_of::<V::Pod>();
         let attributes = V::attributes(path);
-        let entry_info = VertexStreamVertexInfo {
+        let entry_info = VertexInfo {
             input_rate,
             stride,
             attributes,
