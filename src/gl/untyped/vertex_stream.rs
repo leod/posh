@@ -101,6 +101,16 @@ impl VertexStream {
             }
         }
 
+        let (element_buffer, element_type) = if let Some((buffer, ty)) = element_buffer {
+            unsafe {
+                gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(buffer.id()));
+            }
+
+            (Some(buffer), Some(ty))
+        } else {
+            (None, None)
+        };
+
         unsafe {
             gl.bind_vertex_array(None);
             gl.bind_buffer(glow::ARRAY_BUFFER, None);
@@ -111,14 +121,10 @@ impl VertexStream {
             .map(|(_, entry)| entry.clone())
             .collect();
 
-        let element_type = element_buffer.as_ref().map(|(_, ty)| *ty);
-
         let vertex_buffers = vertex_buffers
             .iter()
             .map(|(buffer, _)| buffer.clone())
             .collect();
-
-        let element_buffer = element_buffer.map(|(buffer, _)| buffer);
 
         let shared = Rc::new(VertexStreamShared {
             gl,
@@ -134,6 +140,10 @@ impl VertexStream {
 
     pub fn vertex_infos(&self) -> &[VertexStreamBufferInfo] {
         &self.shared.vertex_infos
+    }
+
+    pub fn element_type(&self) -> Option<ElementType> {
+        self.shared.element_type
     }
 }
 

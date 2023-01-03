@@ -1,5 +1,7 @@
 use posh::{
-    gl::{DrawParams, GeometryType, Program, UniformBufferBinding, VertexStream},
+    gl::{
+        DefaultFramebuffer, DrawParams, GeometryType, Program, UniformBufferBinding, VertexStream,
+    },
     sl::{self, Object, ToValue, Value},
     Domain, FragmentInterface, Gl, Numeric, Primitive, ResourceDomain, ResourceInterface, Sl,
     Uniform, Vertex, VertexDomain, VertexInputRate, VertexInterface,
@@ -85,7 +87,7 @@ fn draw<R: ResourceInterface<Sl>>(
         resources,
         &vertices,
         GeometryType::Triangles,
-        todo!(),
+        &DefaultFramebuffer,
         &DrawParams {},
     );
 }
@@ -152,7 +154,7 @@ fn main() {
         resources,
         &vertices,
         GeometryType::Lines,
-        todo!(),
+        &DefaultFramebuffer,
         &DrawParams {},
     );
 }

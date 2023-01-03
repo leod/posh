@@ -1,7 +1,7 @@
-use std::marker::PhantomData;
+use crate::{sl, FragmentInterface, Sl};
 
-use crate::{FragmentInterface, Sl};
+pub trait Surface<F: FragmentInterface<Sl>> {}
 
-pub struct SurfaceBinding<F: FragmentInterface<Sl>>(PhantomData<F>);
+pub struct DefaultFramebuffer;
 
-pub struct DefaultSurface;
+impl Surface<sl::Vec4<f32>> for DefaultFramebuffer {}
