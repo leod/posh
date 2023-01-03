@@ -1,10 +1,10 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, ops::Range};
 
 use crate::{internal::VertexInterfaceVisitor, Gl, Sl, Vertex, VertexInputRate, VertexInterface};
 
 use super::{
     untyped::{self, VertexInfo},
-    Context, CreateVertexArrayError, ElementSource, VertexBuffer,
+    Context, CreateVertexArrayError, ElementSource, GeometryStream, GeometryType, VertexBuffer,
 };
 
 #[derive(Clone)]
@@ -43,6 +43,17 @@ impl<V: VertexInterface<Sl>, E: ElementSource> VertexArray<V, E> {
 
     pub fn element_source(&self) -> &E {
         &self.element_source
+    }
+
+    pub fn stream(
+        &self,
+        element_range: Range<usize>,
+        geometry_type: GeometryType,
+    ) -> GeometryStream<V> {
+        GeometryStream {
+            untyped: self.untyped.stream(element_range, geometry_type),
+            _phantom: PhantomData,
+        }
     }
 }
 
