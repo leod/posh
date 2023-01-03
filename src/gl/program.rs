@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::{sl::Varying, FragmentInterface, ResourceInterface, Sl, VertexInterface};
 
-use super::{DrawParams, ElementSource, GeometryStream, GeometryType, Surface, VertexArray};
+use super::{DrawParams, GeometryStream, Surface, VertexArray};
 
 pub struct Program<R, A, F> {
     _phantom: PhantomData<(R, A, F)>,

@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, mem::size_of};
 
 use bytemuck::Pod;
 use sealed::sealed;
@@ -26,7 +26,7 @@ impl Element for u32 {
 }
 
 #[derive(Clone)]
-pub struct ElementBuffer<E: Element> {
+pub struct ElementBuffer<E> {
     pub(crate) untyped: untyped::Buffer,
     _phantom: PhantomData<E>,
 }
@@ -37,12 +37,20 @@ impl<E: Element> ElementBuffer<E> {
     /// Panics if the length of `untyped` is not a multiple of the size of
     /// `E`.
     pub(crate) fn from_untyped(untyped: untyped::Buffer) -> Self {
-        assert_eq!(untyped.len() % std::mem::size_of::<E>(), 0);
+        assert_eq!(untyped.len() % size_of::<E>(), 0);
 
         Self {
             untyped,
             _phantom: PhantomData,
         }
+    }
+
+    pub fn len(&self) -> usize {
+        self.untyped.len() / size_of::<E>()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     pub fn set(&self, data: &[E]) {

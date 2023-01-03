@@ -5,13 +5,9 @@ use crate::{Sl, ToPod, Vertex};
 use super::{untyped, BufferUsage};
 
 #[derive(Clone)]
-pub struct VertexBuffer<V: Vertex<Sl>> {
+pub struct VertexBuffer<V> {
     pub(crate) untyped: untyped::Buffer,
     _phantom: PhantomData<V>,
-}
-
-fn vertex_size<V: Vertex<Sl>>() -> usize {
-    std::mem::size_of::<<V::InGl as ToPod>::Output>()
 }
 
 impl<V: Vertex<Sl>> VertexBuffer<V> {
@@ -25,8 +21,8 @@ impl<V: Vertex<Sl>> VertexBuffer<V> {
     /// Since `untyped::Buffer` is `Rc`-cloneable, the underlying buffer can
     /// still be modified. Check if we want to allow this.
     pub(crate) fn from_untyped(untyped: untyped::Buffer) -> Self {
-        assert!(vertex_size::<V>() > 0);
-        assert_eq!(untyped.len() % vertex_size::<V>(), 0);
+        assert!(Self::vertex_size() > 0);
+        assert_eq!(untyped.len() % Self::vertex_size(), 0);
 
         Self {
             untyped,
@@ -43,7 +39,7 @@ impl<V: Vertex<Sl>> VertexBuffer<V> {
     }
 
     pub fn len(&self) -> usize {
-        self.untyped.len() / vertex_size::<V>()
+        self.untyped.len() / Self::vertex_size()
     }
 
     pub fn is_empty(&self) -> bool {
@@ -52,5 +48,9 @@ impl<V: Vertex<Sl>> VertexBuffer<V> {
 
     pub fn set(&self, data: &[V::Pod]) {
         self.untyped.set(data);
+    }
+
+    fn vertex_size() -> usize {
+        std::mem::size_of::<<V::InGl as ToPod>::Output>()
     }
 }

@@ -85,7 +85,7 @@ fn draw<R: ResourceInterface<Sl>>(
 
     program.draw(
         resources,
-        vertices.stream(0..3, GeometryType::TriangleFan),
+        vertices.stream_range(0..3, GeometryType::TriangleFan),
         &DefaultFramebuffer,
         &DrawParams::default(),
     );
@@ -151,7 +151,7 @@ fn main() {
 
     program.draw(
         resources,
-        vertices.stream(0..3, GeometryType::Lines),
+        vertices.stream_range(0..3, GeometryType::Lines),
         &DefaultFramebuffer,
         &DrawParams::default(),
     );
