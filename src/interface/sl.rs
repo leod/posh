@@ -8,8 +8,8 @@ use crate::{
 };
 
 use super::{
-    join_ident_path, FragmentInterface, Primitive, ResourceInterface, Uniform, Vertex,
-    VertexAttribute, VertexInterface, VertexInterfaceVisitor,
+    FragmentInterface, Primitive, ResourceInterface, Uniform, Vertex, VertexAttribute,
+    VertexInterface, VertexInterfaceVisitor,
 };
 
 // Uniform interface

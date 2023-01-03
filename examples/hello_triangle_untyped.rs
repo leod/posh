@@ -1,8 +1,19 @@
+use std::time::Instant;
+
 use glow::HasContext;
 use posh::{
-    gl::{untyped, BufferUsage, GeometryType},
-    Gl, Vertex, VertexAttribute, VertexInputRate,
+    crevice::std140::AsStd140,
+    gl::{
+        untyped::{self, UniformBlockInfo},
+        BufferUsage, GeometryType,
+    },
+    Gl, Vertex, VertexInputRate,
 };
+
+#[derive(AsStd140)]
+struct MyUniform {
+    time: f32,
+}
 
 fn main() {
     let sdl = sdl2::init().unwrap();
@@ -28,6 +39,18 @@ fn main() {
 
     let context = untyped::Context::new(gl);
 
+    let uniform_block_info = UniformBlockInfo {
+        name: "MyUniform".to_string(),
+        location: 3,
+    };
+
+    let uniform_buffer = context
+        .create_buffer(
+            &[MyUniform { time: 0.0 }.as_std140()],
+            BufferUsage::StreamDraw,
+        )
+        .expect("Cannot create uniform buffer");
+
     let vertex_info = untyped::VertexInfo {
         input_rate: VertexInputRate::Vertex,
         stride: std::mem::size_of::<mint::Vector2<f32>>(),
@@ -46,11 +69,14 @@ fn main() {
         .expect("Cannot create vertex array");
 
     let program_def = untyped::ProgramDef {
+        uniform_block_infos: vec![uniform_block_info],
         vertex_infos: vec![vertex_info],
         vertex_shader_source: r#"
             #version 330
+
             in vec2 pos;
             out vec2 vert;
+
             void main() {
                 vert = pos;
                 gl_Position = vec4(pos - 0.5, 0.0, 1.0);
@@ -59,11 +85,18 @@ fn main() {
         .to_string(),
         fragment_shader_source: r#"
             #version 330
+
             precision mediump float;
+
+            uniform MyUniform {
+                float time;
+            };
+
             in vec2 vert;
             out vec4 color;
+
             void main() {
-                color = vec4(vert, 0.5, 1.0);
+                color = vec4(pow(cos(vert + time), vec2(2.0)), 0.5, 1.0);
             }
         "#
         .to_string(),
@@ -78,7 +111,9 @@ fn main() {
         context.gl().clear_color(0.1, 0.2, 0.3, 1.0);
     }
 
+    let start_time = Instant::now();
     let mut running = true;
+
     while running {
         for event in event_loop.poll_iter() {
             match event {
@@ -87,9 +122,15 @@ fn main() {
             }
         }
 
+        let time = Instant::now().duration_since(start_time).as_secs_f32();
+        uniform_buffer.set(&[MyUniform { time }.as_std140()]);
+
         unsafe {
             context.gl().clear(glow::COLOR_BUFFER_BIT);
-            program.draw(&[], vertex_array.stream(0..3, GeometryType::Triangles));
+            program.draw(
+                &[uniform_buffer.clone()],
+                vertex_array.stream(0..3, GeometryType::Triangles),
+            );
         }
 
         window.gl_swap_window();
