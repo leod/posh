@@ -67,7 +67,7 @@ where
 
         // -----------------
 
-        println!("{:#?}", vertex_output.position.expr());
+        println!("{}", vertex_output.position.expr());
 
         Self {
             _phantom: PhantomData,

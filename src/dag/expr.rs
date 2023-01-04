@@ -26,42 +26,42 @@ pub struct FuncDef {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Expr {
     Arg {
-        ty: Type,
         name: String,
+        ty: Type,
     },
     ScalarLiteral {
-        ty: PrimitiveType,
         value: String,
+        ty: PrimitiveType,
     },
     StructLiteral {
-        ty: &'static StructType,
         args: Vec<Rc<Expr>>,
+        ty: &'static StructType,
     },
     Binary {
-        ty: Type,
         left: Rc<Expr>,
         op: BinaryOp,
         right: Rc<Expr>,
+        ty: Type,
     },
     CallFuncDef {
         def: FuncDef,
         args: Vec<Rc<Expr>>,
     },
     CallBuiltIn {
-        ty: Type,
         name: &'static str,
         args: Vec<Rc<Expr>>,
+        ty: Type,
     },
     Field {
-        ty: Type,
         base: Rc<Expr>,
         name: &'static str,
+        ty: Type,
     },
     Branch {
-        ty: Type,
         cond: Rc<Expr>,
         yes: Rc<Expr>,
         no: Rc<Expr>,
+        ty: Type,
     },
 }
 
