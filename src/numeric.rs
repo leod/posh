@@ -13,6 +13,7 @@ use crate::{
 #[sealed]
 pub trait Primitive:
     AsStd140
+    + Default
     + ToPod
     + ToString
     + Uniform<Gl, InGl = Self, InSl = Scalar<Self>>

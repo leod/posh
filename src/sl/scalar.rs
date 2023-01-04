@@ -32,6 +32,12 @@ pub type I32 = Scalar<i32>;
 /// An unsigned integer value in the shading language.
 pub type U32 = Scalar<u32>;
 
+impl<T: Primitive> Default for Scalar<T> {
+    fn default() -> Self {
+        T::default().to_value()
+    }
+}
+
 impl<T: Primitive> Object for Scalar<T> {
     const TYPE: Type = Type::Base(BaseType::Scalar(T::PRIMITIVE_TYPE));
 

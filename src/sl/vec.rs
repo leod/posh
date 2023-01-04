@@ -20,12 +20,42 @@ pub struct Vec2<T> {
     pub y: Scalar<T>,
 }
 
+impl<T: Primitive> Vec2<T> {
+    pub fn to_vec3(self) -> Vec3<T> {
+        Vec3 {
+            x: self.x,
+            y: self.y,
+            z: Default::default(),
+        }
+    }
+
+    pub fn to_vec4(self) -> Vec4<T> {
+        Vec4 {
+            x: self.x,
+            y: self.y,
+            z: Default::default(),
+            w: Default::default(),
+        }
+    }
+}
+
 /// A four-dimensional vector in the shading language.
 #[derive(Debug, Copy, Clone)]
 pub struct Vec3<T> {
     pub x: Scalar<T>,
     pub y: Scalar<T>,
     pub z: Scalar<T>,
+}
+
+impl<T: Primitive> Vec3<T> {
+    pub fn to_vec4(self) -> Vec4<T> {
+        Vec4 {
+            x: self.x,
+            y: self.y,
+            z: self.z,
+            w: Default::default(),
+        }
+    }
 }
 
 /// A four-dimensional vector in the shading language.
@@ -137,6 +167,16 @@ macro_rules! impl_binary_op_scalar_rhs {
 macro_rules! impl_vec {
     ($ty:ident, $mint_ty: ident, $name:literal, $($member:ident),+) => {
         impl_value!($ty, $mint_ty, $name, $($member),+);
+
+        impl<T: Primitive> Default for $ty<T> {
+            fn default() -> Self {
+                $ty {
+                    $(
+                        $member: Default::default()
+                    ),*
+                }
+            }
+        }
 
         impl_binary_op_symmetric!($ty, add, Add);
         impl_binary_op_symmetric!($ty, div, Div);
