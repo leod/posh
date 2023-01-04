@@ -1,3 +1,4 @@
+mod display;
 mod expr;
 mod trace;
 mod ty;
