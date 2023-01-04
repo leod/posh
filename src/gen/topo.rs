@@ -65,12 +65,16 @@ fn visit(
         visit(pred, permanent_mark, temporary_mark, output)
     });
 
+    println!("{}: {} @ {:?}", output.len(), node, key);
+
     temporary_mark.remove(&key);
     permanent_mark.insert(key);
     output.push(key);
 }
 
-pub fn topological_ordering(roots: impl Iterator<Item = Rc<Expr>>) -> HashMap<ExprKey, usize> {
+pub fn topological_ordering<'a>(
+    roots: impl IntoIterator<Item = &'a Rc<Expr>>,
+) -> HashMap<ExprKey, usize> {
     let mut permanent_mark = HashSet::new();
     let mut temporary_mark = HashSet::new();
     let mut output = Vec::new();
@@ -81,7 +85,6 @@ pub fn topological_ordering(roots: impl Iterator<Item = Rc<Expr>>) -> HashMap<Ex
 
     output
         .into_iter()
-        .rev()
         .enumerate()
         .map(|(index, key)| (key, index))
         .collect()

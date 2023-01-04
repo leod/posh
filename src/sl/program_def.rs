@@ -69,6 +69,8 @@ where
 
         println!("{}", vertex_output.position.expr());
 
+        let topo = crate::gen::topo::topological_ordering(&[vertex_output.position.expr()]);
+
         Self {
             _phantom: PhantomData,
         }
