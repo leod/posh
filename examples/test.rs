@@ -118,9 +118,9 @@ impl posh::internal::ResourceInterfaceVisitor<Sl> for MyVisitor {
 
 fn create_program<R, V, F>() -> Program<R, V, F>
 where
-    R: ResourceInterface<Sl>,
-    V: VertexInterface<Sl>,
-    F: FragmentInterface<Sl>,
+    R: ResourceInterface<Sl, InSl = R>,
+    V: VertexInterface<Sl, InSl = V>,
+    F: FragmentInterface<Sl, InSl = F>,
 {
     Program::new::<sl::Vec4<f32>>(todo!(), todo!())
 }
