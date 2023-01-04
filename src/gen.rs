@@ -2,7 +2,7 @@ pub mod expr;
 pub mod scope;
 pub mod topo;
 
-use std::rc::Rc;
+use std::{fmt, rc::Rc};
 
 use crate::dag::Expr;
 

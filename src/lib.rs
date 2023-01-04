@@ -1,4 +1,4 @@
-mod gen;
+pub(crate) mod gen;
 mod interface;
 mod numeric;
 
