@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::{sl::Varying, FragmentInterface, ResourceInterface, Sl, VertexInterface};
 
-use super::{DrawParams, GeometryStream, Surface, VertexArray};
+use super::{DrawParams, GeometryStream, Surface};
 
 pub struct Program<R, A, F> {
     _phantom: PhantomData<(R, A, F)>,
@@ -10,9 +10,9 @@ pub struct Program<R, A, F> {
 
 impl<R, V, F> Program<R, V, F>
 where
-    R: ResourceInterface<Sl>,
-    V: VertexInterface<Sl>,
-    F: FragmentInterface<Sl>,
+    R: ResourceInterface<Sl, InSl = R>,
+    V: VertexInterface<Sl, InSl = V>,
+    F: FragmentInterface<Sl, InSl = F>,
 {
     pub fn new<W>(vertex_shader: fn(R, V) -> W, fragment_shader: fn(R, W) -> F) -> Self
     where

@@ -16,7 +16,8 @@ use super::dag::{Expr, Type};
 pub use posh_derive::{ToValue, Value};
 
 pub use {
-    program_def::ProgramDef,
+    // TODO: Remove ProgramDef re-export.
+    program_def::{FragmentInput, FragmentOutput, ProgramDef, VertexInput, VertexOutput},
     sampler::Sampler2d,
     scalar::{Bool, Scalar, F32, I32, U32},
     vec::{Vec2, Vec4},
@@ -60,7 +61,19 @@ pub trait ToValue: Copy {
 }
 
 /// Data passed from a vertex stage to a fragment stage.
-pub trait Varying: Value {}
+pub trait Varying: Value {
+    fn attributes(path: &str) -> Vec<(String, Type)>;
+
+    fn shader_output(&self) -> Vec<Rc<Expr>>;
+}
 
 // TODO: Impl Varying.
-impl Varying for Vec4<f32> {}
+impl Varying for Vec4<f32> {
+    fn attributes(path: &str) -> Vec<(String, Type)> {
+        vec![(path.to_string(), <Self as Object>::TYPE)]
+    }
+
+    fn shader_output(&self) -> Vec<Rc<Expr>> {
+        vec![self.expr()]
+    }
+}
