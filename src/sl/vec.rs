@@ -1,12 +1,15 @@
-use std::rc::Rc;
+use std::{
+    ops::{Add, Div, Mul, Sub},
+    rc::Rc,
+};
 
 use crate::{
-    dag::{BaseType, Expr, StructType, Type},
-    Primitive,
+    dag::{BaseType, BinaryOp, Expr, StructType, Type},
+    Numeric, Primitive,
 };
 
 use super::{
-    primitives::{field, simplify_struct_literal, value_arg},
+    primitives::{binary, field, simplify_struct_literal, value_arg},
     Object, Scalar, Struct, ToValue, Value,
 };
 
@@ -97,6 +100,56 @@ macro_rules! impl_value {
     };
 }
 
-impl_value!(Vec2, Vector2, "vec2", x, y);
-impl_value!(Vec3, Vector3, "vec3", x, y, z);
-impl_value!(Vec4, Vector4, "vec4", x, y, z, w);
+// Implements `$ty<T> <op> $ty<T>` for all `T: Numeric`.
+macro_rules! impl_binary_op_symmetric {
+    ($ty:ident, $fn:ident, $op:ident) => {
+        impl<T> $op<$ty<T>> for $ty<T>
+        where
+            T: Numeric,
+        {
+            type Output = Self;
+
+            fn $fn(self, right: Self) -> Self::Output {
+                binary(self, BinaryOp::$op, right)
+            }
+        }
+    };
+}
+
+// Implements `$ty<T> <op> Scalar<T>` for all `T: Numeric`.
+macro_rules! impl_binary_op_scalar_rhs {
+    ($ty:ident, $fn:ident, $op:ident) => {
+        impl<T, Rhs> $op<Rhs> for $ty<T>
+        where
+            T: Numeric,
+            Rhs: ToValue<Output = Scalar<T>>,
+        {
+            type Output = Self;
+
+            fn $fn(self, right: Rhs) -> Self::Output {
+                binary(self, BinaryOp::$op, right)
+            }
+        }
+    };
+}
+
+// Implements all the things for `$ty`.
+macro_rules! impl_vec {
+    ($ty:ident, $mint_ty: ident, $name:literal, $($member:ident),+) => {
+        impl_value!($ty, $mint_ty, $name, $($member),+);
+
+        impl_binary_op_symmetric!($ty, add, Add);
+        impl_binary_op_symmetric!($ty, div, Div);
+        impl_binary_op_symmetric!($ty, mul, Mul);
+        impl_binary_op_symmetric!($ty, sub, Sub);
+
+        impl_binary_op_scalar_rhs!($ty, add, Add);
+        impl_binary_op_scalar_rhs!($ty, div, Div);
+        impl_binary_op_scalar_rhs!($ty, mul, Mul);
+        impl_binary_op_scalar_rhs!($ty, sub, Sub);
+    };
+}
+
+impl_vec!(Vec2, Vector2, "vec2", x, y);
+impl_vec!(Vec3, Vector3, "vec3", x, y, z);
+impl_vec!(Vec4, Vector4, "vec4", x, y, z, w);
