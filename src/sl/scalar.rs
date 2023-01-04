@@ -115,7 +115,7 @@ impl Scalar<bool> {
     }
 }
 
-// Implements `Scalar<T> <op> impl ToPosh<Value = Scalar<T>>` for all `T:
+// Implements `Scalar<T> <op> impl ToValue<Output = Scalar<T>>` for all `T:
 // Numeric`.
 macro_rules! impl_binary_op_lhs {
     ($fn:ident, $op:ident) => {
@@ -157,6 +157,6 @@ macro_rules! impl_binary_op {
 }
 
 impl_binary_op!(add, Add);
-impl_binary_op!(sub, Sub);
-impl_binary_op!(mul, Mul);
 impl_binary_op!(div, Div);
+impl_binary_op!(mul, Mul);
+impl_binary_op!(sub, Sub);
