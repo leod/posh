@@ -22,65 +22,54 @@ fn var_name(idx: usize) -> String {
     format!("var_{idx}")
 }
 
-impl Scope {
-    pub fn map_expr(&self, expr: Expr, simplified_exprs: &HashMap<ExprKey, Expr>) -> Expr {
-        use Expr::*;
+fn map_expr(expr: Expr, map: &HashMap<ExprKey, Expr>) -> Expr {
+    use Expr::*;
 
-        let lookup = |node: Rc<Expr>| {
-            let key = ExprKey::from(&node);
-            self.vars.get(&key).map_or_else(
-                || {
-                    simplified_exprs
-                        .get(&key)
-                        .cloned()
-                        .map_or(node, |simplified_expr| Rc::new(simplified_expr))
-                },
-                |var| {
-                    Rc::new(Arg {
-                        ty: var.expr.ty(),
-                        name: var.name.clone(),
-                    })
-                },
-            )
-        };
+    let lookup = |node: Rc<Expr>| {
+        let key = ExprKey::from(&node);
+        map.get(&key)
+            .cloned()
+            .map_or(node, |simplified_expr| Rc::new(simplified_expr))
+    };
 
-        match expr {
-            expr @ Arg { .. } | expr @ ScalarLiteral { .. } => expr,
-            StructLiteral { args, ty } => StructLiteral {
-                args: args.into_iter().map(lookup).collect(),
-                ty,
-            },
-            Binary {
-                left,
-                op,
-                right,
-                ty,
-            } => Binary {
-                left: lookup(left),
-                op,
-                right: lookup(right),
-                ty,
-            },
-            CallFuncDef { .. } => todo!(),
-            CallBuiltIn { name, args, ty } => CallBuiltIn {
-                name,
-                args: args.into_iter().map(lookup).collect(),
-                ty,
-            },
-            Field { base, name, ty } => Field {
-                base: lookup(base),
-                name,
-                ty,
-            },
-            Branch { cond, yes, no, ty } => Branch {
-                cond: lookup(cond),
-                yes: lookup(yes),
-                no: lookup(no),
-                ty,
-            },
-        }
+    match expr {
+        expr @ Arg { .. } | expr @ ScalarLiteral { .. } => expr,
+        StructLiteral { args, ty } => StructLiteral {
+            args: args.into_iter().map(lookup).collect(),
+            ty,
+        },
+        Binary {
+            left,
+            op,
+            right,
+            ty,
+        } => Binary {
+            left: lookup(left),
+            op,
+            right: lookup(right),
+            ty,
+        },
+        CallFuncDef { .. } => todo!(),
+        CallBuiltIn { name, args, ty } => CallBuiltIn {
+            name,
+            args: args.into_iter().map(lookup).collect(),
+            ty,
+        },
+        Field { base, name, ty } => Field {
+            base: lookup(base),
+            name,
+            ty,
+        },
+        Branch { cond, yes, no, ty } => Branch {
+            cond: lookup(cond),
+            yes: lookup(yes),
+            no: lookup(no),
+            ty,
+        },
     }
+}
 
+impl Scope {
     fn needs_var(count: usize, expr: &Expr) -> bool {
         use Expr::*;
 
@@ -106,23 +95,29 @@ impl Scope {
             let key = ExprKey::from(expr);
             let count = usages.get(&key).copied().unwrap_or(0);
 
-            let simplified_expr = scope.map_expr((**expr).clone(), &simplified_exprs);
+            let simplified_expr = map_expr((**expr).clone(), &simplified_exprs);
 
             if Self::needs_var(count, expr) {
                 let name = var_name(scope.vars.len());
 
                 println!("{} {} = {}", expr.ty(), name, simplified_expr);
 
-                scope.vars.insert(
+                let var_expr = Var {
+                    name: name.clone(),
+                    expr: simplified_expr.clone(),
+                };
+
+                scope.vars.insert(key, var_expr.clone());
+                simplified_exprs.insert(
                     key,
-                    Var {
+                    Expr::Arg {
                         name,
-                        expr: simplified_expr.clone(),
+                        ty: simplified_expr.ty(),
                     },
                 );
+            } else {
+                simplified_exprs.insert(key, simplified_expr);
             }
-
-            simplified_exprs.insert(key, simplified_expr);
         }
 
         for root in roots {
