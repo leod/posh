@@ -23,17 +23,17 @@ fn var_name(idx: usize) -> String {
 }
 
 impl Scope {
-    pub fn map_expr(&self, expr: Expr, mapped_exprs: &HashMap<ExprKey, Expr>) -> Expr {
+    pub fn map_expr(&self, expr: Expr, simplified_exprs: &HashMap<ExprKey, Expr>) -> Expr {
         use Expr::*;
 
         let lookup = |node: Rc<Expr>| {
             let key = ExprKey::from(&node);
             self.vars.get(&key).map_or_else(
                 || {
-                    mapped_exprs
+                    simplified_exprs
                         .get(&key)
                         .cloned()
-                        .map_or(node, |mapped_expr| Rc::new(mapped_expr))
+                        .map_or(node, |simplified_expr| Rc::new(simplified_expr))
                 },
                 |var| {
                     Rc::new(Arg {
@@ -81,9 +81,23 @@ impl Scope {
         }
     }
 
+    fn needs_var(count: usize, expr: &Expr) -> bool {
+        use Expr::*;
+
+        match expr {
+            Branch { .. } => true,
+            Arg { .. } | ScalarLiteral { .. } => false,
+            StructLiteral { .. }
+            | Binary { .. }
+            | CallFuncDef { .. }
+            | CallBuiltIn { .. }
+            | Field { .. } => count > 1,
+        }
+    }
+
     pub fn boop(roots: &[Rc<Expr>]) -> Self {
         let mut scope = Self::default();
-        let mut mapped_exprs = HashMap::new();
+        let mut simplified_exprs = HashMap::new();
 
         let topo = topological_ordering(roots);
         let usages = count_usages(&topo);
@@ -92,25 +106,30 @@ impl Scope {
             let key = ExprKey::from(expr);
             let count = usages.get(&key).copied().unwrap_or(0);
 
-            let mapped_expr = scope.map_expr((**expr).clone(), &mapped_exprs);
+            let simplified_expr = scope.map_expr((**expr).clone(), &simplified_exprs);
 
-            if count > 1 {
+            if Self::needs_var(count, expr) {
                 let name = var_name(scope.vars.len());
 
-                println!("{name} := {mapped_expr}");
+                println!("{name} := {simplified_expr}");
 
                 scope.vars.insert(
                     key,
                     Var {
                         name,
-                        expr: mapped_expr.clone(),
+                        expr: simplified_expr.clone(),
                     },
                 );
-            } else {
-                println!("{mapped_expr}");
             }
 
-            mapped_exprs.insert(key, mapped_expr);
+            simplified_exprs.insert(key, simplified_expr);
+        }
+
+        for root in roots {
+            let key = ExprKey::from(root);
+            let simplified_expr = &simplified_exprs[&key];
+
+            println!("root: {simplified_expr}");
         }
 
         scope
