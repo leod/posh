@@ -164,7 +164,12 @@ fn common_field_base(struct_ty: &'static StructType, args: &[Rc<Expr>]) -> Optio
         None
     }?;
 
+    // FIXME: The equality check in `is_match` might be dangerous, due to
+    // potential exponential blow up. We might need a better solution here. For
+    // the purposes of `common_field_base`, referential equality could be
+    // enough.
     let is_match = |base: &Rc<Expr>| base.ty() == ty && base == first_base;
+
     let given_fields: BTreeSet<_> = args
         .iter()
         .map(|arg| match &**arg {
