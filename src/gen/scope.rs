@@ -111,7 +111,7 @@ impl Scope {
             if Self::needs_var(count, expr) {
                 let name = var_name(scope.vars.len());
 
-                println!("{name} := {simplified_expr}");
+                println!("{} {} = {}", expr.ty(), name, simplified_expr);
 
                 scope.vars.insert(
                     key,
@@ -129,7 +129,7 @@ impl Scope {
             let key = ExprKey::from(root);
             let simplified_expr = &simplified_exprs[&key];
 
-            println!("root: {simplified_expr}");
+            println!("{simplified_expr}");
         }
 
         scope
