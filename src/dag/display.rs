@@ -49,7 +49,7 @@ impl fmt::Display for Expr {
             CallFuncDef { def, args } => write_call(f, def.name, args),
             CallBuiltIn { name, args, .. } => write_call(f, name, args),
             Field { base, name, .. } => write!(f, "{base}.{name}"),
-            Branch { cond, yes, no, .. } => write!(f, "({cond} ? {yes} : {no}"),
+            Branch { cond, yes, no, .. } => write!(f, "({cond} ? {yes} : {no})"),
         }
     }
 }
