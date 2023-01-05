@@ -47,7 +47,7 @@ fn visit(
     node: &Rc<Expr>,
     permanent_mark: &mut HashSet<ExprKey>,
     temporary_mark: &mut HashSet<ExprKey>,
-    output: &mut Vec<ExprKey>,
+    output: &mut Vec<Rc<Expr>>,
 ) {
     let key: ExprKey = node.into();
 
@@ -65,16 +65,14 @@ fn visit(
         visit(pred, permanent_mark, temporary_mark, output)
     });
 
-    println!("{}: {} @ {:?}", output.len(), node, key);
+    //println!("{}: {} @ {:?}", output.len(), node, key);
 
     temporary_mark.remove(&key);
     permanent_mark.insert(key);
-    output.push(key);
+    output.push(node.clone());
 }
 
-pub fn topological_ordering<'a>(
-    roots: impl IntoIterator<Item = &'a Rc<Expr>>,
-) -> HashMap<ExprKey, usize> {
+pub fn topological_ordering<'a>(roots: &[Rc<Expr>]) -> Vec<Rc<Expr>> {
     let mut permanent_mark = HashSet::new();
     let mut temporary_mark = HashSet::new();
     let mut output = Vec::new();
@@ -83,9 +81,23 @@ pub fn topological_ordering<'a>(
         visit(&root, &mut permanent_mark, &mut temporary_mark, &mut output);
     }
 
+    /*output
+    .into_iter()
+    .enumerate()
+    .map(|(index, key)| (key, index))
+    .collect()*/
+
     output
-        .into_iter()
-        .enumerate()
-        .map(|(index, key)| (key, index))
-        .collect()
+}
+
+pub fn count_usages(exprs: &[Rc<Expr>]) -> HashMap<ExprKey, usize> {
+    let mut usages = HashMap::new();
+
+    for expr in exprs {
+        predecessors(expr, |pred| {
+            *usages.entry(pred.into()).or_insert(0) += 1;
+        })
+    }
+
+    usages
 }
