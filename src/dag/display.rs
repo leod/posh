@@ -1,6 +1,6 @@
 use std::{fmt, rc::Rc};
 
-use super::{BinaryOp, Expr};
+use super::{BaseType, BinaryOp, Expr, NumericType, PrimitiveType, Type};
 
 impl fmt::Display for BinaryOp {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
@@ -50,6 +50,76 @@ impl fmt::Display for Expr {
             CallBuiltIn { name, args, .. } => write_call(f, name, args),
             Field { base, name, .. } => write!(f, "{base}.{name}"),
             Branch { cond, yes, no, .. } => write!(f, "({cond} ? {yes} : {no}"),
+        }
+    }
+}
+
+impl fmt::Display for NumericType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        use NumericType::*;
+
+        let s = match self {
+            F32 => "float",
+            I32 => "int",
+            U32 => "uint",
+        };
+
+        f.write_str(s)
+    }
+}
+
+impl fmt::Display for PrimitiveType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        use PrimitiveType::*;
+
+        match self {
+            Numeric(ty) => write!(f, "{ty}"),
+            Bool => write!(f, "bool"),
+        }
+    }
+}
+
+fn numeric_type_prefix(ty: NumericType) -> &'static str {
+    use NumericType::*;
+
+    match ty {
+        F32 => "",
+        I32 => "i",
+        U32 => "u",
+    }
+}
+
+fn primitive_type_prefix(ty: PrimitiveType) -> &'static str {
+    use PrimitiveType::*;
+
+    match ty {
+        Numeric(ty) => numeric_type_prefix(ty),
+        Bool => "b",
+    }
+}
+
+impl fmt::Display for BaseType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        use BaseType::*;
+
+        match self {
+            Scalar(ty) => write!(f, "{ty}"),
+            Vec2(ty) => write!(f, "{}vec2", primitive_type_prefix(*ty)),
+            Vec3(ty) => write!(f, "{}vec2", primitive_type_prefix(*ty)),
+            Vec4(ty) => write!(f, "{}vec2", primitive_type_prefix(*ty)),
+            Struct(ty) => write!(f, "{}", ty.name),
+            Sampler2d(ty) => write!(f, "{}sampler2D", numeric_type_prefix(*ty)),
+        }
+    }
+}
+
+impl fmt::Display for Type {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        use Type::*;
+
+        match self {
+            Base(ty) => write!(f, "{ty}"),
+            Array(ty, size) => write!(f, "{ty}[{size}]"),
         }
     }
 }

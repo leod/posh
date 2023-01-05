@@ -82,6 +82,11 @@ macro_rules! impl_value {
         }
 
         impl<T: Primitive> Object for $ty<T> {
+            //const TYPE: Type = Type::Base(BaseType::$ty(T::PRIMITIVE_TYPE));
+
+            // FIXME: This is a hack so we can use `simplify_struct_literal`,
+            // but it breaks other things. Should we perhaps move
+            // `simplify_struct_literal` to codegen?
             const TYPE: Type = Type::Base(BaseType::Struct(&Self::STRUCT_TYPE));
 
             fn expr(&self) -> Rc<Expr> {
