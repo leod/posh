@@ -7,6 +7,8 @@ use crate::dag::{BaseType, BinaryOp, Expr, PrimitiveType, Type};
 
 use super::ExprKey;
 
+pub type VarId = usize;
+
 #[derive(Debug, Clone)]
 pub enum SimplifiedExpr {
     Branch {
@@ -45,18 +47,9 @@ pub enum SimplifiedExpr {
     },
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct VarId(usize);
-
-impl VarId {
-    pub fn index(self) -> usize {
-        self.0
-    }
-}
-
 #[derive(Default)]
 pub struct VarForm {
-    var_exprs: Vec<(VarId, SimplifiedExpr)>,
+    var_exprs: Vec<SimplifiedExpr>,
     expr_to_var: HashMap<ExprKey, VarId>,
     simplified_exprs: HashMap<ExprKey, SimplifiedExpr>,
 }
@@ -75,11 +68,11 @@ impl VarForm {
             let simplified_expr = var_form.map_expr((**expr).clone());
 
             if Self::needs_var(count, expr) {
-                let var_id = VarId(var_form.var_exprs.len());
+                let var_id = var_form.var_exprs.len();
 
                 println!("{:?} {} = {}", var_id, expr.ty(), simplified_expr);
 
-                var_form.var_exprs.push((var_id, simplified_expr));
+                var_form.var_exprs.push(simplified_expr);
                 var_form.expr_to_var.insert(key, var_id);
             } else {
                 var_form.simplified_exprs.insert(key, simplified_expr);
@@ -96,7 +89,7 @@ impl VarForm {
         var_form
     }
 
-    pub fn var_exprs(&self) -> &[(VarId, SimplifiedExpr)] {
+    pub fn var_exprs(&self) -> &[SimplifiedExpr] {
         &self.var_exprs
     }
 

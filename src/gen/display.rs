@@ -22,7 +22,7 @@ fn write_call(
 }
 
 fn write_var_name(f: &mut impl fmt::Write, id: VarId) -> Result<(), fmt::Error> {
-    write!(f, "var_{}", id.index())
+    write!(f, "var_{}", id)
 }
 
 impl fmt::Display for SimplifiedExpr {
