@@ -151,7 +151,7 @@ impl VarForm {
             },
             Expr::Field { base, name, ty } => SimplifiedExpr::Field {
                 base: Box::new(map_pred(base)),
-                name: name,
+                name,
                 ty,
             },
             Expr::Branch { cond, yes, no, ty } => SimplifiedExpr::Branch {
@@ -246,7 +246,7 @@ fn topological_ordering(roots: &[Rc<Expr>]) -> Vec<Rc<Expr>> {
     let mut output = Vec::new();
 
     for root in roots {
-        visit(&root, &mut permanent_mark, &mut temporary_mark, &mut output);
+        visit(root, &mut permanent_mark, &mut temporary_mark, &mut output);
     }
 
     output
