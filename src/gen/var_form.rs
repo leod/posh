@@ -56,7 +56,7 @@ impl VarId {
 
 #[derive(Default)]
 pub struct VarForm {
-    var_exprs: Vec<SimplifiedExpr>,
+    var_exprs: Vec<(VarId, SimplifiedExpr)>,
     expr_to_var: HashMap<ExprKey, VarId>,
     simplified_exprs: HashMap<ExprKey, SimplifiedExpr>,
 }
@@ -79,7 +79,7 @@ impl VarForm {
 
                 println!("{:?} {} = {}", var_id, expr.ty(), simplified_expr);
 
-                var_form.var_exprs.push(simplified_expr);
+                var_form.var_exprs.push((var_id, simplified_expr));
                 var_form.expr_to_var.insert(key, var_id);
             } else {
                 var_form.simplified_exprs.insert(key, simplified_expr);
@@ -96,7 +96,7 @@ impl VarForm {
         var_form
     }
 
-    pub fn var_exprs(&self) -> &[SimplifiedExpr] {
+    pub fn var_exprs(&self) -> &[(VarId, SimplifiedExpr)] {
         &self.var_exprs
     }
 
@@ -161,47 +161,6 @@ impl VarForm {
                 ty,
             },
         }
-
-        /*let simplified_expr = match expr {
-            expr @ Expr::Arg { .. } | expr @ ScalarLiteral { .. } => expr,
-            StructLiteral { args, ty } => StructLiteral {
-                args: args.into_iter().map(map_pred).collect(),
-                ty,
-            },
-            Binary {
-                left,
-                op,
-                right,
-                ty,
-            } => Binary {
-                left: map_pred(left),
-                op,
-                right: map_pred(right),
-                ty,
-            },
-            CallFuncDef { .. } => todo!(),
-            CallBuiltIn { name, args, ty } => CallBuiltIn {
-                name,
-                args: args.into_iter().map(map_pred).collect(),
-                ty,
-            },
-            Field { base, name, ty } => Field {
-                base: map_pred(base),
-                name,
-                ty,
-            },
-            Branch { cond, yes, no, ty } => Branch {
-                cond: map_pred(cond),
-                yes: map_pred(yes),
-                no: map_pred(no),
-                ty,
-            },
-        };
-
-        SimplifiedExpr {
-            expr: simplified_expr,
-            deps,
-        }*/
     }
 
     fn needs_var(count: usize, expr: &Expr) -> bool {
@@ -223,8 +182,7 @@ fn predecessors(expr: &Expr, mut f: impl FnMut(&Rc<Expr>)) {
     use Expr::*;
 
     match expr {
-        Arg { .. } => (),
-        ScalarLiteral { .. } => (),
+        Arg { .. } | ScalarLiteral { .. } => (),
         StructLiteral { args, .. } => {
             for arg in args {
                 f(arg);
@@ -277,8 +235,6 @@ fn visit(
         visit(pred, permanent_mark, temporary_mark, output)
     });
 
-    //println!("{}: {} @ {:?}", output.len(), node, key);
-
     temporary_mark.remove(&key);
     permanent_mark.insert(key);
     output.push(node.clone());
@@ -292,12 +248,6 @@ fn topological_ordering(roots: &[Rc<Expr>]) -> Vec<Rc<Expr>> {
     for root in roots {
         visit(&root, &mut permanent_mark, &mut temporary_mark, &mut output);
     }
-
-    /*output
-    .into_iter()
-    .enumerate()
-    .map(|(index, key)| (key, index))
-    .collect()*/
 
     output
 }
