@@ -40,8 +40,8 @@ impl fmt::Display for Expr {
         use Expr::*;
 
         match self {
-            Arg { name, .. } => f.write_str(&name),
-            ScalarLiteral { value, .. } => f.write_str(&value),
+            Arg { name, .. } => f.write_str(name),
+            ScalarLiteral { value, .. } => f.write_str(value),
             StructLiteral { args, ty } => write_call(f, ty.name, args),
             Binary {
                 left, op, right, ..

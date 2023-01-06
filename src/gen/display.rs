@@ -30,8 +30,8 @@ impl fmt::Display for SimplifiedExpr {
         use SimplifiedExpr::*;
 
         match self {
-            Arg { name, .. } => f.write_str(&name),
-            ScalarLiteral { value, .. } => f.write_str(&value),
+            Arg { name, .. } => f.write_str(name),
+            ScalarLiteral { value, .. } => f.write_str(value),
             Binary {
                 left, op, right, ..
             } => write!(f, "({left} {op} {right})"),
