@@ -1,9 +1,9 @@
-mod expr;
+mod display;
 mod scope_form;
 mod var_form;
 
 pub use scope_form::{Scope, ScopeForm};
-pub use var_form::{Var, VarForm, VarId};
+pub use var_form::{SimplifiedExpr, VarForm, VarId};
 
 use std::rc::Rc;
 

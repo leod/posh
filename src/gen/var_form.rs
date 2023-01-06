@@ -3,28 +3,60 @@ use std::{
     rc::Rc,
 };
 
-use crate::dag::Expr;
+use crate::dag::{BaseType, BinaryOp, Expr, PrimitiveType, Type};
 
 use super::ExprKey;
+
+#[derive(Debug, Clone)]
+pub enum SimplifiedExpr {
+    Branch {
+        cond: Box<SimplifiedExpr>,
+        yes: Box<SimplifiedExpr>,
+        no: Box<SimplifiedExpr>,
+        ty: Type,
+    },
+    Arg {
+        name: String,
+        ty: Type,
+    },
+    ScalarLiteral {
+        value: String,
+        ty: PrimitiveType,
+    },
+    Binary {
+        left: Box<SimplifiedExpr>,
+        op: BinaryOp,
+        right: Box<SimplifiedExpr>,
+        ty: Type,
+    },
+    CallFunc {
+        name: String,
+        args: Vec<SimplifiedExpr>,
+        ty: Type,
+    },
+    Field {
+        base: Box<SimplifiedExpr>,
+        name: &'static str,
+        ty: Type,
+    },
+    Var {
+        id: VarId,
+        ty: Type,
+    },
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct VarId(usize);
 
-#[derive(Debug, Clone)]
-pub struct Var {
-    pub name: String,
-    pub simplified_expr: SimplifiedExpr,
-}
-
-#[derive(Debug, Clone)]
-pub struct SimplifiedExpr {
-    pub expr: Expr,
-    pub deps: HashSet<VarId>,
+impl VarId {
+    pub fn index(self) -> usize {
+        self.0
+    }
 }
 
 #[derive(Default)]
 pub struct VarForm {
-    vars: Vec<Var>,
+    var_exprs: Vec<SimplifiedExpr>,
     expr_to_var: HashMap<ExprKey, VarId>,
     simplified_exprs: HashMap<ExprKey, SimplifiedExpr>,
 }
@@ -43,35 +75,12 @@ impl VarForm {
             let simplified_expr = var_form.map_expr((**expr).clone());
 
             if Self::needs_var(count, expr) {
-                let name = var_name(var_form.expr_to_var.len());
+                let var_id = VarId(var_form.var_exprs.len());
 
-                let var_id = VarId(var_form.vars.len());
-                let var = Var {
-                    name: name.clone(),
-                    simplified_expr: simplified_expr.clone(),
-                };
+                println!("{:?} {} = {}", var_id, expr.ty(), simplified_expr);
 
-                println!(
-                    "{} {} = {}: {:?} @ {:?}",
-                    expr.ty(),
-                    name,
-                    simplified_expr.expr,
-                    simplified_expr.deps,
-                    var_id,
-                );
-
-                var_form.vars.push(var);
+                var_form.var_exprs.push(simplified_expr);
                 var_form.expr_to_var.insert(key, var_id);
-                var_form.simplified_exprs.insert(
-                    key,
-                    SimplifiedExpr {
-                        expr: Expr::Arg {
-                            name,
-                            ty: simplified_expr.expr.ty(),
-                        },
-                        deps: simplified_expr.deps,
-                    },
-                );
             } else {
                 var_form.simplified_exprs.insert(key, simplified_expr);
             }
@@ -81,40 +90,82 @@ impl VarForm {
             let key = ExprKey::from(root);
             let simplified_expr = &var_form.simplified_exprs[&key];
 
-            println!("{}: {:?}", simplified_expr.expr, simplified_expr.deps);
+            println!("{}", simplified_expr);
         }
 
         var_form
     }
 
+    pub fn var_exprs(&self) -> &[SimplifiedExpr] {
+        &self.var_exprs
+    }
+
     fn map_expr(&self, expr: Expr) -> SimplifiedExpr {
-        use Expr::*;
-
-        let mut deps = HashSet::new();
-
-        let mut handle_pred = |pred: Rc<Expr>| {
+        let map_pred = |pred: Rc<Expr>| {
             let key = ExprKey::from(&pred);
 
             if let Some(&var_id) = self.expr_to_var.get(&key) {
-                deps.insert(var_id);
-
-                Rc::new(Expr::Arg {
-                    name: self.vars[var_id.0].name.clone(),
+                SimplifiedExpr::Var {
+                    id: var_id,
                     ty: pred.ty(),
-                })
-            } else if let Some(simplified_pred) = self.simplified_exprs.get(&key) {
-                deps.extend(simplified_pred.deps.iter().copied());
-
-                Rc::new(simplified_pred.expr.clone())
+                }
             } else {
-                pred.clone()
+                self.simplified_exprs[&key].clone()
             }
         };
 
-        let simplified_expr = match expr {
-            expr @ Arg { .. } | expr @ ScalarLiteral { .. } => expr,
+        match expr {
+            Expr::Arg { name, ty } => SimplifiedExpr::Arg { name, ty },
+            Expr::ScalarLiteral { value, ty } => SimplifiedExpr::ScalarLiteral { value, ty },
+            Expr::StructLiteral { args, ty } => {
+                // TODO: Resolve struct name through a prebuilt registry.
+                SimplifiedExpr::CallFunc {
+                    name: ty.name.to_string(),
+                    args: args.into_iter().map(map_pred).collect(),
+                    ty: Type::Base(BaseType::Struct(ty)),
+                }
+            }
+            Expr::Binary {
+                left,
+                op,
+                right,
+                ty,
+            } => SimplifiedExpr::Binary {
+                left: Box::new(map_pred(left)),
+                op,
+                right: Box::new(map_pred(right)),
+                ty,
+            },
+            Expr::CallFuncDef { def, args } => {
+                // TODO: Resolve function name through a prebuilt registry.
+                SimplifiedExpr::CallFunc {
+                    name: def.name.to_string(),
+                    args: args.into_iter().map(map_pred).collect(),
+                    ty: def.result.ty(),
+                }
+            }
+            Expr::CallBuiltIn { name, args, ty } => SimplifiedExpr::CallFunc {
+                name: name.to_string(),
+                args: args.into_iter().map(map_pred).collect(),
+                ty,
+            },
+            Expr::Field { base, name, ty } => SimplifiedExpr::Field {
+                base: Box::new(map_pred(base)),
+                name: name,
+                ty,
+            },
+            Expr::Branch { cond, yes, no, ty } => SimplifiedExpr::Branch {
+                cond: Box::new(map_pred(cond)),
+                yes: Box::new(map_pred(yes)),
+                no: Box::new(map_pred(no)),
+                ty,
+            },
+        }
+
+        /*let simplified_expr = match expr {
+            expr @ Expr::Arg { .. } | expr @ ScalarLiteral { .. } => expr,
             StructLiteral { args, ty } => StructLiteral {
-                args: args.into_iter().map(handle_pred).collect(),
+                args: args.into_iter().map(map_pred).collect(),
                 ty,
             },
             Binary {
@@ -123,26 +174,26 @@ impl VarForm {
                 right,
                 ty,
             } => Binary {
-                left: handle_pred(left),
+                left: map_pred(left),
                 op,
-                right: handle_pred(right),
+                right: map_pred(right),
                 ty,
             },
             CallFuncDef { .. } => todo!(),
             CallBuiltIn { name, args, ty } => CallBuiltIn {
                 name,
-                args: args.into_iter().map(handle_pred).collect(),
+                args: args.into_iter().map(map_pred).collect(),
                 ty,
             },
             Field { base, name, ty } => Field {
-                base: handle_pred(base),
+                base: map_pred(base),
                 name,
                 ty,
             },
             Branch { cond, yes, no, ty } => Branch {
-                cond: handle_pred(cond),
-                yes: handle_pred(yes),
-                no: handle_pred(no),
+                cond: map_pred(cond),
+                yes: map_pred(yes),
+                no: map_pred(no),
                 ty,
             },
         };
@@ -150,7 +201,7 @@ impl VarForm {
         SimplifiedExpr {
             expr: simplified_expr,
             deps,
-        }
+        }*/
     }
 
     fn needs_var(count: usize, expr: &Expr) -> bool {
@@ -166,10 +217,6 @@ impl VarForm {
             | Field { .. } => count > 1,
         }
     }
-}
-
-fn var_name(idx: usize) -> String {
-    format!("var_{idx}")
 }
 
 fn predecessors(expr: &Expr, mut f: impl FnMut(&Rc<Expr>)) {
