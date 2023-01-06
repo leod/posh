@@ -9,64 +9,24 @@ use super::ExprKey;
 
 #[derive(Debug, Clone)]
 pub struct Var {
-    name: String,
-    expr: Expr,
+    pub name: String,
+    pub expr: SimplifiedExpr,
+}
+
+#[derive(Debug, Clone)]
+pub struct SimplifiedExpr {
+    pub expr: Expr,
+    pub deps: HashSet<ExprKey>,
 }
 
 #[derive(Default)]
 pub struct VarForm {
     vars: HashMap<ExprKey, Var>,
+    simplified_exprs: HashMap<ExprKey, SimplifiedExpr>,
 }
 
 fn var_name(idx: usize) -> String {
     format!("var_{idx}")
-}
-
-fn map_expr(expr: Expr, map: &HashMap<ExprKey, Expr>) -> Expr {
-    use Expr::*;
-
-    let lookup = |node: Rc<Expr>| {
-        let key = ExprKey::from(&node);
-        map.get(&key)
-            .cloned()
-            .map_or(node, |mapped_expr| Rc::new(mapped_expr))
-    };
-
-    match expr {
-        expr @ Arg { .. } | expr @ ScalarLiteral { .. } => expr,
-        StructLiteral { args, ty } => StructLiteral {
-            args: args.into_iter().map(lookup).collect(),
-            ty,
-        },
-        Binary {
-            left,
-            op,
-            right,
-            ty,
-        } => Binary {
-            left: lookup(left),
-            op,
-            right: lookup(right),
-            ty,
-        },
-        CallFuncDef { .. } => todo!(),
-        CallBuiltIn { name, args, ty } => CallBuiltIn {
-            name,
-            args: args.into_iter().map(lookup).collect(),
-            ty,
-        },
-        Field { base, name, ty } => Field {
-            base: lookup(base),
-            name,
-            ty,
-        },
-        Branch { cond, yes, no, ty } => Branch {
-            cond: lookup(cond),
-            yes: lookup(yes),
-            no: lookup(no),
-            ty,
-        },
-    }
 }
 
 fn predecessors(expr: &Expr, mut f: impl FnMut(&Rc<Expr>)) {
@@ -165,6 +125,71 @@ pub fn count_usages(exprs: &[Rc<Expr>]) -> HashMap<ExprKey, usize> {
 }
 
 impl VarForm {
+    fn map_expr(&self, expr: Expr) -> SimplifiedExpr {
+        use Expr::*;
+
+        let mut deps = HashSet::new();
+
+        let mut handle_pred = |pred: Rc<Expr>| {
+            let key = ExprKey::from(&pred);
+
+            if self.vars.contains_key(&key) {
+                deps.insert(key);
+            }
+
+            let simplified_pred = self.simplified_exprs.get(&key);
+
+            if let Some(simplified_pred) = simplified_pred {
+                deps.extend(simplified_pred.deps.iter().copied());
+
+                Rc::new(simplified_pred.expr.clone())
+            } else {
+                pred.clone()
+            }
+        };
+
+        let simplified_expr = match expr {
+            expr @ Arg { .. } | expr @ ScalarLiteral { .. } => expr,
+            StructLiteral { args, ty } => StructLiteral {
+                args: args.into_iter().map(handle_pred).collect(),
+                ty,
+            },
+            Binary {
+                left,
+                op,
+                right,
+                ty,
+            } => Binary {
+                left: handle_pred(left),
+                op,
+                right: handle_pred(right),
+                ty,
+            },
+            CallFuncDef { .. } => todo!(),
+            CallBuiltIn { name, args, ty } => CallBuiltIn {
+                name,
+                args: args.into_iter().map(handle_pred).collect(),
+                ty,
+            },
+            Field { base, name, ty } => Field {
+                base: handle_pred(base),
+                name,
+                ty,
+            },
+            Branch { cond, yes, no, ty } => Branch {
+                cond: handle_pred(cond),
+                yes: handle_pred(yes),
+                no: handle_pred(no),
+                ty,
+            },
+        };
+
+        SimplifiedExpr {
+            expr: simplified_expr,
+            deps,
+        }
+    }
+
     fn needs_var(count: usize, expr: &Expr) -> bool {
         use Expr::*;
 
@@ -180,8 +205,7 @@ impl VarForm {
     }
 
     pub fn new(roots: &[Rc<Expr>]) -> Self {
-        let mut scope = Self::default();
-        let mut simplified_exprs = HashMap::new();
+        let mut var_form = Self::default();
 
         let topo = topological_ordering(roots);
         let usages = count_usages(&topo);
@@ -190,38 +214,48 @@ impl VarForm {
             let key = ExprKey::from(expr);
             let count = usages.get(&key).copied().unwrap_or(0);
 
-            let simplified_expr = map_expr((**expr).clone(), &simplified_exprs);
+            let simplified_expr = var_form.map_expr((**expr).clone());
 
             if Self::needs_var(count, expr) {
-                let name = var_name(scope.vars.len());
+                let name = var_name(var_form.vars.len());
 
-                println!("{} {} = {}", expr.ty(), name, simplified_expr);
+                println!(
+                    "{} {} = {}: {:?} @ {:?}",
+                    expr.ty(),
+                    name,
+                    simplified_expr.expr,
+                    simplified_expr.deps,
+                    key,
+                );
 
                 let var_expr = Var {
                     name: name.clone(),
                     expr: simplified_expr.clone(),
                 };
 
-                scope.vars.insert(key, var_expr.clone());
-                simplified_exprs.insert(
+                var_form.vars.insert(key, var_expr.clone());
+                var_form.simplified_exprs.insert(
                     key,
-                    Expr::Arg {
-                        name,
-                        ty: simplified_expr.ty(),
+                    SimplifiedExpr {
+                        expr: Expr::Arg {
+                            name,
+                            ty: simplified_expr.expr.ty(),
+                        },
+                        deps: HashSet::new(),
                     },
                 );
             } else {
-                simplified_exprs.insert(key, simplified_expr);
+                var_form.simplified_exprs.insert(key, simplified_expr);
             }
         }
 
         for root in roots {
             let key = ExprKey::from(root);
-            let simplified_expr = &simplified_exprs[&key];
+            let simplified_expr = &var_form.simplified_exprs[&key];
 
-            println!("{simplified_expr}");
+            println!("{}: {:?}", simplified_expr.expr, simplified_expr.deps);
         }
 
-        scope
+        var_form
     }
 }
