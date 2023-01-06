@@ -2,8 +2,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::{SimplifiedExpr, VarForm, VarId};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct ScopeId(usize);
+pub type ScopeId = usize;
 
 pub struct Scope {
     pub expr: Box<SimplifiedExpr>,
@@ -16,12 +15,11 @@ impl ScopeForm {
         let mut scopes = BTreeMap::new();
 
         let mut add_scope = |scope: Scope| {
-            let scope_id = ScopeId(scopes.len());
-
+            let scope_id = scopes.len();
             scopes.insert(scope_id, scope);
         };
 
-        for (_, var_expr) in var_form.var_exprs() {
+        for (var_id, var_expr) in var_form.var_exprs().iter().enumerate() {
             use SimplifiedExpr::*;
 
             match var_expr {
@@ -36,13 +34,18 @@ impl ScopeForm {
                 | Field { .. }
                 | Var { .. } => (),
             }
+
+            let mut deps = BTreeSet::new();
+            collect_deps(&var_expr, &mut deps);
+
+            println!("var {} = {} @ {:?}", var_id, var_expr, deps);
         }
 
         for (scope_id, scope) in scopes.iter() {
             let mut deps = BTreeSet::new();
             collect_deps(&scope.expr, &mut deps);
 
-            println!("{}: {} @ {:?}", scope_id.0, scope.expr, deps);
+            println!("scope {}: {} @ {:?}", scope_id, scope.expr, deps);
         }
 
         todo!()
