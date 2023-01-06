@@ -1,8 +1,11 @@
-pub mod expr;
-pub mod scope;
-pub mod topo;
+mod expr;
+mod scope;
+mod var_form;
 
-use std::{fmt, rc::Rc};
+pub use scope::Scope;
+pub use var_form::{Var, VarForm};
+
+use std::rc::Rc;
 
 use crate::dag::Expr;
 
