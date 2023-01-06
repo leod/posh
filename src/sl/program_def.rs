@@ -1,6 +1,10 @@
 use std::marker::PhantomData;
 
-use crate::{gen::VarForm, sl::Object, FragmentInterface, ResourceInterface, Sl, VertexInterface};
+use crate::{
+    gen::{ScopeForm, VarForm},
+    sl::Object,
+    FragmentInterface, ResourceInterface, Sl, VertexInterface,
+};
 
 use super::{primitives::value_arg, Bool, Varying, Vec2, Vec4, F32, U32};
 
@@ -71,7 +75,9 @@ where
 
         //let topo = crate::gen::topo::topological_ordering(&[vertex_output.position.expr()]);
 
-        let scope = VarForm::new(&[vertex_output.position.expr()]);
+        let var_form = VarForm::new(&[vertex_output.position.expr()]);
+        println!("----------");
+        let scope_form = ScopeForm::from_var_form(var_form);
 
         Self {
             _phantom: PhantomData,
