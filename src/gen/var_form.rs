@@ -94,13 +94,13 @@ impl VarForm {
     }
 
     fn map_expr(&self, expr: Expr) -> SimplifiedExpr {
-        let map_pred = |pred: Rc<Expr>| {
-            let key = ExprKey::from(&pred);
+        let map_succ = |succ: Rc<Expr>| {
+            let key = ExprKey::from(&succ);
 
             if let Some(&var_id) = self.expr_to_var.get(&key) {
                 SimplifiedExpr::Var {
                     id: var_id,
-                    ty: pred.ty(),
+                    ty: succ.ty(),
                 }
             } else {
                 self.simplified_exprs[&key].clone()
@@ -114,7 +114,7 @@ impl VarForm {
                 // TODO: Resolve struct name through a prebuilt registry.
                 SimplifiedExpr::CallFunc {
                     name: ty.name.to_string(),
-                    args: args.into_iter().map(map_pred).collect(),
+                    args: args.into_iter().map(map_succ).collect(),
                     ty: Type::Base(BaseType::Struct(ty)),
                 }
             }
@@ -124,33 +124,33 @@ impl VarForm {
                 right,
                 ty,
             } => SimplifiedExpr::Binary {
-                left: Box::new(map_pred(left)),
+                left: Box::new(map_succ(left)),
                 op,
-                right: Box::new(map_pred(right)),
+                right: Box::new(map_succ(right)),
                 ty,
             },
             Expr::CallFuncDef { def, args } => {
                 // TODO: Resolve function name through a prebuilt registry.
                 SimplifiedExpr::CallFunc {
                     name: def.name.to_string(),
-                    args: args.into_iter().map(map_pred).collect(),
+                    args: args.into_iter().map(map_succ).collect(),
                     ty: def.result.ty(),
                 }
             }
             Expr::CallBuiltIn { name, args, ty } => SimplifiedExpr::CallFunc {
                 name: name.to_string(),
-                args: args.into_iter().map(map_pred).collect(),
+                args: args.into_iter().map(map_succ).collect(),
                 ty,
             },
             Expr::Field { base, name, ty } => SimplifiedExpr::Field {
-                base: Box::new(map_pred(base)),
+                base: Box::new(map_succ(base)),
                 name,
                 ty,
             },
             Expr::Branch { cond, yes, no, ty } => SimplifiedExpr::Branch {
-                cond: Box::new(map_pred(cond)),
-                yes: Box::new(map_pred(yes)),
-                no: Box::new(map_pred(no)),
+                cond: Box::new(map_succ(cond)),
+                yes: Box::new(map_succ(yes)),
+                no: Box::new(map_succ(no)),
                 ty,
             },
         }
@@ -171,7 +171,7 @@ impl VarForm {
     }
 }
 
-fn predecessors(expr: &Expr, mut f: impl FnMut(&Rc<Expr>)) {
+fn successors(expr: &Expr, mut f: impl FnMut(&Rc<Expr>)) {
     use Expr::*;
 
     match expr {
@@ -224,8 +224,8 @@ fn visit(
 
     temporary_mark.insert(key);
 
-    predecessors(node, |pred| {
-        visit(pred, permanent_mark, temporary_mark, output)
+    successors(node, |succ| {
+        visit(succ, permanent_mark, temporary_mark, output)
     });
 
     temporary_mark.remove(&key);
@@ -249,8 +249,8 @@ fn count_usages(exprs: &[Rc<Expr>]) -> HashMap<ExprKey, usize> {
     let mut usages = HashMap::new();
 
     for expr in exprs {
-        predecessors(expr, |pred| {
-            *usages.entry(pred.into()).or_insert(0) += 1;
+        successors(expr, |succ| {
+            *usages.entry(succ.into()).or_insert(0) += 1;
         })
     }
 

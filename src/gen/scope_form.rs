@@ -4,7 +4,14 @@ use super::{SimplifiedExpr, VarForm, VarId};
 
 pub type ScopeId = usize;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+enum NodeId {
+    Var(VarId),
+    Scope(ScopeId),
+}
+
 pub struct Scope {
+    pub pred_var_id: VarId,
     pub expr: Box<SimplifiedExpr>,
 }
 
@@ -12,10 +19,19 @@ pub struct ScopeForm {}
 
 impl ScopeForm {
     pub fn from_var_form(var_form: VarForm) -> Self {
-        let mut scopes = BTreeMap::new();
+        let mut scopes: BTreeMap<ScopeId, Scope> = BTreeMap::new();
+        let mut preds: BTreeMap<VarId, BTreeSet<NodeId>> = BTreeMap::new();
 
-        let mut add_scope = |scope: Scope| {
+        let mut add_scope = |scope: Scope, preds: &mut BTreeMap<VarId, BTreeSet<NodeId>>| {
             let scope_id = scopes.len();
+
+            successors(&scope.expr, &mut |succ| {
+                preds
+                    .entry(succ)
+                    .or_default()
+                    .insert(NodeId::Scope(scope_id));
+            });
+
             scopes.insert(scope_id, scope);
         };
 
@@ -24,8 +40,20 @@ impl ScopeForm {
 
             match var_expr {
                 Branch { yes, no, .. } => {
-                    add_scope(Scope { expr: yes.clone() });
-                    add_scope(Scope { expr: no.clone() });
+                    add_scope(
+                        Scope {
+                            pred_var_id: var_id,
+                            expr: yes.clone(),
+                        },
+                        &mut preds,
+                    );
+                    add_scope(
+                        Scope {
+                            pred_var_id: var_id,
+                            expr: no.clone(),
+                        },
+                        &mut preds,
+                    );
                 }
                 Arg { .. }
                 | ScalarLiteral { .. }
@@ -35,47 +63,51 @@ impl ScopeForm {
                 | Var { .. } => (),
             }
 
-            let mut deps = BTreeSet::new();
-            collect_deps(&var_expr, &mut deps);
+            //println!("var {} = {} @ {:?}", var_id, var_expr, deps);
 
-            println!("var {} = {} @ {:?}", var_id, var_expr, deps);
+            successors(&var_expr, &mut |succ| {
+                preds.entry(succ).or_default().insert(NodeId::Var(var_id));
+            });
         }
+
+        println!("preds = {preds:#?}");
 
         for (scope_id, scope) in scopes.iter() {
-            let mut deps = BTreeSet::new();
-            collect_deps(&scope.expr, &mut deps);
-
-            println!("scope {}: {} @ {:?}", scope_id, scope.expr, deps);
+            println!(
+                "scope {} in var {}: {}",
+                scope_id, scope.pred_var_id, scope.expr,
+            );
         }
+
+        // scope id -> var id
+        // var id -> var id
 
         todo!()
     }
 }
 
-fn collect_deps(expr: &SimplifiedExpr, deps: &mut BTreeSet<VarId>) {
+fn successors(expr: &SimplifiedExpr, f: &mut impl FnMut(VarId)) {
     use SimplifiedExpr::*;
 
     match expr {
-        Branch { cond, yes, no, .. } => {
-            collect_deps(cond, deps);
-            collect_deps(yes, deps);
-            collect_deps(no, deps);
+        Branch { cond, .. } => {
+            successors(cond, f);
         }
         Arg { .. } | ScalarLiteral { .. } => (),
         Binary { left, right, .. } => {
-            collect_deps(left, deps);
-            collect_deps(right, deps);
+            successors(left, f);
+            successors(right, f);
         }
         CallFunc { args, .. } => {
             for arg in args {
-                collect_deps(arg, deps);
+                successors(arg, f);
             }
         }
         Field { base, .. } => {
-            collect_deps(base, deps);
+            successors(base, f);
         }
         Var { id, .. } => {
-            deps.insert(*id);
+            f(*id);
         }
     }
 }
