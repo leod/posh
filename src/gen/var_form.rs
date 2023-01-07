@@ -89,8 +89,11 @@ impl VarForm {
         var_form
     }
 
-    pub fn var_exprs(&self) -> &[SimplifiedExpr] {
-        &self.var_exprs
+    // TODO: The `VarForm` API doesn't make sense, we probably only need to
+    // expose the final `Vec<SimplifiedExpr>`.
+
+    pub fn var_exprs(self) -> Vec<SimplifiedExpr> {
+        self.var_exprs
     }
 
     fn map_expr(&self, expr: Expr) -> SimplifiedExpr {
