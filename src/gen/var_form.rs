@@ -52,12 +52,15 @@ pub struct VarForm {
     var_exprs: Vec<SimplifiedExpr>,
     expr_to_var: HashMap<ExprKey, VarId>,
     simplified_exprs: HashMap<ExprKey, SimplifiedExpr>,
-    simplified_roots: Vec<SimplifiedExpr>,
+    roots: Vec<ExprKey>,
 }
 
 impl VarForm {
     pub fn new(roots: &[Rc<Expr>]) -> Self {
-        let mut var_form = Self::default();
+        let mut var_form = Self {
+            roots: roots.iter().map(ExprKey::from).collect(),
+            ..Self::default()
+        };
 
         let topo = topological_ordering(roots);
         let usages = count_usages(&topo);
@@ -80,19 +83,18 @@ impl VarForm {
             }
         }
 
-        var_form.simplified_roots = roots
-            .iter()
-            .map(|root| {
-                let key = ExprKey::from(root);
-                var_form.simplified_exprs[&key].clone()
-            })
-            .collect();
-
         var_form
     }
 
     pub fn var_exprs(&self) -> &[SimplifiedExpr] {
         &self.var_exprs
+    }
+
+    pub fn simplified_roots(&self) -> Vec<&SimplifiedExpr> {
+        self.roots
+            .iter()
+            .map(|root| &self.simplified_exprs[root])
+            .collect()
     }
 
     fn map_expr(&self, expr: Expr) -> SimplifiedExpr {
