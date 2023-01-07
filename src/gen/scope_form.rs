@@ -31,6 +31,7 @@ struct Graph<'a> {
     scopes: BTreeMap<ScopeId, Scope<'a>>,
     preds: BTreeMap<VarId, BTreeSet<NodeId>>,
     var_inits: BTreeMap<VarId, VarInit<'a>>,
+    root_scope_id: ScopeId,
 }
 
 impl<'a> Graph<'a> {
@@ -51,7 +52,7 @@ impl<'a> Graph<'a> {
         scope_id
     }
 
-    fn new(var_form: &VarForm) -> Self {
+    fn new(var_form: &'a VarForm) -> Self {
         let mut graph = Self::default();
 
         for (var_id, var_expr) in var_form.var_exprs().iter().enumerate() {
@@ -98,11 +99,50 @@ impl<'a> Graph<'a> {
             graph.var_inits.insert(var_id, var_init);
         }
 
-        let root_scope_id = graph.add_scope(Scope {
+        graph.root_scope_id = graph.add_scope(Scope {
             pred_var_id: None,
             exprs: var_form.simplified_roots().to_vec(),
             vars: BTreeMap::new(),
         });
+
+        graph
+    }
+
+    fn find_scope_depths(
+        &self,
+        scope_id: ScopeId,
+        depth: usize,
+        depths: &mut BTreeMap<ScopeId, usize>,
+    ) {
+        use VarInit::*;
+
+        depths.insert(scope_id, depth);
+
+        let scope = &self.scopes[&scope_id];
+
+        for (var_id, var_init) in &scope.vars {
+            match var_init {
+                Expr(_) => (),
+                Branch {
+                    yes_scope_id,
+                    no_scope_id,
+                    ..
+                } => {
+                    self.find_scope_depths(*yes_scope_id, depth + 1, depths);
+                    self.find_scope_depths(*no_scope_id, depth + 1, depths);
+                }
+            }
+        }
+    }
+}
+
+pub struct ScopeForm<'a> {
+    var_form: &'a VarForm,
+}
+
+impl<'a> ScopeForm<'a> {
+    pub fn new(var_form: &VarForm) -> Self {
+        let graph = Graph::new(&var_form);
 
         for (scope_id, scope) in graph.scopes.iter() {
             println!(
@@ -115,17 +155,10 @@ impl<'a> Graph<'a> {
             println!("var {} preds: {:?}", var_id, var_preds);
         }
 
-        todo!()
-    }
-}
+        let mut scope_depths = BTreeMap::new();
+        let scope_depths = graph.find_scope_depths(graph.root_scope_id, 0, &mut scope_depths);
 
-pub struct ScopeForm<'a> {
-    var_form: &'a VarForm,
-}
-
-impl<'a> ScopeForm<'a> {
-    pub fn new(var_form: &VarForm) -> Self {
-        let graph = Graph::new(&var_form);
+        println!("scope depths: {scope_depths:?}");
 
         todo!()
     }
