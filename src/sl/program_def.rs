@@ -77,7 +77,7 @@ where
 
         let var_form = VarForm::new(&[vertex_output.position.expr()]);
         println!("----------");
-        let scope_form = ScopeForm::from_var_form(var_form);
+        let scope_form = ScopeForm::new(&var_form);
 
         Self {
             _phantom: PhantomData,

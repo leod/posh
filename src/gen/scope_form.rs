@@ -21,8 +21,8 @@ pub enum VarInit<'a> {
 }
 
 pub struct Scope<'a> {
-    pub pred_var_id: VarId,
-    pub expr: &'a SimplifiedExpr,
+    pub pred_var_id: Option<VarId>,
+    pub exprs: Vec<&'a SimplifiedExpr>,
     pub vars: BTreeMap<VarId, VarInit<'a>>,
 }
 
@@ -34,15 +34,17 @@ struct Graph<'a> {
 }
 
 impl<'a> Graph<'a> {
-    fn add_scope(&mut self, scope: Scope) -> usize {
+    fn add_scope(&mut self, scope: Scope<'a>) -> usize {
         let scope_id = self.scopes.len();
 
-        successors(&scope.expr, &mut |succ| {
-            self.preds
-                .entry(succ)
-                .or_default()
-                .insert(NodeId::Scope(scope_id));
-        });
+        for succ in &scope.exprs {
+            successors(succ, &mut |succ| {
+                self.preds
+                    .entry(succ)
+                    .or_default()
+                    .insert(NodeId::Scope(scope_id));
+            });
+        }
 
         self.scopes.insert(scope_id, scope);
 
@@ -68,14 +70,14 @@ impl<'a> Graph<'a> {
             let var_init = match var_expr {
                 Branch { cond, yes, no, .. } => {
                     let yes_scope_id = graph.add_scope(Scope {
-                        pred_var_id: var_id,
-                        expr: yes,
+                        pred_var_id: Some(var_id),
+                        exprs: vec![yes],
                         vars: BTreeMap::new(),
                     });
 
                     let no_scope_id = graph.add_scope(Scope {
-                        pred_var_id: var_id,
-                        expr: no,
+                        pred_var_id: Some(var_id),
+                        exprs: vec![no],
                         vars: BTreeMap::new(),
                     });
 
@@ -96,11 +98,21 @@ impl<'a> Graph<'a> {
             graph.var_inits.insert(var_id, var_init);
         }
 
+        let root_scope_id = graph.add_scope(Scope {
+            pred_var_id: None,
+            exprs: var_form.simplified_roots().to_vec(),
+            vars: BTreeMap::new(),
+        });
+
         for (scope_id, scope) in graph.scopes.iter() {
             println!(
-                "scope {} in var {}: {}",
-                scope_id, scope.pred_var_id, scope.expr,
+                "scope {} in var {:?}: {}",
+                scope_id, scope.pred_var_id, scope.exprs[0],
             );
+        }
+
+        for (var_id, var_preds) in graph.preds.iter() {
+            println!("var {} preds: {:?}", var_id, var_preds);
         }
 
         todo!()
