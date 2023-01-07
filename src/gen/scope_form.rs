@@ -26,60 +26,61 @@ pub struct Scope {
     pub vars: BTreeMap<VarId, VarInit>,
 }
 
-pub struct ScopeForm {}
+#[derive(Default)]
+struct Graph {
+    scopes: BTreeMap<ScopeId, Scope>,
+    preds: BTreeMap<VarId, BTreeSet<NodeId>>,
+    var_inits: BTreeMap<VarId, VarInit>,
+}
 
-impl ScopeForm {
-    pub fn from_var_form(var_form: VarForm) -> Self {
-        let mut scopes: BTreeMap<ScopeId, Scope> = BTreeMap::new();
-        let mut preds: BTreeMap<VarId, BTreeSet<NodeId>> = BTreeMap::new();
-        let mut var_inits: BTreeMap<VarId, VarInit> = BTreeMap::new();
+impl Graph {
+    fn add_scope(&mut self, scope: Scope) -> usize {
+        let scope_id = self.scopes.len();
 
-        let mut add_scope = |scope: Scope, preds: &mut BTreeMap<VarId, BTreeSet<NodeId>>| {
-            let scope_id = scopes.len();
+        successors(&scope.expr, &mut |succ| {
+            self.preds
+                .entry(succ)
+                .or_default()
+                .insert(NodeId::Scope(scope_id));
+        });
 
-            successors(&scope.expr, &mut |succ| {
-                preds
-                    .entry(succ)
-                    .or_default()
-                    .insert(NodeId::Scope(scope_id));
-            });
+        self.scopes.insert(scope_id, scope);
 
-            scopes.insert(scope_id, scope);
+        scope_id
+    }
 
-            scope_id
-        };
+    fn new(var_form: &VarForm) -> Self {
+        let mut graph = Self::default();
 
-        for (var_id, var_expr) in var_form.var_exprs().into_iter().enumerate() {
+        for (var_id, var_expr) in var_form.var_exprs().iter().enumerate() {
             use SimplifiedExpr::*;
 
             //println!("var {} = {} @ {:?}", var_id, var_expr, deps);
 
             successors(&var_expr, &mut |succ| {
-                preds.entry(succ).or_default().insert(NodeId::Var(var_id));
+                graph
+                    .preds
+                    .entry(succ)
+                    .or_default()
+                    .insert(NodeId::Var(var_id));
             });
 
             let var_init = match var_expr {
                 Branch { cond, yes, no, .. } => {
-                    let yes_scope_id = add_scope(
-                        Scope {
-                            pred_var_id: var_id,
-                            expr: yes.clone(),
-                            vars: BTreeMap::new(),
-                        },
-                        &mut preds,
-                    );
+                    let yes_scope_id = graph.add_scope(Scope {
+                        pred_var_id: var_id,
+                        expr: yes.clone(),
+                        vars: BTreeMap::new(),
+                    });
 
-                    let no_scope_id = add_scope(
-                        Scope {
-                            pred_var_id: var_id,
-                            expr: no.clone(),
-                            vars: BTreeMap::new(),
-                        },
-                        &mut preds,
-                    );
+                    let no_scope_id = graph.add_scope(Scope {
+                        pred_var_id: var_id,
+                        expr: no.clone(),
+                        vars: BTreeMap::new(),
+                    });
 
                     VarInit::Branch {
-                        cond: *cond,
+                        cond: (**cond).clone(),
                         yes_scope_id,
                         no_scope_id,
                     }
@@ -89,23 +90,28 @@ impl ScopeForm {
                 | Binary { .. }
                 | CallFunc { .. }
                 | Field { .. }
-                | Var { .. } => VarInit::Expr(var_expr),
+                | Var { .. } => VarInit::Expr((*var_expr).clone()),
             };
 
-            var_inits.insert(var_id, var_init);
+            graph.var_inits.insert(var_id, var_init);
         }
 
-        println!("preds = {preds:#?}");
-
-        for (scope_id, scope) in scopes.iter() {
+        for (scope_id, scope) in graph.scopes.iter() {
             println!(
                 "scope {} in var {}: {}",
                 scope_id, scope.pred_var_id, scope.expr,
             );
         }
 
-        // scope id -> var id
-        // var id -> var id
+        todo!()
+    }
+}
+
+pub struct ScopeForm {}
+
+impl ScopeForm {
+    pub fn from_var_form(var_form: VarForm) -> Self {
+        let graph = Graph::new(&var_form);
 
         todo!()
     }
