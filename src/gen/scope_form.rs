@@ -11,29 +11,29 @@ enum NodeId {
 }
 
 #[derive(Debug, Clone)]
-pub enum VarInit {
-    Expr(SimplifiedExpr),
+pub enum VarInit<'a> {
+    Expr(&'a SimplifiedExpr),
     Branch {
-        cond: SimplifiedExpr,
+        cond: &'a SimplifiedExpr,
         yes_scope_id: ScopeId,
         no_scope_id: ScopeId,
     },
 }
 
-pub struct Scope {
+pub struct Scope<'a> {
     pub pred_var_id: VarId,
-    pub expr: Box<SimplifiedExpr>,
-    pub vars: BTreeMap<VarId, VarInit>,
+    pub expr: &'a SimplifiedExpr,
+    pub vars: BTreeMap<VarId, VarInit<'a>>,
 }
 
 #[derive(Default)]
-struct Graph {
-    scopes: BTreeMap<ScopeId, Scope>,
+struct Graph<'a> {
+    scopes: BTreeMap<ScopeId, Scope<'a>>,
     preds: BTreeMap<VarId, BTreeSet<NodeId>>,
-    var_inits: BTreeMap<VarId, VarInit>,
+    var_inits: BTreeMap<VarId, VarInit<'a>>,
 }
 
-impl Graph {
+impl<'a> Graph<'a> {
     fn add_scope(&mut self, scope: Scope) -> usize {
         let scope_id = self.scopes.len();
 
@@ -69,18 +69,18 @@ impl Graph {
                 Branch { cond, yes, no, .. } => {
                     let yes_scope_id = graph.add_scope(Scope {
                         pred_var_id: var_id,
-                        expr: yes.clone(),
+                        expr: yes,
                         vars: BTreeMap::new(),
                     });
 
                     let no_scope_id = graph.add_scope(Scope {
                         pred_var_id: var_id,
-                        expr: no.clone(),
+                        expr: no,
                         vars: BTreeMap::new(),
                     });
 
                     VarInit::Branch {
-                        cond: (**cond).clone(),
+                        cond,
                         yes_scope_id,
                         no_scope_id,
                     }
@@ -90,7 +90,7 @@ impl Graph {
                 | Binary { .. }
                 | CallFunc { .. }
                 | Field { .. }
-                | Var { .. } => VarInit::Expr((*var_expr).clone()),
+                | Var { .. } => VarInit::Expr(var_expr),
             };
 
             graph.var_inits.insert(var_id, var_init);
@@ -107,10 +107,12 @@ impl Graph {
     }
 }
 
-pub struct ScopeForm {}
+pub struct ScopeForm<'a> {
+    var_form: &'a VarForm,
+}
 
-impl ScopeForm {
-    pub fn from_var_form(var_form: VarForm) -> Self {
+impl<'a> ScopeForm<'a> {
+    pub fn new(var_form: &VarForm) -> Self {
         let graph = Graph::new(&var_form);
 
         todo!()

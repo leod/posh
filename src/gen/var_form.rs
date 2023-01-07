@@ -52,6 +52,7 @@ pub struct VarForm {
     var_exprs: Vec<SimplifiedExpr>,
     expr_to_var: HashMap<ExprKey, VarId>,
     simplified_exprs: HashMap<ExprKey, SimplifiedExpr>,
+    simplified_roots: Vec<SimplifiedExpr>,
 }
 
 impl VarForm {
@@ -79,12 +80,13 @@ impl VarForm {
             }
         }
 
-        for root in roots {
-            let key = ExprKey::from(root);
-            let simplified_expr = &var_form.simplified_exprs[&key];
-
-            println!("{}", simplified_expr);
-        }
+        var_form.simplified_roots = roots
+            .iter()
+            .map(|root| {
+                let key = ExprKey::from(root);
+                var_form.simplified_exprs[&key].clone()
+            })
+            .collect();
 
         var_form
     }
