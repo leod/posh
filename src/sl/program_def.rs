@@ -1,10 +1,6 @@
-use std::{fmt::Write, marker::PhantomData};
+use std::marker::PhantomData;
 
-use crate::{
-    gen::{glsl, ScopeForm, VarForm},
-    sl::Object,
-    FragmentInterface, ResourceInterface, Sl, VertexInterface,
-};
+use crate::{gen::glsl, sl::Object, FragmentInterface, ResourceInterface, Sl, VertexInterface};
 
 use super::{primitives::value_arg, Bool, Varying, Vec2, Vec4, F32, U32};
 
@@ -61,43 +57,31 @@ where
     {
         let resources = R::shader_input("resources");
 
-        let vertex_input = VertexInput {
-            vertex: V::shader_input("vertex"),
-            vertex_id: value_arg("gl_VertexID"),
-            instance_id: value_arg("gl_InstanceID"),
+        let vertex_source = {
+            let varying_attributes = W::attributes("output");
+
+            let input = VertexInput {
+                vertex: V::shader_input("vertex"),
+                vertex_id: value_arg("gl_VertexID"),
+                instance_id: value_arg("gl_InstanceID"),
+            };
+
+            let output = vertex_shader(resources, input);
+            let mut exprs = vec![("gl_Position", output.position.expr())];
+            exprs.extend(
+                varying_attributes
+                    .iter()
+                    .zip(output.varying.shader_outputs())
+                    .map(|((name, _), expr)| (name.as_str(), expr)),
+            );
+
+            let mut source = String::new();
+            glsl::write_shader_stage(&mut source, &exprs).unwrap();
+
+            source
         };
 
-        let vertex_output = vertex_shader(resources, vertex_input);
-
-        // -----------------
-
-        //println!("{}", vertex_output.position.expr());
-
-        //let topo = crate::gen::topo::topological_ordering(&[vertex_output.position.expr()]);
-
-        let var_form = VarForm::new(&[vertex_output.position.expr()]);
-        println!("----------");
-        let scope_form = ScopeForm::new(&var_form);
-
-        let write_context = glsl::WriteContext {
-            depth: 1,
-            scope_form: &scope_form,
-        };
-
-        let mut code = String::new();
-        write!(code, "void main() {{\n").unwrap();
-
-        glsl::write_scope(&mut code, write_context, scope_form.root_scope()).unwrap();
-
-        write!(
-            &mut code,
-            "    gl_Position = {};\n",
-            var_form.simplified_roots()[0]
-        )
-        .unwrap();
-        write!(&mut code, "}}\n").unwrap();
-
-        println!("{code}");
+        println!("{vertex_source}");
 
         Self {
             _phantom: PhantomData,
