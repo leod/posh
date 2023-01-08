@@ -43,7 +43,11 @@ impl Display for Indent {
     }
 }
 
-pub fn write_shader_stage(f: &mut impl Write, outputs: &[(&str, Rc<Expr>)]) -> Result {
+pub fn write_shader_stage(
+    f: &mut impl Write,
+    attributes: impl Iterator<Item = (String, String, Type)>,
+    outputs: &[(&str, Rc<Expr>)],
+) -> Result {
     let roots: Vec<_> = outputs.iter().map(|(_, root)| root.clone()).collect();
     let struct_registry = StructRegistry::new(&roots);
     let var_form = VarForm::new(&struct_registry, &roots);
@@ -56,6 +60,16 @@ pub fn write_shader_stage(f: &mut impl Write, outputs: &[(&str, Rc<Expr>)]) -> R
     };
 
     write_struct_defs(f, &struct_registry)?;
+
+    write!(f, "\n")?;
+
+    for (kind, name, ty) in attributes {
+        let ty_name = type_name(&struct_registry, &ty);
+
+        write!(f, "{kind} {ty_name} {name};\n")?;
+    }
+
+    write!(f, "\n")?;
 
     write!(f, "void main() {{\n")?;
     write_scope(f, write_context, scope_form.root_scope())?;

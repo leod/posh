@@ -1,6 +1,9 @@
 use std::marker::PhantomData;
 
-use crate::{gen::glsl, sl::Object, FragmentInterface, ResourceInterface, Sl, VertexInterface};
+use crate::{
+    dag::Type, gen::glsl, interface::VertexInterfaceVisitor, sl::Object, FragmentInterface,
+    ResourceInterface, Sl, Vertex, VertexInputRate, VertexInterface,
+};
 
 use super::{primitives::value_arg, Bool, Varying, Vec2, Vec4, F32, U32};
 
@@ -58,13 +61,30 @@ where
         let resources = R::shader_input("resources");
 
         let vertex_source = {
-            let varying_attributes = W::attributes("output");
-
             let input = VertexInput {
                 vertex: V::shader_input("vertex"),
                 vertex_id: value_arg("gl_VertexID"),
                 instance_id: value_arg("gl_InstanceID"),
             };
+
+            let varying_attributes = W::attributes("output");
+
+            let attributes = {
+                let mut visitor = VertexAttributesVisitor::default();
+                input.vertex.visit(&mut visitor);
+
+                visitor
+                    .attributes
+                    .into_iter()
+                    .map(|(name, ty)| ("in".to_string(), name, ty))
+            }
+            .chain(
+                // TODO: Interpolation type.
+                varying_attributes
+                    .iter()
+                    .cloned()
+                    .map(|(name, ty)| ("out".to_string(), name, ty)),
+            );
 
             let output = vertex_shader(resources, input);
             let mut exprs = vec![("gl_Position", output.position.expr())];
@@ -76,7 +96,7 @@ where
             );
 
             let mut source = String::new();
-            glsl::write_shader_stage(&mut source, &exprs).unwrap();
+            glsl::write_shader_stage(&mut source, attributes, &exprs).unwrap();
 
             source
         };
@@ -85,6 +105,19 @@ where
 
         Self {
             _phantom: PhantomData,
+        }
+    }
+}
+
+#[derive(Default)]
+struct VertexAttributesVisitor {
+    attributes: Vec<(String, Type)>,
+}
+
+impl VertexInterfaceVisitor<Sl> for VertexAttributesVisitor {
+    fn accept<V: Vertex<Sl>>(&mut self, path: &str, _: VertexInputRate, _: &V) {
+        for attribute in V::attributes(path) {
+            self.attributes.push((attribute.name, attribute.ty));
         }
     }
 }
