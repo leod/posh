@@ -31,7 +31,7 @@ impl VarForm {
 
             let simplified_expr = var_form.map_expr(struct_registry, (**expr).clone());
 
-            if Self::needs_var(count, expr) {
+            if Self::should_have_var(count, expr) && Self::can_have_var(expr) {
                 let var_id = VarId(var_form.var_exprs.len());
 
                 //println!("{:?} {} = {}", var_id, expr.ty(), simplified_expr);
@@ -124,7 +124,7 @@ impl VarForm {
         }
     }
 
-    fn needs_var(count: usize, expr: &Expr) -> bool {
+    fn should_have_var(count: usize, expr: &Expr) -> bool {
         use Expr::*;
 
         match expr {
@@ -136,6 +136,10 @@ impl VarForm {
             | CallBuiltIn { .. }
             | Field { .. } => count > 1,
         }
+    }
+
+    fn can_have_var(expr: &Expr) -> bool {
+        expr.ty().is_transparent()
     }
 }
 
