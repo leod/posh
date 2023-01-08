@@ -19,7 +19,7 @@ pub enum VarInit<'a> {
 
 #[derive(Debug, Clone, Default)]
 struct VarState {
-    scope_ids: BTreeSet<VarId>,
+    scope_ids: BTreeSet<ScopeId>,
 }
 
 #[derive(Debug, Clone)]
@@ -38,10 +38,10 @@ pub struct ScopeForm<'a> {
 }
 
 impl<'a> ScopeForm<'a> {
-    pub fn new(var_form: &VarForm) -> Self {
-        let mut tree = Self::default();
+    pub fn new(var_form: &'a VarForm) -> Self {
+        let mut scope_form = Self::default();
 
-        tree.root_scope_id = tree.add(
+        scope_form.root_scope_id = scope_form.add(
             Scope {
                 parent_id: None,
                 depth: 0,
@@ -51,35 +51,33 @@ impl<'a> ScopeForm<'a> {
             &var_form.simplified_roots(),
         );
 
-        for (var_id, var_expr) in var_form.var_exprs().iter().enumerate().rev() {
-            println!("{} {}", var_id, var_expr);
-
-            let parent_id = tree.var_states[&var_id]
+        for (var_id, var_expr) in var_form.var_exprs().rev() {
+            let parent_id = scope_form.var_states[&var_id]
                 .scope_ids
                 .iter()
                 .copied()
-                .reduce(|acc_id, scope_id| tree.lca(acc_id, scope_id))
+                .reduce(|acc_id, scope_id| scope_form.lca(acc_id, scope_id))
                 .unwrap();
 
             use SimplifiedExpr::*;
 
             let var_init = match var_expr {
                 Branch { cond, yes, no, ty } => {
-                    tree.insert_scope_deps(parent_id, cond);
+                    scope_form.insert_deps(parent_id, cond);
 
-                    let yes_id = tree.add(
+                    let yes_id = scope_form.add(
                         Scope {
                             parent_id: Some(parent_id),
-                            depth: tree.scopes[&parent_id].depth + 1,
+                            depth: scope_form.scopes[&parent_id].depth + 1,
                             vars: BTreeMap::new(),
                             result: Some(yes),
                         },
                         &[yes],
                     );
-                    let no_id = tree.add(
+                    let no_id = scope_form.add(
                         Scope {
                             parent_id: Some(parent_id),
-                            depth: tree.scopes[&parent_id].depth + 1,
+                            depth: scope_form.scopes[&parent_id].depth + 1,
                             vars: BTreeMap::new(),
                             result: Some(no),
                         },
@@ -99,51 +97,32 @@ impl<'a> ScopeForm<'a> {
                 | CallFunc { .. }
                 | Field { .. }
                 | Var { .. } => {
-                    tree.insert_scope_deps(parent_id, var_expr);
+                    scope_form.insert_deps(parent_id, var_expr);
 
                     VarInit::Expr(var_expr)
                 }
             };
 
-            tree.scopes
+            scope_form
+                .scopes
                 .get_mut(&parent_id)
                 .unwrap()
                 .vars
                 .insert(var_id, var_init);
         }
 
-        for (scope_id, scope) in &tree.scopes {
-            println!("scope {}, parent {:?}", scope_id, scope.parent_id);
-
-            for (var_id, var_init) in &scope.vars {
-                use VarInit::*;
-
-                match var_init {
-                    Expr(expr) => {
-                        println!("  var {var_id}: {expr}")
-                    }
-                    Branch {
-                        cond,
-                        yes_id,
-                        no_id,
-                        ..
-                    } => {
-                        println!("  var {var_id}: if {cond} {{ {yes_id} }} else {{ {no_id} }}");
-                    }
-                }
-            }
-
-            if let Some(result) = scope.result {
-                println!("  result {result}");
-            }
-        }
-
-        //println!("{:#?}", tree);
-
-        todo!()
+        scope_form
     }
 
-    fn insert_scope_deps(&mut self, scope_id: ScopeId, expr: &SimplifiedExpr) {
+    pub fn scope(&self, scope_id: ScopeId) -> &Scope {
+        &self.scopes[&scope_id]
+    }
+
+    pub fn root_scope(&self) -> &Scope {
+        self.scope(self.root_scope_id)
+    }
+
+    fn insert_deps(&mut self, scope_id: ScopeId, expr: &SimplifiedExpr) {
         unscoped_successors(expr, &mut |succ| {
             self.var_states
                 .entry(succ)
@@ -157,7 +136,7 @@ impl<'a> ScopeForm<'a> {
         let scope_id = self.scopes.len();
 
         for expr in exprs {
-            self.insert_scope_deps(scope_id, expr);
+            self.insert_deps(scope_id, expr);
         }
 
         self.scopes.insert(scope_id, scope);

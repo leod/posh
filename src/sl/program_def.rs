@@ -1,7 +1,7 @@
-use std::marker::PhantomData;
+use std::{fmt::Write, marker::PhantomData};
 
 use crate::{
-    gen::{ScopeForm, VarForm},
+    gen::{glsl, ScopeForm, VarForm},
     sl::Object,
     FragmentInterface, ResourceInterface, Sl, VertexInterface,
 };
@@ -78,6 +78,26 @@ where
         let var_form = VarForm::new(&[vertex_output.position.expr()]);
         println!("----------");
         let scope_form = ScopeForm::new(&var_form);
+
+        let write_context = glsl::WriteContext {
+            depth: 1,
+            scope_form: &scope_form,
+        };
+
+        let mut code = String::new();
+        write!(code, "void main() {{\n").unwrap();
+
+        glsl::write_scope(&mut code, write_context, scope_form.root_scope()).unwrap();
+
+        write!(
+            &mut code,
+            "    gl_Position = {};\n",
+            var_form.simplified_roots()[0]
+        )
+        .unwrap();
+        write!(&mut code, "}}\n").unwrap();
+
+        println!("{code}");
 
         Self {
             _phantom: PhantomData,

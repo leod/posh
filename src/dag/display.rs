@@ -1,9 +1,12 @@
-use std::{fmt, rc::Rc};
+use std::{
+    fmt::{Display, Formatter, Result, Write},
+    rc::Rc,
+};
 
 use super::{BaseType, BinaryOp, Expr, NumericType, PrimitiveType, Type};
 
-impl fmt::Display for BinaryOp {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+impl Display for BinaryOp {
+    fn fmt(&self, f: &mut Formatter) -> Result {
         use BinaryOp::*;
 
         let s = match self {
@@ -20,7 +23,7 @@ impl fmt::Display for BinaryOp {
     }
 }
 
-fn write_call(f: &mut impl fmt::Write, name: &str, args: &[Rc<Expr>]) -> Result<(), fmt::Error> {
+fn write_call(f: &mut impl Write, name: &str, args: &[Rc<Expr>]) -> Result {
     f.write_str(name)?;
     f.write_char('(')?;
 
@@ -35,8 +38,8 @@ fn write_call(f: &mut impl fmt::Write, name: &str, args: &[Rc<Expr>]) -> Result<
     f.write_char(')')
 }
 
-impl fmt::Display for Expr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+impl Display for Expr {
+    fn fmt(&self, f: &mut Formatter) -> Result {
         use Expr::*;
 
         match self {
@@ -54,8 +57,8 @@ impl fmt::Display for Expr {
     }
 }
 
-impl fmt::Display for NumericType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+impl Display for NumericType {
+    fn fmt(&self, f: &mut Formatter) -> Result {
         use NumericType::*;
 
         let s = match self {
@@ -68,8 +71,8 @@ impl fmt::Display for NumericType {
     }
 }
 
-impl fmt::Display for PrimitiveType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+impl Display for PrimitiveType {
+    fn fmt(&self, f: &mut Formatter) -> Result {
         use PrimitiveType::*;
 
         match self {
@@ -98,8 +101,8 @@ fn primitive_type_prefix(ty: PrimitiveType) -> &'static str {
     }
 }
 
-impl fmt::Display for BaseType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+impl Display for BaseType {
+    fn fmt(&self, f: &mut Formatter) -> Result {
         use BaseType::*;
 
         match self {
@@ -113,8 +116,8 @@ impl fmt::Display for BaseType {
     }
 }
 
-impl fmt::Display for Type {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+impl Display for Type {
+    fn fmt(&self, f: &mut Formatter) -> Result {
         use Type::*;
 
         match self {
