@@ -1,91 +1,96 @@
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::dag::Type;
+
 use super::{SimplifiedExpr, VarForm, VarId};
 
 pub type ScopeId = usize;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-enum NodeId {
-    Var(VarId),
-    Scope(ScopeId),
-}
 
 #[derive(Debug, Clone)]
 pub enum VarInit<'a> {
     Expr(&'a SimplifiedExpr),
     Branch {
         cond: &'a SimplifiedExpr,
-        yes_scope_id: ScopeId,
-        no_scope_id: ScopeId,
+        yes_id: ScopeId,
+        no_id: ScopeId,
+        ty: &'a Type,
     },
 }
 
+#[derive(Debug, Clone, Default)]
+struct VarState {
+    scope_ids: BTreeSet<VarId>,
+}
+
+#[derive(Debug, Clone)]
 pub struct Scope<'a> {
-    pub pred_var_id: Option<VarId>,
-    pub exprs: Vec<&'a SimplifiedExpr>,
+    pub parent_id: Option<ScopeId>,
+    pub depth: usize,
     pub vars: BTreeMap<VarId, VarInit<'a>>,
+    pub result: Option<&'a SimplifiedExpr>,
 }
 
-#[derive(Default)]
-struct Graph<'a> {
+#[derive(Debug, Clone, Default)]
+pub struct ScopeForm<'a> {
     scopes: BTreeMap<ScopeId, Scope<'a>>,
-    preds: BTreeMap<VarId, BTreeSet<NodeId>>,
-    var_inits: BTreeMap<VarId, VarInit<'a>>,
     root_scope_id: ScopeId,
+    var_states: BTreeMap<VarId, VarState>,
 }
 
-impl<'a> Graph<'a> {
-    fn add_scope(&mut self, scope: Scope<'a>) -> usize {
-        let scope_id = self.scopes.len();
+impl<'a> ScopeForm<'a> {
+    pub fn new(var_form: &VarForm) -> Self {
+        let mut tree = Self::default();
 
-        for succ in &scope.exprs {
-            successors(succ, &mut |succ| {
-                self.preds
-                    .entry(succ)
-                    .or_default()
-                    .insert(NodeId::Scope(scope_id));
-            });
-        }
+        tree.root_scope_id = tree.add(
+            Scope {
+                parent_id: None,
+                depth: 0,
+                vars: BTreeMap::new(),
+                result: None,
+            },
+            &var_form.simplified_roots(),
+        );
 
-        self.scopes.insert(scope_id, scope);
+        for (var_id, var_expr) in var_form.var_exprs().iter().enumerate().rev() {
+            println!("{} {}", var_id, var_expr);
 
-        scope_id
-    }
+            let parent_id = tree.var_states[&var_id]
+                .scope_ids
+                .iter()
+                .copied()
+                .reduce(|acc_id, scope_id| tree.lca(acc_id, scope_id))
+                .unwrap();
 
-    fn new(var_form: &'a VarForm) -> Self {
-        let mut graph = Self::default();
-
-        for (var_id, var_expr) in var_form.var_exprs().iter().enumerate() {
             use SimplifiedExpr::*;
 
-            //println!("var {} = {} @ {:?}", var_id, var_expr, deps);
-
-            successors(&var_expr, &mut |succ| {
-                graph
-                    .preds
-                    .entry(succ)
-                    .or_default()
-                    .insert(NodeId::Var(var_id));
-            });
-
             let var_init = match var_expr {
-                Branch { cond, yes, no, .. } => {
-                    let yes_scope_id = graph.add_scope(Scope {
-                        pred_var_id: Some(var_id),
-                        exprs: vec![yes],
-                        vars: BTreeMap::new(),
-                    });
+                Branch { cond, yes, no, ty } => {
+                    tree.insert_scope_deps(parent_id, cond);
 
-                    let no_scope_id = graph.add_scope(Scope {
-                        pred_var_id: Some(var_id),
-                        exprs: vec![no],
-                        vars: BTreeMap::new(),
-                    });
+                    let yes_id = tree.add(
+                        Scope {
+                            parent_id: Some(parent_id),
+                            depth: tree.scopes[&parent_id].depth + 1,
+                            vars: BTreeMap::new(),
+                            result: Some(yes),
+                        },
+                        &[yes],
+                    );
+                    let no_id = tree.add(
+                        Scope {
+                            parent_id: Some(parent_id),
+                            depth: tree.scopes[&parent_id].depth + 1,
+                            vars: BTreeMap::new(),
+                            result: Some(no),
+                        },
+                        &[no],
+                    );
 
                     VarInit::Branch {
                         cond,
-                        yes_scope_id,
-                        no_scope_id,
+                        yes_id,
+                        no_id,
+                        ty,
                     }
                 }
                 Arg { .. }
@@ -93,96 +98,112 @@ impl<'a> Graph<'a> {
                 | Binary { .. }
                 | CallFunc { .. }
                 | Field { .. }
-                | Var { .. } => VarInit::Expr(var_expr),
+                | Var { .. } => {
+                    tree.insert_scope_deps(parent_id, var_expr);
+
+                    VarInit::Expr(var_expr)
+                }
             };
 
-            graph.var_inits.insert(var_id, var_init);
+            tree.scopes
+                .get_mut(&parent_id)
+                .unwrap()
+                .vars
+                .insert(var_id, var_init);
         }
 
-        graph.root_scope_id = graph.add_scope(Scope {
-            pred_var_id: None,
-            exprs: var_form.simplified_roots().to_vec(),
-            vars: BTreeMap::new(),
-        });
+        for (scope_id, scope) in &tree.scopes {
+            println!("scope {}, parent {:?}", scope_id, scope.parent_id);
 
-        graph
-    }
+            for (var_id, var_init) in &scope.vars {
+                use VarInit::*;
 
-    fn find_scope_depths(
-        &self,
-        scope_id: ScopeId,
-        depth: usize,
-        depths: &mut BTreeMap<ScopeId, usize>,
-    ) {
-        use VarInit::*;
-
-        depths.insert(scope_id, depth);
-
-        let scope = &self.scopes[&scope_id];
-
-        for (var_id, var_init) in &scope.vars {
-            match var_init {
-                Expr(_) => (),
-                Branch {
-                    yes_scope_id,
-                    no_scope_id,
-                    ..
-                } => {
-                    self.find_scope_depths(*yes_scope_id, depth + 1, depths);
-                    self.find_scope_depths(*no_scope_id, depth + 1, depths);
+                match var_init {
+                    Expr(expr) => {
+                        println!("  var {var_id}: {expr}")
+                    }
+                    Branch {
+                        cond,
+                        yes_id,
+                        no_id,
+                        ..
+                    } => {
+                        println!("  var {var_id}: if {cond} {{ {yes_id} }} else {{ {no_id} }}");
+                    }
                 }
             }
-        }
-    }
-}
 
-pub struct ScopeForm<'a> {
-    var_form: &'a VarForm,
-}
-
-impl<'a> ScopeForm<'a> {
-    pub fn new(var_form: &VarForm) -> Self {
-        let graph = Graph::new(&var_form);
-
-        for (scope_id, scope) in graph.scopes.iter() {
-            println!(
-                "scope {} in var {:?}: {}",
-                scope_id, scope.pred_var_id, scope.exprs[0],
-            );
+            if let Some(result) = scope.result {
+                println!("  result {result}");
+            }
         }
 
-        for (var_id, var_preds) in graph.preds.iter() {
-            println!("var {} preds: {:?}", var_id, var_preds);
-        }
-
-        let mut scope_depths = BTreeMap::new();
-        let scope_depths = graph.find_scope_depths(graph.root_scope_id, 0, &mut scope_depths);
-
-        println!("scope depths: {scope_depths:?}");
+        //println!("{:#?}", tree);
 
         todo!()
     }
+
+    fn insert_scope_deps(&mut self, scope_id: ScopeId, expr: &SimplifiedExpr) {
+        unscoped_successors(expr, &mut |succ| {
+            self.var_states
+                .entry(succ)
+                .or_default()
+                .scope_ids
+                .insert(scope_id);
+        });
+    }
+
+    fn add(&mut self, scope: Scope<'a>, exprs: &[&'a SimplifiedExpr]) -> ScopeId {
+        let scope_id = self.scopes.len();
+
+        for expr in exprs {
+            self.insert_scope_deps(scope_id, expr);
+        }
+
+        self.scopes.insert(scope_id, scope);
+
+        scope_id
+    }
+
+    fn lca(&self, mut u_id: ScopeId, mut v_id: ScopeId) -> ScopeId {
+        let s = |id: ScopeId| &self.scopes[&id];
+
+        while s(u_id).depth != s(v_id).depth {
+            if s(u_id).depth > s(v_id).depth {
+                u_id = s(u_id).parent_id.unwrap();
+            } else {
+                v_id = s(v_id).parent_id.unwrap();
+            }
+        }
+
+        while u_id != v_id {
+            u_id = s(u_id).parent_id.unwrap();
+            v_id = s(v_id).parent_id.unwrap();
+        }
+
+        u_id
+    }
 }
 
-fn successors(expr: &SimplifiedExpr, f: &mut impl FnMut(VarId)) {
+fn unscoped_successors(expr: &SimplifiedExpr, f: &mut impl FnMut(VarId)) {
     use SimplifiedExpr::*;
 
     match expr {
         Branch { cond, .. } => {
-            successors(cond, f);
+            unscoped_successors(cond, f);
         }
         Arg { .. } | ScalarLiteral { .. } => (),
         Binary { left, right, .. } => {
-            successors(left, f);
-            successors(right, f);
+            unscoped_successors(left, f);
+            unscoped_successors(right, f);
         }
         CallFunc { args, .. } => {
             for arg in args {
-                successors(arg, f);
+                unscoped_successors(arg, f);
             }
         }
         Field { base, .. } => {
-            successors(base, f);
+            unscoped_successors(base, f);
         }
         Var { id, .. } => {
             f(*id);
