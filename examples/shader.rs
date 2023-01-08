@@ -4,10 +4,16 @@ use posh::{
 };
 
 #[derive(Clone, Copy, ToValue, Uniform)]
+struct Foo<D: Domain = Sl> {
+    bar: D::I32,
+}
+
+#[derive(Clone, Copy, ToValue, Uniform)]
 struct Globals<D: Domain = Sl> {
     time: D::F32,
     offset: D::Vec2<f32>,
     invert: D::Bool,
+    foo: Foo<D>,
 }
 
 #[derive(Clone, Copy, ToValue, Vertex)]

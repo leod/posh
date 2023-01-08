@@ -5,7 +5,7 @@ use std::{
 
 use crate::dag::{BaseType, Expr, Type};
 
-use super::{ExprKey, SimplifiedExpr, VarId};
+use super::{ExprKey, SimplifiedExpr, StructRegistry, VarId};
 
 #[derive(Default)]
 pub struct VarForm {
@@ -16,7 +16,7 @@ pub struct VarForm {
 }
 
 impl VarForm {
-    pub fn new(roots: &[Rc<Expr>]) -> Self {
+    pub fn new(struct_registry: &StructRegistry, roots: &[Rc<Expr>]) -> Self {
         let mut var_form = Self {
             roots: roots.iter().map(ExprKey::from).collect(),
             ..Self::default()
@@ -29,7 +29,7 @@ impl VarForm {
             let key = ExprKey::from(expr);
             let count = usages.get(&key).copied().unwrap_or(0);
 
-            let simplified_expr = var_form.map_expr((**expr).clone());
+            let simplified_expr = var_form.map_expr(struct_registry, (**expr).clone());
 
             if Self::needs_var(count, expr) {
                 let var_id = VarId(var_form.var_exprs.len());
@@ -60,7 +60,7 @@ impl VarForm {
             .collect()
     }
 
-    fn map_expr(&self, expr: Expr) -> SimplifiedExpr {
+    fn map_expr(&self, struct_registry: &StructRegistry, expr: Expr) -> SimplifiedExpr {
         let map_succ = |succ: Rc<Expr>| {
             let key = ExprKey::from(&succ);
 
@@ -77,14 +77,15 @@ impl VarForm {
         match expr {
             Expr::Arg { name, ty } => SimplifiedExpr::Arg { name, ty },
             Expr::ScalarLiteral { value, ty } => SimplifiedExpr::ScalarLiteral { value, ty },
-            Expr::StructLiteral { args, ty } => {
-                // TODO: Resolve struct name through a prebuilt registry.
-                SimplifiedExpr::CallFunc {
-                    name: ty.name.to_string(),
-                    args: args.into_iter().map(map_succ).collect(),
-                    ty: Type::Base(BaseType::Struct(ty)),
-                }
-            }
+            Expr::StructLiteral { args, ty } => SimplifiedExpr::CallFunc {
+                name: if ty.is_built_in {
+                    ty.name.into()
+                } else {
+                    struct_registry.name(ty)
+                },
+                args: args.into_iter().map(map_succ).collect(),
+                ty: Type::Base(BaseType::Struct(ty)),
+            },
             Expr::Binary {
                 left,
                 op,

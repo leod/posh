@@ -64,7 +64,7 @@ pub trait ToValue: Copy {
 pub trait Varying: Value {
     fn attributes(path: &str) -> Vec<(String, Type)>;
 
-    fn shader_output(&self) -> Vec<Rc<Expr>>;
+    fn shader_outputs(&self) -> Vec<Rc<Expr>>;
 }
 
 // TODO: Impl Varying.
@@ -73,7 +73,7 @@ impl Varying for Vec4<f32> {
         vec![(path.to_string(), <Self as Object>::TYPE)]
     }
 
-    fn shader_output(&self) -> Vec<Rc<Expr>> {
+    fn shader_outputs(&self) -> Vec<Rc<Expr>> {
         vec![self.expr()]
     }
 }
