@@ -3,49 +3,9 @@ use std::{
     rc::Rc,
 };
 
-use crate::dag::{BaseType, BinaryOp, Expr, PrimitiveType, Type};
+use crate::dag::{BaseType, Expr, Type};
 
-use super::ExprKey;
-
-pub type VarId = usize;
-
-#[derive(Debug, Clone)]
-pub enum SimplifiedExpr {
-    Branch {
-        cond: Box<SimplifiedExpr>,
-        yes: Box<SimplifiedExpr>,
-        no: Box<SimplifiedExpr>,
-        ty: Type,
-    },
-    Arg {
-        name: String,
-        ty: Type,
-    },
-    ScalarLiteral {
-        value: String,
-        ty: PrimitiveType,
-    },
-    Binary {
-        left: Box<SimplifiedExpr>,
-        op: BinaryOp,
-        right: Box<SimplifiedExpr>,
-        ty: Type,
-    },
-    CallFunc {
-        name: String,
-        args: Vec<SimplifiedExpr>,
-        ty: Type,
-    },
-    Field {
-        base: Box<SimplifiedExpr>,
-        name: &'static str,
-        ty: Type,
-    },
-    Var {
-        id: VarId,
-        ty: Type,
-    },
-}
+use super::{ExprKey, SimplifiedExpr, VarId};
 
 #[derive(Default)]
 pub struct VarForm {
@@ -72,9 +32,9 @@ impl VarForm {
             let simplified_expr = var_form.map_expr((**expr).clone());
 
             if Self::needs_var(count, expr) {
-                let var_id = var_form.var_exprs.len();
+                let var_id = VarId(var_form.var_exprs.len());
 
-                println!("{:?} {} = {}", var_id, expr.ty(), simplified_expr);
+                //println!("{:?} {} = {}", var_id, expr.ty(), simplified_expr);
 
                 var_form.var_exprs.push(simplified_expr);
                 var_form.expr_to_var.insert(key, var_id);
@@ -86,8 +46,11 @@ impl VarForm {
         var_form
     }
 
-    pub fn var_exprs(&self) -> &[SimplifiedExpr] {
-        &self.var_exprs
+    pub fn var_exprs(&self) -> impl DoubleEndedIterator<Item = (VarId, &'_ SimplifiedExpr)> {
+        self.var_exprs
+            .iter()
+            .enumerate()
+            .map(|(var_id, expr)| (VarId(var_id), expr))
     }
 
     pub fn simplified_roots(&self) -> Vec<&SimplifiedExpr> {

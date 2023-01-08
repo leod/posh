@@ -18,19 +18,17 @@ struct ColorVertex<D: Domain = Sl> {
 
 fn vertex_shader(globals: Globals, input: VertexInput<ColorVertex>) -> VertexOutput<sl::Vec4<f32>> {
     let shift = globals.offset * globals.time;
-    let mut shift = globals
+    let shift = globals
         .invert
         .branch(shift, false.to_value().branch(shift * -1.0, shift * -2.0));
 
-    for _ in 0..30 {
-        shift = globals.invert.branch(shift, {
-            let x = shift * 5.0;
+    let shift2 = globals.invert.branch(shift, {
+        let x = shift * 5.0;
 
-            false.to_value().branch(x * -1.0, x * -2.0)
-        });
-    }
+        false.to_value().branch(x * -1.0, x * -2.0)
+    });
 
-    let position = input.vertex.position + shift;
+    let position = input.vertex.position + shift2;
 
     VertexOutput::new(position.to_vec4(), sl::Vec4::default())
 }

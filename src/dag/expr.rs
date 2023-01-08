@@ -67,15 +67,17 @@ pub enum Expr {
 
 impl Expr {
     pub fn ty(&self) -> Type {
+        use Expr::*;
+
         match self {
-            Expr::Arg { ty, .. } => ty.clone(),
-            Expr::ScalarLiteral { ty, .. } => Type::Base(BaseType::Scalar(*ty)),
-            Expr::StructLiteral { ty, .. } => Type::Base(BaseType::Struct(ty)),
-            Expr::Binary { ty, .. } => ty.clone(),
-            Expr::CallFuncDef { def, .. } => def.result.ty(),
-            Expr::CallBuiltIn { ty, .. } => ty.clone(),
-            Expr::Field { ty, .. } => ty.clone(),
-            Expr::Branch { ty, .. } => ty.clone(),
+            Arg { ty, .. } => ty.clone(),
+            ScalarLiteral { ty, .. } => Type::Base(BaseType::Scalar(*ty)),
+            StructLiteral { ty, .. } => Type::Base(BaseType::Struct(ty)),
+            Binary { ty, .. } => ty.clone(),
+            CallFuncDef { def, .. } => def.result.ty(),
+            CallBuiltIn { ty, .. } => ty.clone(),
+            Field { ty, .. } => ty.clone(),
+            Branch { ty, .. } => ty.clone(),
         }
     }
 }
