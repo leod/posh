@@ -21,7 +21,7 @@ pub use context::Context;
 pub use draw_params::DrawParams;
 pub use element_buffer::{Element, ElementBuffer, ElementOrUnit, ElementSource};
 pub use enums::{BufferUsage, ElementType, GeometryType};
-pub use error::{CreateBufferError, CreateProgramError, CreateVertexArrayError};
+pub use error::{CreateBufferError, CreateError, CreateProgramError, CreateVertexArrayError};
 pub use geometry_stream::GeometryStream;
 pub use program::Program;
 pub use sampler::{Sampler2d, Sampler2dBinding};

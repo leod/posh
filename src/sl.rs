@@ -22,7 +22,7 @@ pub use {
     program_def::{FragmentInput, FragmentOutput, ProgramDef, VertexInput, VertexOutput},
     sampler::Sampler2d,
     scalar::{Bool, Scalar, F32, I32, U32},
-    vec::{Vec2, Vec4},
+    vec::{vec2, vec3, vec4, Vec2, Vec3, Vec4},
 };
 
 /// An object that can be represented in the shading language.
@@ -99,6 +99,16 @@ pub trait Varying: Value {
 }
 
 // TODO: Impl Varying.
+impl Varying for Vec2<f32> {
+    fn shader_outputs(&self, path: &str) -> Vec<(String, Rc<Expr>)> {
+        vec![(path.to_string(), self.expr())]
+    }
+
+    fn shader_input(path: &str) -> Self {
+        value_arg(path)
+    }
+}
+
 impl Varying for Vec4<f32> {
     fn shader_outputs(&self, path: &str) -> Vec<(String, Rc<Expr>)> {
         vec![(path.to_string(), self.expr())]
