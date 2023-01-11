@@ -1,3 +1,6 @@
+#[macro_use]
+mod gen_type;
+
 mod program_def;
 mod sampler;
 mod scalar;

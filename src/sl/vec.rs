@@ -214,6 +214,8 @@ macro_rules! impl_vec {
         impl_binary_op_scalar_rhs!($ty, div, Div);
         impl_binary_op_scalar_rhs!($ty, mul, Mul);
         impl_binary_op_scalar_rhs!($ty, sub, Sub);
+
+        impl_gen_type!($ty);
     };
 }
 
