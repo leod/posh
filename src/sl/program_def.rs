@@ -11,12 +11,18 @@ use crate::{
 
 use super::{primitives::value_arg, Bool, Sampler2d, Varying, Vec2, Vec4, F32, U32};
 
+#[derive(Debug, Clone)]
+struct Private;
+
+#[derive(Debug, Clone)]
 pub struct VertexInput<V> {
     pub vertex: V,
     pub vertex_id: U32,
     pub instance_id: U32,
+    private: Private,
 }
 
+#[derive(Debug, Clone)]
 pub struct VertexOutput<W> {
     pub position: Vec4<f32>,
     pub varying: W,
@@ -33,13 +39,16 @@ impl<W> VertexOutput<W> {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct FragmentInput<W> {
     pub varying: W,
     pub fragment_coord: Vec4<f32>,
     pub front_facing: Bool,
     pub point_coord: Vec2<f32>,
+    private: Private,
 }
 
+#[derive(Debug, Clone)]
 pub struct FragmentOutput<F> {
     pub fragment: F,
     pub fragment_depth: Option<F32>,
@@ -72,6 +81,7 @@ where
                 vertex: V::shader_input("vertex"),
                 vertex_id: value_arg("gl_VertexID"),
                 instance_id: value_arg("gl_InstanceID"),
+                private: Private,
             };
 
             let varying_attributes = W::attributes("output");
