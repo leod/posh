@@ -93,8 +93,8 @@ impl<V: Vertex<Sl>> VertexInterface<Sl> for V {
     type InGl = gl::VertexBuffer<V>;
     type InSl = V::InSl;
 
-    fn visit(&self, visitor: &mut impl VertexInterfaceVisitor<Sl>) {
-        visitor.accept("vertex", VertexInputRate::Vertex, self);
+    fn visit(&self, path: &str, visitor: &mut impl VertexInterfaceVisitor<Sl>) {
+        visitor.accept(path, VertexInputRate::Vertex, self);
     }
 
     fn shader_input(path: &str) -> Self {
@@ -155,8 +155,8 @@ impl FragmentInterface<Sl> for Vec4<f32> {
     type InGl = Texture2dBinding;
     type InSl = Self;
 
-    fn visit(&self, visitor: &mut impl FragmentInterfaceVisitor<Sl>) {
-        visitor.accept("fragment", self);
+    fn visit(&self, path: &str, visitor: &mut impl FragmentInterfaceVisitor<Sl>) {
+        visitor.accept(path, self);
     }
 }
 

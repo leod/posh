@@ -11,6 +11,7 @@ use super::{
 };
 
 pub struct Program<R, A, F> {
+    untyped: untyped::Program,
     _phantom: PhantomData<(R, A, F)>,
 }
 
@@ -28,9 +29,9 @@ where
     where
         W: Varying,
     {
-        let typed_program_def = sl::ProgramDef::new(vertex_shader, fragment_shader);
-        let untpyed_program_def = untyped::ProgramDef {
-            uniform_block_infos: typed_program_def
+        let typed_def = sl::ProgramDef::new(vertex_shader, fragment_shader);
+        let untyped_def = untyped::ProgramDef {
+            uniform_block_infos: typed_def
                 .uniform_block_defs
                 .into_iter()
                 .map(|def| UniformBlockInfo {
@@ -39,12 +40,20 @@ where
                 })
                 .collect(),
             sampler_infos: Vec::new(), // TODO
-            vertex_infos: typed_program_def.vertex_infos,
-            vertex_shader_source: typed_program_def.vertex_shader_source,
-            fragment_shader_source: typed_program_def.fragment_shader_source,
+            vertex_infos: typed_def.vertex_infos,
+            vertex_shader_source: typed_def.vertex_shader_source,
+            fragment_shader_source: typed_def.fragment_shader_source,
         };
 
+        println!(
+            "{}\n==================={}",
+            untyped_def.vertex_shader_source, untyped_def.fragment_shader_source
+        );
+
+        let untyped = context.untyped.create_program(untyped_def)?;
+
         Ok(Program {
+            untyped,
             _phantom: PhantomData,
         })
     }
