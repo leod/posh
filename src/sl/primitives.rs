@@ -178,15 +178,15 @@ pub fn common_field_base<'a>(
         return None;
     };
 
-    for (required_field, arg) in required_fields.into_iter().zip(args) {
-        if let Type::Base(arg_ty) = arg.ty() {
-            if arg_ty != *base_ty {
-                return None;
-            }
-        } else {
+    if let Type::Base(first_ty) = first_base.ty() {
+        if first_ty != *base_ty {
             return None;
         }
+    } else {
+        return None;
+    }
 
+    for (required_field, arg) in required_fields.into_iter().zip(args) {
         if let Expr::Field { base, name, .. } = &**arg {
             if !Rc::ptr_eq(base, first_base) || *name != required_field {
                 return None;

@@ -1,25 +1,25 @@
 use std::rc::Rc;
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum NumericType {
     F32,
     I32,
     U32,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum PrimitiveType {
     Numeric(NumericType),
     Bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StructType {
     pub name: String,
     pub fields: Vec<(String, Type)>,
 }
 
-#[derive(Debug, Clone, Eq, Hash)]
+#[derive(Debug, Clone, Eq)]
 pub enum BaseType {
     Scalar(PrimitiveType),
     Vec2(PrimitiveType),
@@ -56,7 +56,7 @@ impl BaseType {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Type {
     Base(BaseType),
     Array(BaseType, usize),

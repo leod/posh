@@ -5,11 +5,11 @@ use crate::{
     gen::glsl::{self, UniformBlockDef},
     interface::{ResourceInterfaceVisitor, VertexInterfaceVisitor},
     sl::Object,
-    FragmentInterface, Numeric, ResourceDomain, ResourceInterface, Sl, Uniform, Vertex,
-    VertexInputRate, VertexInterface,
+    FragmentInterface, Numeric, ResourceInterface, Sl, Uniform, Vertex, VertexInputRate,
+    VertexInterface,
 };
 
-use super::{primitives::value_arg, Bool, Sampler2d, Value, Varying, Vec2, Vec4, F32, U32};
+use super::{primitives::value_arg, Bool, Sampler2d, Varying, Vec2, Vec4, F32, U32};
 
 pub struct VertexInput<V> {
     pub vertex: V,
