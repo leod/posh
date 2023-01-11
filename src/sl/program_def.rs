@@ -1,9 +1,9 @@
-use std::marker::PhantomData;
+use std::{iter::once, marker::PhantomData, rc::Rc};
 
 use crate::{
-    dag::Type,
+    dag::{Expr, Type},
     gen::glsl::{self, UniformBlockDef},
-    interface::{ResourceInterfaceVisitor, VertexInterfaceVisitor},
+    interface::{FragmentInterfaceVisitor, ResourceInterfaceVisitor, VertexInterfaceVisitor},
     sl::Object,
     FragmentInterface, Numeric, ResourceInterface, Sl, Uniform, Vertex, VertexInputRate,
     VertexInterface,
@@ -19,7 +19,7 @@ pub struct VertexInput<V> {
     pub vertex: V,
     pub vertex_id: U32,
     pub instance_id: U32,
-    private: Private,
+    _private: Private,
 }
 
 #[derive(Debug, Clone)]
@@ -45,13 +45,22 @@ pub struct FragmentInput<W> {
     pub fragment_coord: Vec4<f32>,
     pub front_facing: Bool,
     pub point_coord: Vec2<f32>,
-    private: Private,
+    _private: Private,
 }
 
 #[derive(Debug, Clone)]
 pub struct FragmentOutput<F> {
     pub fragment: F,
     pub fragment_depth: Option<F32>,
+}
+
+impl<F> FragmentOutput<F> {
+    pub fn new(fragment: F) -> Self {
+        FragmentOutput {
+            fragment,
+            fragment_depth: None,
+        }
+    }
 }
 
 pub struct ProgramDef<R, A, F> {
@@ -76,19 +85,19 @@ where
         let mut resource_visitor = ResourceVisitor::default();
         resources.visit("resource", &mut resource_visitor);
 
-        let vertex_source = {
-            let input = VertexInput {
+        let (vertex_source, varying_outputs) = {
+            let input = || VertexInput {
                 vertex: V::shader_input("vertex"),
                 vertex_id: value_arg("gl_VertexID"),
                 instance_id: value_arg("gl_InstanceID"),
-                private: Private,
+                _private: Private,
             };
+            let output = vertex_shader(resources, input());
 
-            let varying_attributes = W::attributes("output");
-
+            let varying_outputs = output.varying.shader_outputs("output");
             let attributes = {
                 let mut visitor = VertexVisitor::default();
-                input.vertex.visit(&mut visitor);
+                input().vertex.visit(&mut visitor);
 
                 visitor
                     .attributes
@@ -97,50 +106,95 @@ where
             }
             .chain(
                 // TODO: Interpolation type.
-                varying_attributes
+                varying_outputs
                     .iter()
-                    .cloned()
-                    .map(|(name, ty)| ("out".to_string(), name, ty)),
+                    .map(|(name, expr)| ("out".to_string(), name.clone(), expr.ty())),
             );
-
-            let output = vertex_shader(resources, input);
-            let mut exprs = vec![("gl_Position", output.position.expr())];
-            exprs.extend(
-                varying_attributes
-                    .iter()
-                    .zip(output.varying.shader_outputs())
-                    .map(|((name, _), expr)| (name.as_str(), expr)),
-            );
+            let exprs = once(("gl_Position", output.position.expr()))
+                .chain(
+                    varying_outputs
+                        .iter()
+                        .map(|(name, expr)| (name.as_str(), expr.clone())),
+                )
+                .chain(
+                    output
+                        .point_size
+                        .map(|value| ("gl_PointSize", value.expr())),
+                );
 
             let mut source = String::new();
             glsl::write_shader_stage(
                 &mut source,
                 &resource_visitor.uniform_block_defs,
                 attributes,
-                &exprs,
+                &exprs.collect::<Vec<_>>(),
             )
             .unwrap();
 
-            source
+            (source, varying_outputs)
         };
 
+        let resources = R::shader_input("resource");
+
+        let fragment_source =
+            {
+                let input = FragmentInput {
+                    varying: W::shader_input("input"),
+                    fragment_coord: value_arg("gl_FragCoord"),
+                    front_facing: value_arg("gl_FrontFacing"),
+                    point_coord: value_arg("gl_PointCoord"),
+                    _private: Private,
+                };
+                let output = fragment_shader(resources, input);
+
+                let mut fragment_visitor = FragmentVisitor::default();
+                output.fragment.visit(&mut fragment_visitor);
+
+                let attributes =
+                    varying_outputs
+                        .iter()
+                        .map(|(name, expr)| {
+                            // TODO: Interpolation type.
+                            ("in".to_string(), name.clone(), expr.ty())
+                        })
+                        .chain(fragment_visitor.outputs.iter().enumerate().map(
+                            |(i, (name, expr))| {
+                                (
+                                    format!("layout(location = {i}) out"),
+                                    name.clone(),
+                                    expr.ty(),
+                                )
+                            },
+                        ));
+
+                let exprs = fragment_visitor
+                    .outputs
+                    .iter()
+                    .map(|(name, expr)| (name.as_str(), expr.clone()))
+                    .chain(
+                        output
+                            .fragment_depth
+                            .map(|value| ("gl_FragDepth", value.expr())),
+                    );
+
+                let mut source = String::new();
+                glsl::write_shader_stage(
+                    &mut source,
+                    &resource_visitor.uniform_block_defs,
+                    attributes,
+                    &exprs.collect::<Vec<_>>(),
+                )
+                .unwrap();
+
+                source
+            };
+
         println!("{vertex_source}");
+        println!("============");
+        println!("{fragment_source}");
 
         Self {
             _phantom: PhantomData,
-        }
-    }
-}
-
-#[derive(Default)]
-struct VertexVisitor {
-    attributes: Vec<(String, Type)>,
-}
-
-impl VertexInterfaceVisitor<Sl> for VertexVisitor {
-    fn accept<V: Vertex<Sl>>(&mut self, path: &str, _: VertexInputRate, _: &V) {
-        for attribute in V::attributes(path) {
-            self.attributes.push((attribute.name, attribute.ty));
         }
     }
 }
@@ -161,5 +215,29 @@ impl ResourceInterfaceVisitor<Sl> for ResourceVisitor {
             arg_name: path.to_string(),
             ty: <U::InSl as Object>::ty(),
         })
+    }
+}
+
+#[derive(Default)]
+struct VertexVisitor {
+    attributes: Vec<(String, Type)>,
+}
+
+impl VertexInterfaceVisitor<Sl> for VertexVisitor {
+    fn accept<V: Vertex<Sl>>(&mut self, path: &str, _: VertexInputRate, _: &V) {
+        for attribute in V::attributes(path) {
+            self.attributes.push((attribute.name, attribute.ty));
+        }
+    }
+}
+
+#[derive(Default)]
+struct FragmentVisitor {
+    outputs: Vec<(String, Rc<Expr>)>,
+}
+
+impl FragmentInterfaceVisitor<Sl> for FragmentVisitor {
+    fn accept(&mut self, path: &str, output: &Vec4<f32>) {
+        self.outputs.push((path.to_string(), output.expr()));
     }
 }

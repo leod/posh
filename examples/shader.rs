@@ -43,7 +43,7 @@ fn fragment_shader(
     resources: impl ResourceInterface<Sl>,
     input: FragmentInput<sl::Vec4<f32>>,
 ) -> FragmentOutput<sl::Vec4<f32>> {
-    todo!()
+    FragmentOutput::new(input.varying * 3.0)
 }
 
 fn main() {

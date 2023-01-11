@@ -108,8 +108,8 @@ impl Display for BaseType {
         match self {
             Scalar(ty) => write!(f, "{ty}"),
             Vec2(ty) => write!(f, "{}vec2", primitive_type_prefix(*ty)),
-            Vec3(ty) => write!(f, "{}vec2", primitive_type_prefix(*ty)),
-            Vec4(ty) => write!(f, "{}vec2", primitive_type_prefix(*ty)),
+            Vec3(ty) => write!(f, "{}vec3", primitive_type_prefix(*ty)),
+            Vec4(ty) => write!(f, "{}vec4", primitive_type_prefix(*ty)),
             Struct(ty) => write!(f, "{}", ty.name),
             Sampler2d(ty) => write!(f, "{}sampler2D", numeric_type_prefix(*ty)),
         }
