@@ -135,9 +135,9 @@ pub trait VertexDomain: Domain {
 
 #[doc(hidden)]
 pub trait ResourceInterfaceVisitor<D: ResourceDomain> {
-    fn accept_sampler2d<T: Numeric>(&mut self, path: &str, vertex: &D::Sampler2d<T>);
+    fn accept_sampler2d<T: Numeric>(&mut self, path: &str, sampler: &D::Sampler2d<T>);
 
-    fn accept_uniform<U: Uniform<Sl, InSl = U>>(&mut self, path: &str, vertex: &D::Uniform<U>);
+    fn accept_uniform<U: Uniform<Sl, InSl = U>>(&mut self, path: &str, uniform: &D::Uniform<U>);
 }
 
 /// Types that declare the resource input interface of a shader.

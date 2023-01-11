@@ -5,7 +5,11 @@ use std::{
 
 use crate::dag::{BaseType, Expr, Type};
 
-use super::{ExprKey, SimplifiedExpr, StructRegistry, VarId};
+use super::{
+    simplified_expr::{SimplifiedExpr, VarId},
+    struct_registry::StructRegistry,
+    ExprKey,
+};
 
 #[derive(Default)]
 pub struct VarForm {

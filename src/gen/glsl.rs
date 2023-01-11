@@ -3,13 +3,25 @@ use std::{
     rc::Rc,
 };
 
-use crate::{
-    dag::{BaseType, Expr, Type},
-    gen::{struct_registry, VarForm},
-    sl::Struct,
+use crate::dag::{BaseType, Expr, Type};
+
+use super::{
+    scope_form::{Scope, ScopeForm, VarInit},
+    simplified_expr::VarId,
+    struct_registry::StructRegistry,
+    var_form::VarForm,
 };
 
-use super::{Scope, ScopeForm, StructRegistry, VarId, VarInit};
+pub struct UniformBlockDef {
+    /// The name of the uniform block.
+    pub block_name: String,
+
+    /// The name of the single field within the uniform block.
+    pub arg_name: String,
+
+    /// The type of the uniform block.
+    pub ty: Type,
+}
 
 #[derive(Debug, Clone)]
 struct WriteFuncContext<'a> {
@@ -45,11 +57,12 @@ impl Display for Indent {
 
 pub fn write_shader_stage(
     f: &mut impl Write,
+    uniform_block_defs: &[UniformBlockDef],
     attributes: impl Iterator<Item = (String, String, Type)>,
     outputs: &[(&str, Rc<Expr>)],
 ) -> Result {
     let roots: Vec<_> = outputs.iter().map(|(_, root)| root.clone()).collect();
-    let struct_registry = StructRegistry::new(&roots);
+    let struct_registry = StructRegistry::new(&roots, uniform_block_defs.iter().map(|def| &def.ty));
     let var_form = VarForm::new(&struct_registry, &roots);
     let scope_form = ScopeForm::new(&var_form);
 
@@ -60,6 +73,16 @@ pub fn write_shader_stage(
     };
 
     write_struct_defs(f, &struct_registry)?;
+
+    write!(f, "\n")?;
+
+    for def in uniform_block_defs {
+        let ty_name = type_name(&struct_registry, &def.ty);
+
+        write!(f, "uniform {} {{\n", def.block_name)?;
+        write!(f, "    {} {};\n", ty_name, def.arg_name)?;
+        write!(f, "}}\n")?;
+    }
 
     write!(f, "\n")?;
 
@@ -165,7 +188,7 @@ fn write_struct_defs(f: &mut impl Write, struct_registry: &StructRegistry) -> Re
     Ok(())
 }
 
-pub fn type_name(struct_registry: &StructRegistry, ty: &Type) -> String {
+fn type_name(struct_registry: &StructRegistry, ty: &Type) -> String {
     use Type::*;
 
     match ty {

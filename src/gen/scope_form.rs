@@ -2,7 +2,10 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::dag::Type;
 
-use super::{SimplifiedExpr, VarForm, VarId};
+use super::{
+    simplified_expr::{SimplifiedExpr, VarId},
+    var_form::VarForm,
+};
 
 pub type ScopeId = usize;
 

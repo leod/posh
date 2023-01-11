@@ -1,11 +1,15 @@
 use std::marker::PhantomData;
 
 use crate::{
-    dag::Type, gen::glsl, interface::VertexInterfaceVisitor, sl::Object, FragmentInterface,
-    ResourceInterface, Sl, Vertex, VertexInputRate, VertexInterface,
+    dag::Type,
+    gen::glsl::{self, UniformBlockDef},
+    interface::{ResourceInterfaceVisitor, VertexInterfaceVisitor},
+    sl::Object,
+    FragmentInterface, Numeric, ResourceDomain, ResourceInterface, Sl, Uniform, Vertex,
+    VertexInputRate, VertexInterface,
 };
 
-use super::{primitives::value_arg, Bool, Varying, Vec2, Vec4, F32, U32};
+use super::{primitives::value_arg, Bool, Sampler2d, Value, Varying, Vec2, Vec4, F32, U32};
 
 pub struct VertexInput<V> {
     pub vertex: V,
@@ -58,7 +62,10 @@ where
     where
         W: Varying,
     {
-        let resources = R::shader_input("resources");
+        let resources = R::shader_input("resource");
+
+        let mut resource_visitor = ResourceVisitor::default();
+        resources.visit("resource", &mut resource_visitor);
 
         let vertex_source = {
             let input = VertexInput {
@@ -70,7 +77,7 @@ where
             let varying_attributes = W::attributes("output");
 
             let attributes = {
-                let mut visitor = VertexAttributesVisitor::default();
+                let mut visitor = VertexVisitor::default();
                 input.vertex.visit(&mut visitor);
 
                 visitor
@@ -96,7 +103,13 @@ where
             );
 
             let mut source = String::new();
-            glsl::write_shader_stage(&mut source, attributes, &exprs).unwrap();
+            glsl::write_shader_stage(
+                &mut source,
+                &resource_visitor.uniform_block_defs,
+                attributes,
+                &exprs,
+            )
+            .unwrap();
 
             source
         };
@@ -110,14 +123,33 @@ where
 }
 
 #[derive(Default)]
-struct VertexAttributesVisitor {
+struct VertexVisitor {
     attributes: Vec<(String, Type)>,
 }
 
-impl VertexInterfaceVisitor<Sl> for VertexAttributesVisitor {
+impl VertexInterfaceVisitor<Sl> for VertexVisitor {
     fn accept<V: Vertex<Sl>>(&mut self, path: &str, _: VertexInputRate, _: &V) {
         for attribute in V::attributes(path) {
             self.attributes.push((attribute.name, attribute.ty));
         }
+    }
+}
+
+#[derive(Default)]
+struct ResourceVisitor {
+    uniform_block_defs: Vec<UniformBlockDef>,
+}
+
+impl ResourceInterfaceVisitor<Sl> for ResourceVisitor {
+    fn accept_sampler2d<T: Numeric>(&mut self, path: &str, sampler: &Sampler2d<T>) {
+        todo!()
+    }
+
+    fn accept_uniform<U: Uniform<Sl>>(&mut self, path: &str, _: &U) {
+        self.uniform_block_defs.push(UniformBlockDef {
+            block_name: path.to_string() + "_posh_block",
+            arg_name: path.to_string(),
+            ty: <U::InSl as Object>::TYPE,
+        })
     }
 }

@@ -25,15 +25,19 @@ pub struct StructRegistry {
 }
 
 impl StructRegistry {
-    pub fn new<'a>(roots: &[Rc<Expr>]) -> Self {
+    pub fn new<'a>(roots: &[Rc<Expr>], extra_types: impl Iterator<Item = &'a Type>) -> Self {
         let mut structs = HashMap::new();
 
         {
             let mut visited = HashSet::new();
 
             for expr in roots {
-                collect_structs(expr, &mut visited, &mut structs);
+                collect_structs_in_expr(expr, &mut visited, &mut structs);
             }
+        }
+
+        for ty in extra_types {
+            collect_structs_in_type(ty, &mut structs);
         }
 
         let defs = topological_ordering(structs);
@@ -71,7 +75,21 @@ fn get_struct_type(ty: &Type) -> Option<&'static StructType> {
     }
 }
 
-fn collect_structs(
+fn collect_structs_in_type(ty: &Type, structs: &mut HashMap<StructKey, &'static StructType>) {
+    if let Some(ty) = get_struct_type(ty) {
+        println!("find {:?} @ {:?}", ty, StructKey::from(ty));
+
+        if structs.insert(ty.into(), ty).is_some() {
+            return;
+        }
+
+        for (_, field_ty) in ty.fields {
+            collect_structs_in_type(field_ty, structs);
+        }
+    }
+}
+
+fn collect_structs_in_expr(
     expr: &Rc<Expr>,
     visited: &mut HashSet<ExprKey>,
     structs: &mut HashMap<StructKey, &'static StructType>,
@@ -84,40 +102,38 @@ fn collect_structs(
 
     visited.insert(expr.into());
 
-    if let Some(ty) = get_struct_type(&expr.ty()) {
-        structs.insert(ty.into(), ty);
-    }
+    collect_structs_in_type(&expr.ty(), structs);
 
     match &**expr {
         Arg { .. } | ScalarLiteral { .. } => (),
         StructLiteral { args, .. } => {
             for arg in args {
-                collect_structs(arg, visited, structs);
+                collect_structs_in_expr(arg, visited, structs);
             }
         }
         Binary { left, right, .. } => {
-            collect_structs(left, visited, structs);
-            collect_structs(right, visited, structs);
+            collect_structs_in_expr(left, visited, structs);
+            collect_structs_in_expr(right, visited, structs);
         }
         CallFuncDef { def, args, .. } => {
-            collect_structs(&def.result, visited, structs);
+            collect_structs_in_expr(&def.result, visited, structs);
 
             for arg in args {
-                collect_structs(arg, visited, structs);
+                collect_structs_in_expr(arg, visited, structs);
             }
         }
         CallBuiltIn { args, .. } => {
             for arg in args {
-                collect_structs(arg, visited, structs);
+                collect_structs_in_expr(arg, visited, structs);
             }
         }
         Field { base, .. } => {
-            collect_structs(base, visited, structs);
+            collect_structs_in_expr(base, visited, structs);
         }
         Branch { cond, yes, no, .. } => {
-            collect_structs(cond, visited, structs);
-            collect_structs(yes, visited, structs);
-            collect_structs(no, visited, structs);
+            collect_structs_in_expr(cond, visited, structs);
+            collect_structs_in_expr(yes, visited, structs);
+            collect_structs_in_expr(no, visited, structs);
         }
     }
 }

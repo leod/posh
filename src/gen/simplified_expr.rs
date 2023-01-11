@@ -1,4 +1,4 @@
-use std::fmt::{self, Display, Formatter, Result, Write};
+use std::fmt::{Display, Formatter, Result, Write};
 
 use crate::dag::{BaseType, BinaryOp, PrimitiveType, Type};
 
