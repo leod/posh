@@ -106,7 +106,7 @@ impl VarForm {
                 }
             }
             Expr::CallBuiltIn { name, args, ty } => SimplifiedExpr::CallFunc {
-                name: name.to_string(),
+                name,
                 args: args.into_iter().map(map_succ).collect(),
                 ty,
             },

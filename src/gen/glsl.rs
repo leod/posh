@@ -74,32 +74,32 @@ pub fn write_shader_stage(
 
     write_struct_defs(f, &struct_registry)?;
 
-    write!(f, "\n")?;
+    writeln!(f)?;
 
     for def in uniform_block_defs {
         let ty_name = type_name(&struct_registry, &def.ty);
 
-        write!(f, "uniform {} {{\n", def.block_name)?;
-        write!(f, "    {} {};\n", ty_name, def.arg_name)?;
-        write!(f, "}}\n")?;
+        writeln!(f, "uniform {} {{", def.block_name)?;
+        writeln!(f, "    {} {};", ty_name, def.arg_name)?;
+        writeln!(f, "}};")?;
     }
 
-    write!(f, "\n")?;
+    writeln!(f)?;
 
     for (kind, name, ty) in attributes {
         let ty_name = type_name(&struct_registry, &ty);
 
-        write!(f, "{kind} {ty_name} {name};\n")?;
+        writeln!(f, "{kind} {ty_name} {name};")?;
     }
 
-    write!(f, "\n")?;
+    writeln!(f)?;
 
-    write!(f, "void main() {{\n")?;
+    writeln!(f, "void main() {{")?;
     write_scope(f, write_context, scope_form.root_scope())?;
     for ((name, _), simplified_expr) in outputs.iter().zip(var_form.simplified_roots()) {
-        write!(f, "    {name} = {simplified_expr};\n")?;
+        writeln!(f, "    {name} = {simplified_expr};")?;
     }
-    write!(f, "}}\n")?;
+    writeln!(f, "}}")?;
 
     Ok(())
 }
@@ -118,7 +118,7 @@ fn write_var(
         Expr(expr) => {
             let ty_name = type_name(ctx.struct_registry, &expr.ty());
 
-            write!(f, "{indent}{ty_name} {var_id} = {expr};\n")
+            writeln!(f, "{indent}{ty_name} {var_id} = {expr};")
         }
         Branch {
             cond,
@@ -128,8 +128,8 @@ fn write_var(
         } => {
             let ty_name = type_name(ctx.struct_registry, ty);
 
-            write!(f, "{indent}{ty_name} {var_id};\n")?;
-            write!(f, "{indent}if {cond} {{\n")?;
+            writeln!(f, "{indent}{ty_name} {var_id};")?;
+            writeln!(f, "{indent}if {cond} {{")?;
 
             {
                 let ctx = ctx.nest();
@@ -140,10 +140,10 @@ fn write_var(
 
                 write_scope(f, ctx, yes_scope)?;
 
-                write!(f, "{indent}{var_id} = {result};\n")?;
+                writeln!(f, "{indent}{var_id} = {result};")?;
             }
 
-            write!(f, "{indent}}} else {{\n")?;
+            writeln!(f, "{indent}}} else {{")?;
 
             {
                 let ctx = ctx.nest();
@@ -154,10 +154,10 @@ fn write_var(
 
                 write_scope(f, ctx, no_scope)?;
 
-                write!(f, "{indent}{var_id} = {result};\n")?;
+                writeln!(f, "{indent}{var_id} = {result};")?;
             }
 
-            write!(f, "{indent}}}\n")?;
+            writeln!(f, "{indent}}}")?;
 
             Ok(())
         }
@@ -174,15 +174,15 @@ fn write_scope(f: &mut impl Write, ctx: WriteFuncContext, scope: &Scope) -> Resu
 
 fn write_struct_defs(f: &mut impl Write, struct_registry: &StructRegistry) -> Result {
     for (name, ty) in struct_registry.defs() {
-        write!(f, "struct {name} {{\n")?;
+        writeln!(f, "struct {name} {{")?;
 
         for (field_name, field_ty) in ty.fields.iter() {
             let field_ty_name = type_name(struct_registry, field_ty);
 
-            write!(f, "    {field_ty_name} {field_name};\n")?;
+            writeln!(f, "    {field_ty_name} {field_name};")?;
         }
 
-        write!(f, "}}\n")?;
+        writeln!(f, "}};")?;
     }
 
     Ok(())

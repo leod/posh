@@ -5,7 +5,7 @@ use super::{
     BaseType, Type,
 };
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum BinaryOp {
     Add,
     Sub,
@@ -16,14 +16,14 @@ pub enum BinaryOp {
     Or,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone)]
 pub struct FuncDef {
     pub name: &'static str,
     pub params: Vec<(&'static str, Type)>,
     pub result: Rc<Expr>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone)]
 pub enum Expr {
     Arg {
         name: String,

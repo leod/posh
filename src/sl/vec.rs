@@ -4,13 +4,13 @@ use std::{
 };
 
 use crate::{
-    dag::{BaseType, BinaryOp, Expr, StructType, Type},
+    dag::{BaseType, BinaryOp, Expr, Type},
     Numeric, Primitive,
 };
 
 use super::{
     primitives::{binary, common_field_base, field, value_arg},
-    Object, Scalar, Struct, ToValue, Value,
+    Object, Scalar, ToValue, Value,
 };
 
 /// A two-dimensional vector in the shading language.

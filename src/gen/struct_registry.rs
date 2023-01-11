@@ -10,7 +10,7 @@ use super::ExprKey;
 type StructId = usize;
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub struct StructKey(*const StructType);
+struct StructKey(*const StructType);
 
 impl<'a> From<&'a Rc<StructType>> for StructKey {
     fn from(value: &'a Rc<StructType>) -> Self {
@@ -54,11 +54,11 @@ impl StructRegistry {
         struct_name(&ty.name, self.ids[&ty.into()])
     }
 
-    pub fn defs(&self) -> impl Iterator<Item = (String, &Rc<StructType>)> + '_ {
+    pub fn defs(&self) -> impl Iterator<Item = (String, &StructType)> + '_ {
         self.defs
             .iter()
             .enumerate()
-            .map(|(id, ty)| (struct_name(&ty.name, id), ty))
+            .map(|(id, ty)| (struct_name(&ty.name, id), &**ty))
     }
 }
 
@@ -77,14 +77,12 @@ fn get_struct_type(ty: &Type) -> Option<&Rc<StructType>> {
 
 fn collect_structs_in_type(ty: &Type, structs: &mut HashMap<StructKey, Rc<StructType>>) {
     if let Some(ty) = get_struct_type(ty) {
-        println!("find {:?} @ {:?}", ty, StructKey::from(ty));
-
         if structs.insert(ty.into(), ty.clone()).is_some() {
             return;
         }
 
         for (_, field_ty) in &ty.fields {
-            collect_structs_in_type(&field_ty, structs);
+            collect_structs_in_type(field_ty, structs);
         }
     }
 }
@@ -157,7 +155,7 @@ fn visit(
     temporary_mark.insert(key);
 
     for (_, field_ty) in &ty.fields {
-        if let Some(succ) = get_struct_type(&field_ty) {
+        if let Some(succ) = get_struct_type(field_ty) {
             visit(succ, permanent_mark, temporary_mark, output);
         }
     }
