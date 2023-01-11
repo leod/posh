@@ -12,6 +12,7 @@ use super::{
     var_form::VarForm,
 };
 
+// TODO: Merge with `untyped::UniformBlockInfo` and move somewhere up.
 pub struct UniformBlockDef {
     /// The name of the uniform block.
     pub block_name: String,
@@ -21,6 +22,9 @@ pub struct UniformBlockDef {
 
     /// The type of the uniform block.
     pub ty: Type,
+
+    /// The location to which this uniform block is to be bound in the program.
+    pub location: usize,
 }
 
 #[derive(Debug, Clone)]
