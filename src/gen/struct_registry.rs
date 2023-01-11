@@ -12,15 +12,15 @@ type StructId = usize;
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct StructKey(*const StructType);
 
-impl<'a> From<&'static StructType> for StructKey {
-    fn from(value: &'static StructType) -> Self {
-        StructKey(value as *const _)
+impl<'a> From<&'a Rc<StructType>> for StructKey {
+    fn from(value: &'a Rc<StructType>) -> Self {
+        StructKey(&**value as *const _)
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct StructRegistry {
-    defs: Vec<&'static StructType>,
+    defs: Vec<Rc<StructType>>,
     ids: HashMap<StructKey, StructId>,
 }
 
@@ -44,47 +44,47 @@ impl StructRegistry {
         let ids = defs
             .iter()
             .enumerate()
-            .map(|(id, &ty)| (StructKey::from(ty), id))
+            .map(|(id, ty)| (StructKey::from(ty), id))
             .collect();
 
         Self { defs, ids }
     }
 
-    pub fn name(&self, ty: &'static StructType) -> String {
-        struct_name(ty.name, self.ids[&ty.into()])
+    pub fn name(&self, ty: &Rc<StructType>) -> String {
+        struct_name(&ty.name, self.ids[&ty.into()])
     }
 
-    pub fn defs(&self) -> impl Iterator<Item = (String, &'static StructType)> + '_ {
+    pub fn defs(&self) -> impl Iterator<Item = (String, &Rc<StructType>)> + '_ {
         self.defs
             .iter()
             .enumerate()
-            .map(|(id, ty)| (struct_name(ty.name, id), *ty))
+            .map(|(id, ty)| (struct_name(&ty.name, id), ty))
     }
 }
 
-fn struct_name(name: &'static str, id: StructId) -> String {
+fn struct_name(name: &str, id: StructId) -> String {
     format!("{name}_Posh{id}")
 }
 
-fn get_struct_type(ty: &Type) -> Option<&'static StructType> {
+fn get_struct_type(ty: &Type) -> Option<&Rc<StructType>> {
     use Type::*;
 
     match ty {
-        Array(BaseType::Struct(ty), _) | Base(BaseType::Struct(ty)) if !ty.is_built_in => Some(ty),
+        Array(BaseType::Struct(ty), _) | Base(BaseType::Struct(ty)) => Some(ty),
         Array(_, _) | Base(_) => None,
     }
 }
 
-fn collect_structs_in_type(ty: &Type, structs: &mut HashMap<StructKey, &'static StructType>) {
+fn collect_structs_in_type(ty: &Type, structs: &mut HashMap<StructKey, Rc<StructType>>) {
     if let Some(ty) = get_struct_type(ty) {
         println!("find {:?} @ {:?}", ty, StructKey::from(ty));
 
-        if structs.insert(ty.into(), ty).is_some() {
+        if structs.insert(ty.into(), ty.clone()).is_some() {
             return;
         }
 
-        for (_, field_ty) in ty.fields {
-            collect_structs_in_type(field_ty, structs);
+        for (_, field_ty) in &ty.fields {
+            collect_structs_in_type(&field_ty, structs);
         }
     }
 }
@@ -92,7 +92,7 @@ fn collect_structs_in_type(ty: &Type, structs: &mut HashMap<StructKey, &'static 
 fn collect_structs_in_expr(
     expr: &Rc<Expr>,
     visited: &mut HashSet<ExprKey>,
-    structs: &mut HashMap<StructKey, &'static StructType>,
+    structs: &mut HashMap<StructKey, Rc<StructType>>,
 ) {
     use Expr::*;
 
@@ -139,10 +139,10 @@ fn collect_structs_in_expr(
 }
 
 fn visit(
-    ty: &'static StructType,
+    ty: &Rc<StructType>,
     permanent_mark: &mut HashSet<StructKey>,
     temporary_mark: &mut HashSet<StructKey>,
-    output: &mut Vec<&'static StructType>,
+    output: &mut Vec<Rc<StructType>>,
 ) {
     let key: StructKey = ty.into();
 
@@ -156,20 +156,18 @@ fn visit(
 
     temporary_mark.insert(key);
 
-    for (_, field_ty) in ty.fields {
-        if let Some(succ) = get_struct_type(field_ty) {
+    for (_, field_ty) in &ty.fields {
+        if let Some(succ) = get_struct_type(&field_ty) {
             visit(succ, permanent_mark, temporary_mark, output);
         }
     }
 
     temporary_mark.remove(&key);
     permanent_mark.insert(key);
-    output.push(ty);
+    output.push(ty.clone());
 }
 
-fn topological_ordering(
-    structs: HashMap<StructKey, &'static StructType>,
-) -> Vec<&'static StructType> {
+fn topological_ordering(structs: HashMap<StructKey, Rc<StructType>>) -> Vec<Rc<StructType>> {
     let mut permanent_mark = HashSet::new();
     let mut temporary_mark = HashSet::new();
     let mut output = Vec::new();

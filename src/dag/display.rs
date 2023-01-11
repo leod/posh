@@ -45,7 +45,7 @@ impl Display for Expr {
         match self {
             Arg { name, .. } => f.write_str(name),
             ScalarLiteral { value, .. } => f.write_str(value),
-            StructLiteral { args, ty } => write_call(f, ty.name, args),
+            StructLiteral { args, ty } => write_call(f, &ty.name, args),
             Binary {
                 left, op, right, ..
             } => write!(f, "({left} {op} {right})"),

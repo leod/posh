@@ -1,4 +1,4 @@
-use std::{collections::BTreeSet, rc::Rc};
+use std::rc::Rc;
 
 use crate::dag::{BaseType, BinaryOp, Expr, FuncDef, StructType, Type};
 
@@ -14,7 +14,7 @@ where
     V: Value,
     R: Value,
 {
-    let ty = R::TYPE;
+    let ty = R::ty();
     let left = left.to_value().expr();
     let right = right.to_value().expr();
 
@@ -33,7 +33,8 @@ where
     U: Object,
     R: Value,
 {
-    let ty = R::TYPE;
+    let ty = R::ty();
+    let name = name.to_string();
     let args = vec![u.to_value().expr()];
 
     let expr = Expr::CallBuiltIn { ty, name, args };
@@ -51,7 +52,8 @@ where
     V: Object,
     R: Value,
 {
-    let ty = R::TYPE;
+    let ty = R::ty();
+    let name = name.to_string();
     let args = vec![u.to_value().expr(), v.to_value().expr()];
 
     let expr = Expr::CallBuiltIn { ty, name, args };
@@ -71,7 +73,8 @@ where
     W: Object,
     R: Value,
 {
-    let ty = R::TYPE;
+    let ty = R::ty();
+    let name = name.to_string();
     let args = vec![
         u.to_value().expr(),
         v.to_value().expr(),
@@ -97,7 +100,8 @@ where
     X: Object,
     R: Value,
 {
-    let ty = R::TYPE;
+    let ty = R::ty();
+    let name = name.to_string();
     let args = vec![
         u.to_value().expr(),
         v.to_value().expr(),
@@ -112,7 +116,7 @@ where
 
 #[doc(hidden)]
 pub fn field<R: Value>(base: Rc<Expr>, name: &'static str) -> R {
-    let ty = R::TYPE;
+    let ty = R::ty();
 
     let expr = Expr::Field { ty, base, name };
 
@@ -129,10 +133,11 @@ pub fn call_func_def<R: Value>(def: FuncDef, args: Vec<Rc<Expr>>) -> R {
 }
 
 #[doc(hidden)]
-pub fn simplify_struct_literal(ty: &'static StructType, args: &[Rc<Expr>]) -> Rc<Expr> {
+pub fn simplify_struct_literal(ty: Rc<StructType>, args: &[Rc<Expr>]) -> Rc<Expr> {
     assert!(ty.fields.len() == args.len());
 
-    let common_base = common_field_base(ty, args);
+    let fields = ty.fields.iter().map(|(name, _)| name.as_str());
+    let common_base = common_field_base(&BaseType::Struct(ty.clone()), fields, args);
 
     if let Some(common_base) = common_base {
         common_base
@@ -149,40 +154,47 @@ pub fn simplify_struct_literal(ty: &'static StructType, args: &[Rc<Expr>]) -> Rc
 #[doc(hidden)]
 pub fn value_arg<R: Value>(name: &str) -> R {
     R::from_expr(Expr::Arg {
-        ty: R::TYPE,
+        ty: R::ty(),
         name: name.into(),
     })
 }
 
-fn common_field_base(struct_ty: &'static StructType, args: &[Rc<Expr>]) -> Option<Rc<Expr>> {
-    let ty = Type::Base(BaseType::Struct(struct_ty));
+#[doc(hidden)]
+pub fn common_field_base<'a>(
+    base_ty: &BaseType,
+    required_fields: impl Iterator<Item = &'a str>,
+    args: &[Rc<Expr>],
+) -> Option<Rc<Expr>> {
+    let required_fields: Vec<_> = required_fields.collect();
+
+    if required_fields.len() != args.len() {
+        return None;
+    }
 
     let first_expr = args.first()?;
     let first_base = if let Expr::Field { base, .. } = &**first_expr {
-        Some(base)
+        base
     } else {
-        None
-    }?;
+        return None;
+    };
 
-    // FIXME: The equality check in `is_match` might be dangerous, due to
-    // potential exponential blow up. We might need a better solution here. For
-    // the purposes of `common_field_base`, referential equality could be
-    // enough.
-    let is_match = |base: &Rc<Expr>| base.ty() == ty && base == first_base;
+    for (required_field, arg) in required_fields.into_iter().zip(args) {
+        if let Type::Base(arg_ty) = arg.ty() {
+            if arg_ty != *base_ty {
+                return None;
+            }
+        } else {
+            return None;
+        }
 
-    let given_fields: BTreeSet<_> = args
-        .iter()
-        .map(|arg| match &**arg {
-            Expr::Field { base, name, .. } if is_match(base) => Some(*name),
-            _ => None,
-        })
-        .collect::<Option<_>>()?;
-
-    let needed_fields: BTreeSet<_> = struct_ty.fields.iter().map(|(name, _)| *name).collect();
-
-    if given_fields == needed_fields {
-        Some(first_base.clone())
-    } else {
-        None
+        if let Expr::Field { base, name, .. } = &**arg {
+            if !Rc::ptr_eq(base, first_base) || *name != required_field {
+                return None;
+            }
+        } else {
+            return None;
+        }
     }
+
+    Some(first_base.clone())
 }

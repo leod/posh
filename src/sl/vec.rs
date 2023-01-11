@@ -9,7 +9,7 @@ use crate::{
 };
 
 use super::{
-    primitives::{binary, field, simplify_struct_literal, value_arg},
+    primitives::{binary, common_field_base, field, value_arg},
     Object, Scalar, Struct, ToValue, Value,
 };
 
@@ -70,30 +70,40 @@ pub struct Vec4<T> {
 // Implements `Object` and `Value` for `$ty<T>`.
 macro_rules! impl_value {
     ($ty:ident, $mint_ty: ident, $name:literal, $($member:ident),+) => {
-        impl<T: Primitive> Struct for $ty<T> {
-            const STRUCT_TYPE: StructType = StructType {
-                // FIXME: Vec*<T> struct name.
-                name: $name,
-                fields: &[
-                    $((stringify!($member), Type::Base(BaseType::Scalar(T::PRIMITIVE_TYPE)))),+
-                ],
-                is_built_in: true,
-            };
-        }
-
         impl<T: Primitive> Object for $ty<T> {
-            //const TYPE: Type = Type::Base(BaseType::$ty(T::PRIMITIVE_TYPE));
-
-            // FIXME: This is a hack so we can use `simplify_struct_literal`,
-            // but it breaks other things. Should we perhaps move
-            // `simplify_struct_literal` to codegen?
-            const TYPE: Type = Type::Base(BaseType::Struct(&Self::STRUCT_TYPE));
+            fn ty() -> Type {
+                Type::Base(BaseType::$ty(T::PRIMITIVE_TYPE))
+            }
 
             fn expr(&self) -> Rc<Expr> {
-                simplify_struct_literal(
-                    &Self::STRUCT_TYPE,
-                    &[$(self.$member.expr()),+],
-                )
+                if let Some(base) = common_field_base(
+                    &BaseType::$ty(T::PRIMITIVE_TYPE),
+                    [
+                        $(
+                            std::stringify!($member)
+                        ),+
+                    ]
+                    .into_iter(),
+                    &[
+                        $(
+                            self.$member.expr()
+                        ),+,
+                    ],
+                ) {
+                    base
+                } else {
+                    let ty = Self::ty();
+                    let name = format!("{}", ty);
+                    let args = vec![
+                        $(
+                            self.$member.expr()
+                        ),+,
+                    ];
+
+                    let expr = Expr::CallBuiltIn { ty, name, args };
+
+                    Rc::new(expr)
+                }
             }
 
             fn from_arg(path: &str) -> Self {

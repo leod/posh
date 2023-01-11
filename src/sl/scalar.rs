@@ -39,7 +39,9 @@ impl<T: Primitive> Default for Scalar<T> {
 }
 
 impl<T: Primitive> Object for Scalar<T> {
-    const TYPE: Type = Type::Base(BaseType::Scalar(T::PRIMITIVE_TYPE));
+    fn ty() -> Type {
+        Type::Base(BaseType::Scalar(T::PRIMITIVE_TYPE))
+    }
 
     fn expr(&self) -> Rc<Expr> {
         self.trace.expr()
@@ -52,7 +54,7 @@ impl<T: Primitive> Object for Scalar<T> {
 
 impl<T: Primitive> Value for Scalar<T> {
     fn from_expr(expr: Expr) -> Self {
-        assert!(expr.ty() == Self::TYPE);
+        assert!(expr.ty() == Self::ty());
 
         Self {
             trace: Trace::new(expr),
@@ -110,7 +112,7 @@ impl Scalar<bool> {
         yes: impl ToValue<Output = V>,
         no: impl ToValue<Output = V>,
     ) -> V {
-        let ty = V::TYPE;
+        let ty = V::ty();
         let cond = self.expr();
         let yes = yes.to_value().expr();
         let no = no.to_value().expr();

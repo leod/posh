@@ -4,32 +4,37 @@ use crate::dag::{BaseType, Expr, StructType, Type};
 
 use super::{
     primitives::{field, simplify_struct_literal, value_arg},
-    Object, Struct, ToValue, Value,
+    unique_struct_type, Object, Struct, ToValue, Value,
 };
 
 macro_rules! impl_value {
     ($($name: ident),*) => {
         impl<$($name: Value),*> Struct for ($($name),*) {
-            const STRUCT_TYPE: StructType = StructType {
-                name: "tuple",
-                fields: &[
-                    $(
-                        (stringify!($name), $name::TYPE)
-                    ),*
-                ],
-                is_built_in: false,
-            };
+            fn struct_type() -> Rc<StructType> {
+                unique_struct_type::<Self>(
+                    || StructType {
+                        name: "tuple".to_string(),
+                        fields: vec![
+                            $(
+                                (stringify!($name).to_string(), <$name as Object>::ty())
+                            ),*
+                        ],
+                    }
+                )
+            }
         }
 
         impl<$($name: Value),*> Object for ($($name),*) {
-            const TYPE: Type = Type::Base(BaseType::Struct(&Self::STRUCT_TYPE));
+            fn ty() -> Type {
+                Type::Base(BaseType::Struct(Self::struct_type()))
+            }
 
             fn expr(&self) -> Rc<Expr> {
                 #[allow(non_snake_case)]
                 let ($($name),*) = self;
 
                 simplify_struct_literal(
-                    &Self::STRUCT_TYPE,
+                    Self::struct_type(),
                     &[
                         $(
                             $name.expr()

@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum NumericType {
     F32,
@@ -13,19 +15,34 @@ pub enum PrimitiveType {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct StructType {
-    pub name: &'static str,
-    pub fields: &'static [(&'static str, Type)],
-    pub is_built_in: bool,
+    pub name: String,
+    pub fields: Vec<(String, Type)>,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Eq, Hash)]
 pub enum BaseType {
     Scalar(PrimitiveType),
     Vec2(PrimitiveType),
     Vec3(PrimitiveType),
     Vec4(PrimitiveType),
-    Struct(&'static StructType),
+    Struct(Rc<StructType>),
     Sampler2d(NumericType),
+}
+
+impl PartialEq for BaseType {
+    fn eq(&self, other: &Self) -> bool {
+        use BaseType::*;
+
+        match (self, other) {
+            (Scalar(a), Scalar(b)) => a == b,
+            (Vec2(a), Vec2(b)) => a == b,
+            (Vec3(a), Vec3(b)) => a == b,
+            (Vec4(a), Vec4(b)) => a == b,
+            (Struct(a), Struct(b)) => Rc::ptr_eq(a, b),
+            (Sampler2d(a), Sampler2d(b)) => a == b,
+            _ => false,
+        }
+    }
 }
 
 impl BaseType {

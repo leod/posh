@@ -82,11 +82,7 @@ impl VarForm {
             Expr::Arg { name, ty } => SimplifiedExpr::Arg { name, ty },
             Expr::ScalarLiteral { value, ty } => SimplifiedExpr::ScalarLiteral { value, ty },
             Expr::StructLiteral { args, ty } => SimplifiedExpr::CallFunc {
-                name: if ty.is_built_in {
-                    ty.name.into()
-                } else {
-                    struct_registry.name(ty)
-                },
+                name: struct_registry.name(&ty),
                 args: args.into_iter().map(map_succ).collect(),
                 ty: Type::Base(BaseType::Struct(ty)),
             },

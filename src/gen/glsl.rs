@@ -176,7 +176,7 @@ fn write_struct_defs(f: &mut impl Write, struct_registry: &StructRegistry) -> Re
     for (name, ty) in struct_registry.defs() {
         write!(f, "struct {name} {{\n")?;
 
-        for (field_name, field_ty) in ty.fields {
+        for (field_name, field_ty) in ty.fields.iter() {
             let field_ty_name = type_name(struct_registry, field_ty);
 
             write!(f, "    {field_ty_name} {field_name};\n")?;
@@ -192,10 +192,8 @@ fn type_name(struct_registry: &StructRegistry, ty: &Type) -> String {
     use Type::*;
 
     match ty {
-        Base(BaseType::Struct(ty)) if !ty.is_built_in => struct_registry.name(ty),
-        Array(BaseType::Struct(ty), size) if !ty.is_built_in => {
-            format!("{}[{}]", struct_registry.name(ty), size)
-        }
+        Base(BaseType::Struct(ty)) => struct_registry.name(ty),
+        Array(BaseType::Struct(ty), size) => format!("{}[{}]", struct_registry.name(ty), size),
         ty => format!("{ty}"),
     }
 }
