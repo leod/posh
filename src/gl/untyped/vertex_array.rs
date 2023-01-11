@@ -10,6 +10,7 @@ use crate::{
 
 use super::{Buffer, GeometryStream};
 
+// TODO: Move somewhere up.
 #[derive(Debug, Clone)]
 pub struct VertexInfo {
     pub input_rate: VertexInputRate,

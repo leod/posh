@@ -1,8 +1,14 @@
 use std::marker::PhantomData;
 
-use crate::{sl::Varying, FragmentInterface, ResourceInterface, Sl, VertexInterface};
+use crate::{
+    sl::{self, FragmentInput, FragmentOutput, Varying, VertexInput, VertexOutput},
+    FragmentInterface, ResourceInterface, Sl, VertexInterface,
+};
 
-use super::{DrawParams, GeometryStream, Surface};
+use super::{
+    untyped::{self, UniformBlockInfo},
+    DrawParams, GeometryStream, Surface,
+};
 
 pub struct Program<R, A, F> {
     _phantom: PhantomData<(R, A, F)>,
@@ -14,10 +20,29 @@ where
     V: VertexInterface<Sl, InSl = V>,
     F: FragmentInterface<Sl, InSl = F>,
 {
-    pub fn new<W>(vertex_shader: fn(R, V) -> W, fragment_shader: fn(R, W) -> F) -> Self
+    pub fn new<W>(
+        vertex_shader: fn(R, VertexInput<V>) -> VertexOutput<W>,
+        fragment_shader: fn(R, FragmentInput<W>) -> FragmentOutput<F>,
+    ) -> Self
     where
         W: Varying,
     {
+        let typed_program_def = sl::ProgramDef::new(vertex_shader, fragment_shader);
+        let untpyed_program_def = untyped::ProgramDef {
+            uniform_block_infos: typed_program_def
+                .uniform_block_defs
+                .into_iter()
+                .map(|def| UniformBlockInfo {
+                    name: def.block_name,
+                    location: def.location,
+                })
+                .collect(),
+            sampler_infos: Vec::new(), // TODO
+            vertex_infos: typed_program_def.vertex_infos,
+            vertex_shader_source: typed_program_def.vertex_shader_source,
+            fragment_shader_source: typed_program_def.fragment_shader_source,
+        };
+
         Program {
             _phantom: PhantomData,
         }

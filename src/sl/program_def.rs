@@ -3,6 +3,7 @@ use std::{iter::once, marker::PhantomData, rc::Rc};
 use crate::{
     dag::{Expr, Type},
     gen::glsl::{self, UniformBlockDef},
+    gl::untyped::VertexInfo,
     interface::{FragmentInterfaceVisitor, ResourceInterfaceVisitor, VertexInterfaceVisitor},
     sl::Object,
     FragmentInterface, Numeric, ResourceInterface, Sl, Uniform, Vertex, VertexInputRate,
@@ -64,6 +65,10 @@ impl<F> FragmentOutput<F> {
 }
 
 pub struct ProgramDef<R, A, F> {
+    pub uniform_block_defs: Vec<UniformBlockDef>,
+    pub vertex_infos: Vec<VertexInfo>,
+    pub vertex_shader_source: String,
+    pub fragment_shader_source: String,
     _phantom: PhantomData<(R, A, F)>,
 }
 
@@ -82,10 +87,14 @@ where
     {
         let resources = R::shader_input("resource");
 
-        let mut resource_visitor = ResourceVisitor::default();
-        resources.visit("resource", &mut resource_visitor);
+        let uniform_block_defs = {
+            let mut resource_visitor = ResourceVisitor::default();
+            resources.visit("resource", &mut resource_visitor);
 
-        let (vertex_source, varying_outputs) = {
+            resource_visitor.uniform_block_defs
+        };
+
+        let (vertex_infos, varying_outputs, vertex_source) = {
             let input = || VertexInput {
                 vertex: V::shader_input("vertex"),
                 vertex_id: value_arg("gl_VertexID"),
@@ -95,21 +104,22 @@ where
             let output = vertex_shader(resources, input());
 
             let varying_outputs = output.varying.shader_outputs("output");
-            let attributes = {
+            let (vertex_attributes, vertex_infos) = {
                 let mut visitor = VertexVisitor::default();
                 input().vertex.visit(&mut visitor);
 
-                visitor
-                    .attributes
-                    .into_iter()
-                    .map(|(name, ty)| ("in".to_string(), name, ty))
-            }
-            .chain(
-                // TODO: Interpolation type.
-                varying_outputs
-                    .iter()
-                    .map(|(name, expr)| ("out".to_string(), name.clone(), expr.ty())),
-            );
+                (visitor.attributes, visitor.infos)
+            };
+
+            let attributes = vertex_attributes
+                .into_iter()
+                .map(|(name, ty)| ("in".to_string(), name, ty))
+                .chain(
+                    // TODO: Interpolation type.
+                    varying_outputs
+                        .iter()
+                        .map(|(name, expr)| ("out".to_string(), name.clone(), expr.ty())),
+                );
             let exprs = once(("gl_Position", output.position.expr()))
                 .chain(
                     varying_outputs
@@ -125,13 +135,13 @@ where
             let mut source = String::new();
             glsl::write_shader_stage(
                 &mut source,
-                &resource_visitor.uniform_block_defs,
+                &uniform_block_defs,
                 attributes,
                 &exprs.collect::<Vec<_>>(),
             )
             .unwrap();
 
-            (source, varying_outputs)
+            (vertex_infos, varying_outputs, source)
         };
 
         let resources = R::shader_input("resource");
@@ -180,7 +190,7 @@ where
                 let mut source = String::new();
                 glsl::write_shader_stage(
                     &mut source,
-                    &resource_visitor.uniform_block_defs,
+                    &uniform_block_defs,
                     attributes,
                     &exprs.collect::<Vec<_>>(),
                 )
@@ -189,11 +199,11 @@ where
                 source
             };
 
-        println!("{vertex_source}");
-        println!("============");
-        println!("{fragment_source}");
-
         Self {
+            uniform_block_defs,
+            vertex_infos,
+            vertex_shader_source: vertex_source,
+            fragment_shader_source: fragment_source,
             _phantom: PhantomData,
         }
     }
@@ -210,10 +220,12 @@ impl ResourceInterfaceVisitor<Sl> for ResourceVisitor {
     }
 
     fn accept_uniform<U: Uniform<Sl>>(&mut self, path: &str, _: &U) {
+        // TODO: Allow user-specified uniform block locations.
         self.uniform_block_defs.push(UniformBlockDef {
             block_name: path.to_string() + "_posh_block",
             arg_name: path.to_string(),
             ty: <U::InSl as Object>::ty(),
+            location: self.uniform_block_defs.len(),
         })
     }
 }
@@ -221,13 +233,20 @@ impl ResourceInterfaceVisitor<Sl> for ResourceVisitor {
 #[derive(Default)]
 struct VertexVisitor {
     attributes: Vec<(String, Type)>,
+    infos: Vec<VertexInfo>,
 }
 
 impl VertexInterfaceVisitor<Sl> for VertexVisitor {
-    fn accept<V: Vertex<Sl>>(&mut self, path: &str, _: VertexInputRate, _: &V) {
+    fn accept<V: Vertex<Sl>>(&mut self, path: &str, input_rate: VertexInputRate, _: &V) {
         for attribute in V::attributes(path) {
             self.attributes.push((attribute.name, attribute.ty));
         }
+
+        self.infos.push(VertexInfo {
+            input_rate,
+            stride: std::mem::size_of::<V::Pod>(),
+            attributes: V::attributes(path),
+        })
     }
 }
 
