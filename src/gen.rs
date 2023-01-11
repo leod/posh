@@ -5,11 +5,6 @@ mod var_form;
 
 pub mod glsl;
 
-pub use scope_form::{Scope, ScopeForm, VarInit};
-pub use simplified_expr::{SimplifiedExpr, VarId};
-pub use struct_registry::StructRegistry;
-pub use var_form::VarForm;
-
 use std::rc::Rc;
 
 use crate::dag::Expr;
