@@ -149,7 +149,7 @@ impl ResourceInterfaceVisitor<Sl> for ResourceVisitor {
         self.uniform_block_defs.push(UniformBlockDef {
             block_name: path.to_string() + "_posh_block",
             arg_name: path.to_string(),
-            ty: <U::InSl as Object>::TYPE,
+            ty: <U::InSl as Object>::ty(),
         })
     }
 }

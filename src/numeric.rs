@@ -12,7 +12,8 @@ use crate::{
 /// A primitive type: one of `bool`, `f32`, `i32`, or `u32`.
 #[sealed]
 pub trait Primitive:
-    AsStd140
+    'static
+    + AsStd140
     + Default
     + ToPod
     + ToString

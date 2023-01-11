@@ -30,31 +30,37 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         impl #impl_generics_no_d ::posh::sl::Struct for #ident #ty_generics_sl
         #where_clause
         {
-            const STRUCT_TYPE: ::posh::dag::StructType = ::posh::dag::StructType {
-                name: #ident_str,
-                fields: &[
-                    #(
-                        (
-                            #field_strings,
-                            <#field_types_sl as ::posh::sl::Object>::TYPE,
-                        )
-                    ),*
-                ],
-                is_built_in: false,
-            };
+            fn struct_type() -> ::std::rc::Rc<::posh::dag::StructType> {
+                ::posh::internal::unique_struct_type::<Self>(
+                    || ::posh::dag::StructType {
+                        name: #ident_str.to_string(),
+                        fields: vec![
+                            #(
+                                (
+                                    #field_strings.to_string(),
+                                    <#field_types_sl as ::posh::sl::Object>::ty(),
+                                )
+                            ),*
+                        ],
+                    }
+                )
+
+            }
         }
 
         // Implement `Object` for the struct in `Sl`.
         impl #impl_generics_no_d ::posh::sl::Object for #ident #ty_generics_sl
         #where_clause_no_d
         {
-            const TYPE: ::posh::dag::Type = ::posh::dag::Type::Base(::posh::dag::BaseType::Struct(
-                &<Self as ::posh::sl::Struct>::STRUCT_TYPE,
-            ));
+            fn ty() -> ::posh::dag::Type {
+                ::posh::dag::Type::Base(::posh::dag::BaseType::Struct(
+                    <Self as ::posh::sl::Struct>::struct_type(),
+                ))
+            }
 
             fn expr(&self) -> ::std::rc::Rc<::posh::dag::Expr> {
                 ::posh::internal::primitives::simplify_struct_literal(
-                    &<Self as ::posh::sl::Struct>::STRUCT_TYPE,
+                    <Self as ::posh::sl::Struct>::struct_type(),
                     &[
                         #(
                             ::posh::sl::Object::expr(&self.#field_idents)

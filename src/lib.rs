@@ -27,7 +27,7 @@ pub use crevice;
 pub mod internal {
     pub use super::{
         interface::{join_ident_path, ResourceInterfaceVisitor, VertexInterfaceVisitor},
-        sl::primitives,
+        sl::{primitives, unique_struct_type},
     };
 }
 

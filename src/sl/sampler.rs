@@ -15,7 +15,9 @@ pub struct Sampler2d<T: Numeric> {
 }
 
 impl<T: Numeric> Object for Sampler2d<T> {
-    const TYPE: Type = Type::Base(BaseType::Sampler2d(T::NUMERIC_TYPE));
+    fn ty() -> Type {
+        Type::Base(BaseType::Sampler2d(T::NUMERIC_TYPE))
+    }
 
     fn expr(&self) -> Rc<Expr> {
         self.trace.expr()
@@ -24,7 +26,7 @@ impl<T: Numeric> Object for Sampler2d<T> {
     fn from_arg(name: &str) -> Self {
         Self {
             trace: Trace::new(Expr::Arg {
-                ty: Self::TYPE,
+                ty: Self::ty(),
                 name: name.into(),
             }),
             _phantom: PhantomData,

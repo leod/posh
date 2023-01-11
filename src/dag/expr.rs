@@ -35,7 +35,7 @@ pub enum Expr {
     },
     StructLiteral {
         args: Vec<Rc<Expr>>,
-        ty: &'static StructType,
+        ty: Rc<StructType>,
     },
     Binary {
         left: Rc<Expr>,
@@ -48,7 +48,7 @@ pub enum Expr {
         args: Vec<Rc<Expr>>,
     },
     CallBuiltIn {
-        name: &'static str,
+        name: String,
         args: Vec<Rc<Expr>>,
         ty: Type,
     },
@@ -72,7 +72,7 @@ impl Expr {
         match self {
             Arg { ty, .. } => ty.clone(),
             ScalarLiteral { ty, .. } => Type::Base(BaseType::Scalar(*ty)),
-            StructLiteral { ty, .. } => Type::Base(BaseType::Struct(ty)),
+            StructLiteral { ty, .. } => Type::Base(BaseType::Struct(ty.clone())),
             Binary { ty, .. } => ty.clone(),
             CallFuncDef { def, .. } => def.result.ty(),
             CallBuiltIn { ty, .. } => ty.clone(),

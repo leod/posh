@@ -7,7 +7,7 @@ mod vec;
 #[doc(hidden)]
 pub mod primitives;
 
-use std::rc::Rc;
+use std::{collections::BTreeMap, rc::Rc};
 
 use crate::dag::StructType;
 
@@ -26,9 +26,9 @@ pub use {
 /// An object that can be represented in the shading language.
 ///
 /// The interface of this trait is a private implementation detail.
-pub trait Object {
+pub trait Object: 'static {
     #[doc(hidden)]
-    const TYPE: Type;
+    fn ty() -> Type;
 
     #[doc(hidden)]
     fn expr(&self) -> Rc<Expr>;
@@ -50,7 +50,32 @@ pub trait Value: Object {
 /// The interface of this trait is a private implementation detail.
 pub trait Struct: Value {
     #[doc(hidden)]
-    const STRUCT_TYPE: StructType;
+    fn struct_type() -> Rc<StructType>;
+}
+
+#[doc(hidden)]
+pub fn unique_struct_type<T: Struct>(ty: fn() -> StructType) -> Rc<StructType> {
+    use std::{any::TypeId, cell::RefCell};
+
+    std::thread_local! {
+        static MAP: RefCell<BTreeMap<TypeId, Rc<StructType>>> = RefCell::new(BTreeMap::new());
+    }
+
+    let key = TypeId::of::<T>();
+
+    if let Some(ty) = MAP.with(|map| map.borrow().get(&key).cloned()) {
+        return ty;
+    }
+
+    // NOTE: We must not borrow `MAP` while calling `ty`, since `ty` may also
+    // call `unique_struct_type`.
+    let ty = Rc::new(ty());
+
+    MAP.with(|map| {
+        map.borrow_mut().insert(key, ty.clone());
+    });
+
+    ty
 }
 
 /// A conversion to a [`Value`] in the shading language.
@@ -70,7 +95,7 @@ pub trait Varying: Value {
 // TODO: Impl Varying.
 impl Varying for Vec4<f32> {
     fn attributes(path: &str) -> Vec<(String, Type)> {
-        vec![(path.to_string(), <Self as Object>::TYPE)]
+        vec![(path.to_string(), <Self as Object>::ty())]
     }
 
     fn shader_outputs(&self) -> Vec<Rc<Expr>> {
