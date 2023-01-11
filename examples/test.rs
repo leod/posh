@@ -139,7 +139,7 @@ fn main() {
 
     //let vertex = <MyNestedVertex<Gl> as Vertex<Gl>>::shader_input("bar");
 
-    MyVertexIface::shader_input("blub").visit(&mut MyVisitor);
+    MyVertexIface::shader_input("blub").visit("", &mut MyVisitor);
     MyResourceIface2::shader_input("blab").visit("blee", &mut MyVisitor);
 
     let program: Program<MyResourceIface2, MyVertexIface, sl::Vec4<f32>> = todo!();

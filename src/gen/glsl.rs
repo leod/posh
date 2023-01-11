@@ -76,6 +76,9 @@ pub fn write_shader_stage(
         depth: 1,
     };
 
+    writeln!(f, "#version 330")?;
+    writeln!(f)?;
+
     write_struct_defs(f, &struct_registry)?;
 
     writeln!(f)?;

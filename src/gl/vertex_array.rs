@@ -32,7 +32,7 @@ where
         element_source: E::Source,
     ) -> Result<Self, CreateVertexArrayError> {
         let mut visitor = VertexBufferVisitor::default();
-        vertex_buffers.visit(&mut visitor);
+        vertex_buffers.visit("vertex_input", &mut visitor);
 
         let untyped = context
             .untyped

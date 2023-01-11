@@ -96,17 +96,17 @@ where
 
         let (vertex_infos, varying_outputs, vertex_source) = {
             let input = || VertexInput {
-                vertex: V::shader_input("vertex"),
+                vertex: V::shader_input("vertex_input"),
                 vertex_id: value_arg("gl_VertexID"),
                 instance_id: value_arg("gl_InstanceID"),
                 _private: Private,
             };
             let output = vertex_shader(resources, input());
 
-            let varying_outputs = output.varying.shader_outputs("output");
+            let varying_outputs = output.varying.shader_outputs("vertex_output");
             let (vertex_attributes, vertex_infos) = {
                 let mut visitor = VertexVisitor::default();
-                input().vertex.visit(&mut visitor);
+                input().vertex.visit("vertex_input", &mut visitor);
 
                 (visitor.attributes, visitor.infos)
             };
@@ -149,7 +149,7 @@ where
         let fragment_source =
             {
                 let input = FragmentInput {
-                    varying: W::shader_input("input"),
+                    varying: W::shader_input("vertex_output"),
                     fragment_coord: value_arg("gl_FragCoord"),
                     front_facing: value_arg("gl_FrontFacing"),
                     point_coord: value_arg("gl_PointCoord"),
@@ -158,7 +158,9 @@ where
                 let output = fragment_shader(resources, input);
 
                 let mut fragment_visitor = FragmentVisitor::default();
-                output.fragment.visit(&mut fragment_visitor);
+                output
+                    .fragment
+                    .visit("fragment_output", &mut fragment_visitor);
 
                 let attributes =
                     varying_outputs

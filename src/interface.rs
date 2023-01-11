@@ -119,7 +119,7 @@ pub trait VertexInterface<D: VertexDomain> {
     type InSl: VertexInterface<Sl>;
 
     #[doc(hidden)]
-    fn visit(&self, visitor: &mut impl VertexInterfaceVisitor<D>);
+    fn visit(&self, path: &str, visitor: &mut impl VertexInterfaceVisitor<D>);
 
     #[doc(hidden)]
     fn shader_input(path: &str) -> Self;
@@ -184,7 +184,7 @@ pub trait FragmentInterface<D: FragmentDomain> {
     type InSl: FragmentInterface<Sl>;
 
     #[doc(hidden)]
-    fn visit(&self, visitor: &mut impl FragmentInterfaceVisitor<D>);
+    fn visit(&self, path: &str, visitor: &mut impl FragmentInterfaceVisitor<D>);
 }
 
 /// Provides types for declaring fields in a [`FragmentInterface`].
