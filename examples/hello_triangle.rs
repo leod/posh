@@ -24,10 +24,10 @@ fn vertex_shader(_: MyUniform, input: VertexInput<sl::Vec2<f32>>) -> VertexOutpu
 }
 
 fn fragment_shader(
-    _: MyUniform,
+    uniform: MyUniform,
     input: FragmentInput<sl::Vec2<f32>>,
 ) -> FragmentOutput<sl::Vec4<f32>> {
-    let rg = input.varying;
+    let rg = (input.varying + uniform.time).cos().pow(sl::vec2(2.0, 2.0));
 
     FragmentOutput::new(sl::vec4(rg.x, rg.y, 0.5, 1.0))
 }
