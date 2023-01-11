@@ -6,8 +6,8 @@ use crate::{
 };
 
 use super::{
-    FragmentInterface, Primitive, ResourceInterface, ToPod, Uniform, Vertex, VertexAttribute,
-    VertexInterface, VertexInterfaceVisitor,
+    FragmentInterface, FragmentInterfaceVisitor, Primitive, ResourceInterface, ToPod, Uniform,
+    Vertex, VertexAttribute, VertexInterface, VertexInterfaceVisitor,
 };
 
 // Uniform interface
@@ -205,9 +205,13 @@ impl super::ResourceDomain for Gl {
 impl FragmentInterface<Gl> for Texture2dBinding {
     type InGl = Self;
     type InSl = sl::Vec4<f32>;
+
+    fn visit(&self, visitor: &mut impl FragmentInterfaceVisitor<Gl>) {
+        visitor.accept("fragment", self);
+    }
 }
 
 #[sealed]
 impl super::FragmentDomain for Gl {
-    type Attachment2d = Texture2dBinding;
+    type Attachment = Texture2dBinding;
 }

@@ -173,14 +173,22 @@ pub trait ResourceDomain: Domain {
 
 // Fragment interface
 
+#[doc(hidden)]
+pub trait FragmentInterfaceVisitor<D: FragmentDomain> {
+    fn accept(&mut self, path: &str, attachment: &D::Attachment);
+}
+
 /// Types that declare the fragment output interface of a shader.
 pub trait FragmentInterface<D: FragmentDomain> {
     type InGl: FragmentInterface<Gl>;
     type InSl: FragmentInterface<Sl>;
+
+    #[doc(hidden)]
+    fn visit(&self, visitor: &mut impl FragmentInterfaceVisitor<D>);
 }
 
 /// Provides types for declaring fields in a [`FragmentInterface`].
 #[sealed]
 pub trait FragmentDomain: Sized {
-    type Attachment2d: FragmentInterface<Self>;
+    type Attachment: FragmentInterface<Self>;
 }

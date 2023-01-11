@@ -11,6 +11,8 @@ use std::{collections::BTreeMap, rc::Rc};
 
 use crate::dag::StructType;
 
+use self::primitives::value_arg;
+
 use super::dag::{Expr, Type};
 
 pub use posh_derive::{ToValue, Value};
@@ -86,19 +88,23 @@ pub trait ToValue: Copy {
 }
 
 /// Data passed from a vertex stage to a fragment stage.
+///
+/// The interface of this trait is a private implementation detail.
 pub trait Varying: Value {
-    fn attributes(path: &str) -> Vec<(String, Type)>;
+    #[doc(hidden)]
+    fn shader_outputs(&self, path: &str) -> Vec<(String, Rc<Expr>)>;
 
-    fn shader_outputs(&self) -> Vec<Rc<Expr>>;
+    #[doc(hidden)]
+    fn shader_input(path: &str) -> Self;
 }
 
 // TODO: Impl Varying.
 impl Varying for Vec4<f32> {
-    fn attributes(path: &str) -> Vec<(String, Type)> {
-        vec![(path.to_string(), <Self as Object>::ty())]
+    fn shader_outputs(&self, path: &str) -> Vec<(String, Rc<Expr>)> {
+        vec![(path.to_string(), self.expr())]
     }
 
-    fn shader_outputs(&self) -> Vec<Rc<Expr>> {
-        vec![self.expr()]
+    fn shader_input(path: &str) -> Self {
+        value_arg(path)
     }
 }
