@@ -15,11 +15,6 @@ impl<V: Vertex<Sl>> VertexBuffer<V> {
     ///
     /// Panics if the length of `untyped` is not a multiple of the size of
     /// `V::Pod`.
-    ///
-    /// # TODO
-    ///
-    /// Since `untyped::Buffer` is `Rc`-cloneable, the underlying buffer can
-    /// still be modified. Check if we want to allow this.
     pub(crate) fn from_untyped(untyped: untyped::Buffer) -> Self {
         assert!(Self::vertex_size() > 0);
         assert_eq!(untyped.len() % Self::vertex_size(), 0);
