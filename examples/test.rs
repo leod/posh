@@ -122,7 +122,8 @@ where
     V: VertexInterface<Sl, InSl = V>,
     F: FragmentInterface<Sl, InSl = F>,
 {
-    Program::new::<sl::Vec4<f32>>(todo!(), todo!())
+    //Program::new::<sl::Vec4<f32>>(todo!(), todo!())
+    todo!()
 }
 
 fn main() {
@@ -141,8 +142,8 @@ fn main() {
     MyVertexIface::shader_input("blub").visit(&mut MyVisitor);
     MyResourceIface2::shader_input("blab").visit("blee", &mut MyVisitor);
 
-    let program: Program<MyResourceIface2, MyVertexIface, sl::Vec4<f32>> =
-        Program::new::<sl::Vec4<f32>>(todo!(), todo!());
+    let program: Program<MyResourceIface2, MyVertexIface, sl::Vec4<f32>> = todo!();
+    //Program::new::<sl::Vec4<f32>>(todo!(), todo!());
 
     let program: Program<MyResourceIface2, MyVertexIface, sl::Vec4<f32>> = create_program();
 

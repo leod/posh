@@ -7,7 +7,7 @@ use crate::{
 
 use super::{
     untyped::{self, UniformBlockInfo},
-    DrawParams, GeometryStream, Surface,
+    Context, CreateProgramError, DrawParams, GeometryStream, Surface,
 };
 
 pub struct Program<R, A, F> {
@@ -20,10 +20,11 @@ where
     V: VertexInterface<Sl, InSl = V>,
     F: FragmentInterface<Sl, InSl = F>,
 {
-    pub fn new<W>(
+    pub(crate) fn new<W>(
+        context: &Context,
         vertex_shader: fn(R, VertexInput<V>) -> VertexOutput<W>,
         fragment_shader: fn(R, FragmentInput<W>) -> FragmentOutput<F>,
-    ) -> Self
+    ) -> Result<Self, CreateProgramError>
     where
         W: Varying,
     {
@@ -43,9 +44,9 @@ where
             fragment_shader_source: typed_program_def.fragment_shader_source,
         };
 
-        Program {
+        Ok(Program {
             _phantom: PhantomData,
-        }
+        })
     }
 
     pub fn draw<S>(

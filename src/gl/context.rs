@@ -1,20 +1,28 @@
 use std::rc::Rc;
 
-use crate::{Sl, ToPod, Vertex, VertexInterface};
+use crate::{
+    sl::{FragmentInput, FragmentOutput, Varying, VertexInput, VertexOutput},
+    FragmentInterface, ResourceInterface, Sl, ToPod, Vertex, VertexInterface,
+};
 
 use super::{
-    untyped, BufferUsage, CreateBufferError, CreateVertexArrayError, Element, ElementBuffer,
-    ElementOrUnit, VertexArray, VertexBuffer,
+    untyped, BufferUsage, CreateBufferError, CreateProgramError, CreateVertexArrayError, Element,
+    ElementBuffer, ElementOrUnit, Program, VertexArray, VertexBuffer,
 };
 
 pub struct Context {
-    gl: Rc<glow::Context>,
-    untyped: untyped::Context,
+    pub(crate) untyped: untyped::Context,
 }
 
 impl Context {
+    pub fn new(gl: glow::Context) -> Self {
+        let untyped = untyped::Context::new(gl);
+
+        Self { untyped }
+    }
+
     pub fn gl(&self) -> &Rc<glow::Context> {
-        &self.gl
+        &self.untyped.gl()
     }
 
     pub fn create_vertex_buffer<V>(
@@ -61,7 +69,17 @@ impl Context {
         VertexArray::new(self, vertex_buffers, element_source)
     }
 
-    pub fn untyped(&self) -> &untyped::Context {
-        &self.untyped
+    pub fn create_program<R, V, F, W>(
+        &self,
+        vertex_shader: fn(R, VertexInput<V>) -> VertexOutput<W>,
+        fragment_shader: fn(R, FragmentInput<W>) -> FragmentOutput<F>,
+    ) -> Result<Program<R, V, F>, CreateProgramError>
+    where
+        R: ResourceInterface<Sl, InSl = R>,
+        V: VertexInterface<Sl, InSl = V>,
+        F: FragmentInterface<Sl, InSl = F>,
+        W: Varying,
+    {
+        Program::new(self, vertex_shader, fragment_shader)
     }
 }

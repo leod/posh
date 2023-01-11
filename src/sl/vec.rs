@@ -69,7 +69,7 @@ pub struct Vec4<T> {
 
 // Implements `Object` and `Value` for `$ty<T>`.
 macro_rules! impl_value {
-    ($ty:ident, $mint_ty: ident, $name:literal, $($member:ident),+) => {
+    ($ty:ident, $mint_ty: ident, $($member:ident),+) => {
         impl<T: Primitive> Object for $ty<T> {
             fn ty() -> Type {
                 Type::Base(BaseType::$ty(T::PRIMITIVE_TYPE))
@@ -180,8 +180,8 @@ macro_rules! impl_binary_op_scalar_rhs {
 
 // Implements all the things for `$ty`.
 macro_rules! impl_vec {
-    ($ty:ident, $mint_ty: ident, $name:literal, $($member:ident),+) => {
-        impl_value!($ty, $mint_ty, $name, $($member),+);
+    ($ty:ident, $mint_ty:ident, $name:ident, $($member:ident),+) => {
+        impl_value!($ty, $mint_ty, $($member),+);
 
         impl<T: Primitive> Default for $ty<T> {
             fn default() -> Self {
@@ -190,6 +190,18 @@ macro_rules! impl_vec {
                         $member: Default::default()
                     ),*
                 }
+            }
+        }
+
+        pub fn $name<T: Primitive>(
+            $(
+                $member: impl ToValue<Output = Scalar<T>>
+            ),*
+        ) -> $ty<T> {
+            $ty {
+                $(
+                    $member: $member.to_value()
+                ),*
             }
         }
 
@@ -205,6 +217,6 @@ macro_rules! impl_vec {
     };
 }
 
-impl_vec!(Vec2, Vector2, "vec2", x, y);
-impl_vec!(Vec3, Vector3, "vec3", x, y, z);
-impl_vec!(Vec4, Vector4, "vec4", x, y, z, w);
+impl_vec!(Vec2, Vector2, vec2, x, y);
+impl_vec!(Vec3, Vector3, vec3, x, y, z);
+impl_vec!(Vec4, Vector4, vec4, x, y, z, w);

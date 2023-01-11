@@ -35,7 +35,7 @@ where
         vertex_buffers.visit(&mut visitor);
 
         let untyped = context
-            .untyped()
+            .untyped
             .create_vertex_array(&visitor.vertex_buffers, element_source.buffer())?;
 
         Ok(VertexArray {
