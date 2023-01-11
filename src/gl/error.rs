@@ -26,6 +26,12 @@ pub enum CreateProgramError {
 
 #[derive(Debug, Clone, Error)]
 pub enum CreateError {
+    #[error("failed to create buffer: {0}")]
+    CreateBuffer(#[from] CreateBufferError),
+
+    #[error("failed to create vertex array: {0}")]
+    CreateVertexArray(#[from] CreateVertexArrayError),
+
     #[error("failed to create program: {0}")]
     CreateProgram(#[from] CreateProgramError),
 }
