@@ -7,18 +7,19 @@ mod gen_type;
 mod sampler;
 mod scalar;
 mod tuple;
+mod varying;
 mod vec;
 
 pub(crate) mod primitives;
 
 use std::{collections::BTreeMap, rc::Rc};
 
-use self::primitives::value_arg;
 use super::dag::{Expr, StructType, Type};
 
 pub use {
     sampler::Sampler2d,
     scalar::{Bool, Scalar, F32, I32, U32},
+    varying::Varying,
     vec::{vec2, vec3, vec4, Vec2, Vec3, Vec4},
 };
 
@@ -94,38 +95,6 @@ pub trait ToValue: Copy {
     type Output: Value;
 
     fn to_value(self) -> Self::Output;
-}
-
-/// Data passed from a vertex stage to a fragment stage.
-///
-/// The interface of this trait is a private implementation detail.
-pub trait Varying: Value {
-    #[doc(hidden)]
-    fn shader_outputs(&self, path: &str) -> Vec<(String, Rc<Expr>)>;
-
-    #[doc(hidden)]
-    fn shader_input(path: &str) -> Self;
-}
-
-// TODO: Impl Varying.
-impl Varying for Vec2<f32> {
-    fn shader_outputs(&self, path: &str) -> Vec<(String, Rc<Expr>)> {
-        vec![(path.to_string(), self.expr())]
-    }
-
-    fn shader_input(path: &str) -> Self {
-        value_arg(path)
-    }
-}
-
-impl Varying for Vec4<f32> {
-    fn shader_outputs(&self, path: &str) -> Vec<(String, Rc<Expr>)> {
-        vec![(path.to_string(), self.expr())]
-    }
-
-    fn shader_input(path: &str) -> Self {
-        value_arg(path)
-    }
 }
 
 #[derive(Debug, Clone)]
