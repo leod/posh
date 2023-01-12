@@ -1,5 +1,9 @@
 # posh
 
+`posh` is a library for fully type-safe graphics programming.
+
+## Background
+
 `posh` is an experiment: can we use Rust to statically check the type safety of
 draw calls and their interaction with shader code? Can we do so without losing
 much on ergonomics? `posh` approaches this problem by requiring shaders to be
