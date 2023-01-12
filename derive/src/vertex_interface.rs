@@ -38,7 +38,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                 #(
                     visitor.accept(
                         &::posh::internal::join_ident_path(path, #field_strings),
-                        ::posh::program_def::VertexInputRate::Vertex,
+                        ::posh::util::VertexInputRate::Vertex,
                         &self.#field_idents,
                     );
                 )*
@@ -48,10 +48,13 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                 Self {
                     #(
                         #field_idents:
-                            <#field_types as ::posh::VertexInterfaceField<#generics_d_type>>::
-                                shader_input(
-                                    &::posh::internal::join_ident_path(path, #field_strings),
-                                ),
+                            <
+                                #field_types
+                                as
+                                ::posh::internal::VertexInterfaceField<#generics_d_type>
+                            >::shader_input(
+                                &::posh::internal::join_ident_path(path, #field_strings),
+                            ),
                     )*
                 }
             }
@@ -59,7 +62,10 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
         // Check that all field types implement `VertexInterfaceField<D>`.
         const _: fn() = || {
-            fn check_field<D: ::posh::VertexDomain, T: ::posh::VertexInterfaceField<D>>() {}
+            fn check_field<
+                D: ::posh::VertexDomain,
+                T: ::posh::internal::VertexInterfaceField<D>,
+            >() {}
 
             fn check_struct #impl_generics(value: &#ident #ty_generics) #where_clause {
                 #(

@@ -193,18 +193,6 @@ macro_rules! impl_vec {
             }
         }
 
-        pub fn $name<T: Primitive>(
-            $(
-                $member: impl ToValue<Output = Scalar<T>>
-            ),*
-        ) -> $ty<T> {
-            $ty {
-                $(
-                    $member: $member.to_value()
-                ),*
-            }
-        }
-
         impl_binary_op_symmetric!($ty, add, Add);
         impl_binary_op_symmetric!($ty, div, Div);
         impl_binary_op_symmetric!($ty, mul, Mul);
@@ -222,3 +210,42 @@ macro_rules! impl_vec {
 impl_vec!(Vec2, Vector2, vec2, x, y);
 impl_vec!(Vec3, Vector3, vec3, x, y, z);
 impl_vec!(Vec4, Vector4, vec4, x, y, z, w);
+
+/// Constructs a [`Vec2`] conveniently.
+pub fn vec2<T: Primitive>(
+    x: impl ToValue<Output = Scalar<T>>,
+    y: impl ToValue<Output = Scalar<T>>,
+) -> Vec2<T> {
+    Vec2 {
+        x: x.to_value(),
+        y: y.to_value(),
+    }
+}
+
+/// Constructs a [`Vec3`] conveniently.
+pub fn vec3<T: Primitive>(
+    x: impl ToValue<Output = Scalar<T>>,
+    y: impl ToValue<Output = Scalar<T>>,
+    z: impl ToValue<Output = Scalar<T>>,
+) -> Vec3<T> {
+    Vec3 {
+        x: x.to_value(),
+        y: y.to_value(),
+        z: z.to_value(),
+    }
+}
+
+/// Constructs a [`Vec4`] conveniently.
+pub fn vec4<T: Primitive>(
+    x: impl ToValue<Output = Scalar<T>>,
+    y: impl ToValue<Output = Scalar<T>>,
+    z: impl ToValue<Output = Scalar<T>>,
+    w: impl ToValue<Output = Scalar<T>>,
+) -> Vec4<T> {
+    Vec4 {
+        x: x.to_value(),
+        y: y.to_value(),
+        z: z.to_value(),
+        w: w.to_value(),
+    }
+}

@@ -47,7 +47,7 @@ fn fragment_shader(
 }
 
 fn main() {
-    let program_def = posh::compile(vertex_shader, fragment_shader);
+    let program_def = posh::util::build_program_def(vertex_shader, fragment_shader);
 
     println!("{}", program_def.vertex_shader_source);
     println!("{}", program_def.fragment_shader_source);

@@ -67,7 +67,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             type InSl = #ident #ty_generics_sl;
             type Pod = <Self::InGl as ::posh::ToPod>::Output;
 
-            fn attribute_defs(path: &str) -> Vec<::posh::program_def::VertexAttributeDef> {
+            fn attribute_defs(path: &str) -> Vec<::posh::util::VertexAttributeDef> {
                 let mut result = Vec::new();
 
                 #(
@@ -82,7 +82,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                     >::attribute_defs(&::posh::internal::join_ident_path(path, #field_strings));
 
                     for attr in attrs {
-                        result.push(::posh::program_def::VertexAttributeDef {
+                        result.push(::posh::util::VertexAttributeDef {
                             offset: attr.offset + offset,
                             ..attr
                         });
