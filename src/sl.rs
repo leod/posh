@@ -1,6 +1,6 @@
-//! The shading library.
+//! The shading language.
 //!
-//! The shading library allows defining shaders in Rust functions.
+//! `posh`'s shading language allows defining statically typed shaders in Rust.
 
 #[macro_use]
 mod gen_type;
@@ -47,9 +47,10 @@ pub trait Object: 'static {
 
 /// A transparent value in the shading language.
 ///
+/// Only types that implement [`Value`] can be used in `struct` definitions.
+///
 /// Most types in the shader language implement [`Value`]. A notable exception
-/// is [`Sampler2d`]. Only types that implement [`Value`] can be used in
-/// `struct` definitions.
+/// is [`Sampler2d`].
 ///
 /// The interface of this trait is a private implementation detail.
 pub trait Value: Object {
