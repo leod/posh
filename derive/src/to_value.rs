@@ -30,9 +30,9 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         impl #impl_generics_no_d ::posh::sl::Struct for #ident #ty_generics_sl
         #where_clause
         {
-            fn struct_type() -> ::std::rc::Rc<::posh::dag::StructType> {
+            fn struct_type() -> ::std::rc::Rc<::posh::internal::StructType> {
                 ::posh::internal::unique_struct_type::<Self>(
-                    || ::posh::dag::StructType {
+                    || ::posh::internal::StructType {
                         name: #ident_str.to_string(),
                         fields: vec![
                             #(
@@ -52,14 +52,14 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         impl #impl_generics_no_d ::posh::sl::Object for #ident #ty_generics_sl
         #where_clause_no_d
         {
-            fn ty() -> ::posh::dag::Type {
-                ::posh::dag::Type::Base(::posh::dag::BaseType::Struct(
+            fn ty() -> ::posh::internal::Type {
+                ::posh::internal::Type::Base(::posh::internal::BaseType::Struct(
                     <Self as ::posh::sl::Struct>::struct_type(),
                 ))
             }
 
-            fn expr(&self) -> ::std::rc::Rc<::posh::dag::Expr> {
-                ::posh::internal::primitives::simplify_struct_literal(
+            fn expr(&self) -> ::std::rc::Rc<::posh::internal::Expr> {
+                ::posh::internal::simplify_struct_literal(
                     <Self as ::posh::sl::Struct>::struct_type(),
                     &[
                         #(
@@ -70,7 +70,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             }
 
             fn from_arg(name: &str) -> Self {
-                ::posh::internal::primitives::value_arg(name)
+                ::posh::internal::value_arg(name)
             }
         }
 
@@ -78,12 +78,12 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         impl #impl_generics_no_d ::posh::sl::Value for #ident #ty_generics_sl
         #where_clause_no_d
         {
-            fn from_expr(expr: ::posh::dag::Expr) -> Self {
+            fn from_expr(expr: ::posh::internal::Expr) -> Self {
                 let base = ::std::rc::Rc::new(expr);
 
                 Self {
                     #(
-                        #field_idents: ::posh::internal::primitives::field(
+                        #field_idents: ::posh::internal::field(
                             base.clone(),
                             #field_strings,
                         )

@@ -7,7 +7,7 @@ mod vertex_array;
 pub use buffer::Buffer;
 pub use context::Context;
 pub use geometry_stream::GeometryStream;
-pub use program::{Program, ProgramDef, UniformBlockInfo};
-pub use vertex_array::{VertexArray, VertexInfo};
+pub use program::Program;
+pub use vertex_array::VertexArray;
 
 pub(crate) use vertex_array::VertexAttributeLayout;

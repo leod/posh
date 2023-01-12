@@ -1,9 +1,8 @@
-pub(crate) mod gen;
+mod compile;
+mod dag;
+mod gen;
 mod interface;
 mod numeric;
-
-#[doc(hidden)]
-pub mod dag;
 
 /// The graphics library.
 pub mod gl;
@@ -11,9 +10,13 @@ pub mod gl;
 /// The shading language.
 pub mod sl;
 
+/// A compiled, type-erased program.
+pub mod program_def;
+
+pub use compile::compile;
 pub use interface::{
     Domain, FragmentDomain, FragmentInterface, ResourceDomain, ResourceInterface, ToPod, Uniform,
-    Vertex, VertexAttribute, VertexDomain, VertexInputRate, VertexInterface, VertexInterfaceField,
+    Vertex, VertexDomain, VertexInterface, VertexInterfaceField,
 };
 pub use numeric::{Numeric, Primitive};
 
@@ -26,14 +29,18 @@ pub use crevice;
 #[doc(hidden)]
 pub mod internal {
     pub use super::{
+        dag::{BaseType, Expr, StructType, Type},
         interface::{join_ident_path, ResourceInterfaceVisitor, VertexInterfaceVisitor},
-        sl::{primitives, unique_struct_type},
+        sl::{
+            primitives::{field, simplify_struct_literal, value_arg},
+            unique_struct_type,
+        },
     };
 }
 
 /// The graphics library domain.
 ///
-/// This is the domain in which data for draw calls is specified.
+/// This is the domain in which data for draw calls are specified.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Gl;
 

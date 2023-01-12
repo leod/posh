@@ -3,7 +3,10 @@ use std::{
     rc::Rc,
 };
 
-use crate::dag::{BaseType, Expr, Type};
+use crate::{
+    dag::{BaseType, Expr, Type},
+    program_def::UniformDef,
+};
 
 use super::{
     scope_form::{Scope, ScopeForm, VarInit},
@@ -12,26 +15,11 @@ use super::{
     var_form::VarForm,
 };
 
-// TODO: Merge with `untyped::UniformBlockInfo` and move somewhere up.
-pub struct UniformBlockDef {
-    /// The name of the uniform block.
-    pub block_name: String,
-
-    /// The name of the single field within the uniform block.
-    pub arg_name: String,
-
-    /// The type of the uniform block.
-    pub ty: Type,
-
-    /// The location to which this uniform block is to be bound in the program.
-    pub location: usize,
-}
-
 #[derive(Debug, Clone)]
 struct WriteFuncContext<'a> {
-    pub struct_registry: &'a StructRegistry,
-    pub scope_form: &'a ScopeForm<'a>,
-    pub depth: usize,
+    struct_registry: &'a StructRegistry,
+    scope_form: &'a ScopeForm<'a>,
+    depth: usize,
 }
 
 impl<'a> WriteFuncContext<'a> {
@@ -61,12 +49,12 @@ impl Display for Indent {
 
 pub fn write_shader_stage(
     f: &mut impl Write,
-    uniform_block_defs: &[UniformBlockDef],
+    uniform_defs: &[UniformDef],
     attributes: impl Iterator<Item = (String, String, Type)>,
     outputs: &[(&str, Rc<Expr>)],
 ) -> Result {
     let roots: Vec<_> = outputs.iter().map(|(_, root)| root.clone()).collect();
-    let struct_registry = StructRegistry::new(&roots, uniform_block_defs.iter().map(|def| &def.ty));
+    let struct_registry = StructRegistry::new(&roots, uniform_defs.iter().map(|def| &def.ty));
     let var_form = VarForm::new(&struct_registry, &roots);
     let scope_form = ScopeForm::new(&var_form);
 
@@ -83,11 +71,11 @@ pub fn write_shader_stage(
 
     writeln!(f)?;
 
-    for def in uniform_block_defs {
-        let ty_name = type_name(&struct_registry, &def.ty);
+    for uniform_def in uniform_defs {
+        let ty_name = type_name(&struct_registry, &uniform_def.ty);
 
-        writeln!(f, "uniform {} {{", def.block_name)?;
-        writeln!(f, "    {} {};", ty_name, def.arg_name)?;
+        writeln!(f, "uniform {} {{", uniform_def.block_name)?;
+        writeln!(f, "    {} {};", ty_name, uniform_def.arg_name)?;
         writeln!(f, "}};")?;
     }
 

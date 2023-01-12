@@ -1,11 +1,14 @@
 use std::{marker::PhantomData, ops::Range};
 
-use crate::{internal::VertexInterfaceVisitor, Gl, Sl, Vertex, VertexInputRate, VertexInterface};
+use crate::{
+    internal::VertexInterfaceVisitor,
+    program_def::{VertexDef, VertexInputRate},
+    Gl, Sl, Vertex, VertexInterface,
+};
 
 use super::{
-    untyped::{self, VertexInfo},
-    Context, CreateVertexArrayError, Element, ElementOrUnit, ElementSource, GeometryStream,
-    GeometryType, VertexBuffer,
+    untyped, Context, CreateVertexArrayError, Element, ElementOrUnit, ElementSource,
+    GeometryStream, GeometryType, VertexBuffer,
 };
 
 #[derive(Clone)]
@@ -78,7 +81,7 @@ where
 
 #[derive(Default)]
 struct VertexBufferVisitor {
-    vertex_buffers: Vec<(untyped::Buffer, VertexInfo)>,
+    vertex_buffers: Vec<(untyped::Buffer, VertexDef)>,
 }
 
 impl VertexInterfaceVisitor<Gl> for VertexBufferVisitor {
@@ -89,14 +92,14 @@ impl VertexInterfaceVisitor<Gl> for VertexBufferVisitor {
         vertex: &VertexBuffer<V>,
     ) {
         let stride = std::mem::size_of::<V::Pod>();
-        let attributes = V::attributes(path);
-        let entry_info = VertexInfo {
+        let attributes = V::attribute_defs(path);
+        let vertex_def = VertexDef {
             input_rate,
             stride,
             attributes,
         };
 
         self.vertex_buffers
-            .push((vertex.untyped.clone(), entry_info));
+            .push((vertex.untyped.clone(), vertex_def));
     }
 }

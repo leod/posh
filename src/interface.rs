@@ -6,7 +6,7 @@ mod gl;
 mod sl;
 
 use crate::{
-    dag::Type,
+    program_def::{VertexAttributeDef, VertexInputRate},
     sl::{Bool, Scalar, ToValue, Value, Vec2, F32, I32, U32},
     Gl, Numeric, Primitive, Sl,
 };
@@ -41,7 +41,6 @@ pub trait Domain: Copy {
     type U32: Uniform<Self> + Vertex<Self> + ToValue<Output = U32>;
 }
 
-#[doc(hidden)]
 pub fn join_ident_path(lhs: &str, rhs: &str) -> String {
     format!("{lhs}_{rhs}")
 }
@@ -66,14 +65,6 @@ pub trait ToPod: Copy {
     fn to_pod(self) -> Self::Output;
 }
 
-#[doc(hidden)]
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct VertexAttribute {
-    pub name: String,
-    pub ty: Type,
-    pub offset: usize,
-}
-
 /// Vertex types.
 pub trait Vertex<D: Domain>: ToValue {
     type InGl: Vertex<Gl> + ToPod<Output = Self::Pod> + ToValue<Output = Self::InSl>;
@@ -83,20 +74,12 @@ pub trait Vertex<D: Domain>: ToValue {
     type Pod: Pod;
 
     #[doc(hidden)]
-    fn attributes(path: &str) -> Vec<VertexAttribute>;
+    fn attribute_defs(path: &str) -> Vec<VertexAttributeDef>;
 
     #[doc(hidden)]
     fn shader_input(path: &str) -> Self;
 }
 
-#[doc(hidden)]
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum VertexInputRate {
-    Vertex,
-    Instance,
-}
-
-#[doc(hidden)]
 pub trait VertexInterfaceVisitor<D: VertexDomain> {
     fn accept<V: Vertex<Sl>>(
         &mut self,
