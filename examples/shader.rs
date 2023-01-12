@@ -1,5 +1,5 @@
 use posh::{
-    sl::{self, FragmentInput, FragmentOutput, ProgramDef, ToValue, VertexInput, VertexOutput},
+    sl::{self, FragmentInput, FragmentOutput, ToValue, VertexInput, VertexOutput},
     Domain, ResourceInterface, Sl, Uniform, Vertex,
 };
 
@@ -40,12 +40,15 @@ fn vertex_shader(globals: Globals, input: VertexInput<ColorVertex>) -> VertexOut
 }
 
 fn fragment_shader(
-    resources: impl ResourceInterface<Sl>,
+    _: impl ResourceInterface<Sl>,
     input: FragmentInput<sl::Vec4<f32>>,
 ) -> FragmentOutput<sl::Vec4<f32>> {
     FragmentOutput::new(input.varying * 3.0)
 }
 
 fn main() {
-    let program_def = ProgramDef::new(vertex_shader, fragment_shader);
+    let program_def = posh::compile(vertex_shader, fragment_shader);
+
+    println!("{}", program_def.vertex_shader_source);
+    println!("{}", program_def.fragment_shader_source);
 }

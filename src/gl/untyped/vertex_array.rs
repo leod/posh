@@ -5,23 +5,15 @@ use glow::HasContext;
 use crate::{
     dag::{BaseType, NumericType, PrimitiveType, Type},
     gl::{CreateVertexArrayError, ElementType, GeometryType},
-    VertexAttribute, VertexInputRate,
+    program_def::{VertexDef, VertexInputRate},
 };
 
 use super::{Buffer, GeometryStream};
 
-// TODO: Move somewhere up.
-#[derive(Debug, Clone)]
-pub struct VertexInfo {
-    pub input_rate: VertexInputRate,
-    pub stride: usize,
-    pub attributes: Vec<VertexAttribute>,
-}
-
 struct VertexArrayShared {
     gl: Rc<glow::Context>,
     id: glow::VertexArray,
-    vertex_buffers: Vec<(Buffer, VertexInfo)>,
+    vertex_buffers: Vec<(Buffer, VertexDef)>,
     element_buffer: Option<(Buffer, ElementType)>,
 }
 
@@ -38,7 +30,7 @@ impl VertexArray {
     /// buffers have a mismatched size.
     pub fn new(
         gl: Rc<glow::Context>,
-        vertex_buffers: &[(Buffer, VertexInfo)],
+        vertex_buffers: &[(Buffer, VertexDef)],
         element_buffer: Option<(Buffer, ElementType)>,
     ) -> Result<Self, CreateVertexArrayError> {
         // TODO: How do we want to handle `buffers.is_empty()`?
@@ -51,55 +43,52 @@ impl VertexArray {
 
         let mut index = 0;
 
-        for (buffer, vertex_info) in vertex_buffers {
-            assert!(vertex_info.stride > 0);
-            assert_eq!(buffer.len() % vertex_info.stride, 0);
+        for (buffer, vertex_def) in vertex_buffers {
+            assert!(vertex_def.stride > 0);
+            assert_eq!(buffer.len() % vertex_def.stride, 0);
             assert!(Rc::ptr_eq(buffer.gl(), &gl));
 
             unsafe {
                 gl.bind_buffer(glow::ARRAY_BUFFER, Some(buffer.id()));
             }
 
-            for attribute in &vertex_info.attributes {
+            for attribute in &vertex_def.attributes {
                 let attribute_info = VertexAttributeLayout::new(&attribute.ty);
 
                 for i in 0..attribute_info.num_locations {
-                    use NumericType::*;
-                    use VertexInputRate::*;
-
                     let data_type = numeric_type_to_gl(attribute_info.ty);
                     let offset = attribute.offset + i * attribute_info.location_size();
 
-                    assert!(offset + attribute_info.location_size() <= vertex_info.stride);
+                    assert!(offset + attribute_info.location_size() <= vertex_def.stride);
 
                     unsafe {
                         gl.enable_vertex_attrib_array(index);
                     }
 
-                    match vertex_info.input_rate {
-                        Vertex => (),
-                        Instance => unsafe {
+                    match vertex_def.input_rate {
+                        VertexInputRate::Vertex => (),
+                        VertexInputRate::Instance => unsafe {
                             gl.vertex_attrib_divisor(index, 1);
                         },
                     }
 
                     match attribute_info.ty {
-                        F32 => unsafe {
+                        NumericType::F32 => unsafe {
                             gl.vertex_attrib_pointer_f32(
                                 index,
                                 i32::try_from(attribute_info.num_components).unwrap(),
                                 data_type,
                                 false,
-                                i32::try_from(vertex_info.stride).unwrap(),
+                                i32::try_from(vertex_def.stride).unwrap(),
                                 i32::try_from(offset).unwrap(),
                             )
                         },
-                        I32 | U32 => unsafe {
+                        NumericType::I32 | NumericType::U32 => unsafe {
                             gl.vertex_attrib_pointer_i32(
                                 index,
                                 i32::try_from(attribute_info.num_components).unwrap(),
                                 data_type,
-                                i32::try_from(vertex_info.stride).unwrap(),
+                                i32::try_from(vertex_def.stride).unwrap(),
                                 i32::try_from(offset).unwrap(),
                             )
                         },
@@ -141,7 +130,7 @@ impl VertexArray {
         self.shared.id
     }
 
-    pub fn vertex_buffers(&self) -> &[(Buffer, VertexInfo)] {
+    pub fn vertex_buffers(&self) -> &[(Buffer, VertexDef)] {
         &self.shared.vertex_buffers
     }
 

@@ -1,14 +1,14 @@
 use std::{cell::RefCell, marker::PhantomData};
 
 use crate::{
+    compile::compile,
     interface::ResourceInterfaceVisitor,
-    sl::{self, FragmentInput, FragmentOutput, Varying, VertexInput, VertexOutput},
+    sl::{FragmentInput, FragmentOutput, Varying, VertexInput, VertexOutput},
     FragmentInterface, Gl, ResourceInterface, Sl, VertexInterface,
 };
 
 use super::{
-    untyped::{self, UniformBlockInfo},
-    Context, CreateProgramError, DrawParams, GeometryStream, Surface, UniformBufferBinding,
+    untyped, Context, CreateProgramError, DrawParams, GeometryStream, Surface, UniformBufferBinding,
 };
 
 pub struct Program<R, A, F> {
@@ -31,28 +31,14 @@ where
     where
         W: Varying,
     {
-        let typed_def = sl::ProgramDef::new(vertex_shader, fragment_shader);
-        let untyped_def = untyped::ProgramDef {
-            uniform_block_infos: typed_def
-                .uniform_block_defs
-                .into_iter()
-                .map(|def| UniformBlockInfo {
-                    name: def.block_name,
-                    location: def.location,
-                })
-                .collect(),
-            sampler_infos: Vec::new(), // TODO: Samplers in `ProgramDef`
-            vertex_infos: typed_def.vertex_infos,
-            vertex_shader_source: typed_def.vertex_shader_source,
-            fragment_shader_source: typed_def.fragment_shader_source,
-        };
+        let program_def = compile(vertex_shader, fragment_shader);
 
         println!(
             "{}\n==================={}",
-            untyped_def.vertex_shader_source, untyped_def.fragment_shader_source
+            program_def.vertex_shader_source, program_def.fragment_shader_source
         );
 
-        let untyped = context.untyped.create_program(untyped_def)?;
+        let untyped = context.untyped.create_program(program_def)?;
 
         Ok(Program {
             untyped,

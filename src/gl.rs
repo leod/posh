@@ -9,13 +9,9 @@ mod sampler;
 mod surface;
 mod texture;
 mod uniform_buffer;
+mod untyped;
 mod vertex_array;
 mod vertex_buffer;
-
-// TODO: Make `untyped` private. Figure out escape hatches later. Only exposing
-// this for tests right now.
-#[doc(hidden)]
-pub mod untyped;
 
 pub use context::Context;
 pub use draw_params::DrawParams;

@@ -3,13 +3,14 @@ use sealed::sealed;
 use crate::{
     dag::{BaseType, PrimitiveType, Type},
     gl::{self, Texture2dBinding},
+    program_def::{VertexAttributeDef, VertexInputRate},
     sl::{Object, Sampler2d, Scalar, Vec2, Vec4},
-    Numeric, Sl, ToPod, VertexInputRate,
+    Numeric, Sl, ToPod,
 };
 
 use super::{
     FragmentInterface, FragmentInterfaceVisitor, Primitive, ResourceInterface, Uniform, Vertex,
-    VertexAttribute, VertexInterface, VertexInterfaceVisitor,
+    VertexInterface, VertexInterfaceVisitor,
 };
 
 // Uniform interface
@@ -45,8 +46,8 @@ impl super::Domain for Sl {
 
 // Vertex interface
 
-fn vertex_attribute(path: &str, base_type: BaseType) -> Vec<VertexAttribute> {
-    vec![VertexAttribute {
+fn vertex_attribute_def(path: &str, base_type: BaseType) -> Vec<VertexAttributeDef> {
+    vec![VertexAttributeDef {
         name: path.to_string(),
         ty: Type::Base(base_type),
         offset: 0,
@@ -58,8 +59,8 @@ impl<T: Primitive> Vertex<Sl> for Scalar<T> {
     type InSl = Self;
     type Pod = <Self::InGl as ToPod>::Output;
 
-    fn attributes(path: &str) -> Vec<VertexAttribute> {
-        vertex_attribute(
+    fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
+        vertex_attribute_def(
             path,
             BaseType::Scalar(PrimitiveType::Numeric(T::NUMERIC_REPR_TYPE)),
         )
@@ -75,8 +76,8 @@ impl<T: Primitive> Vertex<Sl> for Vec2<T> {
     type InSl = Self;
     type Pod = <Self::InGl as ToPod>::Output;
 
-    fn attributes(path: &str) -> Vec<VertexAttribute> {
-        vertex_attribute(
+    fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
+        vertex_attribute_def(
             path,
             BaseType::Vec2(PrimitiveType::Numeric(T::NUMERIC_REPR_TYPE)),
         )

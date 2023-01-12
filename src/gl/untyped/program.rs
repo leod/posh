@@ -2,34 +2,9 @@ use std::{collections::BTreeSet, rc::Rc};
 
 use glow::HasContext;
 
-use crate::gl::CreateProgramError;
+use crate::{gl::CreateProgramError, program_def::ProgramDef};
 
-use super::{Buffer, GeometryStream, VertexAttributeLayout, VertexInfo};
-
-pub struct SamplerInfo {
-    /// The name of the sampler uniform.
-    pub name: String,
-
-    /// The texture unit to which this sampler is to be bound in the program.
-    pub texture_unit: usize,
-}
-
-pub struct UniformBlockInfo {
-    /// The name of the uniform block.
-    pub name: String,
-
-    /// The location to which this uniform block is to be bound in the program.
-    pub location: usize,
-}
-
-#[derive(Default)]
-pub struct ProgramDef {
-    pub uniform_block_infos: Vec<UniformBlockInfo>,
-    pub sampler_infos: Vec<SamplerInfo>,
-    pub vertex_infos: Vec<VertexInfo>,
-    pub vertex_shader_source: String,
-    pub fragment_shader_source: String,
-}
+use super::{Buffer, GeometryStream, VertexAttributeLayout};
 
 struct ProgramShared {
     gl: Rc<glow::Context>,
@@ -76,7 +51,7 @@ impl Program {
         {
             let mut index = 0;
 
-            for vertex_info in &shared.def.vertex_infos {
+            for vertex_info in &shared.def.vertex_defs {
                 for attribute in &vertex_info.attributes {
                     unsafe {
                         gl.bind_attrib_location(
@@ -119,22 +94,25 @@ impl Program {
         }
 
         // Set texture units.
-        for info in &shared.def.sampler_infos {
-            let location = unsafe { gl.get_uniform_location(shared.id, &info.name) };
+        for sampler_def in &shared.def.sampler_defs {
+            let location = unsafe { gl.get_uniform_location(shared.id, &sampler_def.name) };
 
             // We silently ignore location lookup failures here, since program
             // linking is allowed to remove uniforms that are not used by the
             // program.
             if let Some(location) = location {
                 unsafe {
-                    gl.uniform_1_i32(Some(&location), i32::try_from(info.texture_unit).unwrap());
+                    gl.uniform_1_i32(
+                        Some(&location),
+                        i32::try_from(sampler_def.texture_unit).unwrap(),
+                    );
                 }
             }
         }
 
         // Set uniform block locations.
-        for info in &shared.def.uniform_block_infos {
-            let index = unsafe { gl.get_uniform_block_index(shared.id, &info.name) };
+        for uniform_def in &shared.def.uniform_defs {
+            let index = unsafe { gl.get_uniform_block_index(shared.id, &uniform_def.block_name) };
 
             // As with texture units, we silently ignore uniform block index
             // lookup failures here.
@@ -143,7 +121,7 @@ impl Program {
                     gl.uniform_block_binding(
                         shared.id,
                         index,
-                        u32::try_from(info.location).unwrap(),
+                        u32::try_from(uniform_def.location).unwrap(),
                     );
                 }
             }
@@ -164,7 +142,7 @@ impl Program {
         let shared = &self.shared;
         let gl = &shared.gl;
 
-        assert_eq!(uniform_buffers.len(), shared.def.uniform_block_infos.len());
+        assert_eq!(uniform_buffers.len(), shared.def.uniform_defs.len());
         for buffer in uniform_buffers {
             assert!(Rc::ptr_eq(buffer.gl(), gl));
         }
@@ -174,7 +152,7 @@ impl Program {
             gl.use_program(Some(shared.id));
         }
 
-        for (buffer, block_info) in uniform_buffers.iter().zip(&shared.def.uniform_block_infos) {
+        for (buffer, block_info) in uniform_buffers.iter().zip(&shared.def.uniform_defs) {
             let location = u32::try_from(block_info.location).unwrap();
 
             unsafe {
@@ -185,7 +163,7 @@ impl Program {
         geometry.draw();
 
         // TODO: Remove overly conservative unbinding.
-        for (_, block_info) in uniform_buffers.iter().zip(&shared.def.uniform_block_infos) {
+        for (_, block_info) in uniform_buffers.iter().zip(&shared.def.uniform_defs) {
             let location = u32::try_from(block_info.location).unwrap();
 
             unsafe {
@@ -266,7 +244,7 @@ impl ProgramDef {
         {
             let mut names: BTreeSet<_> = BTreeSet::new();
 
-            for info in &self.sampler_infos {
+            for info in &self.sampler_defs {
                 if names.contains(&info.name) {
                     panic!("Duplicate sampler name: {}", info.name);
                 }
@@ -278,31 +256,34 @@ impl ProgramDef {
         {
             let mut texture_units: BTreeSet<_> = BTreeSet::new();
 
-            for info in &self.sampler_infos {
-                if texture_units.contains(&info.texture_unit) {
-                    panic!("Duplicate sampler texture unit: {}", info.texture_unit);
+            for sampler_def in &self.sampler_defs {
+                if texture_units.contains(&sampler_def.texture_unit) {
+                    panic!(
+                        "Duplicate sampler texture unit: {}",
+                        sampler_def.texture_unit
+                    );
                 }
 
-                texture_units.insert(info.texture_unit);
+                texture_units.insert(sampler_def.texture_unit);
             }
         }
 
         {
             let mut names: BTreeSet<_> = BTreeSet::new();
 
-            for info in &self.uniform_block_infos {
-                if names.contains(&info.name) {
-                    panic!("Duplicate uniform block name: {}", info.name);
+            for info in &self.uniform_defs {
+                if names.contains(&info.block_name) {
+                    panic!("Duplicate uniform block name: {}", info.block_name);
                 }
 
-                names.insert(info.name.clone());
+                names.insert(info.block_name.clone());
             }
         }
 
         {
             let mut locations: BTreeSet<_> = BTreeSet::new();
 
-            for info in &self.uniform_block_infos {
+            for info in &self.uniform_defs {
                 if locations.contains(&info.location) {
                     panic!("Duplicate uniform block location: {}", info.location);
                 }

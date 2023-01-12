@@ -26,7 +26,7 @@ impl Context {
     }
 
     pub fn gl(&self) -> &Rc<glow::Context> {
-        &self.untyped.gl()
+        self.untyped.gl()
     }
 
     pub fn create_vertex_buffer<V>(

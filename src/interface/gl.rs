@@ -2,12 +2,13 @@ use sealed::sealed;
 
 use crate::{
     gl::{Sampler2dBinding, Texture2dBinding, UniformBufferBinding, VertexBuffer},
-    sl, Gl, Numeric, Sl, VertexInputRate,
+    program_def::{VertexAttributeDef, VertexInputRate},
+    sl, Gl, Numeric, Sl,
 };
 
 use super::{
     FragmentInterface, FragmentInterfaceVisitor, Primitive, ResourceInterface, ToPod, Uniform,
-    Vertex, VertexAttribute, VertexInterface, VertexInterfaceVisitor,
+    Vertex, VertexInterface, VertexInterfaceVisitor,
 };
 
 // Uniform interface
@@ -75,8 +76,8 @@ impl Vertex<Gl> for bool {
     type InSl = sl::Scalar<Self>;
     type Pod = <Self::InGl as ToPod>::Output;
 
-    fn attributes(path: &str) -> Vec<VertexAttribute> {
-        <Self::InSl as Vertex<Sl>>::attributes(path)
+    fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
+        <Self::InSl as Vertex<Sl>>::attribute_defs(path)
     }
 
     fn shader_input(_: &str) -> Self {
@@ -89,8 +90,8 @@ impl Vertex<Gl> for f32 {
     type InSl = sl::Scalar<Self>;
     type Pod = <Self::InGl as ToPod>::Output;
 
-    fn attributes(path: &str) -> Vec<VertexAttribute> {
-        <Self::InSl as Vertex<Sl>>::attributes(path)
+    fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
+        <Self::InSl as Vertex<Sl>>::attribute_defs(path)
     }
 
     fn shader_input(_: &str) -> Self {
@@ -103,8 +104,8 @@ impl Vertex<Gl> for i32 {
     type InSl = sl::Scalar<Self>;
     type Pod = <Self::InGl as ToPod>::Output;
 
-    fn attributes(path: &str) -> Vec<VertexAttribute> {
-        <Self::InSl as Vertex<Sl>>::attributes(path)
+    fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
+        <Self::InSl as Vertex<Sl>>::attribute_defs(path)
     }
 
     fn shader_input(_: &str) -> Self {
@@ -117,8 +118,8 @@ impl Vertex<Gl> for u32 {
     type InSl = sl::Scalar<Self>;
     type Pod = <Self::InGl as ToPod>::Output;
 
-    fn attributes(path: &str) -> Vec<VertexAttribute> {
-        <Self::InSl as Vertex<Sl>>::attributes(path)
+    fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
+        <Self::InSl as Vertex<Sl>>::attribute_defs(path)
     }
 
     fn shader_input(_: &str) -> Self {
@@ -131,8 +132,8 @@ impl<T: Primitive> Vertex<Gl> for mint::Vector2<T> {
     type InSl = sl::Vec2<T>;
     type Pod = <Self::InGl as ToPod>::Output;
 
-    fn attributes(path: &str) -> Vec<VertexAttribute> {
-        <Self::InSl as Vertex<Sl>>::attributes(path)
+    fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
+        <Self::InSl as Vertex<Sl>>::attribute_defs(path)
     }
 
     fn shader_input(_: &str) -> Self {
