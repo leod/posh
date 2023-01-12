@@ -38,7 +38,7 @@ pub enum VertexInputRate {
     Instance,
 }
 
-/// Definition of a vertex input.
+/// Vertex input definition.
 #[derive(Debug, Clone)]
 pub struct VertexDef {
     pub input_rate: VertexInputRate,
@@ -46,11 +46,11 @@ pub struct VertexDef {
     pub attributes: Vec<VertexAttributeDef>,
 }
 
-/// Type-erased program definition.
+/// Type-erased definition of a program.
 ///
-/// This is exposed for the purpose of inspecting compiled programs. See
-/// [`crate::compile`] for how to construct a [`ProgramDef`] from shader
-/// definitions.
+/// This is exposed for the purpose of inspecting the generated shader code. See
+/// [`crate::util::build_program_def`] for how to construct a type-erased
+/// [`ProgramDef`] from typed shader definitions.
 #[derive(Debug, Clone, Default)]
 pub struct ProgramDef {
     /// Uniforms that the program needs.

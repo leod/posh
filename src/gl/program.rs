@@ -1,7 +1,7 @@
 use std::{cell::RefCell, marker::PhantomData};
 
 use crate::{
-    compile::compile,
+    build_program_def::build_program_def,
     interface::ResourceInterfaceVisitor,
     sl::{FragmentInput, FragmentOutput, Varying, VertexInput, VertexOutput},
     FragmentInterface, Gl, ResourceInterface, Sl, VertexInterface,
@@ -31,7 +31,7 @@ where
     where
         W: Varying,
     {
-        let program_def = compile(vertex_shader, fragment_shader);
+        let program_def = build_program_def(vertex_shader, fragment_shader);
 
         println!(
             "{}\n==================={}",

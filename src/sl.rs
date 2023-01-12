@@ -1,3 +1,7 @@
+//! The shading library.
+//!
+//! The shading library allows defining shaders in Rust functions.
+
 #[macro_use]
 mod gen_type;
 mod sampler;
@@ -20,7 +24,13 @@ pub use {
 
 pub use posh_derive::{ToValue, Value};
 
-/// An object that can be represented in the shading language.
+/// Base trait for types representing objects in the shading language.
+///
+/// Almost all types that implement [`Object`] also implement [`Value`]. The
+/// only exception to this are intransparent types like [`Sampler2d`].
+///
+/// Internally, implementations of [`Object`] carry around expressions
+/// describing their computation. This enables generation of shader source code.
 ///
 /// The interface of this trait is a private implementation detail.
 pub trait Object: 'static {
@@ -34,7 +44,11 @@ pub trait Object: 'static {
     fn from_arg(name: &str) -> Self;
 }
 
-/// An object that can be stored as a value in the shading language.
+/// A transparent value in the shading language.
+///
+/// Most types in the shader language implement [`Value`]. A notable exception
+/// is [`Sampler2d`]. Only types that implement [`Value`] can be used in
+/// `struct` definitions.
 ///
 /// The interface of this trait is a private implementation detail.
 pub trait Value: Object {
@@ -42,9 +56,7 @@ pub trait Value: Object {
     fn from_expr(expr: Expr) -> Self;
 }
 
-/// A [`Value`] that has a struct type in the shading language.
-///
-/// The interface of this trait is a private implementation detail.
+#[doc(hidden)]
 pub trait Struct: Value {
     #[doc(hidden)]
     fn struct_type() -> Rc<StructType>;
@@ -76,6 +88,8 @@ pub fn unique_struct_type<T: Struct>(ty: fn() -> StructType) -> Rc<StructType> {
 }
 
 /// A conversion to a [`Value`] in the shading language.
+///
+/// This is useful for converting literals to the shading language.
 pub trait ToValue: Copy {
     type Output: Value;
 
@@ -117,6 +131,7 @@ impl Varying for Vec4<f32> {
 #[derive(Debug, Clone)]
 pub(crate) struct Private;
 
+/// Input given to a vertex shader.
 #[derive(Debug, Clone)]
 pub struct VertexInput<V> {
     pub vertex: V,
@@ -125,6 +140,7 @@ pub struct VertexInput<V> {
     pub(crate) _private: Private,
 }
 
+/// Output computed by a vertex shader.
 #[derive(Debug, Clone)]
 pub struct VertexOutput<W> {
     pub position: Vec4<f32>,
@@ -142,6 +158,7 @@ impl<W> VertexOutput<W> {
     }
 }
 
+/// Input given to a fragment shader.
 #[derive(Debug, Clone)]
 pub struct FragmentInput<W> {
     pub varying: W,
@@ -151,6 +168,7 @@ pub struct FragmentInput<W> {
     pub(crate) _private: Private,
 }
 
+/// Output computed by a fragment shader.
 #[derive(Debug, Clone)]
 pub struct FragmentOutput<F> {
     pub fragment: F,

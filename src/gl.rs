@@ -1,3 +1,5 @@
+//! The graphics library.
+
 mod context;
 mod draw_params;
 mod element_buffer;

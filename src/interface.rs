@@ -11,7 +11,7 @@ use crate::{
     Gl, Numeric, Primitive, Sl,
 };
 
-/// Provides types for declaring fields in a [`Uniform`] or a [`Vertex`].
+/// Provides types for [`Uniform`] or [`Vertex`] declarations.
 #[sealed]
 pub trait Domain: Copy {
     /// A scalar value.
@@ -41,15 +41,18 @@ pub trait Domain: Copy {
     type U32: Uniform<Self> + Vertex<Self> + ToValue<Output = U32>;
 }
 
-pub fn join_ident_path(lhs: &str, rhs: &str) -> String {
-    format!("{lhs}_{rhs}")
-}
-
 // Uniform interface
 
 /// Uniform types.
 pub trait Uniform<D: Domain>: ToValue {
+    /// The representation of [`Self`] in the graphics library domain [`Gl`].
+    ///
+    /// This is the type through which uniform data is provided on the host.
     type InGl: Uniform<Gl> + AsStd140 + ToValue<Output = Self::InSl>;
+
+    /// The representation of [`Self`] in the shading language domain [`Sl`].
+    ///
+    /// This is the type through which uniform data is read in shaders.
     type InSl: Uniform<Sl> + Value + ToValue<Output = Self::InSl>;
 
     #[doc(hidden)]
@@ -67,10 +70,17 @@ pub trait ToPod: Copy {
 
 /// Vertex types.
 pub trait Vertex<D: Domain>: ToValue {
+    /// The representation of [`Self`] in the graphics library domain [`Gl`].
+    ///
+    /// This is the type through which vertex data is provided on the host.
     type InGl: Vertex<Gl> + ToPod<Output = Self::Pod> + ToValue<Output = Self::InSl>;
 
+    /// The representation of [`Self`] in the shading language domain [`Sl`].
+    ///
+    /// This is the type through which vertex data is read in shaders.
     type InSl: Vertex<Sl> + Value + ToValue<Output = Self::InSl>;
 
+    #[doc(hidden)]
     type Pod: Pod;
 
     #[doc(hidden)]
@@ -89,16 +99,23 @@ pub trait VertexInterfaceVisitor<D: VertexDomain> {
     );
 }
 
-/// Types that are allowed to occur in a [`VertexInterface`].
+/// Types that can occur in a [`VertexInterface`].
 #[sealed]
+#[doc(hidden)]
 pub trait VertexInterfaceField<D: VertexDomain> {
-    #[doc(hidden)]
     fn shader_input(path: &str) -> Self;
 }
 
-/// Types that declare the vertex input interface of a shader.
+/// A vertex input interface for shaders.
 pub trait VertexInterface<D: VertexDomain> {
+    /// The representation of [`Self`] in the graphics library domain [`Gl`].
+    ///
+    /// This is the type through which vertex buffers are bound on the host.
     type InGl: VertexInterface<Gl>;
+
+    /// The representation of [`Self`] in the shading language domain [`Sl`].
+    ///
+    /// This is the type through which the vertex interface is accessed in shaders.
     type InSl: VertexInterface<Sl>;
 
     #[doc(hidden)]
@@ -108,9 +125,10 @@ pub trait VertexInterface<D: VertexDomain> {
     fn shader_input(path: &str) -> Self;
 }
 
-/// Provides types for declaring fields in a [`VertexInterface`].
+/// Provides types for [`VertexInterface`] declarations.
 #[sealed]
 pub trait VertexDomain: Domain {
+    /// A vertex field.
     type Vertex<V: Vertex<Sl>>: VertexInterfaceField<Self>;
 }
 
@@ -123,9 +141,16 @@ pub trait ResourceInterfaceVisitor<D: ResourceDomain> {
     fn accept_uniform<U: Uniform<Sl, InSl = U>>(&mut self, path: &str, uniform: &D::Uniform<U>);
 }
 
-/// Types that declare the resource input interface of a shader.
+/// A resource input interface for shaders.
 pub trait ResourceInterface<D: ResourceDomain> {
+    /// The representation of [`Self`] in the graphics library domain [`Gl`].
+    ///
+    /// This is the type through which resources are bound on the host.
     type InGl: ResourceInterface<Gl>;
+
+    /// The representation of [`Self`] in the shading language domain [`Sl`].
+    ///
+    /// This is the type through which the resource interface is accessed in shaders.
     type InSl: ResourceInterface<Sl>;
 
     #[doc(hidden)]
@@ -144,13 +169,16 @@ impl<D: ResourceDomain> ResourceInterface<D> for () {
     fn shader_input(_: &str) -> Self {}
 }
 
-/// Provides types for declaring fields in a [`ResourceInterface`].
+/// Provides types for [`ResourceInterface`] declarations.
 #[sealed]
 pub trait ResourceDomain: Domain {
+    /// A two-dimensional sampler field.
     type Sampler2d<T: Numeric>: ResourceInterface<Self>;
 
+    /// A uniform field.
     type Uniform<U: Uniform<Sl, InSl = U>>: ResourceInterface<Self>;
 
+    /// A resource interface field.
     type Compose<R: ResourceInterface<Sl>>: ResourceInterface<Self>;
 }
 
@@ -161,16 +189,24 @@ pub trait FragmentInterfaceVisitor<D: FragmentDomain> {
     fn accept(&mut self, path: &str, attachment: &D::Attachment);
 }
 
-/// Types that declare the fragment output interface of a shader.
+/// A fragment output interface for shaders.
 pub trait FragmentInterface<D: FragmentDomain> {
+    /// The representation of [`Self`] in the graphics library domain [`Gl`].
+    ///
+    /// This is the type through which framebuffer attachments are specified on
+    /// the host.
     type InGl: FragmentInterface<Gl>;
+
+    /// The representation of [`Self`] in the shading language domain [`Sl`].
+    ///
+    /// This is the type through which fragment output is specified in shaders.
     type InSl: FragmentInterface<Sl>;
 
     #[doc(hidden)]
     fn visit(&self, path: &str, visitor: &mut impl FragmentInterfaceVisitor<D>);
 }
 
-/// Provides types for declaring fields in a [`FragmentInterface`].
+/// Provides types for [`FragmentInterface`] declarations.
 #[sealed]
 pub trait FragmentDomain: Sized {
     type Attachment: FragmentInterface<Self>;

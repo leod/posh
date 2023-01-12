@@ -9,7 +9,7 @@ use crate::{
     Gl, Uniform, Vertex,
 };
 
-/// A primitive type: one of `bool`, `f32`, `i32`, or `u32`.
+/// One of `bool`, `f32`, `i32`, or `u32`.
 #[sealed]
 pub trait Primitive:
     'static
@@ -67,9 +67,10 @@ impl Primitive for f32 {
     type Vec2 = mint::Vector2<f32>;
 }
 
-/// A numeric type: one of `f32`, `i32`, or `u32`.
+/// One of `f32`, `i32`, or `u32`.
 #[sealed]
 pub trait Numeric: Pod + ToPod + Primitive + Vertex<Gl> {
+    #[doc(hidden)]
     const NUMERIC_TYPE: NumericType;
 
     #[doc(hidden)]

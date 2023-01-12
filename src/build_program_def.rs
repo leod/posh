@@ -16,9 +16,10 @@ use crate::sl::{primitives::value_arg, Sampler2d, Varying, Vec4};
 /// Compiles a vertex shader and a fragment shader into a type-erased program
 /// definition.
 ///
-/// This is used internally in order to create [`crate::gl::Program`]s. It is
-/// exposed for the purpose of inspecting compiled programs.
-pub fn compile<R, V, F, W>(
+/// This is used internally by `posh` in order to create
+/// [`Program`](crate::gl::Program)s. It is exposed for the purpose of
+/// inspecting generated shader source code.
+pub fn build_program_def<R, V, F, W>(
     vertex_shader: fn(R, VertexInput<V>) -> VertexOutput<W>,
     fragment_shader: fn(R, FragmentInput<W>) -> FragmentOutput<F>,
 ) -> ProgramDef
