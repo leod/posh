@@ -1,4 +1,4 @@
-mod build_program_def;
+mod build;
 mod dag;
 mod gen;
 mod interface;
@@ -22,7 +22,7 @@ pub use crevice;
 /// Utilities.
 pub mod util {
     pub use super::{
-        build_program_def::{build_program_def, build_program_def_with_consts},
+        build::{build_program_def, build_program_def_with_consts},
         program_def::{
             ProgramDef, SamplerDef, UniformDef, VertexAttributeDef, VertexDef, VertexInputRate,
         },

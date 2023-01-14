@@ -24,6 +24,12 @@ pub trait Primitive:
     #[doc(hidden)]
     const PRIMITIVE_TYPE: PrimitiveType;
 
+    /// The type that is used to specify `Self` in vertex arrays. This exists
+    /// because OpenGL does not like bools in attributes, but, for completeness,
+    /// we want to be able to provide the same basic types in uniforms as in
+    /// vertices. Among other things, this allows deriving both `Vertex` and
+    /// `Uniform` for the same `struct`, which might be useful for supporting
+    /// different instancing methods for the same data.
     #[doc(hidden)]
     const NUMERIC_REPR_TYPE: NumericType;
 
