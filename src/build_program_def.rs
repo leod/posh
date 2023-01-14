@@ -7,7 +7,10 @@ use crate::{
     program_def::{
         ProgramDef, SamplerDef, UniformDef, VertexAttributeDef, VertexDef, VertexInputRate,
     },
-    sl::{FragmentInput, FragmentOutput, Object, Private, VertexInput, VertexOutput},
+    sl::{
+        ConstInput, FragmentInput, FromFragmentInput, FromVertexInput, IntoFragmentOutput,
+        IntoVertexOutput, Object, Private, VertexInput,
+    },
     FragmentInterface, Numeric, ResourceInterface, Sl, Uniform, Vertex, VertexInterface,
 };
 
@@ -19,17 +22,86 @@ use crate::sl::{primitives::value_arg, Sampler2d, Varying, Vec4};
 /// This is used internally by `posh` in order to create
 /// [`Program`](crate::gl::Program)s. It is exposed for the purpose of
 /// inspecting generated shader source code.
-pub fn build_program_def<R, V, F, W>(
-    vertex_shader: fn(R, VertexInput<V>) -> VertexOutput<W>,
-    fragment_shader: fn(R, FragmentInput<W>) -> FragmentOutput<F>,
+pub fn build_program_def<Res, Vert, Frag, Vary, VertIn, VertOut, FragIn, FragOut>(
+    vertex_shader: fn(Res, VertIn) -> VertOut,
+    fragment_shader: fn(Res, FragIn) -> FragOut,
 ) -> ProgramDef
 where
-    R: ResourceInterface<Sl, InSl = R>,
-    V: VertexInterface<Sl, InSl = V>,
-    F: FragmentInterface<Sl, InSl = F>,
-    W: Varying,
+    Res: ResourceInterface<Sl, InSl = Res>,
+    Vert: VertexInterface<Sl, InSl = Vert>,
+    Frag: FragmentInterface<Sl, InSl = Frag>,
+    Vary: Varying,
+    VertIn: FromVertexInput<Vert = Vert>,
+    VertOut: IntoVertexOutput<Vary = Vary>,
+    FragIn: FromFragmentInput<Vary = Vary>,
+    FragOut: IntoFragmentOutput<Frag = Frag>,
 {
-    let resources = R::shader_input("resource");
+    build_program_def_with_consts_impl(
+        (),
+        |(), resources, input| vertex_shader(resources, input),
+        |(), resources, input| fragment_shader(resources, input),
+    )
+}
+
+/// Compiles a vertex shader and a fragment shader with constant input.
+///
+/// See also [`build_program_def`].
+pub fn build_program_def_with_consts<
+    Consts,
+    Res,
+    Vert,
+    Frag,
+    Vary,
+    VertIn,
+    VertOut,
+    FragIn,
+    FragOut,
+>(
+    consts: Consts,
+    vertex_shader: fn(Consts, Res, VertIn) -> VertOut,
+    fragment_shader: fn(Consts, Res, FragIn) -> FragOut,
+) -> ProgramDef
+where
+    Consts: ConstInput,
+    Res: ResourceInterface<Sl, InSl = Res>,
+    Vert: VertexInterface<Sl, InSl = Vert>,
+    Frag: FragmentInterface<Sl, InSl = Frag>,
+    Vary: Varying,
+    VertIn: FromVertexInput<Vert = Vert>,
+    VertOut: IntoVertexOutput<Vary = Vary>,
+    FragIn: FromFragmentInput<Vary = Vary>,
+    FragOut: IntoFragmentOutput<Frag = Frag>,
+{
+    build_program_def_with_consts_impl(consts, vertex_shader, fragment_shader)
+}
+
+fn build_program_def_with_consts_impl<
+    Consts,
+    Res,
+    Vert,
+    Frag,
+    Vary,
+    VertIn,
+    VertOut,
+    FragIn,
+    FragOut,
+>(
+    consts: Consts,
+    vertex_shader: impl FnOnce(Consts, Res, VertIn) -> VertOut,
+    fragment_shader: impl FnOnce(Consts, Res, FragIn) -> FragOut,
+) -> ProgramDef
+where
+    Consts: ConstInput,
+    Res: ResourceInterface<Sl, InSl = Res>,
+    Vert: VertexInterface<Sl, InSl = Vert>,
+    Frag: FragmentInterface<Sl, InSl = Frag>,
+    Vary: Varying,
+    VertIn: FromVertexInput<Vert = Vert>,
+    VertOut: IntoVertexOutput<Vary = Vary>,
+    FragIn: FromFragmentInput<Vary = Vary>,
+    FragOut: IntoFragmentOutput<Frag = Frag>,
+{
+    let resources = Res::shader_input("resource");
 
     let (uniform_defs, sampler_defs) = {
         let mut resource_visitor = ResourceVisitor::default();
@@ -40,12 +112,12 @@ where
 
     let (vertex_defs, varying_outputs, vertex_shader_source) = {
         let input = || VertexInput {
-            vertex: V::shader_input("vertex_input"),
+            vertex: Vert::shader_input("vertex_input"),
             vertex_id: value_arg("gl_VertexID"),
             instance_id: value_arg("gl_InstanceID"),
             _private: Private,
         };
-        let output = vertex_shader(resources, input());
+        let output = vertex_shader(consts, resources, VertIn::from(input())).into();
 
         let varying_outputs = output.varying.shader_outputs("vertex_output");
         let (vertex_attributes, vertex_defs) = {
@@ -88,17 +160,17 @@ where
         (vertex_defs, varying_outputs, source)
     };
 
-    let resources = R::shader_input("resource");
+    let resources = Res::shader_input("resource");
 
     let fragment_shader_source = {
         let input = FragmentInput {
-            varying: W::shader_input("vertex_output"),
+            varying: Vary::shader_input("vertex_output"),
             fragment_coord: value_arg("gl_FragCoord"),
             front_facing: value_arg("gl_FrontFacing"),
             point_coord: value_arg("gl_PointCoord"),
             _private: Private,
         };
-        let output = fragment_shader(resources, input);
+        let output = fragment_shader(consts, resources, FragIn::from(input)).into();
 
         let mut fragment_visitor = FragmentVisitor::default();
         output
