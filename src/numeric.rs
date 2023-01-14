@@ -102,7 +102,7 @@ impl Numeric for u32 {
 #[repr(transparent)]
 pub struct BoolField(u32);
 
-impl ToPod for BoolField {
+unsafe impl ToPod for BoolField {
     type Output = Self;
 
     fn to_pod(self) -> Self::Output {
@@ -110,7 +110,7 @@ impl ToPod for BoolField {
     }
 }
 
-impl ToPod for bool {
+unsafe impl ToPod for bool {
     type Output = BoolField;
 
     fn to_pod(self) -> Self::Output {
@@ -118,7 +118,7 @@ impl ToPod for bool {
     }
 }
 
-impl ToPod for f32 {
+unsafe impl ToPod for f32 {
     type Output = Self;
 
     fn to_pod(self) -> Self::Output {
@@ -126,7 +126,7 @@ impl ToPod for f32 {
     }
 }
 
-impl ToPod for i32 {
+unsafe impl ToPod for i32 {
     type Output = Self;
 
     fn to_pod(self) -> Self::Output {
@@ -134,7 +134,7 @@ impl ToPod for i32 {
     }
 }
 
-impl ToPod for u32 {
+unsafe impl ToPod for u32 {
     type Output = Self;
 
     fn to_pod(self) -> Self::Output {
@@ -142,7 +142,7 @@ impl ToPod for u32 {
     }
 }
 
-impl<T: Pod + ToPod> ToPod for [T; 2] {
+unsafe impl<T: Pod + ToPod> ToPod for [T; 2] {
     type Output = Self;
 
     fn to_pod(self) -> Self::Output {
@@ -150,7 +150,7 @@ impl<T: Pod + ToPod> ToPod for [T; 2] {
     }
 }
 
-impl<T: Primitive> ToPod for mint::Vector2<T> {
+unsafe impl<T: Primitive> ToPod for mint::Vector2<T> {
     type Output = [<T as ToPod>::Output; 2];
 
     fn to_pod(self) -> Self::Output {

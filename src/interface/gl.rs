@@ -24,7 +24,7 @@ impl super::Domain for Gl {
 
 // Uniform
 
-impl Uniform<Gl> for bool {
+unsafe impl Uniform<Gl> for bool {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
 
@@ -33,7 +33,7 @@ impl Uniform<Gl> for bool {
     }
 }
 
-impl Uniform<Gl> for f32 {
+unsafe impl Uniform<Gl> for f32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
 
@@ -42,7 +42,7 @@ impl Uniform<Gl> for f32 {
     }
 }
 
-impl Uniform<Gl> for i32 {
+unsafe impl Uniform<Gl> for i32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
 
@@ -51,7 +51,7 @@ impl Uniform<Gl> for i32 {
     }
 }
 
-impl Uniform<Gl> for u32 {
+unsafe impl Uniform<Gl> for u32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
 
@@ -60,7 +60,7 @@ impl Uniform<Gl> for u32 {
     }
 }
 
-impl<T: Primitive> Uniform<Gl> for mint::Vector2<T> {
+unsafe impl<T: Primitive> Uniform<Gl> for mint::Vector2<T> {
     type InGl = T::Vec2;
     type InSl = sl::Vec2<T>;
 
@@ -71,7 +71,7 @@ impl<T: Primitive> Uniform<Gl> for mint::Vector2<T> {
 
 // Vertex
 
-impl Vertex<Gl> for bool {
+unsafe impl Vertex<Gl> for bool {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
     type Pod = <Self::InGl as ToPod>::Output;
@@ -85,7 +85,7 @@ impl Vertex<Gl> for bool {
     }
 }
 
-impl Vertex<Gl> for f32 {
+unsafe impl Vertex<Gl> for f32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
     type Pod = <Self::InGl as ToPod>::Output;
@@ -99,7 +99,7 @@ impl Vertex<Gl> for f32 {
     }
 }
 
-impl Vertex<Gl> for i32 {
+unsafe impl Vertex<Gl> for i32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
     type Pod = <Self::InGl as ToPod>::Output;
@@ -113,7 +113,7 @@ impl Vertex<Gl> for i32 {
     }
 }
 
-impl Vertex<Gl> for u32 {
+unsafe impl Vertex<Gl> for u32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
     type Pod = <Self::InGl as ToPod>::Output;
@@ -127,7 +127,7 @@ impl Vertex<Gl> for u32 {
     }
 }
 
-impl<T: Primitive> Vertex<Gl> for mint::Vector2<T> {
+unsafe impl<T: Primitive> Vertex<Gl> for mint::Vector2<T> {
     type InGl = T::Vec2;
     type InSl = sl::Vec2<T>;
     type Pod = <Self::InGl as ToPod>::Output;
@@ -148,7 +148,7 @@ impl super::VertexDomain for Gl {
     type Vertex<V: Vertex<Sl>> = VertexBuffer<V>;
 }
 
-impl<V: Vertex<Sl>> VertexInterface<Gl> for VertexBuffer<V> {
+unsafe impl<V: Vertex<Sl>> VertexInterface<Gl> for VertexBuffer<V> {
     type InGl = Self;
     type InSl = V::InSl;
 
@@ -177,7 +177,7 @@ impl super::ResourceDomain for Gl {
     type Compose<R: ResourceInterface<Sl>> = R::InGl;
 }
 
-impl<T: Numeric> ResourceInterface<Gl> for Sampler2dBinding<T> {
+unsafe impl<T: Numeric> ResourceInterface<Gl> for Sampler2dBinding<T> {
     type InGl = Self;
     type InSl = sl::Sampler2d<T>;
 
@@ -190,7 +190,7 @@ impl<T: Numeric> ResourceInterface<Gl> for Sampler2dBinding<T> {
     }
 }
 
-impl<U: Uniform<Sl, InSl = U>> ResourceInterface<Gl> for UniformBufferBinding<U> {
+unsafe impl<U: Uniform<Sl, InSl = U>> ResourceInterface<Gl> for UniformBufferBinding<U> {
     type InGl = Self;
     type InSl = U;
 
@@ -210,7 +210,7 @@ impl super::FragmentDomain for Gl {
     type Attachment = Texture2dBinding;
 }
 
-impl FragmentInterface<Gl> for Texture2dBinding {
+unsafe impl FragmentInterface<Gl> for Texture2dBinding {
     type InGl = Self;
     type InSl = sl::Vec4<f32>;
 

@@ -70,19 +70,19 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         }
 
         // Implement `Uniform<Gl>` for the struct in `Gl`.
-        impl #impl_generics_no_d ::posh::Uniform<::posh::Gl> for #ident #ty_generics_gl
+        unsafe impl #impl_generics_no_d ::posh::Uniform<::posh::Gl> for #ident #ty_generics_gl
         #where_clause_no_d
         {
             type InGl = #ident #ty_generics_gl;
             type InSl = #ident #ty_generics_sl;
 
             fn shader_input(path: &str) -> Self {
-                todo!()
+                unimplemented!()
             }
         }
 
         // Implement `Uniform<Sl>` for the struct in `Sl`.
-        impl #impl_generics_no_d ::posh::Uniform<::posh::Sl> for #ident #ty_generics_sl
+        unsafe impl #impl_generics_no_d ::posh::Uniform<::posh::Sl> for #ident #ty_generics_sl
         #where_clause_no_d
         {
             type InGl = #ident #ty_generics_gl;

@@ -47,7 +47,14 @@ pub trait Domain: Copy {
 ///
 /// Types that implement this can be passed to shaders as a
 /// [resource](`ResourceInterface`).
-pub trait Uniform<D: Domain>: ToValue {
+///
+/// User-defined types can implement this trait with a [derive
+/// macro](`posh_derive::Uniform`).
+///
+/// # Safety
+///
+/// TODO
+pub unsafe trait Uniform<D: Domain>: ToValue {
     /// The representation of [`Self`] in the graphics library domain [`Gl`].
     ///
     /// This is the type through which uniform data is provided on the host.
@@ -67,15 +74,26 @@ pub trait Uniform<D: Domain>: ToValue {
 /// Conversion to a type that implements [`Pod`].
 ///
 /// TODO: This is a workarond for `mint` not supporting `bytemuck`.
+///
+/// # Safety
+///
+/// TODO
 #[doc(hidden)]
-pub trait ToPod: Copy {
+pub unsafe trait ToPod: Copy {
     type Output: Pod;
 
     fn to_pod(self) -> Self::Output;
 }
 
 /// Vertex data.
-pub trait Vertex<D: Domain>: ToValue {
+///
+/// User-defined types can implement this trait with a [derive
+/// macro](`posh_derive::Vertex`).
+///
+/// # Safety
+///
+/// TODO
+pub unsafe trait Vertex<D: Domain>: ToValue {
     /// The representation of [`Self`] in the graphics library domain [`Gl`].
     ///
     /// This is the type through which vertex data is provided on the host.
@@ -114,7 +132,14 @@ pub trait VertexInterfaceField<D: VertexDomain> {
 }
 
 /// A vertex shader input interface.
-pub trait VertexInterface<D: VertexDomain> {
+///
+/// User-defined types can implement this trait with a [derive
+/// macro](`posh_derive::VertexInterface`).
+///
+/// # Safety
+///
+/// TODO
+pub unsafe trait VertexInterface<D: VertexDomain> {
     /// The representation of [`Self`] in the graphics library domain [`Gl`].
     ///
     /// Provides vertex buffers for creating a [`crate::gl::VertexArray`](vertex
@@ -165,13 +190,21 @@ pub trait ResourceDomain: Domain {
 /// shaders. In order to link a vertex shader with a fragment shader, they must
 /// use the same resource type. See
 /// [`create_program`](crate::gl::Context::create_program) for details.
-pub trait ResourceInterface<D: ResourceDomain> {
+///
+/// User-defined types can implement this trait with a [derive
+/// macro](`posh_derive::ResourceInterface`).
+///
+/// # Safety
+///
+/// TODO
+pub unsafe trait ResourceInterface<D: ResourceDomain> {
     /// The representation of [`Self`] in the graphics library domain [`Gl`].
     ///
     /// Provides resource bindings such as [uniform
     /// buffers](crate::gl::UniformBuffer) or [samplers](crate::gl::Sampler2d).
-    /// This is specified on the host through [draw calls](crate::gl::Program::draw) with
-    /// programs using this resource interface.
+    /// This is specified on the host through [draw
+    /// calls](crate::gl::Program::draw) with programs using this resource
+    /// interface.
     type InGl: ResourceInterface<Gl>;
 
     /// The representation of [`Self`] in the shading language domain [`Sl`].
@@ -187,7 +220,7 @@ pub trait ResourceInterface<D: ResourceDomain> {
     fn shader_input(path: &str) -> Self;
 }
 
-impl<D: ResourceDomain> ResourceInterface<D> for () {
+unsafe impl<D: ResourceDomain> ResourceInterface<D> for () {
     type InGl = ();
     type InSl = ();
 
@@ -212,7 +245,14 @@ pub trait FragmentDomain: Sized {
 }
 
 /// A fragment shader output interface.
-pub trait FragmentInterface<D: FragmentDomain> {
+///
+/// User-defined types can implement this trait with a [derive
+/// macro](`posh_derive::FragmentInterface`).
+///
+/// # Safety
+///
+/// TODO
+pub unsafe trait FragmentInterface<D: FragmentDomain> {
     /// The representation of [`Self`] in the graphics library domain [`Gl`].
     ///
     /// Provides framebuffer attachments on the host.

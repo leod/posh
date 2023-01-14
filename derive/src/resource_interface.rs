@@ -23,7 +23,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
     Ok(quote! {
         // Implement `ResourceInterface<D>` for the struct.
-        impl #impl_generics ::posh::ResourceInterface<#generics_d_type>
+        unsafe impl #impl_generics ::posh::ResourceInterface<#generics_d_type>
         for #ident #ty_generics
         #where_clause
         {
