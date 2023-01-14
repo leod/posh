@@ -41,8 +41,8 @@ impl<V: Vertex<Sl>> VertexBuffer<V> {
         self.len() == 0
     }
 
-    pub fn set(&self, data: &[V::Pod]) {
-        self.untyped.set(data);
+    pub fn set(&self, data: &[V]) {
+        todo!()
     }
 
     fn vertex_size() -> usize {

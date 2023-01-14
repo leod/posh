@@ -13,7 +13,18 @@ use super::{
     VertexInterface, VertexInterfaceVisitor,
 };
 
-// Uniform interface
+#[sealed]
+impl super::Domain for Sl {
+    type Scalar<T: Primitive> = Scalar<T>;
+    type Vec2<T: Primitive> = Vec2<T>;
+
+    type Bool = Scalar<bool>;
+    type F32 = Scalar<f32>;
+    type I32 = Scalar<i32>;
+    type U32 = Scalar<u32>;
+}
+
+// Uniform
 
 impl<T: Primitive> Uniform<Sl> for Scalar<T> {
     type InGl = T;
@@ -33,18 +44,7 @@ impl<T: Primitive> Uniform<Sl> for Vec2<T> {
     }
 }
 
-#[sealed]
-impl super::Domain for Sl {
-    type Scalar<T: Primitive> = Scalar<T>;
-    type Vec2<T: Primitive> = Vec2<T>;
-
-    type Bool = Scalar<bool>;
-    type F32 = Scalar<f32>;
-    type I32 = Scalar<i32>;
-    type U32 = Scalar<u32>;
-}
-
-// Vertex interface
+// Vertex
 
 fn vertex_attribute_def(path: &str, base_type: BaseType) -> Vec<VertexAttributeDef> {
     vec![VertexAttributeDef {
@@ -88,7 +88,12 @@ impl<T: Primitive> Vertex<Sl> for Vec2<T> {
     }
 }
 
-// Vertex interface
+// VertexInterface
+
+#[sealed]
+impl super::VertexDomain for Sl {
+    type Vertex<V: Vertex<Sl>> = V;
+}
 
 impl<V: Vertex<Sl>> VertexInterface<Sl> for V {
     type InGl = gl::VertexBuffer<V>;
@@ -110,12 +115,14 @@ impl<V: Vertex<Sl>> super::VertexInterfaceField<Sl> for V {
     }
 }
 
-#[sealed]
-impl super::VertexDomain for Sl {
-    type Vertex<V: Vertex<Sl>> = V;
-}
+// ResourceInterface
 
-// Resource interface
+#[sealed]
+impl super::ResourceDomain for Sl {
+    type Sampler2d<T: Numeric> = Sampler2d<T>;
+    type Uniform<U: Uniform<Sl, InSl = U>> = U;
+    type Compose<R: ResourceInterface<Sl>> = R;
+}
 
 impl<T: Numeric> ResourceInterface<Sl> for Sampler2d<T> {
     type InGl = gl::Sampler2dBinding<T>;
@@ -143,14 +150,12 @@ impl<U: Uniform<Sl, InSl = U>> ResourceInterface<Sl> for U {
     }
 }
 
-#[sealed]
-impl super::ResourceDomain for Sl {
-    type Sampler2d<T: Numeric> = Sampler2d<T>;
-    type Uniform<U: Uniform<Sl, InSl = U>> = U;
-    type Compose<R: ResourceInterface<Sl>> = R;
-}
+// FragmentInterface
 
-// Fragment interface
+#[sealed]
+impl super::FragmentDomain for Sl {
+    type Attachment = Vec4<f32>;
+}
 
 impl FragmentInterface<Sl> for Vec4<f32> {
     type InGl = Texture2dBinding;
@@ -159,9 +164,4 @@ impl FragmentInterface<Sl> for Vec4<f32> {
     fn visit(&self, path: &str, visitor: &mut impl FragmentInterfaceVisitor<Sl>) {
         visitor.accept(path, self);
     }
-}
-
-#[sealed]
-impl super::FragmentDomain for Sl {
-    type Attachment = Vec4<f32>;
 }
