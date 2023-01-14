@@ -97,16 +97,12 @@ pub unsafe trait Vertex<D: Domain>: ToValue {
     /// The representation of [`Self`] in the graphics library domain [`Gl`].
     ///
     /// This is the type through which vertex data is provided on the host.
-    type InGl: Vertex<Gl> + ToPod<Output = Self::Pod> + ToValue<Output = Self::InSl>;
+    type InGl: Vertex<Gl> + ToPod + ToValue<Output = Self::InSl>;
 
     /// The representation of [`Self`] in the shading language domain [`Sl`].
     ///
     /// This is the type through which vertex data is read in shaders.
     type InSl: Vertex<Sl> + Value + ToValue<Output = Self::InSl>;
-
-    // TODO: This is a workarond for `mint` not supporting `bytemuck`.
-    #[doc(hidden)]
-    type Pod: Pod;
 
     #[doc(hidden)]
     fn attribute_defs(path: &str) -> Vec<VertexAttributeDef>;
