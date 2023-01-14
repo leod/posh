@@ -1,9 +1,6 @@
 use posh::{
-    sl::{
-        self, FragmentInput, FragmentOutput, ToValue, Varying, VaryingOutput, VertexInput,
-        VertexOutput,
-    },
-    Domain, ResourceInterface, Sl, Uniform, Vertex,
+    sl::{self, ToValue, VaryingOutput},
+    Domain, Sl, Uniform, Vertex,
 };
 
 #[derive(Clone, Copy, ToValue, Uniform)]

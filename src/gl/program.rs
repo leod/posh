@@ -1,7 +1,7 @@
 use std::{cell::RefCell, marker::PhantomData};
 
 use crate::{
-    interface::ResourceInterfaceVisitor, program_def::ProgramDef, FragmentInterface, Gl,
+    interface::ResourceInterfaceVisitor, program_def::ProgramDef, sl, FragmentInterface, Gl,
     ResourceInterface, Sl, VertexInterface,
 };
 
@@ -9,7 +9,7 @@ use super::{
     untyped, Context, CreateProgramError, DrawParams, GeometryStream, Surface, UniformBufferBinding,
 };
 
-pub struct Program<Res, Vert, Frag> {
+pub struct Program<Res, Vert, Frag = sl::Vec4<f32>> {
     untyped: untyped::Program,
     uniform_buffers: RefCell<Vec<untyped::Buffer>>,
     _phantom: PhantomData<(Res, Vert, Frag)>,
