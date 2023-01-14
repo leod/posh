@@ -31,7 +31,7 @@ fn fragment_shader(uniform: MyUniform, varying: sl::Vec2<f32>) -> sl::Vec4<f32> 
 
 struct Demo {
     context: Context,
-    program: Program<MyUniform, sl::Vec2<f32>, sl::Vec4<f32>>,
+    program: Program<MyUniform, sl::Vec2<f32>>,
     uniform_buffer: UniformBuffer<MyUniform>,
     vertex_array: VertexArray<sl::Vec2<f32>>,
     start_time: Instant,
