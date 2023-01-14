@@ -153,18 +153,18 @@ pub unsafe trait VertexInterface<D: VertexDomain> {
     type InSl: VertexInterface<Sl>;
 
     #[doc(hidden)]
-    fn visit(&self, path: &str, visitor: &mut impl VertexInterfaceVisitor<D>);
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl VertexInterfaceVisitor<'a, D>);
 
     #[doc(hidden)]
     fn shader_input(path: &str) -> Self;
 }
 
-pub trait VertexInterfaceVisitor<D: VertexDomain> {
+pub trait VertexInterfaceVisitor<'a, D: VertexDomain> {
     fn accept<V: Vertex<Sl>>(
         &mut self,
         path: &str,
         input_rate: VertexInputRate,
-        vertex: &D::Vertex<V>,
+        vertex: &'a D::Vertex<V>,
     );
 }
 
@@ -214,7 +214,7 @@ pub unsafe trait ResourceInterface<D: ResourceDomain> {
     type InSl: ResourceInterface<Sl>;
 
     #[doc(hidden)]
-    fn visit(&self, path: &str, visitor: &mut impl ResourceInterfaceVisitor<D>);
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl ResourceInterfaceVisitor<'a, D>);
 
     #[doc(hidden)]
     fn shader_input(path: &str) -> Self;
@@ -224,16 +224,16 @@ unsafe impl<D: ResourceDomain> ResourceInterface<D> for () {
     type InGl = ();
     type InSl = ();
 
-    fn visit(&self, _: &str, _: &mut impl ResourceInterfaceVisitor<D>) {}
+    fn visit<'a>(&self, _: &str, _: &mut impl ResourceInterfaceVisitor<'a, D>) {}
 
     fn shader_input(_: &str) -> Self {}
 }
 
 #[doc(hidden)]
-pub trait ResourceInterfaceVisitor<D: ResourceDomain> {
-    fn accept_sampler2d<T: Numeric>(&mut self, path: &str, sampler: &D::Sampler2d<T>);
+pub trait ResourceInterfaceVisitor<'a, D: ResourceDomain> {
+    fn accept_sampler2d<T: Numeric>(&mut self, path: &str, sampler: &'a D::Sampler2d<T>);
 
-    fn accept_uniform<U: Uniform<Sl, InSl = U>>(&mut self, path: &str, uniform: &D::Uniform<U>);
+    fn accept_uniform<U: Uniform<Sl, InSl = U>>(&mut self, path: &str, uniform: &'a D::Uniform<U>);
 }
 
 // FragmentInterface

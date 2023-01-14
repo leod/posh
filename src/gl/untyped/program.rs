@@ -6,13 +6,12 @@ use crate::{gl::CreateProgramError, program_def::ProgramDef};
 
 use super::{Buffer, GeometryStream, VertexAttributeLayout};
 
-struct ProgramShared {
+pub(super) struct ProgramShared {
     gl: Rc<glow::Context>,
     def: ProgramDef,
     id: glow::Program,
 }
 
-#[derive(Clone)]
 pub struct Program {
     shared: Rc<ProgramShared>,
 }
@@ -23,7 +22,7 @@ impl Program {
     /// Panics if the `def` contains duplicate texture unit bindings or
     /// duplicate uniform block bindings.
     pub(crate) fn new(gl: Rc<glow::Context>, def: ProgramDef) -> Result<Self, CreateProgramError> {
-        def.validate();
+        validate_program_def(&def);
 
         let shared = Rc::new(ProgramShared {
             gl: gl.clone(),
@@ -138,21 +137,19 @@ impl Program {
     /// # Safety
     ///
     /// TODO
-    pub unsafe fn draw(&self, uniform_buffers: &[Buffer], geometry: GeometryStream) {
+    pub unsafe fn draw(&self, uniform_buffers: &[&Buffer], geometry: GeometryStream) {
         let shared = &self.shared;
         let gl = &shared.gl;
-
-        assert_eq!(uniform_buffers.len(), shared.def.uniform_defs.len());
-        for buffer in uniform_buffers {
-            assert!(Rc::ptr_eq(buffer.gl(), gl));
-        }
-        assert!(Rc::ptr_eq(geometry.gl(), gl));
 
         unsafe {
             gl.use_program(Some(shared.id));
         }
 
+        assert_eq!(uniform_buffers.len(), shared.def.uniform_defs.len());
+
         for (buffer, block_info) in uniform_buffers.iter().zip(&shared.def.uniform_defs) {
+            assert!(Rc::ptr_eq(buffer.gl(), gl));
+
             let location = u32::try_from(block_info.location).unwrap();
 
             unsafe {
@@ -160,6 +157,7 @@ impl Program {
             }
         }
 
+        assert!(Rc::ptr_eq(geometry.gl(), gl));
         geometry.draw();
 
         // TODO: Remove overly conservative unbinding.
@@ -239,57 +237,55 @@ impl Drop for AttachedShader {
     }
 }
 
-impl ProgramDef {
-    fn validate(&self) {
-        {
-            let mut names: BTreeSet<_> = BTreeSet::new();
+fn validate_program_def(def: &ProgramDef) {
+    {
+        let mut names: BTreeSet<_> = BTreeSet::new();
 
-            for info in &self.sampler_defs {
-                if names.contains(&info.name) {
-                    panic!("Duplicate sampler name: {}", info.name);
-                }
-
-                names.insert(info.name.clone());
+        for info in &def.sampler_defs {
+            if names.contains(&info.name) {
+                panic!("Duplicate sampler name: {}", info.name);
             }
+
+            names.insert(info.name.clone());
         }
+    }
 
-        {
-            let mut texture_units: BTreeSet<_> = BTreeSet::new();
+    {
+        let mut texture_units: BTreeSet<_> = BTreeSet::new();
 
-            for sampler_def in &self.sampler_defs {
-                if texture_units.contains(&sampler_def.texture_unit) {
-                    panic!(
-                        "Duplicate sampler texture unit: {}",
-                        sampler_def.texture_unit
-                    );
-                }
-
-                texture_units.insert(sampler_def.texture_unit);
+        for sampler_def in &def.sampler_defs {
+            if texture_units.contains(&sampler_def.texture_unit) {
+                panic!(
+                    "Duplicate sampler texture unit: {}",
+                    sampler_def.texture_unit
+                );
             }
+
+            texture_units.insert(sampler_def.texture_unit);
         }
+    }
 
-        {
-            let mut names: BTreeSet<_> = BTreeSet::new();
+    {
+        let mut names: BTreeSet<_> = BTreeSet::new();
 
-            for info in &self.uniform_defs {
-                if names.contains(&info.block_name) {
-                    panic!("Duplicate uniform block name: {}", info.block_name);
-                }
-
-                names.insert(info.block_name.clone());
+        for info in &def.uniform_defs {
+            if names.contains(&info.block_name) {
+                panic!("Duplicate uniform block name: {}", info.block_name);
             }
+
+            names.insert(info.block_name.clone());
         }
+    }
 
-        {
-            let mut locations: BTreeSet<_> = BTreeSet::new();
+    {
+        let mut locations: BTreeSet<_> = BTreeSet::new();
 
-            for info in &self.uniform_defs {
-                if locations.contains(&info.location) {
-                    panic!("Duplicate uniform block location: {}", info.location);
-                }
-
-                locations.insert(info.location);
+        for info in &def.uniform_defs {
+            if locations.contains(&info.location) {
+                panic!("Duplicate uniform block location: {}", info.location);
             }
+
+            locations.insert(info.location);
         }
     }
 }

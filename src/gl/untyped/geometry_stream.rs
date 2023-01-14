@@ -4,19 +4,19 @@ use glow::HasContext;
 
 use crate::gl::GeometryType;
 
-use super::VertexArray;
+use super::vertex_array::VertexArrayShared;
 
 // TODO: Instancing.
 
 pub struct GeometryStream {
-    pub(crate) vertex_array: VertexArray,
-    pub(crate) element_range: Range<usize>,
-    pub(crate) geometry_type: GeometryType,
+    pub(super) vertex_array: Rc<VertexArrayShared>,
+    pub(super) element_range: Range<usize>,
+    pub(super) geometry_type: GeometryType,
 }
 
 impl GeometryStream {
     pub fn gl(&self) -> &Rc<glow::Context> {
-        self.vertex_array.gl()
+        &self.vertex_array.gl
     }
 
     /// # Panics
@@ -29,16 +29,16 @@ impl GeometryStream {
     pub(crate) unsafe fn draw(&self) {
         assert!(self.element_range.start <= self.element_range.end);
 
-        let gl = self.vertex_array.gl();
+        let gl = &self.vertex_array.gl;
         let mode = self.geometry_type.to_gl();
         let first = self.element_range.start;
         let count = self.element_range.end - self.element_range.start;
 
         unsafe {
-            gl.bind_vertex_array(Some(self.vertex_array.id()));
+            gl.bind_vertex_array(Some(self.vertex_array.id));
         }
 
-        if let Some((element_buffer, element_type)) = self.vertex_array.element_buffer() {
+        if let Some((element_buffer, element_type)) = &self.vertex_array.element_buffer {
             let element_size = element_type.size();
             let element_type = element_type.to_gl();
 
@@ -62,10 +62,12 @@ impl GeometryStream {
             }
         } else {
             // Safety: check vertex buffer sizes.
-            for (buffer, vertex_info) in self.vertex_array.vertex_buffers() {
+            let end = first.checked_add(count).unwrap();
+
+            for (buffer, vertex_info) in &self.vertex_array.vertex_buffers {
                 let num_vertices = buffer.len() / vertex_info.stride;
 
-                assert!(first.checked_add(count).unwrap() <= num_vertices);
+                assert!(num_vertices >= end);
             }
 
             let first = i32::try_from(first).unwrap();

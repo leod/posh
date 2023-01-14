@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, mem::size_of};
+use std::{marker::PhantomData, mem::size_of, rc::Rc};
 
 use bytemuck::Pod;
 use sealed::sealed;
@@ -7,7 +7,7 @@ use super::{untyped, ElementType};
 
 pub trait ElementSource {
     #[doc(hidden)]
-    fn buffer(&self) -> Option<(untyped::Buffer, ElementType)>;
+    fn buffer(&self) -> Option<(&untyped::Buffer, ElementType)>;
 }
 
 #[sealed]
@@ -47,7 +47,7 @@ impl Element for u32 {
 
 #[derive(Clone)]
 pub struct ElementBuffer<E> {
-    pub(crate) untyped: untyped::Buffer,
+    pub(crate) untyped: Rc<untyped::Buffer>,
     _phantom: PhantomData<E>,
 }
 
@@ -60,7 +60,7 @@ impl<E: Element> ElementBuffer<E> {
         assert_eq!(untyped.len() % size_of::<E>(), 0);
 
         Self {
-            untyped,
+            untyped: Rc::new(untyped),
             _phantom: PhantomData,
         }
     }
@@ -79,13 +79,13 @@ impl<E: Element> ElementBuffer<E> {
 }
 
 impl<E: Element> ElementSource for ElementBuffer<E> {
-    fn buffer(&self) -> Option<(untyped::Buffer, ElementType)> {
-        Some((self.untyped.clone(), E::TYPE))
+    fn buffer(&self) -> Option<(&untyped::Buffer, ElementType)> {
+        Some((&self.untyped, E::TYPE))
     }
 }
 
 impl ElementSource for () {
-    fn buffer(&self) -> Option<(untyped::Buffer, ElementType)> {
+    fn buffer(&self) -> Option<(&untyped::Buffer, ElementType)> {
         None
     }
 }

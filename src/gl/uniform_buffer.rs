@@ -8,13 +8,13 @@ use super::{untyped, BufferUsage};
 
 #[derive(Clone)]
 pub struct UniformBuffer<U> {
-    pub(crate) untyped: untyped::Buffer,
+    pub(crate) untyped: Rc<untyped::Buffer>,
     _phantom: PhantomData<U>,
 }
 
 #[derive(Clone)]
 pub struct UniformBufferBinding<U> {
-    pub(crate) untyped: untyped::Buffer,
+    pub(crate) untyped: Rc<untyped::Buffer>,
     _phantom: PhantomData<U>,
     // TODO: Uniform buffer slicing.
 }
@@ -23,18 +23,13 @@ impl<U: Uniform<Sl>> UniformBuffer<U> {
     /// # Panics
     ///
     /// Panics if the length of `untyped` is not a multiple of the size of
-    /// `V::Pod`.
-    ///
-    /// # TODO
-    ///
-    /// Since `untyped::Buffer` is `Rc`-cloneable, the underlying buffer can
-    /// still be modified. Check if we want to allow this.
+    /// `<U::InGl as AsStd140>::Output`.
     pub(crate) fn from_untyped(untyped: untyped::Buffer) -> Self {
         assert!(Self::uniform_size() > 0);
         assert_eq!(untyped.len() % Self::uniform_size(), 0);
 
         Self {
-            untyped,
+            untyped: Rc::new(untyped),
             _phantom: PhantomData,
         }
     }

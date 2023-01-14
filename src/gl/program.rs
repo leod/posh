@@ -1,17 +1,15 @@
-use std::{cell::RefCell, marker::PhantomData};
+use std::{cell::RefCell, marker::PhantomData, rc::Rc};
 
 use crate::{
-    interface::ResourceInterfaceVisitor, program_def::ProgramDef, sl, FragmentInterface, Gl,
-    ResourceInterface, Sl, VertexInterface,
+    interface::ResourceInterfaceVisitor, sl, FragmentInterface, Gl, ResourceInterface, Sl,
+    VertexInterface,
 };
 
-use super::{
-    untyped, Context, CreateProgramError, DrawParams, GeometryStream, Surface, UniformBufferBinding,
-};
+use super::{untyped, DrawParams, GeometryStream, Surface, UniformBufferBinding};
 
+#[derive(Clone)]
 pub struct Program<Res, Vert, Frag = sl::Vec4<f32>> {
-    untyped: untyped::Program,
-    uniform_buffers: RefCell<Vec<untyped::Buffer>>,
+    untyped: Rc<untyped::Program>,
     _phantom: PhantomData<(Res, Vert, Frag)>,
 }
 
@@ -21,17 +19,11 @@ where
     Vert: VertexInterface<Sl>,
     Frag: FragmentInterface<Sl>,
 {
-    pub(crate) fn unchecked_from_untyped_program_def(
-        context: &Context,
-        program_def: ProgramDef,
-    ) -> Result<Self, CreateProgramError> {
-        let untyped = context.untyped.create_program(program_def)?;
-
-        Ok(Program {
-            untyped,
-            uniform_buffers: RefCell::new(Vec::new()),
+    pub(crate) fn unchecked_from_untyped(untyped: untyped::Program) -> Self {
+        Program {
+            untyped: Rc::new(untyped),
             _phantom: PhantomData,
-        })
+        }
     }
 
     pub fn draw<S>(
@@ -45,26 +37,24 @@ where
     {
         // TODO: Surface stuff.
 
-        let mut uniform_buffers = self.uniform_buffers.borrow_mut();
-        let mut resource_visitor = ResourceVisitor {
-            uniform_buffers: &mut uniform_buffers,
-        };
+        // TODO: This allocation can be avoided once stable has allocators.
+        let mut resource_visitor = ResourceVisitor::default();
         resource.visit("", &mut resource_visitor);
 
         // FIXME: Safety: Check element range.
         unsafe {
-            self.untyped.draw(&uniform_buffers, geometry.untyped);
+            self.untyped
+                .draw(&resource_visitor.uniform_buffers, geometry.untyped);
         }
-
-        uniform_buffers.clear();
     }
 }
 
+#[derive(Default)]
 struct ResourceVisitor<'a> {
-    uniform_buffers: &'a mut Vec<untyped::Buffer>,
+    uniform_buffers: Vec<&'a untyped::Buffer>,
 }
 
-impl<'a> ResourceInterfaceVisitor<Gl> for ResourceVisitor<'a> {
+impl<'a> ResourceInterfaceVisitor<'a, Gl> for ResourceVisitor<'a> {
     fn accept_sampler2d<T: crate::Numeric>(
         &mut self,
         path: &str,
@@ -76,8 +66,8 @@ impl<'a> ResourceInterfaceVisitor<Gl> for ResourceVisitor<'a> {
     fn accept_uniform<U: crate::Uniform<Sl, InSl = U>>(
         &mut self,
         _: &str,
-        uniform: &UniformBufferBinding<U>,
+        uniform: &'a UniformBufferBinding<U>,
     ) {
-        self.uniform_buffers.push(uniform.untyped.clone());
+        self.uniform_buffers.push(&uniform.untyped);
     }
 }

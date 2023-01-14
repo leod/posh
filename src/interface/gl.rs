@@ -152,7 +152,7 @@ unsafe impl<V: Vertex<Sl>> VertexInterface<Gl> for VertexBuffer<V> {
     type InGl = Self;
     type InSl = V::InSl;
 
-    fn visit(&self, path: &str, visitor: &mut impl VertexInterfaceVisitor<Gl>) {
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl VertexInterfaceVisitor<'a, Gl>) {
         visitor.accept(path, VertexInputRate::Vertex, self)
     }
 
@@ -181,7 +181,7 @@ unsafe impl<T: Numeric> ResourceInterface<Gl> for Sampler2dBinding<T> {
     type InGl = Self;
     type InSl = sl::Sampler2d<T>;
 
-    fn visit(&self, path: &str, visitor: &mut impl super::ResourceInterfaceVisitor<Gl>) {
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::ResourceInterfaceVisitor<'a, Gl>) {
         visitor.accept_sampler2d(path, self);
     }
 
@@ -194,7 +194,7 @@ unsafe impl<U: Uniform<Sl, InSl = U>> ResourceInterface<Gl> for UniformBufferBin
     type InGl = Self;
     type InSl = U;
 
-    fn visit(&self, path: &str, visitor: &mut impl super::ResourceInterfaceVisitor<Gl>) {
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::ResourceInterfaceVisitor<'a, Gl>) {
         visitor.accept_uniform::<U::InSl>(path, self);
     }
 

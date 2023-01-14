@@ -8,16 +8,15 @@ use crate::{
     program_def::{VertexDef, VertexInputRate},
 };
 
-use super::{Buffer, GeometryStream};
+use super::{buffer::BufferShared, Buffer, GeometryStream};
 
-struct VertexArrayShared {
-    gl: Rc<glow::Context>,
-    id: glow::VertexArray,
-    vertex_buffers: Vec<(Buffer, VertexDef)>,
-    element_buffer: Option<(Buffer, ElementType)>,
+pub(super) struct VertexArrayShared {
+    pub(super) gl: Rc<glow::Context>,
+    pub(super) id: glow::VertexArray,
+    pub(super) vertex_buffers: Vec<(Rc<BufferShared>, VertexDef)>,
+    pub(super) element_buffer: Option<(Rc<BufferShared>, ElementType)>,
 }
 
-#[derive(Clone)]
 pub struct VertexArray {
     shared: Rc<VertexArrayShared>,
 }
@@ -30,8 +29,8 @@ impl VertexArray {
     /// buffers have a mismatched size.
     pub fn new(
         gl: Rc<glow::Context>,
-        vertex_buffers: &[(Buffer, VertexDef)],
-        element_buffer: Option<(Buffer, ElementType)>,
+        vertex_buffers: &[(&Buffer, VertexDef)],
+        element_buffer: Option<(&Buffer, ElementType)>,
     ) -> Result<Self, CreateVertexArrayError> {
         // TODO: How do we want to handle `buffers.is_empty()`?
 
@@ -43,13 +42,13 @@ impl VertexArray {
 
         let mut index = 0;
 
-        for (buffer, vertex_def) in vertex_buffers {
+        for (vertex_buffer, vertex_def) in vertex_buffers {
             assert!(vertex_def.stride > 0);
-            assert_eq!(buffer.len() % vertex_def.stride, 0);
-            assert!(Rc::ptr_eq(buffer.gl(), &gl));
+            assert_eq!(vertex_buffer.len() % vertex_def.stride, 0);
+            assert!(Rc::ptr_eq(vertex_buffer.gl(), &gl));
 
             unsafe {
-                gl.bind_buffer(glow::ARRAY_BUFFER, Some(buffer.id()));
+                gl.bind_buffer(glow::ARRAY_BUFFER, Some(vertex_buffer.id()));
             }
 
             for attribute in &vertex_def.attributes {
@@ -99,9 +98,9 @@ impl VertexArray {
             }
         }
 
-        if let Some((buffer, _)) = element_buffer.as_ref() {
+        if let Some((element_buffer, _)) = element_buffer.as_ref() {
             unsafe {
-                gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(buffer.id()));
+                gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(element_buffer.id()));
             }
         };
 
@@ -110,7 +109,13 @@ impl VertexArray {
             gl.bind_buffer(glow::ARRAY_BUFFER, None);
         }
 
-        let vertex_buffers = vertex_buffers.to_vec();
+        let vertex_buffers = vertex_buffers
+            .iter()
+            .map(|(vertex_buffer, vertex_def)| (vertex_buffer.shared.clone(), vertex_def.clone()))
+            .collect();
+
+        let element_buffer = element_buffer
+            .map(|(element_buffer, element_type)| (element_buffer.shared.clone(), element_type));
 
         let shared = Rc::new(VertexArrayShared {
             gl,
@@ -122,29 +127,13 @@ impl VertexArray {
         Ok(Self { shared })
     }
 
-    pub fn gl(&self) -> &Rc<glow::Context> {
-        &self.shared.gl
-    }
-
-    pub fn id(&self) -> glow::VertexArray {
-        self.shared.id
-    }
-
-    pub fn vertex_buffers(&self) -> &[(Buffer, VertexDef)] {
-        &self.shared.vertex_buffers
-    }
-
-    pub fn element_buffer(&self) -> Option<&(Buffer, ElementType)> {
-        self.shared.element_buffer.as_ref()
-    }
-
     pub fn stream_range(
         &self,
         element_range: Range<usize>,
         geometry_type: GeometryType,
     ) -> GeometryStream {
         GeometryStream {
-            vertex_array: self.clone(),
+            vertex_array: self.shared.clone(),
             element_range,
             geometry_type,
         }

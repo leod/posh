@@ -6,7 +6,7 @@ use super::{untyped, BufferUsage};
 
 #[derive(Clone)]
 pub struct VertexBuffer<V> {
-    pub(crate) untyped: untyped::Buffer,
+    pub(crate) untyped: Rc<untyped::Buffer>,
     _phantom: PhantomData<V>,
 }
 
@@ -20,7 +20,7 @@ impl<V: Vertex<Sl>> VertexBuffer<V> {
         assert_eq!(untyped.len() % Self::vertex_size(), 0);
 
         Self {
-            untyped,
+            untyped: Rc::new(untyped),
             _phantom: PhantomData,
         }
     }

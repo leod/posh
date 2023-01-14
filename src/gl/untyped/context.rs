@@ -32,8 +32,8 @@ impl Context {
 
     pub fn create_vertex_array(
         &self,
-        vertex_buffers: &[(Buffer, VertexDef)],
-        element_buffer: Option<(Buffer, ElementType)>,
+        vertex_buffers: &[(&Buffer, VertexDef)],
+        element_buffer: Option<(&Buffer, ElementType)>,
     ) -> Result<VertexArray, CreateVertexArrayError> {
         VertexArray::new(self.gl.clone(), vertex_buffers, element_buffer)
     }
