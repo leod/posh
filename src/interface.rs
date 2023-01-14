@@ -59,9 +59,11 @@ pub trait Uniform<D: Domain>: ToValue {
     fn shader_input(path: &str) -> Self;
 }
 
-// Vertex interface
+// Vertex
 
 /// A conversion to a type that implements [`Pod`].
+///
+/// TODO: This is a workarond for `mint` not supporting `bytemuck`.
 pub trait ToPod: Copy {
     type Output: Pod;
 
@@ -80,6 +82,7 @@ pub trait Vertex<D: Domain>: ToValue {
     /// This is the type through which vertex data is read in shaders.
     type InSl: Vertex<Sl> + Value + ToValue<Output = Self::InSl>;
 
+    // TODO: This is a workarond for `mint` not supporting `bytemuck`.
     #[doc(hidden)]
     type Pod: Pod;
 
@@ -90,13 +93,13 @@ pub trait Vertex<D: Domain>: ToValue {
     fn shader_input(path: &str) -> Self;
 }
 
-pub trait VertexInterfaceVisitor<D: VertexDomain> {
-    fn accept<V: Vertex<Sl>>(
-        &mut self,
-        path: &str,
-        input_rate: VertexInputRate,
-        vertex: &D::Vertex<V>,
-    );
+// VertexInterface
+
+/// Provides types for [`VertexInterface`] declarations.
+#[sealed]
+pub trait VertexDomain: Domain {
+    /// A vertex field.
+    type Vertex<V: Vertex<Sl>>: VertexInterfaceField<Self>;
 }
 
 /// Types that can occur in a [`VertexInterface`].
@@ -125,32 +128,46 @@ pub trait VertexInterface<D: VertexDomain> {
     fn shader_input(path: &str) -> Self;
 }
 
-/// Provides types for [`VertexInterface`] declarations.
+pub trait VertexInterfaceVisitor<D: VertexDomain> {
+    fn accept<V: Vertex<Sl>>(
+        &mut self,
+        path: &str,
+        input_rate: VertexInputRate,
+        vertex: &D::Vertex<V>,
+    );
+}
+
+// ResourceInterface
+
+/// Provides types for [`ResourceInterface`] declarations.
 #[sealed]
-pub trait VertexDomain: Domain {
-    /// A vertex field.
-    type Vertex<V: Vertex<Sl>>: VertexInterfaceField<Self>;
+pub trait ResourceDomain: Domain {
+    /// A two-dimensional sampler field.
+    type Sampler2d<T: Numeric>: ResourceInterface<Self>;
+
+    /// A uniform field.
+    type Uniform<U: Uniform<Sl, InSl = U>>: ResourceInterface<Self>;
+
+    /// A resource interface field.
+    type Compose<R: ResourceInterface<Sl>>: ResourceInterface<Self>;
 }
 
-// Resource interface
-
-#[doc(hidden)]
-pub trait ResourceInterfaceVisitor<D: ResourceDomain> {
-    fn accept_sampler2d<T: Numeric>(&mut self, path: &str, sampler: &D::Sampler2d<T>);
-
-    fn accept_uniform<U: Uniform<Sl, InSl = U>>(&mut self, path: &str, uniform: &D::Uniform<U>);
-}
-
-/// A resource input interface for shaders.
+/// A shader resource interface.
+///
+/// Resources provide access to uniforms or samplers to shaders. Resources can
+/// be used in both vertex shaders and fragment shaders. In order to link a
+/// vertex shader with a fragment shader, they must use the same resource type.
+/// See [`create_program`](crate::gl::Context::create_program) for details.
 pub trait ResourceInterface<D: ResourceDomain> {
     /// The representation of [`Self`] in the graphics library domain [`Gl`].
     ///
-    /// This is the type through which resources are bound on the host.
+    /// This type provides resource bindings such as [uniform
+    /// buffers](crate::gl::UniformBuffer) on the host.
     type InGl: ResourceInterface<Gl>;
 
     /// The representation of [`Self`] in the shading language domain [`Sl`].
     ///
-    /// This is the type through which the resource interface is accessed in shaders.
+    /// T
     type InSl: ResourceInterface<Sl>;
 
     #[doc(hidden)]
@@ -169,45 +186,38 @@ impl<D: ResourceDomain> ResourceInterface<D> for () {
     fn shader_input(_: &str) -> Self {}
 }
 
-/// Provides types for [`ResourceInterface`] declarations.
-#[sealed]
-pub trait ResourceDomain: Domain {
-    /// A two-dimensional sampler field.
-    type Sampler2d<T: Numeric>: ResourceInterface<Self>;
-
-    /// A uniform field.
-    type Uniform<U: Uniform<Sl, InSl = U>>: ResourceInterface<Self>;
-
-    /// A resource interface field.
-    type Compose<R: ResourceInterface<Sl>>: ResourceInterface<Self>;
-}
-
-// Fragment interface
-
 #[doc(hidden)]
-pub trait FragmentInterfaceVisitor<D: FragmentDomain> {
-    fn accept(&mut self, path: &str, attachment: &D::Attachment);
+pub trait ResourceInterfaceVisitor<D: ResourceDomain> {
+    fn accept_sampler2d<T: Numeric>(&mut self, path: &str, sampler: &D::Sampler2d<T>);
+
+    fn accept_uniform<U: Uniform<Sl, InSl = U>>(&mut self, path: &str, uniform: &D::Uniform<U>);
 }
 
-/// A fragment output interface for shaders.
+// FragmentInterface
+
+/// Provides types for [`FragmentInterface`] declarations.
+#[sealed]
+pub trait FragmentDomain: Sized {
+    type Attachment: FragmentInterface<Self>;
+}
+
+/// A fragment shader output interface.
 pub trait FragmentInterface<D: FragmentDomain> {
     /// The representation of [`Self`] in the graphics library domain [`Gl`].
     ///
-    /// This is the type through which framebuffer attachments are specified on
-    /// the host.
+    /// Provides framebuffer attachments on the host.
     type InGl: FragmentInterface<Gl>;
 
     /// The representation of [`Self`] in the shading language domain [`Sl`].
     ///
-    /// This is the type through which fragment output is specified in shaders.
+    /// Contains expressions representing fragment shader output.
     type InSl: FragmentInterface<Sl>;
 
     #[doc(hidden)]
     fn visit(&self, path: &str, visitor: &mut impl FragmentInterfaceVisitor<D>);
 }
 
-/// Provides types for [`FragmentInterface`] declarations.
-#[sealed]
-pub trait FragmentDomain: Sized {
-    type Attachment: FragmentInterface<Self>;
+#[doc(hidden)]
+pub trait FragmentInterfaceVisitor<D: FragmentDomain> {
+    fn accept(&mut self, path: &str, attachment: &D::Attachment);
 }

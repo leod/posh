@@ -45,8 +45,6 @@ impl Context {
         // eliminated if we see the need.
         let data: Vec<_> = data.iter().copied().map(ToPod::to_pod).collect();
 
-        // TODO: We should also allow passing `V::Pod` directly.
-
         let untyped = self.untyped.create_buffer(&data, usage)?;
 
         Ok(VertexBuffer::from_untyped(untyped))
