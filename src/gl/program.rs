@@ -1,43 +1,30 @@
 use std::{cell::RefCell, marker::PhantomData};
 
 use crate::{
-    build_program_def::build_program_def,
-    interface::ResourceInterfaceVisitor,
-    sl::{FragmentInput, FragmentOutput, Varying, VertexInput, VertexOutput},
-    FragmentInterface, Gl, ResourceInterface, Sl, VertexInterface,
+    interface::ResourceInterfaceVisitor, program_def::ProgramDef, FragmentInterface, Gl,
+    ResourceInterface, Sl, VertexInterface,
 };
 
 use super::{
     untyped, Context, CreateProgramError, DrawParams, GeometryStream, Surface, UniformBufferBinding,
 };
 
-pub struct Program<R, A, F> {
+pub struct Program<Res, Vert, Frag> {
     untyped: untyped::Program,
     uniform_buffers: RefCell<Vec<untyped::Buffer>>,
-    _phantom: PhantomData<(R, A, F)>,
+    _phantom: PhantomData<(Res, Vert, Frag)>,
 }
 
-impl<R, V, F> Program<R, V, F>
+impl<Res, Vert, Frag> Program<Res, Vert, Frag>
 where
-    R: ResourceInterface<Sl, InSl = R>,
-    V: VertexInterface<Sl, InSl = V>,
-    F: FragmentInterface<Sl, InSl = F>,
+    Res: ResourceInterface<Sl, InSl = Res>,
+    Vert: VertexInterface<Sl, InSl = Vert>,
+    Frag: FragmentInterface<Sl, InSl = Frag>,
 {
-    pub(crate) fn new<W>(
+    pub(crate) fn unchecked_from_untyped_program_def(
         context: &Context,
-        vertex_shader: fn(R, VertexInput<V>) -> VertexOutput<W>,
-        fragment_shader: fn(R, FragmentInput<W>) -> FragmentOutput<F>,
-    ) -> Result<Self, CreateProgramError>
-    where
-        W: Varying,
-    {
-        let program_def = build_program_def(vertex_shader, fragment_shader);
-
-        println!(
-            "{}\n==================={}",
-            program_def.vertex_shader_source, program_def.fragment_shader_source
-        );
-
+        program_def: ProgramDef,
+    ) -> Result<Self, CreateProgramError> {
         let untyped = context.untyped.create_program(program_def)?;
 
         Ok(Program {
@@ -49,12 +36,12 @@ where
 
     pub fn draw<S>(
         &self,
-        resource: R::InGl,
-        geometry: GeometryStream<V>,
+        resource: Res::InGl,
+        geometry: GeometryStream<Vert>,
         surface: &S,
         draw_params: &DrawParams,
     ) where
-        S: Surface<F>,
+        S: Surface<Frag>,
     {
         // TODO: Surface stuff.
 

@@ -4,7 +4,11 @@ use crevice::std140::AsStd140;
 use glow::HasContext;
 
 use crate::{
-    sl::{FragmentInput, FragmentOutput, Varying, VertexInput, VertexOutput},
+    build_program_def::{build_program_def, build_program_def_with_consts},
+    sl::{
+        ConstInput, FromFragmentInput, FromVertexInput, IntoFragmentOutput, IntoVertexOutput,
+        Varying,
+    },
     FragmentInterface, ResourceInterface, Sl, ToPod, Uniform, Vertex, VertexInterface,
 };
 
@@ -101,18 +105,66 @@ impl Context {
         Ok(VertexArray::new(self, vertex_buffer, element_source)?)
     }
 
-    pub fn create_program<R, V, F, W>(
+    pub fn create_program<Res, Vert, Frag, Vary, VertIn, VertOut, FragIn, FragOut>(
         &self,
-        vertex_shader: fn(R, VertexInput<V>) -> VertexOutput<W>,
-        fragment_shader: fn(R, FragmentInput<W>) -> FragmentOutput<F>,
-    ) -> Result<Program<R, V, F>, CreateProgramError>
+        vertex_shader: fn(Res, VertIn) -> VertOut,
+        fragment_shader: fn(Res, FragIn) -> FragOut,
+    ) -> Result<Program<Res, Vert, Frag>, CreateProgramError>
     where
-        R: ResourceInterface<Sl, InSl = R>,
-        V: VertexInterface<Sl, InSl = V>,
-        F: FragmentInterface<Sl, InSl = F>,
-        W: Varying,
+        Res: ResourceInterface<Sl, InSl = Res>,
+        Vert: VertexInterface<Sl, InSl = Vert>,
+        Frag: FragmentInterface<Sl, InSl = Frag>,
+        Vary: Varying,
+        VertIn: FromVertexInput<Vert = Vert>,
+        VertOut: IntoVertexOutput<Vary = Vary>,
+        FragIn: FromFragmentInput<Vary = Vary>,
+        FragOut: IntoFragmentOutput<Frag = Frag>,
     {
-        Program::new(self, vertex_shader, fragment_shader)
+        let program_def = build_program_def(vertex_shader, fragment_shader);
+
+        println!(
+            "{}\n==================={}",
+            program_def.vertex_shader_source, program_def.fragment_shader_source
+        );
+
+        Program::unchecked_from_untyped_program_def(self, program_def)
+    }
+
+    pub fn create_program_with_consts<
+        Consts,
+        Res,
+        Vert,
+        Frag,
+        Vary,
+        VertIn,
+        VertOut,
+        FragIn,
+        FragOut,
+    >(
+        &self,
+        consts: Consts,
+        vertex_shader: fn(Consts, Res, VertIn) -> VertOut,
+        fragment_shader: fn(Consts, Res, FragIn) -> FragOut,
+    ) -> Result<Program<Res, Vert, Frag>, CreateProgramError>
+    where
+        Consts: ConstInput,
+        Res: ResourceInterface<Sl, InSl = Res>,
+        Vert: VertexInterface<Sl, InSl = Vert>,
+        Frag: FragmentInterface<Sl, InSl = Frag>,
+        Vary: Varying,
+        VertIn: FromVertexInput<Vert = Vert>,
+        VertOut: IntoVertexOutput<Vary = Vary>,
+        FragIn: FromFragmentInput<Vary = Vary>,
+        FragOut: IntoFragmentOutput<Frag = Frag>,
+    {
+        let program_def = build_program_def_with_consts(consts, vertex_shader, fragment_shader);
+
+        println!(
+            "{}\n==================={}",
+            program_def.vertex_shader_source, program_def.fragment_shader_source
+        );
+
+        Program::unchecked_from_untyped_program_def(self, program_def)
     }
 
     // TODO: Clearing should move to some framebuffer thing.

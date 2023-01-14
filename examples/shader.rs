@@ -1,5 +1,8 @@
 use posh::{
-    sl::{self, FragmentInput, FragmentOutput, ToValue, VertexInput, VertexOutput},
+    sl::{
+        self, FragmentInput, FragmentOutput, ToValue, Varying, VaryingOutput, VertexInput,
+        VertexOutput,
+    },
     Domain, ResourceInterface, Sl, Uniform, Vertex,
 };
 
@@ -22,7 +25,7 @@ struct ColorVertex<D: Domain = Sl> {
     color: D::Vec2<f32>,
 }
 
-fn vertex_shader(globals: Globals, input: VertexInput<ColorVertex>) -> VertexOutput<sl::Vec4<f32>> {
+fn vertex_shader(globals: Globals, vertex: ColorVertex) -> VaryingOutput<sl::Vec4<f32>> {
     let shift = globals.offset * globals.time;
     let shift = globals
         .invert
@@ -34,16 +37,16 @@ fn vertex_shader(globals: Globals, input: VertexInput<ColorVertex>) -> VertexOut
         false.to_value().branch(x * -1.0, x * -2.0)
     });
 
-    let position = input.vertex.position + shift2;
+    let position = vertex.position + shift2;
 
-    VertexOutput::new(position.to_vec4(), sl::Vec4::default())
+    VaryingOutput {
+        varying: sl::Vec4::default(),
+        position: position.to_vec4(),
+    }
 }
 
-fn fragment_shader(
-    _: impl ResourceInterface<Sl>,
-    input: FragmentInput<sl::Vec4<f32>>,
-) -> FragmentOutput<sl::Vec4<f32>> {
-    FragmentOutput::new(input.varying * 3.0)
+fn fragment_shader<Res>(_: Res, varying: sl::Vec4<f32>) -> sl::Vec4<f32> {
+    varying * 3.0
 }
 
 fn main() {

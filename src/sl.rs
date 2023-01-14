@@ -6,6 +6,7 @@
 mod gen_type;
 mod sampler;
 mod scalar;
+mod shader;
 mod tuple;
 mod varying;
 mod vec;
@@ -16,9 +17,14 @@ use std::{collections::BTreeMap, rc::Rc};
 
 use super::dag::{Expr, StructType, Type};
 
+pub(crate) use shader::Private;
 pub use {
     sampler::Sampler2d,
     scalar::{Bool, Scalar, F32, I32, U32},
+    shader::{
+        ConstInput, FragmentInput, FragmentOutput, FromFragmentInput, FromVertexInput,
+        IntoFragmentOutput, IntoVertexOutput, VaryingOutput, VertexInput, VertexOutput,
+    },
     varying::Varying,
     vec::{vec2, vec3, vec4, Vec2, Vec3, Vec4},
 };
@@ -96,60 +102,4 @@ pub trait ToValue: Copy {
     type Output: Value;
 
     fn to_value(self) -> Self::Output;
-}
-
-#[derive(Debug, Clone)]
-pub(crate) struct Private;
-
-/// Input given to a vertex shader.
-#[derive(Debug, Clone)]
-pub struct VertexInput<V> {
-    pub vertex: V,
-    pub vertex_id: U32,
-    pub instance_id: U32,
-    pub(crate) _private: Private,
-}
-
-/// Output computed by a vertex shader.
-#[derive(Debug, Clone)]
-pub struct VertexOutput<W> {
-    pub position: Vec4<f32>,
-    pub varying: W,
-    pub point_size: Option<F32>,
-}
-
-impl<W> VertexOutput<W> {
-    pub fn new(position: Vec4<f32>, varying: W) -> Self {
-        Self {
-            position,
-            varying,
-            point_size: None,
-        }
-    }
-}
-
-/// Input given to a fragment shader.
-#[derive(Debug, Clone)]
-pub struct FragmentInput<W> {
-    pub varying: W,
-    pub fragment_coord: Vec4<f32>,
-    pub front_facing: Bool,
-    pub point_coord: Vec2<f32>,
-    pub(crate) _private: Private,
-}
-
-/// Output computed by a fragment shader.
-#[derive(Debug, Clone)]
-pub struct FragmentOutput<F> {
-    pub fragment: F,
-    pub fragment_depth: Option<F32>,
-}
-
-impl<F> FragmentOutput<F> {
-    pub fn new(fragment: F) -> Self {
-        FragmentOutput {
-            fragment,
-            fragment_depth: None,
-        }
-    }
 }

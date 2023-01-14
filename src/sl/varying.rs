@@ -15,6 +15,14 @@ pub trait Varying: Value {
     fn shader_input(path: &str) -> Self;
 }
 
+impl Varying for () {
+    fn shader_outputs(&self, _: &str) -> Vec<(String, Rc<Expr>)> {
+        Vec::new()
+    }
+
+    fn shader_input(_: &str) -> Self {}
+}
+
 // TODO: Impl Varying.
 
 impl Varying for Vec2<f32> {
