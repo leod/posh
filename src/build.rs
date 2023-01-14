@@ -27,9 +27,9 @@ pub fn build_program_def<Res, Vert, Frag, Vary, VertIn, VertOut, FragIn, FragOut
     fragment_shader: fn(Res, FragIn) -> FragOut,
 ) -> ProgramDef
 where
-    Res: ResourceInterface<Sl, InSl = Res>,
-    Vert: VertexInterface<Sl, InSl = Vert>,
-    Frag: FragmentInterface<Sl, InSl = Frag>,
+    Res: ResourceInterface<Sl>,
+    Vert: VertexInterface<Sl>,
+    Frag: FragmentInterface<Sl>,
     Vary: Varying,
     VertIn: FromVertexInput<Vert = Vert>,
     VertOut: IntoVertexOutput<Vary = Vary>,
@@ -63,9 +63,9 @@ pub fn build_program_def_with_consts<
 ) -> ProgramDef
 where
     Consts: ConstInput,
-    Res: ResourceInterface<Sl, InSl = Res>,
-    Vert: VertexInterface<Sl, InSl = Vert>,
-    Frag: FragmentInterface<Sl, InSl = Frag>,
+    Res: ResourceInterface<Sl>,
+    Vert: VertexInterface<Sl>,
+    Frag: FragmentInterface<Sl>,
     Vary: Varying,
     VertIn: FromVertexInput<Vert = Vert>,
     VertOut: IntoVertexOutput<Vary = Vary>,

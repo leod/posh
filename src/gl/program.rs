@@ -17,9 +17,9 @@ pub struct Program<Res, Vert, Frag = sl::Vec4<f32>> {
 
 impl<Res, Vert, Frag> Program<Res, Vert, Frag>
 where
-    Res: ResourceInterface<Sl, InSl = Res>,
-    Vert: VertexInterface<Sl, InSl = Vert>,
-    Frag: FragmentInterface<Sl, InSl = Frag>,
+    Res: ResourceInterface<Sl>,
+    Vert: VertexInterface<Sl>,
+    Frag: FragmentInterface<Sl>,
 {
     pub(crate) fn unchecked_from_untyped_program_def(
         context: &Context,

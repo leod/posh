@@ -109,9 +109,9 @@ impl Context {
         fragment_shader: fn(Res, FragIn) -> FragOut,
     ) -> Result<Program<Res, Vert, Frag>, CreateProgramError>
     where
-        Res: ResourceInterface<Sl, InSl = Res>,
-        Vert: VertexInterface<Sl, InSl = Vert>,
-        Frag: FragmentInterface<Sl, InSl = Frag>,
+        Res: ResourceInterface<Sl>,
+        Vert: VertexInterface<Sl>,
+        Frag: FragmentInterface<Sl>,
         Vary: Varying,
         VertIn: FromVertexInput<Vert = Vert>,
         VertOut: IntoVertexOutput<Vary = Vary>,
