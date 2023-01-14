@@ -26,7 +26,7 @@ impl super::Domain for Sl {
 
 // Uniform
 
-impl<T: Primitive> Uniform<Sl> for Scalar<T> {
+unsafe impl<T: Primitive> Uniform<Sl> for Scalar<T> {
     type InGl = T;
     type InSl = Self;
 
@@ -35,7 +35,7 @@ impl<T: Primitive> Uniform<Sl> for Scalar<T> {
     }
 }
 
-impl<T: Primitive> Uniform<Sl> for Vec2<T> {
+unsafe impl<T: Primitive> Uniform<Sl> for Vec2<T> {
     type InGl = T::Vec2;
     type InSl = Self;
 
@@ -54,7 +54,7 @@ fn vertex_attribute_def(path: &str, base_type: BaseType) -> Vec<VertexAttributeD
     }]
 }
 
-impl<T: Primitive> Vertex<Sl> for Scalar<T> {
+unsafe impl<T: Primitive> Vertex<Sl> for Scalar<T> {
     type InGl = T;
     type InSl = Self;
     type Pod = <Self::InGl as ToPod>::Output;
@@ -71,7 +71,7 @@ impl<T: Primitive> Vertex<Sl> for Scalar<T> {
     }
 }
 
-impl<T: Primitive> Vertex<Sl> for Vec2<T> {
+unsafe impl<T: Primitive> Vertex<Sl> for Vec2<T> {
     type InGl = T::Vec2;
     type InSl = Self;
     type Pod = <Self::InGl as ToPod>::Output;
@@ -95,7 +95,7 @@ impl super::VertexDomain for Sl {
     type Vertex<V: Vertex<Sl>> = V;
 }
 
-impl<V: Vertex<Sl>> VertexInterface<Sl> for V {
+unsafe impl<V: Vertex<Sl>> VertexInterface<Sl> for V {
     type InGl = gl::VertexBuffer<V>;
     type InSl = V::InSl;
 
@@ -124,7 +124,7 @@ impl super::ResourceDomain for Sl {
     type Compose<R: ResourceInterface<Sl>> = R;
 }
 
-impl<T: Numeric> ResourceInterface<Sl> for Sampler2d<T> {
+unsafe impl<T: Numeric> ResourceInterface<Sl> for Sampler2d<T> {
     type InGl = gl::Sampler2dBinding<T>;
     type InSl = Self;
 
@@ -137,7 +137,7 @@ impl<T: Numeric> ResourceInterface<Sl> for Sampler2d<T> {
     }
 }
 
-impl<U: Uniform<Sl, InSl = U>> ResourceInterface<Sl> for U {
+unsafe impl<U: Uniform<Sl, InSl = U>> ResourceInterface<Sl> for U {
     type InGl = gl::UniformBufferBinding<U>;
     type InSl = Self;
 
@@ -157,7 +157,7 @@ impl super::FragmentDomain for Sl {
     type Attachment = Vec4<f32>;
 }
 
-impl FragmentInterface<Sl> for Vec4<f32> {
+unsafe impl FragmentInterface<Sl> for Vec4<f32> {
     type InGl = Texture2dBinding;
     type InSl = Self;
 

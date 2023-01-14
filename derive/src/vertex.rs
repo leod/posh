@@ -45,7 +45,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         }
 
         // Implement `ToPod` for the struct in `Gl` via the helper type above.
-        impl #impl_generics_no_d ::posh::ToPod for #ident #ty_generics_gl
+        unsafe impl #impl_generics_no_d ::posh::ToPod for #ident #ty_generics_gl
         #where_clause_no_d
         {
             type Output = #to_pod_ident #ty_generics_no_d;
@@ -60,7 +60,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         }
 
         // Implement `Vertex<D>` for the struct.
-        impl #impl_generics ::posh::Vertex<#generics_d_type> for #ident #ty_generics
+        unsafe impl #impl_generics ::posh::Vertex<#generics_d_type> for #ident #ty_generics
         #where_clause
         {
             type InGl = #ident #ty_generics_gl;
