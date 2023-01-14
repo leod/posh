@@ -3,7 +3,9 @@ use std::{iter::once, rc::Rc};
 use crate::{
     dag::Expr,
     gen::glsl,
-    interface::{FragmentInterfaceVisitor, ResourceInterfaceVisitor, VertexInterfaceVisitor},
+    interface::{
+        FragmentInterfaceVisitor, ResourceInterfaceVisitor, ToPod, VertexInterfaceVisitor,
+    },
     program_def::{
         ProgramDef, SamplerDef, UniformDef, VertexAttributeDef, VertexDef, VertexInputRate,
     },
@@ -261,7 +263,7 @@ impl<'a> VertexInterfaceVisitor<'a, Sl> for VertexVisitor {
         self.attribute_defs.extend(V::attribute_defs(path));
         self.vertex_defs.push(VertexDef {
             input_rate,
-            stride: std::mem::size_of::<V::Pod>(),
+            stride: std::mem::size_of::<<V::InGl as ToPod>::Output>(),
             attributes: V::attribute_defs(path),
         })
     }

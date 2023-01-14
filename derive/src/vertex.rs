@@ -40,12 +40,12 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         #[repr(C)]
         #visibility struct #to_pod_ident #impl_generics_no_d {
             #(
-                #field_idents: <#field_types_gl as ::posh::ToPod>::Output
+                #field_idents: <#field_types_gl as ::posh::internal::ToPod>::Output
             ),*
         }
 
         // Implement `ToPod` for the struct in `Gl` via the helper type above.
-        unsafe impl #impl_generics_no_d ::posh::ToPod for #ident #ty_generics_gl
+        unsafe impl #impl_generics_no_d ::posh::internal::ToPod for #ident #ty_generics_gl
         #where_clause_no_d
         {
             type Output = #to_pod_ident #ty_generics_no_d;
@@ -65,7 +65,6 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         {
             type InGl = #ident #ty_generics_gl;
             type InSl = #ident #ty_generics_sl;
-            type Pod = <Self::InGl as ::posh::ToPod>::Output;
 
             fn attribute_defs(path: &str) -> Vec<::posh::util::VertexAttributeDef> {
                 let mut result = Vec::new();

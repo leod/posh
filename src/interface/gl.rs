@@ -7,8 +7,8 @@ use crate::{
 };
 
 use super::{
-    FragmentInterface, FragmentInterfaceVisitor, Primitive, ResourceInterface, ToPod, Uniform,
-    Vertex, VertexInterface, VertexInterfaceVisitor,
+    FragmentInterface, FragmentInterfaceVisitor, Primitive, ResourceInterface, Uniform, Vertex,
+    VertexInterface, VertexInterfaceVisitor,
 };
 
 #[sealed]
@@ -74,7 +74,6 @@ unsafe impl<T: Primitive> Uniform<Gl> for mint::Vector2<T> {
 unsafe impl Vertex<Gl> for bool {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
-    type Pod = <Self::InGl as ToPod>::Output;
 
     fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
         <Self::InSl as Vertex<Sl>>::attribute_defs(path)
@@ -88,7 +87,6 @@ unsafe impl Vertex<Gl> for bool {
 unsafe impl Vertex<Gl> for f32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
-    type Pod = <Self::InGl as ToPod>::Output;
 
     fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
         <Self::InSl as Vertex<Sl>>::attribute_defs(path)
@@ -102,7 +100,6 @@ unsafe impl Vertex<Gl> for f32 {
 unsafe impl Vertex<Gl> for i32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
-    type Pod = <Self::InGl as ToPod>::Output;
 
     fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
         <Self::InSl as Vertex<Sl>>::attribute_defs(path)
@@ -116,7 +113,6 @@ unsafe impl Vertex<Gl> for i32 {
 unsafe impl Vertex<Gl> for u32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
-    type Pod = <Self::InGl as ToPod>::Output;
 
     fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
         <Self::InSl as Vertex<Sl>>::attribute_defs(path)
@@ -130,7 +126,6 @@ unsafe impl Vertex<Gl> for u32 {
 unsafe impl<T: Primitive> Vertex<Gl> for mint::Vector2<T> {
     type InGl = T::Vec2;
     type InSl = sl::Vec2<T>;
-    type Pod = <Self::InGl as ToPod>::Output;
 
     fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
         <Self::InSl as Vertex<Sl>>::attribute_defs(path)

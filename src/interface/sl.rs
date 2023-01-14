@@ -5,7 +5,7 @@ use crate::{
     gl::{self, Texture2dBinding},
     program_def::{VertexAttributeDef, VertexInputRate},
     sl::{Object, Sampler2d, Scalar, Vec2, Vec4},
-    Numeric, Sl, ToPod,
+    Numeric, Sl,
 };
 
 use super::{
@@ -57,7 +57,6 @@ fn vertex_attribute_def(path: &str, base_type: BaseType) -> Vec<VertexAttributeD
 unsafe impl<T: Primitive> Vertex<Sl> for Scalar<T> {
     type InGl = T;
     type InSl = Self;
-    type Pod = <Self::InGl as ToPod>::Output;
 
     fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
         vertex_attribute_def(
@@ -74,7 +73,6 @@ unsafe impl<T: Primitive> Vertex<Sl> for Scalar<T> {
 unsafe impl<T: Primitive> Vertex<Sl> for Vec2<T> {
     type InGl = T::Vec2;
     type InSl = Self;
-    type Pod = <Self::InGl as ToPod>::Output;
 
     fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
         vertex_attribute_def(

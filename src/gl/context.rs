@@ -5,11 +5,12 @@ use glow::HasContext;
 
 use crate::{
     build::{build_program_def, build_program_def_with_consts},
+    interface::ToPod,
     sl::{
         ConstInput, FromFragmentInput, FromVertexInput, IntoFragmentOutput, IntoVertexOutput,
         Varying,
     },
-    FragmentInterface, ResourceInterface, Sl, ToPod, Uniform, Vertex, VertexInterface,
+    FragmentInterface, ResourceInterface, Sl, Uniform, Vertex, VertexInterface,
 };
 
 use super::{

@@ -9,8 +9,8 @@ pub mod gl;
 pub mod sl;
 
 pub use interface::{
-    Domain, FragmentDomain, FragmentInterface, ResourceDomain, ResourceInterface, ToPod, Uniform,
-    Vertex, VertexDomain, VertexInterface,
+    Domain, FragmentDomain, FragmentInterface, ResourceDomain, ResourceInterface, Uniform, Vertex,
+    VertexDomain, VertexInterface,
 };
 pub use numeric::{Numeric, Primitive};
 
@@ -46,7 +46,9 @@ pub struct Sl;
 pub mod internal {
     pub use super::{
         dag::{BaseType, Expr, StructType, Type},
-        interface::{ResourceInterfaceVisitor, VertexInterfaceField, VertexInterfaceVisitor},
+        interface::{
+            ResourceInterfaceVisitor, ToPod, VertexInterfaceField, VertexInterfaceVisitor,
+        },
         sl::{
             primitives::{field, simplify_struct_literal, value_arg},
             unique_struct_type,

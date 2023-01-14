@@ -1,4 +1,4 @@
-use std::{cell::RefCell, marker::PhantomData, rc::Rc};
+use std::{marker::PhantomData, rc::Rc};
 
 use crate::{
     interface::ResourceInterfaceVisitor, sl, FragmentInterface, Gl, ResourceInterface, Sl,

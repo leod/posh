@@ -1,6 +1,6 @@
 use std::{marker::PhantomData, rc::Rc};
 
-use crate::{Sl, ToPod, Vertex};
+use crate::{interface::ToPod, Sl, Vertex};
 
 use super::{untyped, BufferUsage};
 
@@ -16,8 +16,8 @@ impl<V: Vertex<Sl>> VertexBuffer<V> {
     /// Panics if the length of `untyped` is not a multiple of the size of
     /// `V::Pod`.
     pub(crate) fn from_untyped(untyped: untyped::Buffer) -> Self {
-        assert!(Self::vertex_size() > 0);
-        assert_eq!(untyped.len() % Self::vertex_size(), 0);
+        assert!(vertex_size::<V>() > 0);
+        assert_eq!(untyped.len() % vertex_size::<V>(), 0);
 
         Self {
             untyped: Rc::new(untyped),
@@ -34,7 +34,9 @@ impl<V: Vertex<Sl>> VertexBuffer<V> {
     }
 
     pub fn len(&self) -> usize {
-        self.untyped.len() / Self::vertex_size()
+        assert_eq!(self.untyped.len() % vertex_size::<V>(), 0);
+
+        self.untyped.len() / vertex_size::<V>()
     }
 
     pub fn is_empty(&self) -> bool {
@@ -44,8 +46,8 @@ impl<V: Vertex<Sl>> VertexBuffer<V> {
     pub fn set(&self, data: &[V]) {
         todo!()
     }
+}
 
-    fn vertex_size() -> usize {
-        std::mem::size_of::<<V::InGl as ToPod>::Output>()
-    }
+pub(super) const fn vertex_size<V: Vertex<Sl>>() -> usize {
+    std::mem::size_of::<<V::InGl as ToPod>::Output>()
 }

@@ -7,8 +7,8 @@ use crate::{
 };
 
 use super::{
-    untyped, Context, CreateVertexArrayError, Element, ElementOrUnit, ElementSource,
-    GeometryStream, GeometryType, VertexBuffer,
+    untyped, vertex_buffer::vertex_size, CreateVertexArrayError, Element, ElementOrUnit,
+    ElementSource, GeometryStream, GeometryType, VertexBuffer,
 };
 
 #[derive(Clone)]
@@ -91,7 +91,7 @@ impl<'a> VertexInterfaceVisitor<'a, Gl> for VertexBufferVisitor<'a> {
         input_rate: VertexInputRate,
         vertex: &'a VertexBuffer<V>,
     ) {
-        let stride = std::mem::size_of::<V::Pod>();
+        let stride = vertex_size::<V>();
         let attributes = V::attribute_defs(path);
         let vertex_def = VertexDef {
             input_rate,
