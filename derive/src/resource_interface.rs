@@ -30,10 +30,10 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             type InGl = #ident #ty_generics_gl;
             type InSl = #ident #ty_generics_sl;
 
-            fn visit(
-                &self,
+            fn visit<'a>(
+                &'a self,
                 path: &str,
-                visitor: &mut impl ::posh::internal::ResourceInterfaceVisitor<D>,
+                visitor: &mut impl ::posh::internal::ResourceInterfaceVisitor<'a, D>,
             ) {
                 #(
                     self.#field_idents.visit(

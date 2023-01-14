@@ -5,16 +5,25 @@ use glow::HasContext;
 
 use crate::gl::{BufferUsage, CreateBufferError};
 
-struct BufferShared {
+pub(super) struct BufferShared {
     gl: Rc<glow::Context>,
     id: glow::Buffer,
     usage: BufferUsage,
     len: Cell<usize>,
 }
 
-#[derive(Clone)]
+impl BufferShared {
+    pub fn len(&self) -> usize {
+        self.len.get()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}
+
 pub struct Buffer {
-    shared: Rc<BufferShared>,
+    pub(super) shared: Rc<BufferShared>,
 }
 
 impl Buffer {
@@ -52,11 +61,11 @@ impl Buffer {
     }
 
     pub fn len(&self) -> usize {
-        self.shared.len.get()
+        self.shared.len()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.len() == 0
+        self.shared.is_empty()
     }
 
     pub fn set<T: Pod>(&self, data: &[T]) {

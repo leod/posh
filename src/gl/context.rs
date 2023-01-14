@@ -85,7 +85,7 @@ impl Context {
         V: VertexInterface<Sl>,
         E: ElementOrUnit,
     {
-        VertexArray::new(self, vertex_buffers, element_source)
+        VertexArray::new(&self.untyped, vertex_buffers, element_source)
     }
 
     pub fn create_simple_vertex_array<V, E>(
@@ -100,7 +100,11 @@ impl Context {
     {
         let vertex_buffer = self.create_vertex_buffer(vertices, usage)?;
 
-        Ok(VertexArray::new(self, vertex_buffer, element_source)?)
+        Ok(VertexArray::new(
+            &self.untyped,
+            vertex_buffer,
+            element_source,
+        )?)
     }
 
     pub fn create_program<Res, Vert, Frag, Vary, VertIn, VertOut, FragIn, FragOut>(
@@ -125,7 +129,9 @@ impl Context {
             program_def.vertex_shader_source, program_def.fragment_shader_source
         );
 
-        Program::unchecked_from_untyped_program_def(self, program_def)
+        let untyped = self.untyped.create_program(program_def)?;
+
+        Ok(Program::unchecked_from_untyped(untyped))
     }
 
     pub fn create_program_with_consts<
@@ -162,7 +168,9 @@ impl Context {
             program_def.vertex_shader_source, program_def.fragment_shader_source
         );
 
-        Program::unchecked_from_untyped_program_def(self, program_def)
+        let untyped = self.untyped.create_program(program_def)?;
+
+        Ok(Program::unchecked_from_untyped(untyped))
     }
 
     // TODO: Clearing should move to some framebuffer thing.

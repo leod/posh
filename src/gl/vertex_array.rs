@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, ops::Range};
+use std::{marker::PhantomData, ops::Range, rc::Rc};
 
 use crate::{
     internal::VertexInterfaceVisitor,
@@ -17,9 +17,9 @@ where
     V: VertexInterface<Sl>,
     E: ElementOrUnit,
 {
-    untyped: untyped::VertexArray,
-    vertex_buffers: V::InGl,
-    element_source: E::Source,
+    untyped: Rc<untyped::VertexArray>,
+    vertex_buffers: Rc<V::InGl>,
+    element_source: Rc<E::Source>,
     _phantom: PhantomData<V>,
 }
 
@@ -28,23 +28,23 @@ where
     V: VertexInterface<Sl>,
     E: ElementOrUnit,
 {
-    // TODO: Allow construction from `untyped::VertexData`?
     pub(crate) fn new(
-        context: &Context,
+        context: &untyped::Context,
         vertex_buffers: V::InGl,
         element_source: E::Source,
     ) -> Result<Self, CreateVertexArrayError> {
         let mut visitor = VertexBufferVisitor::default();
+
+        // TODO: Don't hardcode path names.
         vertex_buffers.visit("vertex_input", &mut visitor);
 
-        let untyped = context
-            .untyped
-            .create_vertex_array(&visitor.vertex_buffers, element_source.buffer())?;
+        let untyped =
+            context.create_vertex_array(&visitor.vertex_buffers, element_source.buffer())?;
 
         Ok(VertexArray {
-            untyped,
-            vertex_buffers,
-            element_source,
+            untyped: Rc::new(untyped),
+            vertex_buffers: Rc::new(vertex_buffers),
+            element_source: Rc::new(element_source),
             _phantom: PhantomData,
         })
     }
@@ -80,16 +80,16 @@ where
 }
 
 #[derive(Default)]
-struct VertexBufferVisitor {
-    vertex_buffers: Vec<(untyped::Buffer, VertexDef)>,
+struct VertexBufferVisitor<'a> {
+    vertex_buffers: Vec<(&'a untyped::Buffer, VertexDef)>,
 }
 
-impl VertexInterfaceVisitor<Gl> for VertexBufferVisitor {
+impl<'a> VertexInterfaceVisitor<'a, Gl> for VertexBufferVisitor<'a> {
     fn accept<V: Vertex<Sl>>(
         &mut self,
         path: &str,
         input_rate: VertexInputRate,
-        vertex: &VertexBuffer<V>,
+        vertex: &'a VertexBuffer<V>,
     ) {
         let stride = std::mem::size_of::<V::Pod>();
         let attributes = V::attribute_defs(path);
@@ -99,7 +99,6 @@ impl VertexInterfaceVisitor<Gl> for VertexBufferVisitor {
             attributes,
         };
 
-        self.vertex_buffers
-            .push((vertex.untyped.clone(), vertex_def));
+        self.vertex_buffers.push((&vertex.untyped, vertex_def));
     }
 }

@@ -234,7 +234,7 @@ struct ResourceVisitor {
     sampler_defs: Vec<SamplerDef>,
 }
 
-impl ResourceInterfaceVisitor<Sl> for ResourceVisitor {
+impl<'a> ResourceInterfaceVisitor<'a, Sl> for ResourceVisitor {
     fn accept_sampler2d<T: Numeric>(&mut self, path: &str, sampler: &Sampler2d<T>) {
         todo!()
     }
@@ -256,7 +256,7 @@ struct VertexVisitor {
     vertex_defs: Vec<VertexDef>,
 }
 
-impl VertexInterfaceVisitor<Sl> for VertexVisitor {
+impl<'a> VertexInterfaceVisitor<'a, Sl> for VertexVisitor {
     fn accept<V: Vertex<Sl>>(&mut self, path: &str, input_rate: VertexInputRate, _: &V) {
         self.attribute_defs.extend(V::attribute_defs(path));
         self.vertex_defs.push(VertexDef {
