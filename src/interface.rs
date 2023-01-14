@@ -43,7 +43,10 @@ pub trait Domain: Copy {
 
 // Uniform interface
 
-/// Uniform types.
+/// Uniform data.
+///
+/// Types that implement this can be passed to shaders as a
+/// [resource](`ResourceInterface`).
 pub trait Uniform<D: Domain>: ToValue {
     /// The representation of [`Self`] in the graphics library domain [`Gl`].
     ///
@@ -61,16 +64,17 @@ pub trait Uniform<D: Domain>: ToValue {
 
 // Vertex
 
-/// A conversion to a type that implements [`Pod`].
+/// Conversion to a type that implements [`Pod`].
 ///
 /// TODO: This is a workarond for `mint` not supporting `bytemuck`.
+#[doc(hidden)]
 pub trait ToPod: Copy {
     type Output: Pod;
 
     fn to_pod(self) -> Self::Output;
 }
 
-/// Vertex types.
+/// Vertex data.
 pub trait Vertex<D: Domain>: ToValue {
     /// The representation of [`Self`] in the graphics library domain [`Gl`].
     ///
@@ -102,23 +106,25 @@ pub trait VertexDomain: Domain {
     type Vertex<V: Vertex<Sl>>: VertexInterfaceField<Self>;
 }
 
-/// Types that can occur in a [`VertexInterface`].
+/// Types that are allowed to occur in a [`VertexInterface`].
 #[sealed]
 #[doc(hidden)]
 pub trait VertexInterfaceField<D: VertexDomain> {
     fn shader_input(path: &str) -> Self;
 }
 
-/// A vertex input interface for shaders.
+/// A vertex shader input interface.
 pub trait VertexInterface<D: VertexDomain> {
     /// The representation of [`Self`] in the graphics library domain [`Gl`].
     ///
-    /// This is the type through which vertex buffers are bound on the host.
+    /// Provides vertex buffers for creating a [`crate::gl::VertexArray`](vertex
+    /// array) that matches this vertex interface.
     type InGl: VertexInterface<Gl>;
 
     /// The representation of [`Self`] in the shading language domain [`Sl`].
     ///
-    /// This is the type through which the vertex interface is accessed in shaders.
+    /// The input that user-defined vertex shaders using this vertex interface
+    /// receive.
     type InSl: VertexInterface<Sl>;
 
     #[doc(hidden)]
@@ -152,22 +158,26 @@ pub trait ResourceDomain: Domain {
     type Compose<R: ResourceInterface<Sl>>: ResourceInterface<Self>;
 }
 
-/// A shader resource interface.
+/// A shader resource input interface.
 ///
-/// Resources provide access to uniforms or samplers to shaders. Resources can
-/// be used in both vertex shaders and fragment shaders. In order to link a
-/// vertex shader with a fragment shader, they must use the same resource type.
-/// See [`create_program`](crate::gl::Context::create_program) for details.
+/// Resources give shaders access to uniforms or samplers to shaders that are
+/// bound by the host. Resources can be used in both vertex shaders and fragment
+/// shaders. In order to link a vertex shader with a fragment shader, they must
+/// use the same resource type. See
+/// [`create_program`](crate::gl::Context::create_program) for details.
 pub trait ResourceInterface<D: ResourceDomain> {
     /// The representation of [`Self`] in the graphics library domain [`Gl`].
     ///
-    /// This type provides resource bindings such as [uniform
-    /// buffers](crate::gl::UniformBuffer) on the host.
+    /// Provides resource bindings such as [uniform
+    /// buffers](crate::gl::UniformBuffer) or [samplers](crate::gl::Sampler2d).
+    /// This is specified on the host through [draw calls](crate::gl::Program::draw) with
+    /// programs using this resource interface.
     type InGl: ResourceInterface<Gl>;
 
     /// The representation of [`Self`] in the shading language domain [`Sl`].
     ///
-    /// T
+    /// The input that user-defined shaders using this resource interface
+    /// receive.
     type InSl: ResourceInterface<Sl>;
 
     #[doc(hidden)]
@@ -210,7 +220,8 @@ pub trait FragmentInterface<D: FragmentDomain> {
 
     /// The representation of [`Self`] in the shading language domain [`Sl`].
     ///
-    /// Contains expressions representing fragment shader output.
+    /// The output of user-defined fragment shaders using this fragment
+    /// interface. Contains expressions describing the shader's output.
     type InSl: FragmentInterface<Sl>;
 
     #[doc(hidden)]
