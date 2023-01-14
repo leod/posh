@@ -4,7 +4,7 @@ use crevice::std140::AsStd140;
 use glow::HasContext;
 
 use crate::{
-    build_program_def::{build_program_def, build_program_def_with_consts},
+    build::{build_program_def, build_program_def_with_consts},
     sl::{
         ConstInput, FromFragmentInput, FromVertexInput, IntoFragmentOutput, IntoVertexOutput,
         Varying,
