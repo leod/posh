@@ -6,7 +6,7 @@ use std::{
 
 use super::{
     primitives::{binary, built_in_1, value_arg},
-    Object, ToValue, Value,
+    Object, ToValue, Value, ValueNonArray,
 };
 use crate::{
     dag::{BaseType, BinaryOp, Expr, Trace, Type},
@@ -40,7 +40,7 @@ impl<T: Primitive> Default for Scalar<T> {
 
 impl<T: Primitive> Object for Scalar<T> {
     fn ty() -> Type {
-        Type::Base(BaseType::Scalar(T::PRIMITIVE_TYPE))
+        Type::Base(Self::base_type())
     }
 
     fn expr(&self) -> Rc<Expr> {
@@ -60,6 +60,12 @@ impl<T: Primitive> Value for Scalar<T> {
             trace: Trace::new(expr),
             _phantom: PhantomData,
         }
+    }
+}
+
+impl<T: Primitive> ValueNonArray for Scalar<T> {
+    fn base_type() -> BaseType {
+        BaseType::Scalar(T::PRIMITIVE_TYPE)
     }
 }
 

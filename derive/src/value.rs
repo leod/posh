@@ -40,9 +40,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         // Implement `Object` for the struct.
         impl #impl_generics ::posh::sl::Object for #ident #ty_generics #where_clause {
             fn ty() -> ::posh::internal::Type {
-                ::posh::internal::Type::Base(::posh::internal::BaseType::Struct(
-                    <Self as ::posh::sl::Struct>::struct_type(),
-                ))
+                ::posh::internal::Type::Base(<Self as ::posh::sl::ValueNonArray>::base_type())
             }
 
             fn expr(&self) -> ::std::rc::Rc<::posh::internal::Expr> {
@@ -74,6 +72,13 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                         )
                     ),*
                 }
+            }
+        }
+
+        // Implement `ValueNonArray` for the struct.
+        impl #impl_generics ::posh::sl::ValueNonArray for #ident #ty_generics #where_clause {
+            fn base_type() -> ::posh::internal::BaseType {
+                ::posh::internal::BaseType::Struct(<Self as ::posh::sl::Struct>::struct_type())
             }
         }
 

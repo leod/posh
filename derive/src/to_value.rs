@@ -26,36 +26,12 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         specialize_field_types(parse_quote!(::posh::Sl), ident, &input.generics, &fields)?;
 
     Ok(quote! {
-        // Implement `Struct` for the struct in `Sl`.
-        impl #impl_generics_no_d ::posh::sl::Struct for #ident #ty_generics_sl
-        #where_clause
-        {
-            fn struct_type() -> ::std::rc::Rc<::posh::internal::StructType> {
-                ::posh::internal::unique_struct_type::<Self>(
-                    || ::posh::internal::StructType {
-                        name: #ident_str.to_string(),
-                        fields: vec![
-                            #(
-                                (
-                                    #field_strings.to_string(),
-                                    <#field_types_sl as ::posh::sl::Object>::ty(),
-                                )
-                            ),*
-                        ],
-                    }
-                )
-
-            }
-        }
-
         // Implement `Object` for the struct in `Sl`.
         impl #impl_generics_no_d ::posh::sl::Object for #ident #ty_generics_sl
         #where_clause_no_d
         {
             fn ty() -> ::posh::internal::Type {
-                ::posh::internal::Type::Base(::posh::internal::BaseType::Struct(
-                    <Self as ::posh::sl::Struct>::struct_type(),
-                ))
+                ::posh::internal::Type::Base(<Self as ::posh::sl::ValueNonArray>::base_type())
             }
 
             fn expr(&self) -> ::std::rc::Rc<::posh::internal::Expr> {
@@ -89,6 +65,37 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                         )
                     ),*
                 }
+            }
+        }
+
+        // Implement `ValueNonArray` for the struct in `Sl`.
+        impl #impl_generics_no_d ::posh::sl::ValueNonArray for #ident #ty_generics_sl
+        #where_clause
+        {
+            fn base_type() -> ::posh::internal::BaseType {
+                ::posh::internal::BaseType::Struct(<Self as ::posh::sl::Struct>::struct_type())
+            }
+        }
+
+        // Implement `Struct` for the struct in `Sl`.
+        impl #impl_generics_no_d ::posh::sl::Struct for #ident #ty_generics_sl
+        #where_clause
+        {
+            fn struct_type() -> ::std::rc::Rc<::posh::internal::StructType> {
+                ::posh::internal::unique_struct_type::<Self>(
+                    || ::posh::internal::StructType {
+                        name: #ident_str.to_string(),
+                        fields: vec![
+                            #(
+                                (
+                                    #field_strings.to_string(),
+                                    <#field_types_sl as ::posh::sl::Object>::ty(),
+                                )
+                            ),*
+                        ],
+                    }
+                )
+
             }
         }
 

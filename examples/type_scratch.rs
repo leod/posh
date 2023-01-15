@@ -4,7 +4,7 @@ use posh::{
     VertexDomain, VertexInterface,
 };
 
-#[derive(Value)]
+#[derive(Clone, Copy, Value)]
 struct Foo<T: Numeric> {
     x: sl::Scalar<T>,
 }

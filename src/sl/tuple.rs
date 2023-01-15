@@ -4,26 +4,11 @@ use crate::dag::{BaseType, Expr, StructType, Type};
 
 use super::{
     primitives::{field, simplify_struct_literal, value_arg},
-    unique_struct_type, Object, Struct, ToValue, Value,
+    unique_struct_type, Object, Struct, ToValue, Value, ValueNonArray,
 };
 
 macro_rules! impl_value {
     ($($name: ident),*) => {
-        impl<$($name: Value),*> Struct for ($($name),*) {
-            fn struct_type() -> Rc<StructType> {
-                unique_struct_type::<Self>(
-                    || StructType {
-                        name: "tuple".to_string(),
-                        fields: vec![
-                            $(
-                                (stringify!($name).to_string(), <$name as Object>::ty())
-                            ),*
-                        ],
-                    }
-                )
-            }
-        }
-
         impl<$($name: Value),*> Object for ($($name),*) {
             fn ty() -> Type {
                 Type::Base(BaseType::Struct(Self::struct_type()))
@@ -57,6 +42,27 @@ macro_rules! impl_value {
                     $(
                         field(base.clone(), stringify!($name))
                     ),*
+                )
+            }
+        }
+
+        impl<$($name: Value),*> ValueNonArray for ($($name),*) {
+            fn base_type() -> BaseType {
+                BaseType::Struct(Self::struct_type())
+            }
+        }
+
+        impl<$($name: Value),*> Struct for ($($name),*) {
+            fn struct_type() -> Rc<StructType> {
+                unique_struct_type::<Self>(
+                    || StructType {
+                        name: "tuple".to_string(),
+                        fields: vec![
+                            $(
+                                (stringify!($name).to_string(), <$name as Object>::ty())
+                            ),*
+                        ],
+                    }
                 )
             }
         }

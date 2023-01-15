@@ -7,12 +7,6 @@ pub struct VarId(pub usize);
 
 #[derive(Debug, Clone)]
 pub enum SimplifiedExpr {
-    Branch {
-        cond: Box<SimplifiedExpr>,
-        yes: Box<SimplifiedExpr>,
-        no: Box<SimplifiedExpr>,
-        ty: Type,
-    },
     Arg {
         name: String,
         ty: Type,
@@ -37,8 +31,19 @@ pub enum SimplifiedExpr {
         name: &'static str,
         ty: Type,
     },
+    Subscript {
+        base: Box<SimplifiedExpr>,
+        index: Box<SimplifiedExpr>,
+        ty: Type,
+    },
     Var {
         id: VarId,
+        ty: Type,
+    },
+    Branch {
+        cond: Box<SimplifiedExpr>,
+        yes: Box<SimplifiedExpr>,
+        no: Box<SimplifiedExpr>,
         ty: Type,
     },
 }
@@ -54,6 +59,7 @@ impl SimplifiedExpr {
             CallFunc { ty, .. } => ty.clone(),
             Field { ty, .. } => ty.clone(),
             Branch { ty, .. } => ty.clone(),
+            Subscript { ty, .. } => ty.clone(),
             Var { ty, .. } => ty.clone(),
         }
     }
@@ -93,6 +99,7 @@ impl Display for SimplifiedExpr {
             CallFunc { name, args, .. } => write_call(f, name, args),
             Field { base, name, .. } => write!(f, "{base}.{name}"),
             Branch { cond, yes, no, .. } => write!(f, "({cond} ? {yes} : {no})"),
+            Subscript { base, index, .. } => write!(f, "{base}[{index}"),
             Var { id, .. } => write!(f, "{id}"),
         }
     }

@@ -46,13 +46,14 @@ unsafe impl<T: Primitive> Uniform<Sl> for Vec2<T> {
 
 // Vertex
 
-/// Returns the type that is used to specify a value of a given primitive type in vertex arrays.
+/// Returns the type that is used to specify a value of a given primitive type
+/// in vertex arrays.
 ///
 /// This exists because OpenGL does not like `bool`s in attributes, but, for
-/// completeness, we want to be able to provide the same basic types in
-/// uniforms as in vertices. Among other things, this allows deriving both
-/// `Vertex` and `Uniform` for the same `struct`, which might be useful for
-/// supporting different instancing methods for the same data.
+/// completeness, we want to be able to provide the same basic types in uniforms
+/// as in vertices. Among other things, this allows deriving both `Vertex` and
+/// `Uniform` for the same `struct`, which might be useful for supporting
+/// different instancing methods for the same data.
 fn numeric_repr(ty: PrimitiveType) -> PrimitiveType {
     use PrimitiveType::*;
 

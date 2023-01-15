@@ -10,7 +10,7 @@ use crate::{
 
 use super::{
     primitives::{binary, built_in_1, common_field_base, field, value_arg},
-    Object, Scalar, ToValue, Value,
+    Object, Scalar, ToValue, Value, ValueNonArray,
 };
 
 /// A two-dimensional vector in the shading language.
@@ -72,7 +72,7 @@ macro_rules! impl_value {
     ($ty:ident, $mint_ty: ident, $($member:ident),+) => {
         impl<T: Primitive> Object for $ty<T> {
             fn ty() -> Type {
-                Type::Base(BaseType::$ty(T::PRIMITIVE_TYPE))
+                Type::Base(Self::base_type())
             }
 
             fn expr(&self) -> Rc<Expr> {
@@ -120,6 +120,12 @@ macro_rules! impl_value {
                         $member: field(base.clone(), stringify!($member))
                     ),+
                 }
+            }
+        }
+
+        impl<T: Primitive> ValueNonArray for $ty<T> {
+            fn base_type() -> BaseType {
+                BaseType::$ty(T::PRIMITIVE_TYPE)
             }
         }
 

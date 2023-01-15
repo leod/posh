@@ -33,6 +33,7 @@ pub enum Expr {
         value: String,
         ty: PrimitiveType,
     },
+    // TOOD: Rename to `Construct`
     StructLiteral {
         args: Vec<Rc<Expr>>,
         ty: Rc<StructType>,
@@ -57,6 +58,11 @@ pub enum Expr {
         name: &'static str,
         ty: Type,
     },
+    Subscript {
+        base: Rc<Expr>,
+        index: Rc<Expr>,
+        ty: Type,
+    },
     Branch {
         cond: Rc<Expr>,
         yes: Rc<Expr>,
@@ -77,6 +83,7 @@ impl Expr {
             CallFuncDef { def, .. } => def.result.ty(),
             CallBuiltIn { ty, .. } => ty.clone(),
             Field { ty, .. } => ty.clone(),
+            Subscript { ty, .. } => ty.clone(),
             Branch { ty, .. } => ty.clone(),
         }
     }

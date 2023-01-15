@@ -22,6 +22,10 @@ pub trait Domain: Copy {
     /// A two-dimensional vector.
     type Vec2<T: Primitive>: Uniform<Self> + Vertex<Self> + ToValue<Output = Vec2<T>>;
 
+    // TODO: This needs support for arrays in crevice.
+    /*type Array<V: Uniform<Sl> + ValueNonArray, const N: usize>: Uniform<Self>
+    + ToValue<Output = Array<V, N>>;*/
+
     /// A boolean value.
     ///
     /// Shorthand for [`Self::Scalar<bool>`].
