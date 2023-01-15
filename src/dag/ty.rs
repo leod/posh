@@ -25,8 +25,24 @@ pub enum BaseType {
     Vec2(PrimitiveType),
     Vec3(PrimitiveType),
     Vec4(PrimitiveType),
+    Mat2,
+    Mat3,
+    Mat4,
     Struct(Rc<StructType>),
     Sampler2d(NumericType),
+}
+
+impl BaseType {
+    pub fn is_mat(&self) -> bool {
+        use BaseType::*;
+
+        match self {
+            Mat2 => true,
+            Mat3 => true,
+            Mat4 => true,
+            Scalar(_) | Vec2(_) | Vec3(_) | Vec4(_) | Struct(_) | Sampler2d(_) => false,
+        }
+    }
 }
 
 impl PartialEq for BaseType {
@@ -38,6 +54,9 @@ impl PartialEq for BaseType {
             (Vec2(a), Vec2(b)) => a == b,
             (Vec3(a), Vec3(b)) => a == b,
             (Vec4(a), Vec4(b)) => a == b,
+            (Mat2, Mat2) => true,
+            (Mat3, Mat3) => true,
+            (Mat4, Mat4) => true,
             (Struct(a), Struct(b)) => Rc::ptr_eq(a, b),
             (Sampler2d(a), Sampler2d(b)) => a == b,
             _ => false,

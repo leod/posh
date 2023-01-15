@@ -97,7 +97,20 @@ impl Display for SimplifiedExpr {
                 left, op, right, ..
             } => write!(f, "({left} {op} {right})"),
             CallFunc { name, args, .. } => write_call(f, name, args),
-            Field { base, name, .. } => write!(f, "{base}.{name}"),
+            Field { base, name, .. } => match base.ty() {
+                Type::Base(ty) if ty.is_mat() => {
+                    let index = match *name {
+                        "x" => 0,
+                        "y" => 1,
+                        "z" => 2,
+                        "w" => 3,
+                        _ => unreachable!(),
+                    };
+
+                    write!(f, "{base}[{index}]")
+                }
+                _ => write!(f, "{base}.{name}"),
+            },
             Branch { cond, yes, no, .. } => write!(f, "({cond} ? {yes} : {no})"),
             Subscript { base, index, .. } => write!(f, "{base}[{index}"),
             Var { id, .. } => write!(f, "{id}"),

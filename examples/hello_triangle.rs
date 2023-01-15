@@ -22,6 +22,7 @@ struct MyVertex<D: Domain = Sl> {
 
 fn vertex_shader<Res>(_: Res, vertex: MyVertex) -> VaryingOutput<sl::Vec2<f32>> {
     let shifted_pos = vertex.pos - 0.5 * vertex.flag.x.branch(1.0, 2.0);
+    let shifted_pos = sl::Mat2::identity().x * sl::Vec2::default() + shifted_pos;
 
     VaryingOutput {
         varying: vertex.pos,

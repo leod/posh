@@ -111,6 +111,9 @@ impl Display for BaseType {
             Vec2(ty) => write!(f, "{}vec2", primitive_type_prefix(*ty)),
             Vec3(ty) => write!(f, "{}vec3", primitive_type_prefix(*ty)),
             Vec4(ty) => write!(f, "{}vec4", primitive_type_prefix(*ty)),
+            Mat2 => write!(f, "mat2"),
+            Mat3 => write!(f, "mat3"),
+            Mat4 => write!(f, "mat4"),
             Struct(ty) => write!(f, "{}", ty.name),
             Sampler2d(ty) => write!(f, "{}sampler2D", numeric_type_prefix(*ty)),
         }

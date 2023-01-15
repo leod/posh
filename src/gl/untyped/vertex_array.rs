@@ -181,6 +181,21 @@ impl VertexAttributeLayout {
                     num_components: 4,
                     num_locations: 1,
                 },
+                Mat2 => Self {
+                    ty: NumericType::F32,
+                    num_components: 2,
+                    num_locations: 2,
+                },
+                Mat3 => Self {
+                    ty: NumericType::F32,
+                    num_components: 3,
+                    num_locations: 3,
+                },
+                Mat4 => Self {
+                    ty: NumericType::F32,
+                    num_components: 4,
+                    num_locations: 4,
+                },
                 Struct(_) => panic!("`VertexArray` does not support struct types"),
                 Sampler2d(_) => panic!("`VertexArray` does not support sampler types"),
             },

@@ -9,8 +9,8 @@ use crate::{
 };
 
 use super::{
-    primitives::{binary, built_in_1, common_field_base, field, value_arg},
-    Object, Scalar, ToValue, Value, ValueNonArray,
+    primitives::{binary, built_in_1, built_in_2, common_field_base, field, value_arg},
+    Mat2, Mat3, Mat4, Object, Scalar, ToValue, Value, ValueNonArray,
 };
 
 /// A two-dimensional vector in the shading language.
@@ -39,7 +39,7 @@ impl<T: Primitive> Vec2<T> {
     }
 }
 
-/// A four-dimensional vector in the shading language.
+/// A three-dimensional vector in the shading language.
 #[derive(Debug, Copy, Clone)]
 pub struct Vec3<T> {
     pub x: Scalar<T>,
@@ -148,12 +148,6 @@ macro_rules! impl_value {
                 self
             }
         }
-
-        impl<T: Primitive> $ty<T> {
-            pub fn cast<U: Primitive>(self) -> $ty<U> {
-                built_in_1(&format!("{}", $ty::<U>::ty()), self)
-            }
-        }
     };
 }
 
@@ -173,7 +167,8 @@ macro_rules! impl_binary_op_symmetric {
     };
 }
 
-// Implements `$ty<T> <op> Scalar<T>` for all `T: Numeric`.
+// Implements `$ty<T> <op> impl ToValue<Output = Scalar<T>>` for all `T:
+// Numeric`.
 macro_rules! impl_binary_op_scalar_rhs {
     ($ty:ident, $fn:ident, $op:ident) => {
         impl<T, Rhs> $op<Rhs> for $ty<T>
@@ -192,18 +187,8 @@ macro_rules! impl_binary_op_scalar_rhs {
 
 // Implements all the things for `$ty`.
 macro_rules! impl_vec {
-    ($ty:ident, $mint_ty:ident, $name:ident, $($member:ident),+) => {
+    ($ty:ident, $mint_ty:ident, $mat_ty:ident, $($member:ident),+) => {
         impl_value!($ty, $mint_ty, $($member),+);
-
-        impl<T: Primitive> Default for $ty<T> {
-            fn default() -> Self {
-                $ty {
-                    $(
-                        $member: Default::default()
-                    ),*
-                }
-            }
-        }
 
         impl_binary_op_symmetric!($ty, add, Add);
         impl_binary_op_symmetric!($ty, div, Div);
@@ -216,12 +201,34 @@ macro_rules! impl_vec {
         impl_binary_op_scalar_rhs!($ty, sub, Sub);
 
         impl_gen_type!($ty);
+
+        impl<T: Primitive> Default for $ty<T> {
+            fn default() -> Self {
+                $ty {
+                    $(
+                        $member: Default::default()
+                    ),*
+                }
+            }
+        }
+
+        impl<T: Primitive> $ty<T> {
+            pub fn cast<U: Primitive>(self) -> $ty<U> {
+                built_in_1(&format!("{}", $ty::<U>::ty()), self)
+            }
+        }
+
+        impl $ty<f32> {
+            pub fn outer_product(self, r: Self) -> $mat_ty {
+                built_in_2("outerProduct", self, r)
+            }
+        }
     };
 }
 
-impl_vec!(Vec2, Vector2, vec2, x, y);
-impl_vec!(Vec3, Vector3, vec3, x, y, z);
-impl_vec!(Vec4, Vector4, vec4, x, y, z, w);
+impl_vec!(Vec2, Vector2, Mat2, x, y);
+impl_vec!(Vec3, Vector3, Mat3, x, y, z);
+impl_vec!(Vec4, Vector4, Mat4, x, y, z, w);
 
 /// Constructs a [`Vec2`] conveniently.
 pub fn vec2<T: Primitive>(
