@@ -2,7 +2,7 @@ use sealed::sealed;
 
 use crate::{
     gl::{Sampler2dBinding, Texture2dBinding, UniformBufferBinding, VertexBuffer},
-    program_def::{VertexAttributeDef, VertexInputRate},
+    program_def::VertexInputRate,
     sl, Gl, Numeric, Sl,
 };
 
@@ -112,18 +112,10 @@ unsafe impl<V: Vertex<Sl>> VertexInterface<Gl> for VertexBuffer<V> {
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl VertexInterfaceVisitor<'a, Gl>) {
         visitor.accept(path, VertexInputRate::Vertex, self)
     }
-
-    fn shader_input(_: &str) -> Self {
-        unimplemented!()
-    }
 }
 
 #[sealed]
-impl<V: Vertex<Sl>> super::VertexInterfaceField<Gl> for VertexBuffer<V> {
-    fn shader_input(_: &str) -> Self {
-        unimplemented!()
-    }
-}
+impl<V: Vertex<Sl>> super::VertexInterfaceField<Gl> for VertexBuffer<V> {}
 
 // ResourceInterface
 
@@ -141,10 +133,6 @@ unsafe impl<T: Numeric> ResourceInterface<Gl> for Sampler2dBinding<T> {
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::ResourceInterfaceVisitor<'a, Gl>) {
         visitor.accept_sampler2d(path, self);
     }
-
-    fn shader_input(_: &str) -> Self {
-        unimplemented!()
-    }
 }
 
 unsafe impl<U: Uniform<Sl, InSl = U>> ResourceInterface<Gl> for UniformBufferBinding<U> {
@@ -153,10 +141,6 @@ unsafe impl<U: Uniform<Sl, InSl = U>> ResourceInterface<Gl> for UniformBufferBin
 
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::ResourceInterfaceVisitor<'a, Gl>) {
         visitor.accept_uniform::<U::InSl>(path, self);
-    }
-
-    fn shader_input(_: &str) -> Self {
-        todo!()
     }
 }
 

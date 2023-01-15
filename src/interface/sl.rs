@@ -4,7 +4,7 @@ use crate::{
     dag::{BaseType, NumericType, PrimitiveType, Type},
     gl::{self, Texture2dBinding},
     program_def::{VertexAttributeDef, VertexInputRate},
-    sl::{Object, Sampler2d, Scalar, Vec2, Vec3, Vec4, U32},
+    sl::{Object, Sampler2d, Scalar, Vec2, Vec3, Vec4},
     Numeric, Sl,
 };
 
@@ -37,32 +37,22 @@ unsafe impl<T: Primitive> Uniform<Sl> for Scalar<T> {
     }
 }
 
-unsafe impl<T: Primitive> Uniform<Sl> for Vec2<T> {
-    type InGl = T::Vec2;
-    type InSl = Self;
+macro_rules! impl_uniform {
+    ($ty:ident) => {
+        unsafe impl<T: Primitive> Uniform<Sl> for $ty<T> {
+            type InGl = T::$ty;
+            type InSl = Self;
 
-    fn shader_input(path: &str) -> Self {
-        <Self as Object>::from_arg(path)
-    }
+            fn shader_input(path: &str) -> Self {
+                <Self as Object>::from_arg(path)
+            }
+        }
+    };
 }
 
-unsafe impl<T: Primitive> Uniform<Sl> for Vec3<T> {
-    type InGl = T::Vec3;
-    type InSl = Self;
-
-    fn shader_input(path: &str) -> Self {
-        <Self as Object>::from_arg(path)
-    }
-}
-
-unsafe impl<T: Primitive> Uniform<Sl> for Vec4<T> {
-    type InGl = T::Vec4;
-    type InSl = Self;
-
-    fn shader_input(path: &str) -> Self {
-        <Self as Object>::from_arg(path)
-    }
-}
+impl_uniform!(Vec2);
+impl_uniform!(Vec3);
+impl_uniform!(Vec4);
 
 // Vertex
 
@@ -83,81 +73,35 @@ fn numeric_repr(ty: PrimitiveType) -> PrimitiveType {
     })
 }
 
-fn vertex_attribute_def(path: &str, base_type: BaseType) -> Vec<VertexAttributeDef> {
-    vec![VertexAttributeDef {
-        name: path.to_string(),
-        ty: Type::Base(base_type),
-        offset: 0,
-    }]
-}
+macro_rules! impl_vertex {
+    ($ty:ident) => {
+        unsafe impl<T: Primitive> Vertex<Sl> for $ty<T> {
+            type InGl = <Self as Uniform<Sl>>::InGl;
+            type InSl = Self;
 
-unsafe impl<T: Primitive> Vertex<Sl> for Scalar<T> {
-    type InGl = T;
-    type InSl = Self;
+            fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
+                vec![VertexAttributeDef {
+                    name: path.to_string(),
+                    ty: Type::Base(BaseType::$ty(numeric_repr(T::PRIMITIVE_TYPE))),
+                    offset: 0,
+                }]
+            }
 
-    fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
-        vertex_attribute_def(path, BaseType::Scalar(numeric_repr(T::PRIMITIVE_TYPE)))
-    }
-
-    fn shader_input(path: &str) -> Self {
-        if T::PRIMITIVE_TYPE != PrimitiveType::Bool {
-            <Self as Object>::from_arg(path)
-        } else {
-            U32::from_arg(path).cast()
+            fn shader_input(path: &str) -> Self {
+                if T::PRIMITIVE_TYPE != PrimitiveType::Bool {
+                    <Self as Object>::from_arg(path)
+                } else {
+                    $ty::<u32>::from_arg(path).cast()
+                }
+            }
         }
-    }
+    };
 }
 
-unsafe impl<T: Primitive> Vertex<Sl> for Vec2<T> {
-    type InGl = T::Vec2;
-    type InSl = Self;
-
-    fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
-        vertex_attribute_def(path, BaseType::Vec2(numeric_repr(T::PRIMITIVE_TYPE)))
-    }
-
-    fn shader_input(path: &str) -> Self {
-        if T::PRIMITIVE_TYPE != PrimitiveType::Bool {
-            <Self as Object>::from_arg(path)
-        } else {
-            Vec2::<u32>::from_arg(path).cast()
-        }
-    }
-}
-
-unsafe impl<T: Primitive> Vertex<Sl> for Vec3<T> {
-    type InGl = T::Vec3;
-    type InSl = Self;
-
-    fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
-        vertex_attribute_def(path, BaseType::Vec3(numeric_repr(T::PRIMITIVE_TYPE)))
-    }
-
-    fn shader_input(path: &str) -> Self {
-        if T::PRIMITIVE_TYPE != PrimitiveType::Bool {
-            <Self as Object>::from_arg(path)
-        } else {
-            Vec3::<u32>::from_arg(path).cast()
-        }
-    }
-}
-
-unsafe impl<T: Primitive> Vertex<Sl> for Vec4<T> {
-    type InGl = T::Vec4;
-    type InSl = Self;
-
-    fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
-        vertex_attribute_def(path, BaseType::Vec4(numeric_repr(T::PRIMITIVE_TYPE)))
-    }
-
-    fn shader_input(path: &str) -> Self {
-        if T::PRIMITIVE_TYPE != PrimitiveType::Bool {
-            <Self as Object>::from_arg(path)
-        } else {
-            Vec4::<u32>::from_arg(path).cast()
-        }
-    }
-}
+impl_vertex!(Scalar);
+impl_vertex!(Vec2);
+impl_vertex!(Vec3);
+impl_vertex!(Vec4);
 
 // VertexInterface
 

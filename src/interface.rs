@@ -141,8 +141,10 @@ pub trait VertexDomain: Domain {
 /// Types that are allowed to occur in a [`VertexInterface`].
 #[sealed]
 #[doc(hidden)]
-pub trait VertexInterfaceField<D: VertexDomain> {
-    fn shader_input(path: &str) -> Self;
+pub trait VertexInterfaceField<D: VertexDomain>: Sized {
+    fn shader_input(path: &str) -> Self {
+        unimplemented!()
+    }
 }
 
 /// A vertex shader input interface.
@@ -153,7 +155,7 @@ pub trait VertexInterfaceField<D: VertexDomain> {
 /// # Safety
 ///
 /// TODO
-pub unsafe trait VertexInterface<D: VertexDomain> {
+pub unsafe trait VertexInterface<D: VertexDomain>: Sized {
     /// The representation of [`Self`] in the graphics library domain [`Gl`].
     ///
     /// Provides vertex buffers for creating a [`crate::gl::VertexArray`](vertex
@@ -170,7 +172,9 @@ pub unsafe trait VertexInterface<D: VertexDomain> {
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl VertexInterfaceVisitor<'a, D>);
 
     #[doc(hidden)]
-    fn shader_input(path: &str) -> Self;
+    fn shader_input(path: &str) -> Self {
+        unimplemented!()
+    }
 }
 
 pub trait VertexInterfaceVisitor<'a, D: VertexDomain> {
@@ -211,7 +215,7 @@ pub trait ResourceDomain: Domain {
 /// # Safety
 ///
 /// TODO
-pub unsafe trait ResourceInterface<D: ResourceDomain> {
+pub unsafe trait ResourceInterface<D: ResourceDomain>: Sized {
     /// The representation of [`Self`] in the graphics library domain [`Gl`].
     ///
     /// Provides resource bindings such as [uniform
@@ -231,7 +235,9 @@ pub unsafe trait ResourceInterface<D: ResourceDomain> {
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl ResourceInterfaceVisitor<'a, D>);
 
     #[doc(hidden)]
-    fn shader_input(path: &str) -> Self;
+    fn shader_input(path: &str) -> Self {
+        unimplemented!()
+    }
 }
 
 unsafe impl<D: ResourceDomain> ResourceInterface<D> for () {
