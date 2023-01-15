@@ -11,10 +11,6 @@ pub struct VertexBuffer<V> {
 }
 
 impl<V: Vertex<Sl>> VertexBuffer<V> {
-    /// # Panics
-    ///
-    /// Panics if the length of `untyped` is not a multiple of the size of
-    /// `V::Pod`.
     pub(crate) fn from_untyped(untyped: untyped::Buffer) -> Self {
         assert!(vertex_size::<V>() > 0);
         assert_eq!(untyped.len() % vertex_size::<V>(), 0);

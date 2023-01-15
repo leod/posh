@@ -29,7 +29,7 @@ where
     pub fn draw<S>(
         &self,
         resource: Res::InGl,
-        geometry: GeometryStream<Vert>,
+        geometry: GeometryStream<Vert::InGl>,
         surface: &S,
         draw_params: &DrawParams,
     ) where
@@ -37,11 +37,13 @@ where
     {
         // TODO: Surface stuff.
 
-        // TODO: This allocation can be avoided once stable has allocators.
+        // TODO: These allocations can be avoided once stable has allocators.
         let mut resource_visitor = ResourceVisitor::default();
         resource.visit("", &mut resource_visitor);
 
-        // FIXME: Safety: Check element range.
+        // FIXME: Safety: check that all vertex buffers are large enough for the
+        // values in the element buffer (if we have one).
+
         unsafe {
             self.untyped
                 .draw(&resource_visitor.uniform_buffers, geometry.untyped);
