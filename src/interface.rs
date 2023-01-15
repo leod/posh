@@ -1,4 +1,5 @@
 mod gl;
+mod numeric;
 mod sl;
 #[cfg(tests)]
 mod tests;
@@ -10,8 +11,10 @@ use sealed::sealed;
 use crate::{
     program_def::{VertexAttributeDef, VertexInputRate},
     sl::{Bool, Scalar, ToValue, Value, Vec2, Vec3, Vec4, F32, I32, U32},
-    Gl, Numeric, Primitive, Sl,
+    Gl, Sl,
 };
+
+pub use numeric::{Numeric, Primitive};
 
 /// Provides types for [`Uniform`] or [`Vertex`] declarations.
 #[sealed]

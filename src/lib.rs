@@ -2,17 +2,15 @@ mod build;
 mod dag;
 mod gen;
 mod interface;
-mod numeric;
 mod program_def;
 
 pub mod gl;
 pub mod sl;
 
 pub use interface::{
-    Domain, FragmentDomain, FragmentInterface, ResourceDomain, ResourceInterface, Uniform, Vertex,
-    VertexDomain, VertexInterface,
+    Domain, FragmentDomain, FragmentInterface, Numeric, Primitive, ResourceDomain,
+    ResourceInterface, Uniform, Vertex, VertexDomain, VertexInterface,
 };
-pub use numeric::{Numeric, Primitive};
 
 pub use posh_derive::{ResourceInterface, Uniform, Vertex, VertexInterface};
 
