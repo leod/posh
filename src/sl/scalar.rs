@@ -5,7 +5,7 @@ use std::{
 };
 
 use super::{
-    primitives::{binary, value_arg},
+    primitives::{binary, built_in_1, value_arg},
     Object, ToValue, Value,
 };
 use crate::{
@@ -95,6 +95,10 @@ impl<T: Primitive> Scalar<T> {
 
     pub fn eq(&self, right: impl ToValue<Output = Self>) -> Scalar<bool> {
         binary(*self, BinaryOp::Eq, right)
+    }
+
+    pub fn cast<U: Primitive>(self) -> Scalar<U> {
+        built_in_1(&format!("{}", U::PRIMITIVE_TYPE), self)
     }
 }
 

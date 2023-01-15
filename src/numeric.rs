@@ -24,15 +24,6 @@ pub trait Primitive:
     #[doc(hidden)]
     const PRIMITIVE_TYPE: PrimitiveType;
 
-    /// The type that is used to specify `Self` in vertex arrays. This exists
-    /// because OpenGL does not like bools in attributes, but, for completeness,
-    /// we want to be able to provide the same basic types in uniforms as in
-    /// vertices. Among other things, this allows deriving both `Vertex` and
-    /// `Uniform` for the same `struct`, which might be useful for supporting
-    /// different instancing methods for the same data.
-    #[doc(hidden)]
-    const NUMERIC_REPR_TYPE: NumericType;
-
     #[doc(hidden)]
     type Vec2: Uniform<Gl, InGl = Self::Vec2, InSl = Vec2<Self>>
         + Vertex<Gl, InGl = Self::Vec2, InSl = Vec2<Self>>
@@ -44,7 +35,6 @@ pub trait Primitive:
 #[sealed]
 impl Primitive for bool {
     const PRIMITIVE_TYPE: PrimitiveType = PrimitiveType::Bool;
-    const NUMERIC_REPR_TYPE: NumericType = NumericType::U32;
 
     type Vec2 = mint::Vector2<bool>;
 }
@@ -52,7 +42,6 @@ impl Primitive for bool {
 #[sealed]
 impl Primitive for i32 {
     const PRIMITIVE_TYPE: PrimitiveType = PrimitiveType::Numeric(NumericType::I32);
-    const NUMERIC_REPR_TYPE: NumericType = NumericType::I32;
 
     type Vec2 = mint::Vector2<i32>;
 }
@@ -60,7 +49,6 @@ impl Primitive for i32 {
 #[sealed]
 impl Primitive for u32 {
     const PRIMITIVE_TYPE: PrimitiveType = PrimitiveType::Numeric(NumericType::U32);
-    const NUMERIC_REPR_TYPE: NumericType = NumericType::U32;
 
     type Vec2 = mint::Vector2<u32>;
 }
@@ -68,7 +56,6 @@ impl Primitive for u32 {
 #[sealed]
 impl Primitive for f32 {
     const PRIMITIVE_TYPE: PrimitiveType = PrimitiveType::Numeric(NumericType::F32);
-    const NUMERIC_REPR_TYPE: NumericType = NumericType::F32;
 
     type Vec2 = mint::Vector2<f32>;
 }

@@ -1,9 +1,11 @@
+mod gl;
+mod sl;
+#[cfg(tests)]
+mod tests;
+
 use bytemuck::Pod;
 use crevice::std140::AsStd140;
 use sealed::sealed;
-
-mod gl;
-mod sl;
 
 use crate::{
     program_def::{VertexAttributeDef, VertexInputRate},
