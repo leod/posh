@@ -5,12 +5,11 @@ use glow::HasContext;
 
 use crate::{
     build::{build_program_def, build_program_def_with_consts},
-    interface::ToPod,
     sl::{
         ConstInput, FromFragmentInput, FromVertexInput, IntoFragmentOutput, IntoVertexOutput,
         Varying,
     },
-    FragmentInterface, ResourceInterface, Sl, Uniform, Vertex, VertexInterface,
+    Block, FragmentInterface, ResourceInterface, Sl, VertexInterface,
 };
 
 use super::{
@@ -36,15 +35,15 @@ impl Context {
 
     pub fn create_vertex_buffer<V>(
         &self,
-        data: &[V::InGl],
+        data: &[<V::InGl as AsStd140>::Output],
         usage: BufferUsage,
     ) -> Result<VertexBuffer<V>, CreateBufferError>
     where
-        V: Vertex<Sl>,
+        V: Block<Sl>,
     {
-        // TODO: This extra allocation for converting to `V::Pod` could be
-        // eliminated if we see the need.
-        let data: Vec<_> = data.iter().copied().map(ToPod::to_pod).collect();
+        // TODO: This extra allocation for converting to `V::AsStd140::Output`
+        // could be eliminated if we see the need.
+        let data: Vec<_> = data.iter().map(AsStd140::as_std140).collect();
 
         let untyped = self.untyped.create_buffer(&data, usage)?;
 
@@ -70,7 +69,7 @@ impl Context {
         usage: BufferUsage,
     ) -> Result<UniformBuffer<U>, CreateBufferError>
     where
-        U: Uniform<Sl>,
+        U: Block<Sl>,
     {
         let untyped = self.untyped.create_buffer(&[uniform.as_std140()], usage)?;
 
@@ -91,12 +90,12 @@ impl Context {
 
     pub fn create_simple_vertex_array<V, E>(
         &self,
-        vertices: &[V::InGl],
+        vertices: &[<V::InGl as AsStd140>::Output],
         usage: BufferUsage,
         element_source: E::Source,
     ) -> Result<VertexArray<V, E>, CreateError>
     where
-        V: Vertex<Sl>,
+        V: Block<Sl>,
         E: ElementOrUnit,
     {
         let vertex_buffer = self.create_vertex_buffer(vertices, usage)?;

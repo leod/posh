@@ -25,23 +25,23 @@ usual shader code.
 ## Example
 
 First, we need to define the types that will appear in our shader's signature.
-Here, we'll define a `Uniform` and a `Vertex`. In `posh`, such types need to
-have _dual_ representations in the graphics library domain `Gl` and the shading
-language domain `Sl`. In this example, the host will provide vertex data as
-`MyVertex<Gl>`, while the shader will access it through the dual type
+Here, we'll define a uniform type and a vertex type. In `posh`, such types need
+to have _dual_ representations in the graphics library domain `Gl` and the
+shading language domain `Sl`. In this example, the host will provide vertex data
+as `MyVertex<Gl>`, while the shader will access it through the dual type
 `MyVertex<Sl>`.
 
 ```rust
-use posh::{Domain, Sl, Uniform, Vertex, sl::ToValue};
+use posh::{Block, BlockDomain, Sl, sl::ToValue};
 
-#[derive(Clone, Copy, ToValue, Uniform)]
-struct Camera<D: Domain = Sl> {
-   view: D::Mat4<f32>,
-   projection: D::Mat4<f32>,
+#[derive(Clone, Copy, Block)]
+struct Camera<D: BlockDomain = Sl> {
+   view: D::Mat4,
+   projection: D::Mat4,
 }
 
-#[derive(Clone, Copy, ToValue, Vertex)]
-struct MyVertex<D: Domain = Sl> {
+#[derive(Clone, Copy, Block)]
+struct MyVertex<D: BlockDomain = Sl> {
    pos: D::Vec3<f32>,
    color: D::Vec3<f32>,
 }
@@ -51,9 +51,9 @@ struct MyVertex<D: Domain = Sl> {
 Next, we can use these types to define a simple shader. Notice that the shader
 stages are defined as simple Rust code!
 ```rust
-use posh::sl::{self, FragmentOutput, VertexOutput};
+use posh::sl::{self, FragmentOutput, VaryingOutput};
 
-fn vertex_stage(camera: Camera, vertex: MyVertex) -> VertexOutput<sl::Vec3<f32>> {
+fn vertex_shader(camera: Camera, vertex: MyVertex) -> VaryingOutput<sl::Vec3<f32>> {
    let position = camera.projection * camera.view * vertex.pos.to_vec4();
 
    VertexOutput {
@@ -63,22 +63,19 @@ fn vertex_stage(camera: Camera, vertex: MyVertex) -> VertexOutput<sl::Vec3<f32>>
    }
 }
 
-fn fragment_stage(varying: sl::Vec3<f32>) -> FragmentOutput<sl::Vec4<f32>> {
-   FragmentOutput {
-      fragment: varying,
-      ..Default::default()
-   }
+fn fragment_shader(_: Camera, varying: sl::Vec3<f32>) -> sl::Vec4<f32> {
+   varying
 }
 ```
 
-Finally, we can compile our shader into a `Program<R, A, F>`. The three type
+Finally, we can compile our shader into a `Program<R, V, F>`. The three type
 parameters signify the interface of our shader: `R` are input resources such as
-uniforms and textures, `A` are input attributes, and `F` is the output fragment
+uniforms and textures, `V` are input vertices, and `F` is the output fragment
 type. This makes it possible to check at compile-time that the buffers passed to
 draw calls match the signature of the shader.
 ```rust
 use posh::gl::{
-    Context, DefaultSurface, DrawParams, GeometryType, Program, UniformBuffer,
+    Context, DefaultFramebuffer, DrawParams, GeometryType, Program, UniformBuffer,
     VertexArray,
 };
 
@@ -89,14 +86,14 @@ fn main() {
     let vertices: VertexArray<MyVertex> = todo!();
 
     // Compile the shader into a program.
-    let program: Program<Camera, MyVertex, sl::Vec4<f32>> =
-        Program::new(&ctx, vertex_stage, fragment_stage).unwrap();
+    let program: Program<Camera, MyVertex> =
+        context.create_program(vertex_shader, fragment_shader).unwrap();
 
     // Finally, a draw call!
     program.draw(
         camera.bind(),
-        vertices.bind_without_elements(GeometryType::Triangles),
-        DefaultSurface.bind(),
+        vertices.stream(GeometryType::Triangles),
+        &DefaultFramebuffer,
         &DrawParams::default(),
     );
 }

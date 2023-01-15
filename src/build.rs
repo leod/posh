@@ -1,11 +1,11 @@
 use std::{iter::once, rc::Rc};
 
+use crevice::std140::AsStd140;
+
 use crate::{
     dag::Expr,
     gen::glsl,
-    interface::{
-        FragmentInterfaceVisitor, ResourceInterfaceVisitor, ToPod, VertexInterfaceVisitor,
-    },
+    interface::{FragmentInterfaceVisitor, ResourceInterfaceVisitor, VertexInterfaceVisitor},
     program_def::{
         ProgramDef, SamplerDef, UniformDef, VertexAttributeDef, VertexDef, VertexInputRate,
     },
@@ -13,7 +13,7 @@ use crate::{
         ConstInput, FragmentInput, FromFragmentInput, FromVertexInput, IntoFragmentOutput,
         IntoVertexOutput, Object, Private, VertexInput,
     },
-    FragmentInterface, Numeric, ResourceInterface, Sl, Uniform, Vertex, VertexInterface,
+    Block, FragmentInterface, Numeric, ResourceInterface, Sl, VertexInterface,
 };
 
 use crate::sl::{primitives::value_arg, Sampler2d, Varying, Vec4};
@@ -241,7 +241,7 @@ impl<'a> ResourceInterfaceVisitor<'a, Sl> for ResourceVisitor {
         todo!()
     }
 
-    fn accept_uniform<U: Uniform<Sl>>(&mut self, path: &str, _: &U) {
+    fn accept_uniform<U: Block<Sl>>(&mut self, path: &str, _: &U) {
         // TODO: Allow user-specified uniform block locations.
         self.uniform_defs.push(UniformDef {
             block_name: path.to_string() + "_posh_block",
@@ -259,12 +259,12 @@ struct VertexVisitor {
 }
 
 impl<'a> VertexInterfaceVisitor<'a, Sl> for VertexVisitor {
-    fn accept<V: Vertex<Sl>>(&mut self, path: &str, input_rate: VertexInputRate, _: &V) {
-        self.attribute_defs.extend(V::attribute_defs(path));
+    fn accept<V: Block<Sl>>(&mut self, path: &str, input_rate: VertexInputRate, _: &V) {
+        self.attribute_defs.extend(V::vertex_attribute_defs(path));
         self.vertex_defs.push(VertexDef {
             input_rate,
-            stride: std::mem::size_of::<<V::InGl as ToPod>::Output>(),
-            attributes: V::attribute_defs(path),
+            stride: std::mem::size_of::<<V::InGl as AsStd140>::Output>(),
+            attributes: V::vertex_attribute_defs(path),
         })
     }
 }

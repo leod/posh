@@ -3,7 +3,7 @@ use std::{marker::PhantomData, ops::Range, rc::Rc};
 use crate::{
     internal::VertexInterfaceVisitor,
     program_def::{VertexDef, VertexInputRate},
-    Gl, Sl, Vertex, VertexInterface,
+    Block, Gl, Sl, VertexInterface,
 };
 
 use super::{
@@ -85,14 +85,14 @@ struct VertexBufferVisitor<'a> {
 }
 
 impl<'a> VertexInterfaceVisitor<'a, Gl> for VertexBufferVisitor<'a> {
-    fn accept<V: Vertex<Sl>>(
+    fn accept<V: Block<Sl>>(
         &mut self,
         path: &str,
         input_rate: VertexInputRate,
         vertex: &'a VertexBuffer<V>,
     ) {
         let stride = vertex_size::<V>();
-        let attributes = V::attribute_defs(path);
+        let attributes = V::vertex_attribute_defs(path);
         let vertex_def = VertexDef {
             input_rate,
             stride,

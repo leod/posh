@@ -2,7 +2,7 @@ use std::{marker::PhantomData, rc::Rc};
 
 use crevice::std140::AsStd140;
 
-use crate::{Sl, Uniform};
+use crate::{Block, Sl};
 
 use super::{untyped, BufferUsage};
 
@@ -19,7 +19,7 @@ pub struct UniformBufferBinding<U> {
     // TODO: Uniform buffer slicing.
 }
 
-impl<U: Uniform<Sl>> UniformBuffer<U> {
+impl<U: Block<Sl>> UniformBuffer<U> {
     /// # Panics
     ///
     /// Panics if the length of `untyped` is not a multiple of the size of
