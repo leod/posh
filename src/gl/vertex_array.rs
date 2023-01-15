@@ -61,10 +61,10 @@ where
         &self,
         element_range: Range<usize>,
         geometry_type: GeometryType,
-    ) -> GeometryStream<V> {
+    ) -> GeometryStream<V::InGl> {
         GeometryStream {
             untyped: self.untyped.stream_range(element_range, geometry_type),
-            _phantom: PhantomData,
+            _vertex_buffers: self.vertex_buffers.clone(),
         }
     }
 }
@@ -74,7 +74,7 @@ where
     V: VertexInterface<Sl>,
     E: Element,
 {
-    pub fn stream(&self, geometry_type: GeometryType) -> GeometryStream<V> {
+    pub fn stream(&self, geometry_type: GeometryType) -> GeometryStream<V::InGl> {
         self.stream_range(0..self.element_source().len(), geometry_type)
     }
 }

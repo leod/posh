@@ -1,9 +1,8 @@
-use std::marker::PhantomData;
+use std::rc::Rc;
 
 use super::untyped;
 
 pub struct GeometryStream<V> {
     pub(crate) untyped: untyped::GeometryStream,
-    // FIXME: Store ref to element buffer range and check before drawing.
-    pub(crate) _phantom: PhantomData<V>,
+    pub(crate) _vertex_buffers: Rc<V>,
 }

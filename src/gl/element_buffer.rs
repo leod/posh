@@ -52,10 +52,6 @@ pub struct ElementBuffer<E> {
 }
 
 impl<E: Element> ElementBuffer<E> {
-    /// # Panics
-    ///
-    /// Panics if the length of `untyped` is not a multiple of the size of
-    /// `E`.
     pub(crate) fn from_untyped(untyped: untyped::Buffer) -> Self {
         assert_eq!(untyped.len() % size_of::<E>(), 0);
 
@@ -66,6 +62,8 @@ impl<E: Element> ElementBuffer<E> {
     }
 
     pub fn len(&self) -> usize {
+        assert_eq!(self.untyped.len() % size_of::<E>(), 0);
+
         self.untyped.len() / size_of::<E>()
     }
 
