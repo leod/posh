@@ -5,7 +5,7 @@ use sealed::sealed;
 use crate::{
     dag::{NumericType, PrimitiveType},
     interface::ToPod,
-    sl::{Scalar, ToValue, Vec2},
+    sl::{Scalar, ToValue, Vec2, Vec3, Vec4},
     Gl, Uniform, Vertex,
 };
 
@@ -30,6 +30,20 @@ pub trait Primitive:
         + AsStd140
         + ToPod
         + ToValue<Output = Vec2<Self>>;
+
+    #[doc(hidden)]
+    type Vec3: Uniform<Gl, InGl = Self::Vec3, InSl = Vec3<Self>>
+        + Vertex<Gl, InGl = Self::Vec3, InSl = Vec3<Self>>
+        + AsStd140
+        + ToPod
+        + ToValue<Output = Vec3<Self>>;
+
+    #[doc(hidden)]
+    type Vec4: Uniform<Gl, InGl = Self::Vec4, InSl = Vec4<Self>>
+        + Vertex<Gl, InGl = Self::Vec4, InSl = Vec4<Self>>
+        + AsStd140
+        + ToPod
+        + ToValue<Output = Vec4<Self>>;
 }
 
 #[sealed]
@@ -37,6 +51,8 @@ impl Primitive for bool {
     const PRIMITIVE_TYPE: PrimitiveType = PrimitiveType::Bool;
 
     type Vec2 = mint::Vector2<bool>;
+    type Vec3 = mint::Vector3<bool>;
+    type Vec4 = mint::Vector4<bool>;
 }
 
 #[sealed]
@@ -44,6 +60,8 @@ impl Primitive for i32 {
     const PRIMITIVE_TYPE: PrimitiveType = PrimitiveType::Numeric(NumericType::I32);
 
     type Vec2 = mint::Vector2<i32>;
+    type Vec3 = mint::Vector3<i32>;
+    type Vec4 = mint::Vector4<i32>;
 }
 
 #[sealed]
@@ -51,6 +69,8 @@ impl Primitive for u32 {
     const PRIMITIVE_TYPE: PrimitiveType = PrimitiveType::Numeric(NumericType::U32);
 
     type Vec2 = mint::Vector2<u32>;
+    type Vec3 = mint::Vector3<u32>;
+    type Vec4 = mint::Vector4<u32>;
 }
 
 #[sealed]
@@ -58,6 +78,8 @@ impl Primitive for f32 {
     const PRIMITIVE_TYPE: PrimitiveType = PrimitiveType::Numeric(NumericType::F32);
 
     type Vec2 = mint::Vector2<f32>;
+    type Vec3 = mint::Vector3<f32>;
+    type Vec4 = mint::Vector4<f32>;
 }
 
 /// One of `f32`, `i32`, or `u32`.
@@ -148,5 +170,26 @@ unsafe impl<T: Primitive> ToPod for mint::Vector2<T> {
 
     fn to_pod(self) -> Self::Output {
         [self.x.to_pod(), self.y.to_pod()]
+    }
+}
+
+unsafe impl<T: Primitive> ToPod for mint::Vector3<T> {
+    type Output = [<T as ToPod>::Output; 3];
+
+    fn to_pod(self) -> Self::Output {
+        [self.x.to_pod(), self.y.to_pod(), self.z.to_pod()]
+    }
+}
+
+unsafe impl<T: Primitive> ToPod for mint::Vector4<T> {
+    type Output = [<T as ToPod>::Output; 4];
+
+    fn to_pod(self) -> Self::Output {
+        [
+            self.x.to_pod(),
+            self.y.to_pod(),
+            self.z.to_pod(),
+            self.w.to_pod(),
+        ]
     }
 }

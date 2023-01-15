@@ -15,6 +15,8 @@ use super::{
 impl super::Domain for Gl {
     type Scalar<T: Primitive> = T;
     type Vec2<T: Primitive> = mint::Vector2<T>;
+    type Vec3<T: Primitive> = mint::Vector3<T>;
+    type Vec4<T: Primitive> = mint::Vector4<T>;
 
     type Bool = bool;
     type F32 = f32;
@@ -27,46 +29,36 @@ impl super::Domain for Gl {
 unsafe impl Uniform<Gl> for bool {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
-
-    fn shader_input(_: &str) -> Self {
-        unimplemented!()
-    }
 }
 
 unsafe impl Uniform<Gl> for f32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
-
-    fn shader_input(_: &str) -> Self {
-        unimplemented!()
-    }
 }
 
 unsafe impl Uniform<Gl> for i32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
-
-    fn shader_input(_: &str) -> Self {
-        unimplemented!()
-    }
 }
 
 unsafe impl Uniform<Gl> for u32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
-
-    fn shader_input(_: &str) -> Self {
-        unimplemented!()
-    }
 }
 
 unsafe impl<T: Primitive> Uniform<Gl> for mint::Vector2<T> {
     type InGl = T::Vec2;
     type InSl = sl::Vec2<T>;
+}
 
-    fn shader_input(_: &str) -> Self {
-        unimplemented!()
-    }
+unsafe impl<T: Primitive> Uniform<Gl> for mint::Vector3<T> {
+    type InGl = T::Vec3;
+    type InSl = sl::Vec3<T>;
+}
+
+unsafe impl<T: Primitive> Uniform<Gl> for mint::Vector4<T> {
+    type InGl = T::Vec4;
+    type InSl = sl::Vec4<T>;
 }
 
 // Vertex
@@ -74,66 +66,36 @@ unsafe impl<T: Primitive> Uniform<Gl> for mint::Vector2<T> {
 unsafe impl Vertex<Gl> for bool {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
-
-    fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
-        <Self::InSl as Vertex<Sl>>::attribute_defs(path)
-    }
-
-    fn shader_input(_: &str) -> Self {
-        unimplemented!()
-    }
 }
 
 unsafe impl Vertex<Gl> for f32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
-
-    fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
-        <Self::InSl as Vertex<Sl>>::attribute_defs(path)
-    }
-
-    fn shader_input(_: &str) -> Self {
-        unimplemented!()
-    }
 }
 
 unsafe impl Vertex<Gl> for i32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
-
-    fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
-        <Self::InSl as Vertex<Sl>>::attribute_defs(path)
-    }
-
-    fn shader_input(_: &str) -> Self {
-        unimplemented!()
-    }
 }
 
 unsafe impl Vertex<Gl> for u32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
-
-    fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
-        <Self::InSl as Vertex<Sl>>::attribute_defs(path)
-    }
-
-    fn shader_input(_: &str) -> Self {
-        unimplemented!()
-    }
 }
 
 unsafe impl<T: Primitive> Vertex<Gl> for mint::Vector2<T> {
     type InGl = T::Vec2;
     type InSl = sl::Vec2<T>;
+}
 
-    fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
-        <Self::InSl as Vertex<Sl>>::attribute_defs(path)
-    }
+unsafe impl<T: Primitive> Vertex<Gl> for mint::Vector3<T> {
+    type InGl = T::Vec3;
+    type InSl = sl::Vec3<T>;
+}
 
-    fn shader_input(_: &str) -> Self {
-        unimplemented!()
-    }
+unsafe impl<T: Primitive> Vertex<Gl> for mint::Vector4<T> {
+    type InGl = T::Vec4;
+    type InSl = sl::Vec4<T>;
 }
 
 // VertexInterface
