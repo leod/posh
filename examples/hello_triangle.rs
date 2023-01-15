@@ -1,21 +1,22 @@
 use std::time::Instant;
 
+use crevice::std140::AsStd140;
 use posh::{
     gl::{
         BufferUsage, Context, CreateError, DefaultFramebuffer, DrawParams, GeometryType, Program,
         UniformBuffer, VertexArray,
     },
-    sl::{self, ToValue, VaryingOutput},
-    Domain, Sl, Uniform, Vertex,
+    sl::{self, VaryingOutput},
+    Block, BlockDomain, Sl,
 };
 
-#[derive(Clone, Copy, ToValue, Uniform)]
-struct MyUniform<D: Domain = Sl> {
+#[derive(Clone, Copy, Block)]
+struct MyUniform<D: BlockDomain = Sl> {
     time: D::F32,
 }
 
-#[derive(Clone, Copy, ToValue, Vertex)]
-struct MyVertex<D: Domain = Sl> {
+#[derive(Clone, Copy, Block)]
+struct MyVertex<D: BlockDomain = Sl> {
     pos: D::Vec2<f32>,
     flag: D::Vec2<bool>,
 }
@@ -54,15 +55,18 @@ impl Demo {
                 MyVertex {
                     pos: [0.5f32, 1.0].into(),
                     flag: [false, true].into(),
-                },
+                }
+                .as_std140(),
                 MyVertex {
                     pos: [0.0, 0.0].into(),
                     flag: [false, false].into(),
-                },
+                }
+                .as_std140(),
                 MyVertex {
                     pos: [1.0, 0.0].into(),
                     flag: [true, true].into(),
-                },
+                }
+                .as_std140(),
             ],
             BufferUsage::StaticDraw,
             (),

@@ -112,7 +112,7 @@ pub fn associated_type_to_trait(ty: &str) -> Option<Path> {
         || ty == "I32"
         || ty == "U32"
     {
-        Some(parse_quote!(::posh::Domain))
+        Some(parse_quote!(::posh::BlockDomain))
     } else {
         None
     }

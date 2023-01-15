@@ -7,105 +7,85 @@ use crate::{
 };
 
 use super::{
-    FragmentInterface, FragmentInterfaceVisitor, Primitive, ResourceInterface, Uniform, Vertex,
+    Block, FragmentInterface, FragmentInterfaceVisitor, Primitive, ResourceInterface,
     VertexInterface, VertexInterfaceVisitor,
 };
 
+// Block
+
 #[sealed]
-impl super::Domain for Gl {
+impl super::BlockDomain for Gl {
     type Scalar<T: Primitive> = T;
     type Vec2<T: Primitive> = mint::Vector2<T>;
     type Vec3<T: Primitive> = mint::Vector3<T>;
     type Vec4<T: Primitive> = mint::Vector4<T>;
-
+    type Mat2 = mint::ColumnMatrix2<f32>;
+    type Mat3 = mint::ColumnMatrix3<f32>;
+    type Mat4 = mint::ColumnMatrix4<f32>;
     type Bool = bool;
     type F32 = f32;
     type I32 = i32;
     type U32 = u32;
 }
 
-// Uniform
-
-unsafe impl Uniform<Gl> for bool {
+unsafe impl Block<Gl> for bool {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
 }
 
-unsafe impl Uniform<Gl> for f32 {
+unsafe impl Block<Gl> for f32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
 }
 
-unsafe impl Uniform<Gl> for i32 {
+unsafe impl Block<Gl> for i32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
 }
 
-unsafe impl Uniform<Gl> for u32 {
+unsafe impl Block<Gl> for u32 {
     type InGl = Self;
     type InSl = sl::Scalar<Self>;
 }
 
-unsafe impl<T: Primitive> Uniform<Gl> for mint::Vector2<T> {
+unsafe impl<T: Primitive> Block<Gl> for mint::Vector2<T> {
     type InGl = T::Vec2;
     type InSl = sl::Vec2<T>;
 }
 
-unsafe impl<T: Primitive> Uniform<Gl> for mint::Vector3<T> {
+unsafe impl<T: Primitive> Block<Gl> for mint::Vector3<T> {
     type InGl = T::Vec3;
     type InSl = sl::Vec3<T>;
 }
 
-unsafe impl<T: Primitive> Uniform<Gl> for mint::Vector4<T> {
+unsafe impl<T: Primitive> Block<Gl> for mint::Vector4<T> {
     type InGl = T::Vec4;
     type InSl = sl::Vec4<T>;
 }
 
-// Vertex
-
-unsafe impl Vertex<Gl> for bool {
+unsafe impl Block<Gl> for mint::ColumnMatrix2<f32> {
     type InGl = Self;
-    type InSl = sl::Scalar<Self>;
+    type InSl = sl::Mat2;
 }
 
-unsafe impl Vertex<Gl> for f32 {
+unsafe impl Block<Gl> for mint::ColumnMatrix3<f32> {
     type InGl = Self;
-    type InSl = sl::Scalar<Self>;
+    type InSl = sl::Mat3;
 }
 
-unsafe impl Vertex<Gl> for i32 {
+unsafe impl Block<Gl> for mint::ColumnMatrix4<f32> {
     type InGl = Self;
-    type InSl = sl::Scalar<Self>;
-}
-
-unsafe impl Vertex<Gl> for u32 {
-    type InGl = Self;
-    type InSl = sl::Scalar<Self>;
-}
-
-unsafe impl<T: Primitive> Vertex<Gl> for mint::Vector2<T> {
-    type InGl = T::Vec2;
-    type InSl = sl::Vec2<T>;
-}
-
-unsafe impl<T: Primitive> Vertex<Gl> for mint::Vector3<T> {
-    type InGl = T::Vec3;
-    type InSl = sl::Vec3<T>;
-}
-
-unsafe impl<T: Primitive> Vertex<Gl> for mint::Vector4<T> {
-    type InGl = T::Vec4;
-    type InSl = sl::Vec4<T>;
+    type InSl = sl::Mat4;
 }
 
 // VertexInterface
 
 #[sealed]
 impl super::VertexDomain for Gl {
-    type Vertex<V: Vertex<Sl>> = VertexBuffer<V>;
+    type Vertex<V: Block<Sl>> = VertexBuffer<V>;
 }
 
-unsafe impl<V: Vertex<Sl>> VertexInterface<Gl> for VertexBuffer<V> {
+unsafe impl<V: Block<Sl>> VertexInterface<Gl> for VertexBuffer<V> {
     type InGl = Self;
     type InSl = V::InSl;
 
@@ -115,14 +95,14 @@ unsafe impl<V: Vertex<Sl>> VertexInterface<Gl> for VertexBuffer<V> {
 }
 
 #[sealed]
-impl<V: Vertex<Sl>> super::VertexInterfaceField<Gl> for VertexBuffer<V> {}
+impl<V: Block<Sl>> super::VertexInterfaceField<Gl> for VertexBuffer<V> {}
 
 // ResourceInterface
 
 #[sealed]
 impl super::ResourceDomain for Gl {
     type Sampler2d<T: Numeric> = Sampler2dBinding<T>;
-    type Uniform<U: Uniform<Sl, InSl = U>> = UniformBufferBinding<U>;
+    type Uniform<U: Block<Sl, InSl = U>> = UniformBufferBinding<U>;
     type Compose<R: ResourceInterface<Sl>> = R::InGl;
 }
 
@@ -135,7 +115,7 @@ unsafe impl<T: Numeric> ResourceInterface<Gl> for Sampler2dBinding<T> {
     }
 }
 
-unsafe impl<U: Uniform<Sl, InSl = U>> ResourceInterface<Gl> for UniformBufferBinding<U> {
+unsafe impl<U: Block<Sl, InSl = U>> ResourceInterface<Gl> for UniformBufferBinding<U> {
     type InGl = Self;
     type InSl = U;
 

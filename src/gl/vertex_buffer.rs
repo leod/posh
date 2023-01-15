@@ -1,6 +1,8 @@
 use std::{marker::PhantomData, rc::Rc};
 
-use crate::{interface::ToPod, Sl, Vertex};
+use crevice::std140::AsStd140;
+
+use crate::{Block, Sl};
 
 use super::{untyped, BufferUsage};
 
@@ -10,7 +12,7 @@ pub struct VertexBuffer<V> {
     _phantom: PhantomData<V>,
 }
 
-impl<V: Vertex<Sl>> VertexBuffer<V> {
+impl<V: Block<Sl>> VertexBuffer<V> {
     pub(crate) fn from_untyped(untyped: untyped::Buffer) -> Self {
         assert!(vertex_size::<V>() > 0);
         assert_eq!(untyped.len() % vertex_size::<V>(), 0);
@@ -44,6 +46,6 @@ impl<V: Vertex<Sl>> VertexBuffer<V> {
     }
 }
 
-pub(super) const fn vertex_size<V: Vertex<Sl>>() -> usize {
-    std::mem::size_of::<<V::InGl as ToPod>::Output>()
+pub(super) const fn vertex_size<V: Block<Sl>>() -> usize {
+    std::mem::size_of::<<V::InGl as AsStd140>::Output>()
 }

@@ -35,7 +35,7 @@ pub use {
     vec::{vec2, vec3, vec4, Vec2, Vec3, Vec4},
 };
 
-pub use posh_derive::{ToValue, Value};
+pub use posh_derive::Value;
 
 /// Base trait for types representing objects in the shading language.
 ///

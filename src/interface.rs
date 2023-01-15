@@ -4,32 +4,42 @@ mod sl;
 #[cfg(tests)]
 mod tests;
 
-use bytemuck::Pod;
 use crevice::std140::AsStd140;
 use sealed::sealed;
 
 use crate::{
     program_def::{VertexAttributeDef, VertexInputRate},
-    sl::{Bool, Scalar, ToValue, Value, Vec2, Vec3, Vec4, F32, I32, U32},
+    sl::{Bool, Mat2, Mat3, Mat4, Scalar, ToValue, Value, Vec2, Vec3, Vec4, F32, I32, U32},
     Gl, Sl,
 };
 
 pub use numeric::{Numeric, Primitive};
 
-/// Provides types for [`Uniform`] or [`Vertex`] declarations.
+// Block
+
+/// Provides types for [`Block`] declarations.
 #[sealed]
-pub trait Domain: Copy {
+pub trait BlockDomain: Copy {
     /// A scalar value.
-    type Scalar<T: Primitive>: Uniform<Self> + Vertex<Self> + ToValue<Output = Scalar<T>>;
+    type Scalar<T: Primitive>: Block<Self> + ToValue<Output = Scalar<T>>;
 
     /// A two-dimensional vector.
-    type Vec2<T: Primitive>: Uniform<Self> + Vertex<Self> + ToValue<Output = Vec2<T>>;
+    type Vec2<T: Primitive>: Block<Self> + ToValue<Output = Vec2<T>>;
 
     /// A three-dimensional vector.
-    type Vec3<T: Primitive>: Uniform<Self> + Vertex<Self> + ToValue<Output = Vec3<T>>;
+    type Vec3<T: Primitive>: Block<Self> + ToValue<Output = Vec3<T>>;
 
     /// A three-dimensional vector.
-    type Vec4<T: Primitive>: Uniform<Self> + Vertex<Self> + ToValue<Output = Vec4<T>>;
+    type Vec4<T: Primitive>: Block<Self> + ToValue<Output = Vec4<T>>;
+
+    /// A two-by-two matrix.
+    type Mat2: Block<Self> + ToValue<Output = Mat2>;
+
+    /// A three-by-three matrix.
+    type Mat3: Block<Self> + ToValue<Output = Mat3>;
+
+    /// A four-by-four matrix.
+    type Mat4: Block<Self> + ToValue<Output = Mat4>;
 
     // TODO: This needs support for arrays in crevice.
     /*type Array<V: Uniform<Sl> + ValueNonArray, const N: usize>: Uniform<Self>
@@ -38,97 +48,56 @@ pub trait Domain: Copy {
     /// A boolean value.
     ///
     /// Shorthand for [`Self::Scalar<bool>`].
-    type Bool: Uniform<Self> + Vertex<Self> + ToValue<Output = Bool>;
+    type Bool: Block<Self> + ToValue<Output = Bool>;
 
     /// A floating-point value.
     ///
     /// Shorthand for [`Self::Scalar<f32>`].
-    type F32: Uniform<Self> + Vertex<Self> + ToValue<Output = F32>;
+    type F32: Block<Self> + ToValue<Output = F32>;
 
     /// A signed integer value.
     ///
     /// Shorthand for [`Self::Scalar<i32>`].
-    type I32: Uniform<Self> + Vertex<Self> + ToValue<Output = I32>;
+    type I32: Block<Self> + ToValue<Output = I32>;
 
     /// An unsigned integer value.
     ///
     /// Shorthand for [`Self::Scalar<u32>`].
-    type U32: Uniform<Self> + Vertex<Self> + ToValue<Output = U32>;
+    type U32: Block<Self> + ToValue<Output = U32>;
 }
 
-// Uniform interface
-
-/// Uniform data.
-///
-/// Types that implement this can be passed to shaders as a
-/// [resource](`ResourceInterface`).
+/// Plain-old-data that can be passed to shaders.
 ///
 /// User-defined types can implement this trait with a [derive
-/// macro](`posh_derive::Uniform`).
+/// macro](`posh_derive::Block`).
 ///
 /// # Safety
 ///
 /// TODO
-pub unsafe trait Uniform<D: Domain>: ToValue {
+pub unsafe trait Block<D: BlockDomain>: ToValue {
     /// The representation of [`Self`] in the graphics library domain [`Gl`].
     ///
-    /// This is the type through which uniform data is provided on the host.
-    type InGl: Uniform<Gl> + AsStd140 + ToValue<Output = Self::InSl>;
+    /// This is the type through which the host provides block data.
+    type InGl: Block<Gl> + AsStd140 + ToValue<Output = Self::InSl>;
 
     /// The representation of [`Self`] in the shading language domain [`Sl`].
     ///
-    /// This is the type through which uniform data is read in shaders.
-    type InSl: Uniform<Sl> + Value + ToValue<Output = Self::InSl>;
+    /// This is the type through which shaders access block data.
+    type InSl: Block<Sl> + Value + ToValue<Output = Self::InSl>;
 
     #[doc(hidden)]
-    fn shader_input(path: &str) -> Self {
+    fn uniform_input(path: &str) -> Self {
         unimplemented!()
     }
-}
-
-// Vertex
-
-/// Conversion to a type that implements [`Pod`].
-///
-/// TODO: This is a workarond for `mint` not supporting `bytemuck`.
-///
-/// # Safety
-///
-/// TODO
-#[doc(hidden)]
-pub unsafe trait ToPod: Copy {
-    type Output: Pod;
-
-    fn to_pod(self) -> Self::Output;
-}
-
-/// Vertex data.
-///
-/// User-defined types can implement this trait with a [derive
-/// macro](`posh_derive::Vertex`).
-///
-/// # Safety
-///
-/// TODO
-pub unsafe trait Vertex<D: Domain>: ToValue {
-    /// The representation of [`Self`] in the graphics library domain [`Gl`].
-    ///
-    /// This is the type through which vertex data is provided on the host.
-    type InGl: Vertex<Gl> + ToPod + ToValue<Output = Self::InSl>;
-
-    /// The representation of [`Self`] in the shading language domain [`Sl`].
-    ///
-    /// This is the type through which vertex data is read in shaders.
-    type InSl: Vertex<Sl> + Value + ToValue<Output = Self::InSl>;
 
     #[doc(hidden)]
-    fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
-        <Self::InSl as Vertex<Sl>>::attribute_defs(path)
+    fn vertex_input(path: &str) -> Self {
+        unimplemented!()
     }
 
     #[doc(hidden)]
-    fn shader_input(path: &str) -> Self {
-        unimplemented!()
+    fn vertex_attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
+        <Self::InSl as Block<Sl>>::vertex_attribute_defs(path)
     }
 }
 
@@ -136,9 +105,9 @@ pub unsafe trait Vertex<D: Domain>: ToValue {
 
 /// Provides types for [`VertexInterface`] declarations.
 #[sealed]
-pub trait VertexDomain: Domain {
+pub trait VertexDomain: BlockDomain {
     /// A vertex field.
-    type Vertex<V: Vertex<Sl>>: VertexInterfaceField<Self>;
+    type Vertex<V: Block<Sl>>: VertexInterfaceField<Self>;
 }
 
 /// Types that are allowed to occur in a [`VertexInterface`].
@@ -181,7 +150,7 @@ pub unsafe trait VertexInterface<D: VertexDomain>: Sized {
 }
 
 pub trait VertexInterfaceVisitor<'a, D: VertexDomain> {
-    fn accept<V: Vertex<Sl>>(
+    fn accept<V: Block<Sl>>(
         &mut self,
         path: &str,
         input_rate: VertexInputRate,
@@ -193,12 +162,12 @@ pub trait VertexInterfaceVisitor<'a, D: VertexDomain> {
 
 /// Provides types for [`ResourceInterface`] declarations.
 #[sealed]
-pub trait ResourceDomain: Domain {
+pub trait ResourceDomain: BlockDomain {
     /// A two-dimensional sampler field.
     type Sampler2d<T: Numeric>: ResourceInterface<Self>;
 
     /// A uniform field.
-    type Uniform<U: Uniform<Sl, InSl = U>>: ResourceInterface<Self>;
+    type Uniform<U: Block<Sl, InSl = U>>: ResourceInterface<Self>;
 
     /// A resource interface field.
     type Compose<R: ResourceInterface<Sl>>: ResourceInterface<Self>;
@@ -256,7 +225,7 @@ unsafe impl<D: ResourceDomain> ResourceInterface<D> for () {
 pub trait ResourceInterfaceVisitor<'a, D: ResourceDomain> {
     fn accept_sampler2d<T: Numeric>(&mut self, path: &str, sampler: &'a D::Sampler2d<T>);
 
-    fn accept_uniform<U: Uniform<Sl, InSl = U>>(&mut self, path: &str, uniform: &'a D::Uniform<U>);
+    fn accept_uniform<U: Block<Sl, InSl = U>>(&mut self, path: &str, uniform: &'a D::Uniform<U>);
 }
 
 // FragmentInterface

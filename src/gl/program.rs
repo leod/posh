@@ -65,7 +65,7 @@ impl<'a> ResourceInterfaceVisitor<'a, Gl> for ResourceVisitor<'a> {
         todo!()
     }
 
-    fn accept_uniform<U: crate::Uniform<Sl, InSl = U>>(
+    fn accept_uniform<U: crate::Block<Sl, InSl = U>>(
         &mut self,
         _: &str,
         uniform: &'a UniformBufferBinding<U>,
