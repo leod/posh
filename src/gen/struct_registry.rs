@@ -125,6 +125,10 @@ fn collect_structs_in_expr(
                 collect_structs_in_expr(arg, visited, structs);
             }
         }
+        Subscript { base, index, .. } => {
+            collect_structs_in_expr(base, visited, structs);
+            collect_structs_in_expr(index, visited, structs);
+        }
         Field { base, .. } => {
             collect_structs_in_expr(base, visited, structs);
         }

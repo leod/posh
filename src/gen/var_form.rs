@@ -115,6 +115,11 @@ impl VarForm {
                 name,
                 ty,
             },
+            Expr::Subscript { base, index, ty } => SimplifiedExpr::Subscript {
+                base: Box::new(map_succ(base)),
+                index: Box::new(map_succ(index)),
+                ty,
+            },
             Expr::Branch { cond, yes, no, ty } => SimplifiedExpr::Branch {
                 cond: Box::new(map_succ(cond)),
                 yes: Box::new(map_succ(yes)),
@@ -134,6 +139,7 @@ impl VarForm {
             | Binary { .. }
             | CallFuncDef { .. }
             | CallBuiltIn { .. }
+            | Subscript { .. }
             | Field { .. } => count > 1,
         }
     }
@@ -169,6 +175,10 @@ fn successors(expr: &Expr, mut f: impl FnMut(&Rc<Expr>)) {
         }
         Field { base, .. } => {
             f(base);
+        }
+        Subscript { base, index, .. } => {
+            f(base);
+            f(index);
         }
         Branch { cond, yes, no, .. } => {
             f(cond);

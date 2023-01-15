@@ -98,6 +98,7 @@ impl<'a> ScopeForm<'a> {
                 | ScalarLiteral { .. }
                 | Binary { .. }
                 | CallFunc { .. }
+                | Subscript { .. }
                 | Field { .. }
                 | Var { .. } => {
                     scope_form.insert_deps(parent_id, var_expr);
@@ -185,6 +186,9 @@ fn unscoped_successors(expr: &SimplifiedExpr, f: &mut impl FnMut(VarId)) {
             }
         }
         Field { base, .. } => {
+            unscoped_successors(base, f);
+        }
+        Subscript { base, index, .. } => {
             unscoped_successors(base, f);
         }
         Var { id, .. } => {

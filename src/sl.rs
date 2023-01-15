@@ -4,6 +4,7 @@
 
 #[macro_use]
 mod gen_type;
+mod array;
 mod sampler;
 mod scalar;
 mod shader;
@@ -15,10 +16,13 @@ pub(crate) mod primitives;
 
 use std::{collections::BTreeMap, rc::Rc};
 
+use crate::dag::BaseType;
+
 use super::dag::{Expr, StructType, Type};
 
 pub(crate) use shader::Private;
 pub use {
+    array::Array,
     sampler::Sampler2d,
     scalar::{Bool, Scalar, F32, I32, U32},
     shader::{
@@ -59,13 +63,21 @@ pub trait Object: 'static {
 /// is [`Sampler2d`].
 ///
 /// The interface of this trait is a private implementation detail.
-pub trait Value: Object {
+pub trait Value: Object + Copy {
     #[doc(hidden)]
     fn from_expr(expr: Expr) -> Self;
 }
 
+/// A transparent non-array value in the shading value.
+///
+/// The interface of this trait is a private implementation detail.
+pub trait ValueNonArray: Value {
+    #[doc(hidden)]
+    fn base_type() -> BaseType;
+}
+
 #[doc(hidden)]
-pub trait Struct: Value {
+pub trait Struct: ValueNonArray {
     #[doc(hidden)]
     fn struct_type() -> Rc<StructType>;
 }

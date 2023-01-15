@@ -52,6 +52,7 @@ impl Display for Expr {
             CallFuncDef { def, args } => write_call(f, def.name, args),
             CallBuiltIn { name, args, .. } => write_call(f, name, args),
             Field { base, name, .. } => write!(f, "{base}.{name}"),
+            Subscript { base, index, .. } => write!(f, "{base}[{index}]"),
             Branch { cond, yes, no, .. } => write!(f, "({cond} ? {yes} : {no})"),
         }
     }
