@@ -12,7 +12,7 @@ use super::{
 };
 
 #[derive(Clone)]
-pub struct VertexArray<V: VertexInterface<Sl>, E = ()>
+pub struct VertexArray<V, E = ()>
 where
     V: VertexInterface<Sl>,
     E: ElementOrUnit,

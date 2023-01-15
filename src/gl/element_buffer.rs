@@ -45,6 +45,9 @@ impl Element for u32 {
     const TYPE: ElementType = ElementType::U32;
 }
 
+/// Stores element data in a buffer on the GPU.
+///
+/// Instances of `ElementBuffer` can be created with [`Context::create_element_buffer`](crate::gl::Context::create_element_buffer).
 #[derive(Clone)]
 pub struct ElementBuffer<E> {
     pub(crate) untyped: Rc<untyped::Buffer>,

@@ -6,6 +6,10 @@ use crate::{Block, Sl};
 
 use super::{untyped, BufferUsage};
 
+/// Stores vertices in a buffer on the GPU.
+///
+/// Instances of `VertexBuffer` can be created with
+/// [`Context::create_vertex_buffer`](crate::gl::Context::create_vertex_buffer).
 #[derive(Clone)]
 pub struct VertexBuffer<V> {
     pub(crate) untyped: Rc<untyped::Buffer>,
