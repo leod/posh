@@ -35,7 +35,7 @@ fn vertex_shader(globals: Globals, vertex: ColorVertex) -> VaryingOutput<sl::Vec
         false.to_value().branch(x * -1.0, x * -2.0)
     });
 
-    let position = vertex.position + shift2;
+    let position = sl::Mat2::identity() * vertex.position + shift2 + sl::Mat2::diagonal(4.0).x;
 
     VaryingOutput {
         varying: sl::Vec4::default(),

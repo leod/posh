@@ -5,6 +5,7 @@
 #[macro_use]
 mod gen_type;
 mod array;
+mod mat;
 mod sampler;
 mod scalar;
 mod shader;
@@ -23,6 +24,7 @@ use super::dag::{Expr, StructType, Type};
 pub(crate) use shader::Private;
 pub use {
     array::Array,
+    mat::{mat2, mat3, mat4, Mat2, Mat3, Mat4},
     sampler::Sampler2d,
     scalar::{Bool, Scalar, F32, I32, U32},
     shader::{

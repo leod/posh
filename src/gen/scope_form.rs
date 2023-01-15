@@ -190,6 +190,7 @@ fn unscoped_successors(expr: &SimplifiedExpr, f: &mut impl FnMut(VarId)) {
         }
         Subscript { base, index, .. } => {
             unscoped_successors(base, f);
+            unscoped_successors(index, f);
         }
         Var { id, .. } => {
             f(*id);
