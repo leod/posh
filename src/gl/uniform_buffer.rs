@@ -6,6 +6,10 @@ use crate::{Block, Sl};
 
 use super::{untyped, BufferUsage};
 
+/// Stores uniform data in a buffer on the GPU.
+///
+/// Instances of `UniformBuffer` can be created with
+/// [`Context::create_uniform_buffer`](crate::gl::Context::create_uniform_buffer).
 #[derive(Clone)]
 pub struct UniformBuffer<U> {
     pub(crate) untyped: Rc<untyped::Buffer>,
