@@ -20,6 +20,7 @@ struct Globals<D: Domain = Sl> {
 struct ColorVertex<D: Domain = Sl> {
     position: D::Vec2<f32>,
     color: D::Vec2<f32>,
+    flags: D::Vec4<bool>,
 }
 
 fn vertex_shader(globals: Globals, vertex: ColorVertex) -> VaryingOutput<sl::Vec4<f32>> {

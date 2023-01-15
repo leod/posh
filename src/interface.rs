@@ -9,7 +9,7 @@ use sealed::sealed;
 
 use crate::{
     program_def::{VertexAttributeDef, VertexInputRate},
-    sl::{Bool, Scalar, ToValue, Value, Vec2, F32, I32, U32},
+    sl::{Bool, Scalar, ToValue, Value, Vec2, Vec3, Vec4, F32, I32, U32},
     Gl, Numeric, Primitive, Sl,
 };
 
@@ -21,6 +21,12 @@ pub trait Domain: Copy {
 
     /// A two-dimensional vector.
     type Vec2<T: Primitive>: Uniform<Self> + Vertex<Self> + ToValue<Output = Vec2<T>>;
+
+    /// A three-dimensional vector.
+    type Vec3<T: Primitive>: Uniform<Self> + Vertex<Self> + ToValue<Output = Vec3<T>>;
+
+    /// A three-dimensional vector.
+    type Vec4<T: Primitive>: Uniform<Self> + Vertex<Self> + ToValue<Output = Vec4<T>>;
 
     // TODO: This needs support for arrays in crevice.
     /*type Array<V: Uniform<Sl> + ValueNonArray, const N: usize>: Uniform<Self>
@@ -72,7 +78,9 @@ pub unsafe trait Uniform<D: Domain>: ToValue {
     type InSl: Uniform<Sl> + Value + ToValue<Output = Self::InSl>;
 
     #[doc(hidden)]
-    fn shader_input(path: &str) -> Self;
+    fn shader_input(path: &str) -> Self {
+        unimplemented!()
+    }
 }
 
 // Vertex
@@ -111,10 +119,14 @@ pub unsafe trait Vertex<D: Domain>: ToValue {
     type InSl: Vertex<Sl> + Value + ToValue<Output = Self::InSl>;
 
     #[doc(hidden)]
-    fn attribute_defs(path: &str) -> Vec<VertexAttributeDef>;
+    fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
+        <Self::InSl as Vertex<Sl>>::attribute_defs(path)
+    }
 
     #[doc(hidden)]
-    fn shader_input(path: &str) -> Self;
+    fn shader_input(path: &str) -> Self {
+        unimplemented!()
+    }
 }
 
 // VertexInterface
