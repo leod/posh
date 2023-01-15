@@ -1,4 +1,4 @@
-use bytemuck::{Pod, Zeroable};
+use bytemuck::Pod;
 use crevice::std140::AsStd140;
 use sealed::sealed;
 
@@ -46,41 +46,23 @@ pub trait Primitive:
         + ToValue<Output = Vec4<Self>>;
 }
 
-#[sealed]
-impl Primitive for bool {
-    const PRIMITIVE_TYPE: PrimitiveType = PrimitiveType::Bool;
+macro_rules! impl_primitive {
+    ($ty:ty, $prim:expr) => {
+        #[sealed]
+        impl Primitive for $ty {
+            const PRIMITIVE_TYPE: PrimitiveType = $prim;
 
-    type Vec2 = mint::Vector2<bool>;
-    type Vec3 = mint::Vector3<bool>;
-    type Vec4 = mint::Vector4<bool>;
+            type Vec2 = mint::Vector2<$ty>;
+            type Vec3 = mint::Vector3<$ty>;
+            type Vec4 = mint::Vector4<$ty>;
+        }
+    };
 }
 
-#[sealed]
-impl Primitive for i32 {
-    const PRIMITIVE_TYPE: PrimitiveType = PrimitiveType::Numeric(NumericType::I32);
-
-    type Vec2 = mint::Vector2<i32>;
-    type Vec3 = mint::Vector3<i32>;
-    type Vec4 = mint::Vector4<i32>;
-}
-
-#[sealed]
-impl Primitive for u32 {
-    const PRIMITIVE_TYPE: PrimitiveType = PrimitiveType::Numeric(NumericType::U32);
-
-    type Vec2 = mint::Vector2<u32>;
-    type Vec3 = mint::Vector3<u32>;
-    type Vec4 = mint::Vector4<u32>;
-}
-
-#[sealed]
-impl Primitive for f32 {
-    const PRIMITIVE_TYPE: PrimitiveType = PrimitiveType::Numeric(NumericType::F32);
-
-    type Vec2 = mint::Vector2<f32>;
-    type Vec3 = mint::Vector3<f32>;
-    type Vec4 = mint::Vector4<f32>;
-}
+impl_primitive!(bool, PrimitiveType::Bool);
+impl_primitive!(i32, PrimitiveType::Numeric(NumericType::I32));
+impl_primitive!(u32, PrimitiveType::Numeric(NumericType::U32));
+impl_primitive!(f32, PrimitiveType::Numeric(NumericType::F32));
 
 /// One of `f32`, `i32`, or `u32`.
 #[sealed]
@@ -113,23 +95,11 @@ impl Numeric for u32 {
     type Vec2 = mint::Vector2<u32>;
 }
 
-#[derive(Clone, Copy, Eq, PartialEq, Pod, Zeroable)]
-#[repr(transparent)]
-pub struct BoolField(u32);
-
-unsafe impl ToPod for BoolField {
-    type Output = Self;
-
-    fn to_pod(self) -> Self::Output {
-        self
-    }
-}
-
 unsafe impl ToPod for bool {
-    type Output = BoolField;
+    type Output = u32;
 
     fn to_pod(self) -> Self::Output {
-        BoolField(self as u32)
+        self as u32
     }
 }
 
@@ -150,14 +120,6 @@ unsafe impl ToPod for i32 {
 }
 
 unsafe impl ToPod for u32 {
-    type Output = Self;
-
-    fn to_pod(self) -> Self::Output {
-        self
-    }
-}
-
-unsafe impl<T: Pod + ToPod> ToPod for [T; 2] {
     type Output = Self;
 
     fn to_pod(self) -> Self::Output {
