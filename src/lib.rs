@@ -14,8 +14,11 @@ pub use interface::{
 
 pub use posh_derive::{Block, ResourceInterface, VertexInterface};
 
-pub use bytemuck;
 pub use crevice;
+
+// Only re-exported for `posh-derive`.
+#[doc(hidden)]
+pub use bytemuck;
 
 /// Utilities.
 pub mod util {
@@ -39,7 +42,7 @@ pub struct Gl;
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Sl;
 
-// Hidden unstable symbols, needed for `posh-derive`:
+// Hidden unstable symbols, needed for `posh-derive`.
 #[doc(hidden)]
 pub mod internal {
     pub use super::{
