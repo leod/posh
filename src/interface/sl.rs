@@ -1,10 +1,10 @@
 use sealed::sealed;
 
 use crate::{
-    dag::{BaseType, PrimitiveType, Type},
+    dag::{BaseType, NumericType, PrimitiveType, Type},
     gl::{self, Texture2dBinding},
     program_def::{VertexAttributeDef, VertexInputRate},
-    sl::{Object, Sampler2d, Scalar, Vec2, Vec4},
+    sl::{Object, Sampler2d, Scalar, Vec2, Vec4, U32},
     Numeric, Sl,
 };
 
@@ -46,6 +46,22 @@ unsafe impl<T: Primitive> Uniform<Sl> for Vec2<T> {
 
 // Vertex
 
+/// Returns the type that is used to specify a value of a given primitive type in vertex arrays.
+///
+/// This exists because OpenGL does not like `bool`s in attributes, but, for
+/// completeness, we want to be able to provide the same basic types in
+/// uniforms as in vertices. Among other things, this allows deriving both
+/// `Vertex` and `Uniform` for the same `struct`, which might be useful for
+/// supporting different instancing methods for the same data.
+fn numeric_repr(ty: PrimitiveType) -> PrimitiveType {
+    use PrimitiveType::*;
+
+    PrimitiveType::Numeric(match ty {
+        Numeric(ty) => ty,
+        Bool => NumericType::U32,
+    })
+}
+
 fn vertex_attribute_def(path: &str, base_type: BaseType) -> Vec<VertexAttributeDef> {
     vec![VertexAttributeDef {
         name: path.to_string(),
@@ -59,14 +75,15 @@ unsafe impl<T: Primitive> Vertex<Sl> for Scalar<T> {
     type InSl = Self;
 
     fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
-        vertex_attribute_def(
-            path,
-            BaseType::Scalar(PrimitiveType::Numeric(T::NUMERIC_REPR_TYPE)),
-        )
+        vertex_attribute_def(path, BaseType::Scalar(numeric_repr(T::PRIMITIVE_TYPE)))
     }
 
     fn shader_input(path: &str) -> Self {
-        <Self as Object>::from_arg(path)
+        if T::PRIMITIVE_TYPE != PrimitiveType::Bool {
+            <Self as Object>::from_arg(path)
+        } else {
+            U32::from_arg(path).cast()
+        }
     }
 }
 
@@ -75,14 +92,15 @@ unsafe impl<T: Primitive> Vertex<Sl> for Vec2<T> {
     type InSl = Self;
 
     fn attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
-        vertex_attribute_def(
-            path,
-            BaseType::Vec2(PrimitiveType::Numeric(T::NUMERIC_REPR_TYPE)),
-        )
+        vertex_attribute_def(path, BaseType::Vec2(numeric_repr(T::PRIMITIVE_TYPE)))
     }
 
     fn shader_input(path: &str) -> Self {
-        <Self as Object>::from_arg(path)
+        if T::PRIMITIVE_TYPE != PrimitiveType::Bool {
+            <Self as Object>::from_arg(path)
+        } else {
+            Vec2::<u32>::from_arg(path).cast()
+        }
     }
 }
 

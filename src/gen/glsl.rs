@@ -124,7 +124,7 @@ fn write_var(
             let ty_name = type_name(ctx.struct_registry, ty);
 
             writeln!(f, "{indent}{ty_name} {var_id};")?;
-            writeln!(f, "{indent}if {cond} {{")?;
+            writeln!(f, "{indent}if ({cond}) {{")?;
 
             {
                 let ctx = ctx.nest();

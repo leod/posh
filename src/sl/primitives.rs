@@ -28,7 +28,7 @@ where
     R::from_expr(expr)
 }
 
-pub(crate) fn built_in_1<U, R>(name: &'static str, u: impl ToValue<Output = U>) -> R
+pub(crate) fn built_in_1<U, R>(name: &str, u: impl ToValue<Output = U>) -> R
 where
     U: Object,
     R: Value,
@@ -43,7 +43,7 @@ where
 }
 
 pub(crate) fn built_in_2<U, V, R>(
-    name: &'static str,
+    name: &str,
     u: impl ToValue<Output = U>,
     v: impl ToValue<Output = V>,
 ) -> R
@@ -62,7 +62,7 @@ where
 }
 
 pub(crate) fn built_in_3<U, V, W, R>(
-    name: &'static str,
+    name: &str,
     u: impl ToValue<Output = U>,
     v: impl ToValue<Output = V>,
     w: impl ToValue<Output = W>,
@@ -87,7 +87,7 @@ where
 }
 
 pub(crate) fn built_in_4<U, V, W, X, R>(
-    name: &'static str,
+    name: &str,
     u: impl ToValue<Output = U>,
     v: impl ToValue<Output = V>,
     w: impl ToValue<Output = W>,

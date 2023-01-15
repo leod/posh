@@ -9,7 +9,7 @@ use crate::{
 };
 
 use super::{
-    primitives::{binary, common_field_base, field, value_arg},
+    primitives::{binary, built_in_1, common_field_base, field, value_arg},
     Object, Scalar, ToValue, Value,
 };
 
@@ -140,6 +140,12 @@ macro_rules! impl_value {
 
             fn to_value(self) -> Self::Output {
                 self
+            }
+        }
+
+        impl<T: Primitive> $ty<T> {
+            pub fn cast<U: Primitive>(self) -> $ty<U> {
+                built_in_1(&format!("{}", $ty::<U>::ty()), self)
             }
         }
     };

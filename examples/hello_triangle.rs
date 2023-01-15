@@ -6,7 +6,7 @@ use posh::{
         UniformBuffer, VertexArray,
     },
     sl::{self, ToValue, VaryingOutput},
-    Domain, Sl, Uniform,
+    Domain, Sl, Uniform, Vertex,
 };
 
 #[derive(Clone, Copy, ToValue, Uniform)]
@@ -14,11 +14,17 @@ struct MyUniform<D: Domain = Sl> {
     time: D::F32,
 }
 
-fn vertex_shader<Res>(_: Res, vertex: sl::Vec2<f32>) -> VaryingOutput<sl::Vec2<f32>> {
-    let shifted_pos = vertex - 0.5;
+#[derive(Clone, Copy, ToValue, Vertex)]
+struct MyVertex<D: Domain = Sl> {
+    pos: D::Vec2<f32>,
+    flag: D::Vec2<bool>,
+}
+
+fn vertex_shader<Res>(_: Res, vertex: MyVertex) -> VaryingOutput<sl::Vec2<f32>> {
+    let shifted_pos = vertex.pos - 0.5 * vertex.flag.x.branch(1.0, 2.0);
 
     VaryingOutput {
-        varying: vertex,
+        varying: vertex.pos,
         position: sl::vec4(shifted_pos.x, shifted_pos.y, 0.0, 1.0),
     }
 }
@@ -31,9 +37,9 @@ fn fragment_shader(uniform: MyUniform, varying: sl::Vec2<f32>) -> sl::Vec4<f32> 
 
 struct Demo {
     context: Context,
-    program: Program<MyUniform, sl::Vec2<f32>>,
+    program: Program<MyUniform, MyVertex>,
     uniform_buffer: UniformBuffer<MyUniform>,
-    vertex_array: VertexArray<sl::Vec2<f32>>,
+    vertex_array: VertexArray<MyVertex>,
     start_time: Instant,
 }
 
@@ -43,7 +49,20 @@ impl Demo {
         let uniform_buffer =
             context.create_uniform_buffer(MyUniform { time: 0.0 }, BufferUsage::StreamDraw)?;
         let vertex_array = context.create_simple_vertex_array(
-            &[[0.5f32, 1.0].into(), [0.0, 0.0].into(), [1.0, 0.0].into()],
+            &[
+                MyVertex {
+                    pos: [0.5f32, 1.0].into(),
+                    flag: [false, true].into(),
+                },
+                MyVertex {
+                    pos: [0.0, 0.0].into(),
+                    flag: [false, false].into(),
+                },
+                MyVertex {
+                    pos: [1.0, 0.0].into(),
+                    flag: [true, true].into(),
+                },
+            ],
             BufferUsage::StaticDraw,
             (),
         )?;

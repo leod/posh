@@ -46,14 +46,14 @@ where
 
         unsafe {
             self.untyped
-                .draw(&resource_visitor.uniform_buffers, geometry.untyped);
+                .draw(&resource_visitor.untyped_uniform_buffers, geometry.untyped);
         }
     }
 }
 
 #[derive(Default)]
 struct ResourceVisitor<'a> {
-    uniform_buffers: Vec<&'a untyped::Buffer>,
+    untyped_uniform_buffers: Vec<&'a untyped::Buffer>,
 }
 
 impl<'a> ResourceInterfaceVisitor<'a, Gl> for ResourceVisitor<'a> {
@@ -70,6 +70,6 @@ impl<'a> ResourceInterfaceVisitor<'a, Gl> for ResourceVisitor<'a> {
         _: &str,
         uniform: &'a UniformBufferBinding<U>,
     ) {
-        self.uniform_buffers.push(&uniform.untyped);
+        self.untyped_uniform_buffers.push(&uniform.untyped);
     }
 }
