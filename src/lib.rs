@@ -59,3 +59,6 @@ pub mod internal {
         format!("{lhs}_{rhs}")
     }
 }
+
+// Re-export `crate` as `posh` for `posh-derive`.
+extern crate self as posh;
