@@ -18,6 +18,7 @@ use super::{
     VertexArray, VertexBuffer,
 };
 
+/// The graphics context, which is used for creating GPU objects.
 pub struct Context {
     pub(crate) untyped: untyped::Context,
 }
