@@ -212,7 +212,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                     );
 
                     let attrs = <
-                        #field_types_sl as ::posh::Block<Sl>
+                        #field_types_sl as ::posh::Block<::posh::Sl>
                     >::vertex_attribute_defs(
                         &::posh::internal::join_ident_path(path, #field_strings),
                     );
