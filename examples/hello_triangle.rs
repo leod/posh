@@ -10,6 +10,8 @@ use posh::{
     Block, BlockDomain, Sl,
 };
 
+// Shader interface
+
 #[derive(Clone, Copy, Block)]
 struct MyUniform<D: BlockDomain = Sl> {
     time: D::F32,
@@ -20,6 +22,8 @@ struct MyVertex<D: BlockDomain = Sl> {
     pos: D::Vec2<f32>,
     flag: D::Vec2<bool>,
 }
+
+// Shader code
 
 fn vertex_shader<Res>(_: Res, vertex: MyVertex) -> VaryingOutput<sl::Vec2<f32>> {
     let shifted_pos = vertex.pos - 0.5 * vertex.flag.x.branch(1.0, 2.0);
@@ -36,6 +40,8 @@ fn fragment_shader(uniform: MyUniform, varying: sl::Vec2<f32>) -> sl::Vec4<f32> 
 
     sl::vec4(rg.x, rg.y, 0.5, 1.0)
 }
+
+// Host code
 
 struct Demo {
     context: Context,
@@ -100,15 +106,18 @@ impl Demo {
 fn main() {
     let sdl = sdl2::init().unwrap();
     let video = sdl.video().unwrap();
+
     let gl_attr = video.gl_attr();
     gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
     gl_attr.set_context_version(3, 0);
+
     let window = video
-        .window("Hello triangle!", 1024, 769)
+        .window("Hello triangle!", 1024, 768)
         .opengl()
         .resizable()
         .build()
         .unwrap();
+
     let _gl_context = window.gl_create_context().unwrap();
     let context = Context::new(unsafe {
         glow::Context::from_loader_function(|s| video.gl_get_proc_address(s) as *const _)
