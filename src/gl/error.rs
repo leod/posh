@@ -1,13 +1,16 @@
 use thiserror::Error;
 
+/// An error that occurred while creating a buffer.
 #[derive(Debug, Clone, Error)]
 #[error("failed to create buffer: {0}")]
 pub struct CreateBufferError(pub String);
 
+/// An error that occurred while creating a vertex array.
 #[derive(Debug, Clone, Error)]
 #[error("failed to create vertex array: {0}")]
 pub struct CreateVertexArrayError(pub String);
 
+/// An error that occurred while creating a program.
 #[derive(Debug, Clone, Error)]
 pub enum CreateProgramError {
     #[error("failed to create shader: {0}")]
@@ -24,6 +27,7 @@ pub enum CreateProgramError {
     },
 }
 
+/// An error that occured while creating a object.
 #[derive(Debug, Clone, Error)]
 pub enum CreateError {
     #[error("failed to create buffer: {0}")]

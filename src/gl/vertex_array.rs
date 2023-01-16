@@ -11,6 +11,12 @@ use super::{
     ElementSource, GeometryStream, GeometryType, VertexBuffer,
 };
 
+/// Combines buffers so that they can be used in [draw
+/// calls](crate::gl::Program::draw).
+///
+/// Instances of `VertexArray` can be created with
+/// [`Context::create_vertex_array`](crate::gl::Context::create_vertex_array) or
+/// [`Context::create_simple_vertex_array`](crate::gl::Context::create_simple_vertex_array).
 #[derive(Clone)]
 pub struct VertexArray<V, E = ()>
 where

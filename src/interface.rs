@@ -86,12 +86,12 @@ pub unsafe trait Block<D: BlockDomain>: ToValue {
     type InSl: Block<Sl> + Value + ToValue<Output = Self::InSl>;
 
     #[doc(hidden)]
-    fn uniform_input(path: &str) -> Self {
+    fn uniform_input(_path: &str) -> Self {
         unimplemented!()
     }
 
     #[doc(hidden)]
-    fn vertex_input(path: &str) -> Self {
+    fn vertex_input(_path: &str) -> Self {
         unimplemented!()
     }
 
@@ -105,7 +105,7 @@ pub unsafe trait Block<D: BlockDomain>: ToValue {
 
 /// Provides types for [`VertexInterface`] declarations.
 #[sealed]
-pub trait VertexDomain: BlockDomain {
+pub trait VertexDomain: Copy {
     /// A vertex field.
     type Vertex<V: Block<Sl>>: VertexInterfaceField<Self>;
 }
@@ -114,7 +114,7 @@ pub trait VertexDomain: BlockDomain {
 #[sealed]
 #[doc(hidden)]
 pub trait VertexInterfaceField<D: VertexDomain>: Sized {
-    fn shader_input(path: &str) -> Self {
+    fn shader_input(_path: &str) -> Self {
         unimplemented!()
     }
 }
@@ -144,7 +144,7 @@ pub unsafe trait VertexInterface<D: VertexDomain>: Sized {
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl VertexInterfaceVisitor<'a, D>);
 
     #[doc(hidden)]
-    fn shader_input(path: &str) -> Self {
+    fn shader_input(_path: &str) -> Self {
         unimplemented!()
     }
 }
@@ -162,7 +162,7 @@ pub trait VertexInterfaceVisitor<'a, D: VertexDomain> {
 
 /// Provides types for [`ResourceInterface`] declarations.
 #[sealed]
-pub trait ResourceDomain: BlockDomain {
+pub trait ResourceDomain: Copy {
     /// A two-dimensional sampler field.
     type Sampler2d<T: Numeric>: ResourceInterface<Self>;
 
@@ -207,7 +207,7 @@ pub unsafe trait ResourceInterface<D: ResourceDomain>: Sized {
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl ResourceInterfaceVisitor<'a, D>);
 
     #[doc(hidden)]
-    fn shader_input(path: &str) -> Self {
+    fn shader_input(_path: &str) -> Self {
         unimplemented!()
     }
 }
@@ -232,7 +232,7 @@ pub trait ResourceInterfaceVisitor<'a, D: ResourceDomain> {
 
 /// Provides types for [`FragmentInterface`] declarations.
 #[sealed]
-pub trait FragmentDomain: Sized {
+pub trait FragmentDomain: Copy {
     type Attachment: FragmentInterface<Self>;
 }
 
