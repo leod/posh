@@ -92,7 +92,7 @@ pub trait BlockDomain: Copy {
 ///
 /// Types that implement [`Block`] can appear in two parts of shader interfaces:
 /// 1. As vertex data in a [`VertexInterface`].
-/// 2. As uniform data in a [`ResourceInterface`]
+/// 2. As uniform block in a [`UniformInterface`]
 ///
 /// [`Block`] declarations are generic in [`BlockDomain`]. By convention, the
 /// generic domain parameter should be named `D`, and its default value should
@@ -223,7 +223,7 @@ pub trait VertexInterfaceField<D: VertexDomain>: Sized {
 ///
 /// // A vertex shader that uses `MyVertexIface`.
 /// fn my_vertex_shader(
-///     resources: (),
+///     uniforms: (),
 ///     vertex: MyVertexIface,
 /// ) -> VaryingOutput<sl::Vec4<f32>> {
 ///     VaryingOutput {
@@ -267,53 +267,53 @@ pub trait VertexInterfaceVisitor<'a, D: VertexDomain> {
     );
 }
 
-// ResourceInterface
+// UniformInterface
 
-/// Provides types for [`ResourceInterface`] declarations.
+/// Provides types for [`UniformInterface`] declarations.
 #[sealed]
-pub trait ResourceDomain: Copy {
+pub trait UniformDomain: Copy {
+    /// A uniform block field.
+    type Block<U: Block<Sl, InSl = U>>: UniformInterface<Self>;
+
     /// A two-dimensional sampler field.
-    type Sampler2d<T: Numeric>: ResourceInterface<Self>;
+    type Sampler2d<T: Numeric>: UniformInterface<Self>;
 
-    /// A uniform field.
-    type Uniform<U: Block<Sl, InSl = U>>: ResourceInterface<Self>;
-
-    /// A resource interface field.
-    type Compose<R: ResourceInterface<Sl>>: ResourceInterface<Self>;
+    /// A nested uniform interface field.
+    type Compose<R: UniformInterface<Sl>>: UniformInterface<Self>;
 }
 
-/// A shader resource input interface.
+/// A uniform input interface for shaders.
 ///
-/// Resources give shaders access to uniforms or samplers to shaders that are
-/// bound by the host. Resources can be used in both vertex shaders and fragment
-/// shaders. In order to link a vertex shader with a fragment shader, they must
-/// use the same resource type. See
+/// Gives shaders access to uniform blocks or samplers that are bound by the
+/// host. Uniforms can be used in both vertex shaders and fragment shaders. In
+/// order to link a vertex shader with a fragment shader, they must use the same
+/// uniform interface. See
 /// [`create_program`](crate::gl::Context::create_program) for details.
 ///
 /// User-defined types can implement this trait with a [derive
-/// macro](`posh_derive::ResourceInterface`).
+/// macro](`posh_derive::UniformInterface`).
 ///
 /// # Safety
 ///
 /// TODO
-pub unsafe trait ResourceInterface<D: ResourceDomain>: Sized {
+pub unsafe trait UniformInterface<D: UniformDomain>: Sized {
     /// The representation of [`Self`] in the graphics library domain [`Gl`].
     ///
-    /// Provides resource bindings such as [uniform
+    /// Provides uniform bindings such as [uniform
     /// buffers](crate::gl::UniformBuffer) or [samplers](crate::gl::Sampler2d).
     /// This is specified on the host through [draw
-    /// calls](crate::gl::Program::draw) with programs using this resource
+    /// calls](crate::gl::Program::draw) with programs using this uniform
     /// interface.
-    type InGl: ResourceInterface<Gl>;
+    type InGl: UniformInterface<Gl>;
 
     /// The representation of [`Self`] in the shading language domain [`Sl`].
     ///
-    /// The input that user-defined shaders using this resource interface
+    /// The input that user-defined shaders using this uniform interface
     /// receive.
-    type InSl: ResourceInterface<Sl>;
+    type InSl: UniformInterface<Sl>;
 
     #[doc(hidden)]
-    fn visit<'a>(&'a self, path: &str, visitor: &mut impl ResourceInterfaceVisitor<'a, D>);
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl UniformInterfaceVisitor<'a, D>);
 
     #[doc(hidden)]
     fn shader_input(_path: &str) -> Self {
@@ -321,20 +321,20 @@ pub unsafe trait ResourceInterface<D: ResourceDomain>: Sized {
     }
 }
 
-unsafe impl<D: ResourceDomain> ResourceInterface<D> for () {
+unsafe impl<D: UniformDomain> UniformInterface<D> for () {
     type InGl = ();
     type InSl = ();
 
-    fn visit<'a>(&self, _: &str, _: &mut impl ResourceInterfaceVisitor<'a, D>) {}
+    fn visit<'a>(&self, _: &str, _: &mut impl UniformInterfaceVisitor<'a, D>) {}
 
     fn shader_input(_: &str) -> Self {}
 }
 
 #[doc(hidden)]
-pub trait ResourceInterfaceVisitor<'a, D: ResourceDomain> {
+pub trait UniformInterfaceVisitor<'a, D: UniformDomain> {
     fn accept_sampler2d<T: Numeric>(&mut self, path: &str, sampler: &'a D::Sampler2d<T>);
 
-    fn accept_uniform<U: Block<Sl, InSl = U>>(&mut self, path: &str, uniform: &'a D::Uniform<U>);
+    fn accept_uniform<U: Block<Sl, InSl = U>>(&mut self, path: &str, uniform: &'a D::Block<U>);
 }
 
 // FragmentInterface

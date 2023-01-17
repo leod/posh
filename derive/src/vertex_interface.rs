@@ -62,10 +62,11 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
         // Check that all field types implement `VertexInterfaceField<D>`.
         const _: fn() = || {
-            fn check_field<
+            fn check_field<D, V>()
+            where
                 D: ::posh::VertexDomain,
-                T: ::posh::internal::VertexInterfaceField<D>,
-            >() {}
+                V: ::posh::internal::VertexInterfaceField<D>,
+            {}
 
             fn check_struct #impl_generics(value: &#ident #ty_generics) #where_clause {
                 #(

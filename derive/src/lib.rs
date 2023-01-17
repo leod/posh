@@ -1,5 +1,5 @@
 mod block;
-mod resource_interface;
+mod uniform_interface;
 mod utils;
 mod value;
 mod vertex_interface;
@@ -9,7 +9,7 @@ use syn::{parse_macro_input, DeriveInput};
 
 /// Derives `Block` for a struct that is generic in `BlockDomain`.
 #[proc_macro_derive(Block)]
-pub fn derive_uniform(input: TokenStream) -> TokenStream {
+pub fn derive_block(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match block::derive(input) {
         Ok(ts) => ts,
@@ -18,11 +18,11 @@ pub fn derive_uniform(input: TokenStream) -> TokenStream {
     .into()
 }
 
-/// Derives `ResourceInterface` for a struct that is generic in `ResourceDomain`.
-#[proc_macro_derive(ResourceInterface)]
-pub fn derive_resource_interface(input: TokenStream) -> TokenStream {
+/// Derives `UniformInterface` for a struct that is generic in `UniformDomain`.
+#[proc_macro_derive(UniformInterface)]
+pub fn derive_uniform_interface(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    match resource_interface::derive(input) {
+    match uniform_interface::derive(input) {
         Ok(ts) => ts,
         Err(e) => e.to_compile_error(),
     }

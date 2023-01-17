@@ -5,7 +5,7 @@ use crevice::std140::AsStd140;
 use crate::{
     dag::Expr,
     gen::glsl,
-    interface::{FragmentInterfaceVisitor, ResourceInterfaceVisitor, VertexInterfaceVisitor},
+    interface::{FragmentInterfaceVisitor, UniformInterfaceVisitor, VertexInterfaceVisitor},
     program_def::{
         ProgramDef, SamplerDef, UniformDef, VertexAttributeDef, VertexDef, VertexInputRate,
     },
@@ -13,7 +13,7 @@ use crate::{
         ConstInput, FragmentInput, FromFragmentInput, FromVertexInput, IntoFragmentOutput,
         IntoVertexOutput, Object, Private, VertexInput,
     },
-    Block, FragmentInterface, Numeric, ResourceInterface, Sl, VertexInterface,
+    Block, FragmentInterface, Numeric, Sl, UniformInterface, VertexInterface,
 };
 
 use crate::sl::{primitives::value_arg, Sampler2d, Varying, Vec4};
@@ -24,12 +24,12 @@ use crate::sl::{primitives::value_arg, Sampler2d, Varying, Vec4};
 /// This is used internally by `posh` in order to create
 /// [`Program`](crate::gl::Program)s. It is exposed for the purpose of
 /// inspecting generated shader source code.
-pub fn build_program_def<Res, Vert, Frag, Vary, VertIn, VertOut, FragIn, FragOut>(
-    vertex_shader: fn(Res, VertIn) -> VertOut,
-    fragment_shader: fn(Res, FragIn) -> FragOut,
+pub fn build_program_def<Unif, Vert, Frag, Vary, VertIn, VertOut, FragIn, FragOut>(
+    vertex_shader: fn(Unif, VertIn) -> VertOut,
+    fragment_shader: fn(Unif, FragIn) -> FragOut,
 ) -> ProgramDef
 where
-    Res: ResourceInterface<Sl>,
+    Unif: UniformInterface<Sl>,
     Vert: VertexInterface<Sl>,
     Frag: FragmentInterface<Sl>,
     Vary: Varying,
@@ -40,8 +40,8 @@ where
 {
     build_program_def_with_consts_impl(
         (),
-        |(), resources, input| vertex_shader(resources, input),
-        |(), resources, input| fragment_shader(resources, input),
+        |(), uniforms, input| vertex_shader(uniforms, input),
+        |(), uniforms, input| fragment_shader(uniforms, input),
     )
 }
 
@@ -50,7 +50,7 @@ where
 /// See also [`build_program_def`].
 pub fn build_program_def_with_consts<
     Consts,
-    Res,
+    Unif,
     Vert,
     Frag,
     Vary,
@@ -60,12 +60,12 @@ pub fn build_program_def_with_consts<
     FragOut,
 >(
     consts: Consts,
-    vertex_shader: fn(Consts, Res, VertIn) -> VertOut,
-    fragment_shader: fn(Consts, Res, FragIn) -> FragOut,
+    vertex_shader: fn(Consts, Unif, VertIn) -> VertOut,
+    fragment_shader: fn(Consts, Unif, FragIn) -> FragOut,
 ) -> ProgramDef
 where
     Consts: ConstInput,
-    Res: ResourceInterface<Sl>,
+    Unif: UniformInterface<Sl>,
     Vert: VertexInterface<Sl>,
     Frag: FragmentInterface<Sl>,
     Vary: Varying,
@@ -79,7 +79,7 @@ where
 
 fn build_program_def_with_consts_impl<
     Consts,
-    Res,
+    Unif,
     Vert,
     Frag,
     Vary,
@@ -89,12 +89,12 @@ fn build_program_def_with_consts_impl<
     FragOut,
 >(
     consts: Consts,
-    vertex_shader: impl FnOnce(Consts, Res, VertIn) -> VertOut,
-    fragment_shader: impl FnOnce(Consts, Res, FragIn) -> FragOut,
+    vertex_shader: impl FnOnce(Consts, Unif, VertIn) -> VertOut,
+    fragment_shader: impl FnOnce(Consts, Unif, FragIn) -> FragOut,
 ) -> ProgramDef
 where
     Consts: ConstInput,
-    Res: ResourceInterface<Sl>,
+    Unif: UniformInterface<Sl>,
     Vert: VertexInterface<Sl>,
     Frag: FragmentInterface<Sl>,
     Vary: Varying,
@@ -103,13 +103,13 @@ where
     FragIn: FromFragmentInput<Vary = Vary>,
     FragOut: IntoFragmentOutput<Frag = Frag>,
 {
-    let resources = Res::shader_input("resource");
+    let uniforms = Unif::shader_input("uniforms");
 
-    let (uniform_defs, sampler_defs) = {
-        let mut resource_visitor = ResourceVisitor::default();
-        resources.visit("resource", &mut resource_visitor);
+    let (block_defs, sampler_defs) = {
+        let mut uniform_visitor = UniformVisitor::default();
+        uniforms.visit("uniforms", &mut uniform_visitor);
 
-        (resource_visitor.uniform_defs, resource_visitor.sampler_defs)
+        (uniform_visitor.uniform_defs, uniform_visitor.sampler_defs)
     };
 
     let (vertex_defs, varying_outputs, vertex_shader_source) = {
@@ -119,7 +119,7 @@ where
             instance_id: value_arg("gl_InstanceID"),
             _private: Private,
         };
-        let output = vertex_shader(consts, resources, VertIn::from(input())).into();
+        let output = vertex_shader(consts, uniforms, VertIn::from(input())).into();
 
         let varying_outputs = output.varying.shader_outputs("vertex_output");
         let (vertex_attributes, vertex_defs) = {
@@ -153,7 +153,7 @@ where
         let mut source = String::new();
         glsl::write_shader_stage(
             &mut source,
-            &uniform_defs,
+            &block_defs,
             attributes,
             &exprs.collect::<Vec<_>>(),
         )
@@ -162,7 +162,7 @@ where
         (vertex_defs, varying_outputs, source)
     };
 
-    let resources = Res::shader_input("resource");
+    let uniforms = Unif::shader_input("uniforms");
 
     let fragment_shader_source = {
         let input = FragmentInput {
@@ -172,7 +172,7 @@ where
             point_coord: value_arg("gl_PointCoord"),
             _private: Private,
         };
-        let output = fragment_shader(consts, resources, FragIn::from(input)).into();
+        let output = fragment_shader(consts, uniforms, FragIn::from(input)).into();
 
         let mut fragment_visitor = FragmentVisitor::default();
         output
@@ -212,7 +212,7 @@ where
         let mut source = String::new();
         glsl::write_shader_stage(
             &mut source,
-            &uniform_defs,
+            &block_defs,
             attributes,
             &exprs.collect::<Vec<_>>(),
         )
@@ -222,7 +222,7 @@ where
     };
 
     ProgramDef {
-        uniform_defs,
+        uniform_defs: block_defs,
         sampler_defs,
         vertex_defs,
         vertex_shader_source,
@@ -231,12 +231,12 @@ where
 }
 
 #[derive(Default)]
-struct ResourceVisitor {
+struct UniformVisitor {
     uniform_defs: Vec<UniformDef>,
     sampler_defs: Vec<SamplerDef>,
 }
 
-impl<'a> ResourceInterfaceVisitor<'a, Sl> for ResourceVisitor {
+impl<'a> UniformInterfaceVisitor<'a, Sl> for UniformVisitor {
     fn accept_sampler2d<T: Numeric>(&mut self, path: &str, sampler: &Sampler2d<T>) {
         todo!()
     }

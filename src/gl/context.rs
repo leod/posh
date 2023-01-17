@@ -9,7 +9,7 @@ use crate::{
         ConstInput, FromFragmentInput, FromVertexInput, IntoFragmentOutput, IntoVertexOutput,
         Varying,
     },
-    Block, FragmentInterface, ResourceInterface, Sl, VertexInterface,
+    Block, FragmentInterface, Sl, UniformInterface, VertexInterface,
 };
 
 use super::{
@@ -108,13 +108,13 @@ impl Context {
         )?)
     }
 
-    pub fn create_program<Res, Vert, Frag, Vary, VertIn, VertOut, FragIn, FragOut>(
+    pub fn create_program<Unif, Vert, Frag, Vary, VertIn, VertOut, FragIn, FragOut>(
         &self,
-        vertex_shader: fn(Res, VertIn) -> VertOut,
-        fragment_shader: fn(Res, FragIn) -> FragOut,
-    ) -> Result<Program<Res, Vert, Frag>, CreateProgramError>
+        vertex_shader: fn(Unif, VertIn) -> VertOut,
+        fragment_shader: fn(Unif, FragIn) -> FragOut,
+    ) -> Result<Program<Unif, Vert, Frag>, CreateProgramError>
     where
-        Res: ResourceInterface<Sl>,
+        Unif: UniformInterface<Sl>,
         Vert: VertexInterface<Sl>,
         Frag: FragmentInterface<Sl>,
         Vary: Varying,
@@ -137,7 +137,7 @@ impl Context {
 
     pub fn create_program_with_consts<
         Consts,
-        Res,
+        Unif,
         Vert,
         Frag,
         Vary,
@@ -148,12 +148,12 @@ impl Context {
     >(
         &self,
         consts: Consts,
-        vertex_shader: fn(Consts, Res, VertIn) -> VertOut,
-        fragment_shader: fn(Consts, Res, FragIn) -> FragOut,
-    ) -> Result<Program<Res, Vert, Frag>, CreateProgramError>
+        vertex_shader: fn(Consts, Unif, VertIn) -> VertOut,
+        fragment_shader: fn(Consts, Unif, FragIn) -> FragOut,
+    ) -> Result<Program<Unif, Vert, Frag>, CreateProgramError>
     where
         Consts: ConstInput,
-        Res: ResourceInterface<Sl, InSl = Res>,
+        Unif: UniformInterface<Sl, InSl = Unif>,
         Vert: VertexInterface<Sl, InSl = Vert>,
         Frag: FragmentInterface<Sl, InSl = Frag>,
         Vary: Varying,

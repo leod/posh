@@ -1,21 +1,21 @@
 use std::{marker::PhantomData, rc::Rc};
 
 use crate::{
-    interface::ResourceInterfaceVisitor, sl, FragmentInterface, Gl, ResourceInterface, Sl,
+    interface::UniformInterfaceVisitor, sl, FragmentInterface, Gl, Sl, UniformInterface,
     VertexInterface,
 };
 
 use super::{untyped, DrawParams, GeometryStream, Surface, UniformBufferBinding};
 
 #[derive(Clone)]
-pub struct Program<Res, Vert, Frag = sl::Vec4<f32>> {
+pub struct Program<Unif, Vert, Frag = sl::Vec4<f32>> {
     untyped: Rc<untyped::Program>,
-    _phantom: PhantomData<(Res, Vert, Frag)>,
+    _phantom: PhantomData<(Unif, Vert, Frag)>,
 }
 
-impl<Res, Vert, Frag> Program<Res, Vert, Frag>
+impl<Unif, Vert, Frag> Program<Unif, Vert, Frag>
 where
-    Res: ResourceInterface<Sl>,
+    Unif: UniformInterface<Sl>,
     Vert: VertexInterface<Sl>,
     Frag: FragmentInterface<Sl>,
 {
@@ -28,7 +28,7 @@ where
 
     pub fn draw<S>(
         &self,
-        resource: Res::InGl,
+        uniforms: Unif::InGl,
         geometry: GeometryStream<Vert::InGl>,
         surface: &S,
         draw_params: &DrawParams,
@@ -38,29 +38,29 @@ where
         // TODO: Surface stuff.
 
         // TODO: These allocations can be avoided once stable has allocators.
-        let mut resource_visitor = ResourceVisitor::default();
-        resource.visit("", &mut resource_visitor);
+        let mut uniform_visitor = UniformVisitor::default();
+        uniforms.visit("", &mut uniform_visitor);
 
         // FIXME: Safety: check that all vertex buffers are large enough for the
         // values in the element buffer (if we have one).
 
         unsafe {
             self.untyped
-                .draw(&resource_visitor.untyped_uniform_buffers, geometry.untyped);
+                .draw(&uniform_visitor.untyped_uniform_buffers, geometry.untyped);
         }
     }
 }
 
 #[derive(Default)]
-struct ResourceVisitor<'a> {
+struct UniformVisitor<'a> {
     untyped_uniform_buffers: Vec<&'a untyped::Buffer>,
 }
 
-impl<'a> ResourceInterfaceVisitor<'a, Gl> for ResourceVisitor<'a> {
+impl<'a> UniformInterfaceVisitor<'a, Gl> for UniformVisitor<'a> {
     fn accept_sampler2d<T: crate::Numeric>(
         &mut self,
         path: &str,
-        sampler: &<Gl as crate::ResourceDomain>::Sampler2d<T>,
+        sampler: &<Gl as crate::UniformDomain>::Sampler2d<T>,
     ) {
         todo!()
     }

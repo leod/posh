@@ -9,7 +9,7 @@ use crate::{
 };
 
 use super::{
-    Block, FragmentInterface, FragmentInterfaceVisitor, Primitive, ResourceInterface,
+    Block, FragmentInterface, FragmentInterfaceVisitor, Primitive, UniformInterface,
     VertexInterface, VertexInterfaceVisitor,
 };
 
@@ -166,20 +166,20 @@ impl<V: Block<Sl>> super::VertexInterfaceField<Sl> for V {
     }
 }
 
-// ResourceInterface
+// UniformInterface
 
 #[sealed]
-impl super::ResourceDomain for Sl {
+impl super::UniformDomain for Sl {
     type Sampler2d<T: Numeric> = Sampler2d<T>;
-    type Uniform<U: Block<Sl, InSl = U>> = U;
-    type Compose<R: ResourceInterface<Sl>> = R;
+    type Block<U: Block<Sl, InSl = U>> = U;
+    type Compose<R: UniformInterface<Sl>> = R;
 }
 
-unsafe impl<T: Numeric> ResourceInterface<Sl> for Sampler2d<T> {
+unsafe impl<T: Numeric> UniformInterface<Sl> for Sampler2d<T> {
     type InGl = gl::Sampler2dBinding<T>;
     type InSl = Self;
 
-    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::ResourceInterfaceVisitor<'a, Sl>) {
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformInterfaceVisitor<'a, Sl>) {
         visitor.accept_sampler2d(path, self)
     }
 
@@ -188,11 +188,11 @@ unsafe impl<T: Numeric> ResourceInterface<Sl> for Sampler2d<T> {
     }
 }
 
-unsafe impl<U: Block<Sl, InSl = U>> ResourceInterface<Sl> for U {
+unsafe impl<U: Block<Sl, InSl = U>> UniformInterface<Sl> for U {
     type InGl = gl::UniformBufferBinding<U>;
     type InSl = Self;
 
-    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::ResourceInterfaceVisitor<'a, Sl>) {
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformInterfaceVisitor<'a, Sl>) {
         visitor.accept_uniform(path, self)
     }
 

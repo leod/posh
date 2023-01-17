@@ -8,11 +8,11 @@ pub mod gl;
 pub mod sl;
 
 pub use interface::{
-    Block, BlockDomain, FragmentDomain, FragmentInterface, Numeric, Primitive, ResourceDomain,
-    ResourceInterface, VertexDomain, VertexInterface,
+    Block, BlockDomain, FragmentDomain, FragmentInterface, Numeric, Primitive, UniformDomain,
+    UniformInterface, VertexDomain, VertexInterface,
 };
 
-pub use posh_derive::{Block, ResourceInterface, VertexInterface};
+pub use posh_derive::{Block, UniformInterface, VertexInterface};
 
 pub use crevice;
 
@@ -47,7 +47,7 @@ pub struct Sl;
 pub mod internal {
     pub use super::{
         dag::{BaseType, Expr, StructType, Type},
-        interface::{ResourceInterfaceVisitor, VertexInterfaceField, VertexInterfaceVisitor},
+        interface::{UniformInterfaceVisitor, VertexInterfaceField, VertexInterfaceVisitor},
         sl::{
             primitives::{field, simplify_struct_literal, value_arg},
             unique_struct_type,
