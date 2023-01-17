@@ -1,6 +1,6 @@
 use posh::{
     sl::{self, Value},
-    Block, BlockDomain, Numeric, ResourceDomain, ResourceInterface, Sl, VertexDomain,
+    Block, BlockDomain, Numeric, Sl, UniformDomain, UniformInterface, VertexDomain,
     VertexInterface,
 };
 
@@ -40,24 +40,24 @@ struct MyVertexIface<D: VertexDomain = Sl> {
     instance: D::Vertex<MyNestedVertex>,
 }
 
-#[derive(ResourceInterface)]
-struct MyResourceIface<D: ResourceDomain = Sl> {
-    uniform: D::Uniform<MyUniform1>,
+#[derive(UniformInterface)]
+struct MyUniformIface<D: UniformDomain = Sl> {
+    uniform: D::Block<MyUniform1>,
 }
 
-#[derive(ResourceInterface)]
-struct MyResourceIface2<D: ResourceDomain = Sl> {
-    uniformxy: D::Uniform<MyUniform1>,
-    bla: MyResourceIface<D>,
-    zzz: D::Uniform<MyUniform1>,
+#[derive(UniformInterface)]
+struct MyUniformIface2<D: UniformDomain = Sl> {
+    uniformxy: D::Block<MyUniform1>,
+    bla: MyUniformIface<D>,
+    zzz: D::Block<MyUniform1>,
 }
 
-#[derive(ResourceInterface)]
-struct GenericResourceIface<R, D: ResourceDomain = Sl>
+#[derive(UniformInterface)]
+struct GenericUniformIface<R, D: UniformDomain = Sl>
 where
-    R: ResourceInterface<Sl>,
+    R: UniformInterface<Sl>,
 {
-    uniformxy: D::Uniform<MyUniform1>,
+    uniformxy: D::Block<MyUniform1>,
     x: D::Compose<R>,
 }
 

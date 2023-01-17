@@ -68,11 +68,11 @@ fn fragment_shader(_: Camera, varying: sl::Vec3<f32>) -> sl::Vec4<f32> {
 }
 ```
 
-Finally, we can compile our shader into a `Program<R, V, F>`. The three type
-parameters signify the interface of our shader: `R` are input resources such as
-uniforms and textures, `V` are input vertices, and `F` is the output fragment
-type. This makes it possible to check at compile-time that the buffers passed to
-draw calls match the signature of the shader.
+Finally, we can compile our shader into a `Program<Unif, Vert>`. The type
+parameters signify the interface of our shader: `Unif` are uniform bindings such
+as uniform blocks or samplers, and `Vert` are input vertices. This makes it
+possible to check at compile-time that the buffers passed to draw calls match
+the signature of the shader.
 ```rust
 use posh::gl::{
     Context, DefaultFramebuffer, DrawParams, GeometryType, Program, UniformBuffer,
