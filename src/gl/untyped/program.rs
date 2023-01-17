@@ -2,7 +2,7 @@ use std::{collections::BTreeSet, rc::Rc};
 
 use glow::HasContext;
 
-use crate::{gl::CreateProgramError, program_def::ProgramDef};
+use crate::{gl::ProgramError, program_def::ProgramDef};
 
 use super::{Buffer, GeometryStream, VertexAttributeLayout};
 
@@ -21,13 +21,13 @@ impl Program {
     ///
     /// Panics if the `def` contains duplicate texture unit bindings or
     /// duplicate uniform block bindings.
-    pub(crate) fn new(gl: Rc<glow::Context>, def: ProgramDef) -> Result<Self, CreateProgramError> {
+    pub(crate) fn new(gl: Rc<glow::Context>, def: ProgramDef) -> Result<Self, ProgramError> {
         validate_program_def(&def);
 
         let shared = Rc::new(ProgramShared {
             gl: gl.clone(),
             def,
-            id: unsafe { gl.create_program() }.map_err(CreateProgramError::CreateProgram)?,
+            id: unsafe { gl.create_program() }.map_err(ProgramError::CreateProgram)?,
         });
 
         // Compile and attach shaders.
@@ -85,7 +85,7 @@ impl Program {
             let fragment_shader_info = unsafe { gl.get_shader_info_log(fragment_shader.shader.id) };
             let program_info = unsafe { gl.get_program_info_log(shared.id) };
 
-            return Err(CreateProgramError::CompilationError {
+            return Err(ProgramError::CompilerError {
                 vertex_shader_info,
                 fragment_shader_info,
                 program_info,
@@ -191,8 +191,8 @@ struct Shader {
 }
 
 impl Shader {
-    fn new(gl: Rc<glow::Context>, ty: u32, source: &str) -> Result<Self, CreateProgramError> {
-        let id = unsafe { gl.create_shader(ty) }.map_err(CreateProgramError::CreateShader)?;
+    fn new(gl: Rc<glow::Context>, ty: u32, source: &str) -> Result<Self, ProgramError> {
+        let id = unsafe { gl.create_shader(ty) }.map_err(ProgramError::CreateShader)?;
 
         unsafe {
             gl.shader_source(id, source);

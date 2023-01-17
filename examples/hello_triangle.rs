@@ -1,9 +1,9 @@
 use std::time::Instant;
 
-use crevice::std140::AsStd140;
 use posh::{
+    crevice::std140::AsStd140,
     gl::{
-        BufferUsage, Context, CreateError, DefaultFramebuffer, DrawParams, GeometryType, Program,
+        BufferUsage, Context, DefaultFramebuffer, DrawParams, Error, GeometryType, Program,
         UniformBuffer, VertexArray,
     },
     sl::{self, VaryingOutput},
@@ -52,7 +52,7 @@ struct Demo {
 }
 
 impl Demo {
-    pub fn new(context: Context) -> Result<Self, CreateError> {
+    pub fn new(context: Context) -> Result<Self, Error> {
         let program = context.create_program(vertex_shader, fragment_shader)?;
         let uniform_buffer =
             context.create_uniform_buffer(MyUniform { time: 0.0 }, BufferUsage::StreamDraw)?;

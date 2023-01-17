@@ -3,7 +3,7 @@ use std::{cell::Cell, rc::Rc};
 use bytemuck::Pod;
 use glow::HasContext;
 
-use crate::gl::{BufferUsage, CreateBufferError};
+use crate::gl::{BufferError, BufferUsage};
 
 pub(super) struct BufferShared {
     gl: Rc<glow::Context>,
@@ -31,8 +31,8 @@ impl Buffer {
         gl: Rc<glow::Context>,
         data: &[T],
         usage: BufferUsage,
-    ) -> Result<Self, CreateBufferError> {
-        let id = unsafe { gl.create_buffer() }.map_err(CreateBufferError)?;
+    ) -> Result<Self, BufferError> {
+        let id = unsafe { gl.create_buffer() }.map_err(BufferError)?;
 
         let shared = Rc::new(BufferShared {
             gl,

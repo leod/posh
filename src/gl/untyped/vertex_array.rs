@@ -4,7 +4,7 @@ use glow::HasContext;
 
 use crate::{
     dag::{BaseType, NumericType, PrimitiveType, Type},
-    gl::{CreateVertexArrayError, ElementType, GeometryType},
+    gl::{ElementType, GeometryType, VertexArrayError},
     program_def::{VertexDef, VertexInputRate},
 };
 
@@ -31,10 +31,10 @@ impl VertexArray {
         gl: Rc<glow::Context>,
         vertex_buffers: &[(&Buffer, VertexDef)],
         element_buffer: Option<(&Buffer, ElementType)>,
-    ) -> Result<Self, CreateVertexArrayError> {
+    ) -> Result<Self, VertexArrayError> {
         // TODO: How do we want to handle `buffers.is_empty()`?
 
-        let id = unsafe { gl.create_vertex_array() }.map_err(CreateVertexArrayError)?;
+        let id = unsafe { gl.create_vertex_array() }.map_err(VertexArrayError)?;
 
         unsafe {
             gl.bind_vertex_array(Some(id));
