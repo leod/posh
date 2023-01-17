@@ -3,7 +3,7 @@ use std::rc::Rc;
 use bytemuck::Pod;
 
 use crate::{
-    gl::{BufferUsage, CreateBufferError, CreateProgramError, CreateVertexArrayError, ElementType},
+    gl::{BufferError, BufferUsage, ElementType, ProgramError, VertexArrayError},
     program_def::{ProgramDef, VertexDef},
 };
 
@@ -26,7 +26,7 @@ impl Context {
         &self,
         data: &[T],
         usage: BufferUsage,
-    ) -> Result<Buffer, CreateBufferError> {
+    ) -> Result<Buffer, BufferError> {
         Buffer::new(self.gl.clone(), data, usage)
     }
 
@@ -34,11 +34,11 @@ impl Context {
         &self,
         vertex_buffers: &[(&Buffer, VertexDef)],
         element_buffer: Option<(&Buffer, ElementType)>,
-    ) -> Result<VertexArray, CreateVertexArrayError> {
+    ) -> Result<VertexArray, VertexArrayError> {
         VertexArray::new(self.gl.clone(), vertex_buffers, element_buffer)
     }
 
-    pub fn create_program(&self, def: ProgramDef) -> Result<Program, CreateProgramError> {
+    pub fn create_program(&self, def: ProgramDef) -> Result<Program, ProgramError> {
         Program::new(self.gl.clone(), def)
     }
 }

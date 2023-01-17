@@ -13,9 +13,8 @@ use crate::{
 };
 
 use super::{
-    untyped, BufferUsage, CreateBufferError, CreateError, CreateProgramError,
-    CreateVertexArrayError, Element, ElementBuffer, ElementOrUnit, Program, UniformBuffer,
-    VertexArray, VertexBuffer,
+    untyped, BufferError, BufferUsage, Element, ElementBuffer, ElementOrUnit, Error, Program,
+    ProgramError, UniformBuffer, VertexArray, VertexArrayError, VertexBuffer,
 };
 
 /// The graphics context, which is used for creating GPU objects.
@@ -38,7 +37,7 @@ impl Context {
         &self,
         data: &[<V::InGl as AsStd140>::Output],
         usage: BufferUsage,
-    ) -> Result<VertexBuffer<V>, CreateBufferError>
+    ) -> Result<VertexBuffer<V>, BufferError>
     where
         V: Block<Sl>,
     {
@@ -55,7 +54,7 @@ impl Context {
         &self,
         data: &[E],
         usage: BufferUsage,
-    ) -> Result<ElementBuffer<E>, CreateBufferError>
+    ) -> Result<ElementBuffer<E>, BufferError>
     where
         E: Element,
     {
@@ -68,7 +67,7 @@ impl Context {
         &self,
         uniform: U::InGl,
         usage: BufferUsage,
-    ) -> Result<UniformBuffer<U>, CreateBufferError>
+    ) -> Result<UniformBuffer<U>, BufferError>
     where
         U: Block<Sl>,
     {
@@ -81,7 +80,7 @@ impl Context {
         &self,
         vertex_buffers: V::InGl,
         element_source: E::Source,
-    ) -> Result<VertexArray<V, E>, CreateVertexArrayError>
+    ) -> Result<VertexArray<V, E>, VertexArrayError>
     where
         V: VertexInterface<Sl>,
         E: ElementOrUnit,
@@ -94,7 +93,7 @@ impl Context {
         vertices: &[<V::InGl as AsStd140>::Output],
         usage: BufferUsage,
         element_source: E::Source,
-    ) -> Result<VertexArray<V, E>, CreateError>
+    ) -> Result<VertexArray<V, E>, Error>
     where
         V: Block<Sl>,
         E: ElementOrUnit,
@@ -112,7 +111,7 @@ impl Context {
         &self,
         vertex_shader: fn(Unif, VertIn) -> VertOut,
         fragment_shader: fn(Unif, FragIn) -> FragOut,
-    ) -> Result<Program<Unif, Vert, Frag>, CreateProgramError>
+    ) -> Result<Program<Unif, Vert, Frag>, ProgramError>
     where
         Unif: UniformInterface<Sl>,
         Vert: VertexInterface<Sl>,
@@ -150,7 +149,7 @@ impl Context {
         consts: Consts,
         vertex_shader: fn(Consts, Unif, VertIn) -> VertOut,
         fragment_shader: fn(Consts, Unif, FragIn) -> FragOut,
-    ) -> Result<Program<Unif, Vert, Frag>, CreateProgramError>
+    ) -> Result<Program<Unif, Vert, Frag>, ProgramError>
     where
         Consts: ConstInput,
         Unif: UniformInterface<Sl, InSl = Unif>,

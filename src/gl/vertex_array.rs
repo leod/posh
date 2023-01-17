@@ -7,8 +7,8 @@ use crate::{
 };
 
 use super::{
-    untyped, vertex_buffer::vertex_size, CreateVertexArrayError, Element, ElementOrUnit,
-    ElementSource, GeometryStream, GeometryType, VertexBuffer,
+    untyped, vertex_buffer::vertex_size, Element, ElementOrUnit, ElementSource, GeometryStream,
+    GeometryType, VertexArrayError, VertexBuffer,
 };
 
 /// Combines buffers so that they can be used in [draw
@@ -38,7 +38,7 @@ where
         context: &untyped::Context,
         vertex_buffers: V::InGl,
         element_source: E::Source,
-    ) -> Result<Self, CreateVertexArrayError> {
+    ) -> Result<Self, VertexArrayError> {
         let mut visitor = VertexBufferVisitor::default();
 
         // TODO: Don't hardcode path names.
