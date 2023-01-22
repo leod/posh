@@ -4,6 +4,14 @@ use crate::dag::{BaseType, BinaryOp, Expr, FuncDef, StructType, Type};
 
 use super::{Object, ToValue, Value};
 
+pub(crate) fn cast<U, V>(u: impl ToValue<Output = U>) -> V
+where
+    U: Value,
+    V: Value,
+{
+    built_in_1(&format!("{}", V::ty()), u)
+}
+
 pub(crate) fn binary<U, V, R>(
     left: impl ToValue<Output = U>,
     op: BinaryOp,
