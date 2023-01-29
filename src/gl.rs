@@ -22,7 +22,7 @@ pub use element_buffer::{Element, ElementBuffer, ElementOrUnit, ElementSource};
 pub use enums::{BufferUsage, ElementType, GeometryType};
 pub use error::{BufferError, Error, ProgramError, VertexArrayError};
 pub use geometry_stream::GeometryStream;
-pub use image::{ImageData, ImageFormat, Rgba};
+pub use image::{ImageData, ImageFormat, RgbaFormat};
 pub use program::Program;
 pub use sampler::Sampler2d;
 pub use surface::{DefaultFramebuffer, Surface};

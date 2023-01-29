@@ -209,7 +209,7 @@ impl super::FragmentDomain for Sl {
 }
 
 unsafe impl FragmentInterface<Sl> for Vec4<f32> {
-    type InGl = gl::Texture2d<gl::Rgba>;
+    type InGl = gl::Texture2d<gl::RgbaFormat>;
     type InSl = Self;
 
     fn visit(&self, path: &str, visitor: &mut impl FragmentInterfaceVisitor<Sl>) {

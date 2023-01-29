@@ -1,7 +1,7 @@
 use sealed::sealed;
 
 use crate::{
-    gl::{Rgba, Sampler2d, Texture2d, UniformBufferBinding, VertexBuffer},
+    gl::{RgbaFormat, Sampler2d, Texture2d, UniformBufferBinding, VertexBuffer},
     program_def::VertexInputRate,
     sl, Gl, Sl,
 };
@@ -128,10 +128,10 @@ unsafe impl<U: Block<Sl, InSl = U>> UniformInterface<Gl> for UniformBufferBindin
 
 #[sealed]
 impl super::FragmentDomain for Gl {
-    type Attachment = Texture2d<Rgba>;
+    type Attachment = Texture2d<RgbaFormat>;
 }
 
-unsafe impl FragmentInterface<Gl> for Texture2d<Rgba> {
+unsafe impl FragmentInterface<Gl> for Texture2d<RgbaFormat> {
     type InGl = Self;
     type InSl = sl::Vec4<f32>;
 
