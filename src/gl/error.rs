@@ -5,6 +5,16 @@ use thiserror::Error;
 #[error("failed to create buffer: {0}")]
 pub struct BufferError(pub String);
 
+/// An error that occurred while creating a texture.
+#[derive(Debug, Clone, Error)]
+pub enum TextureError {
+    #[error("failed to create texture: {0}")]
+    Create(String),
+
+    #[error("texture too large: requested {0}, but max size is {1}")]
+    TooLarge(usize, usize),
+}
+
 /// An error that occurred while creating a vertex array.
 #[derive(Debug, Clone, Error)]
 #[error("failed to create vertex array: {0}")]
@@ -30,12 +40,15 @@ pub enum ProgramError {
 /// An error that occured while creating a object.
 #[derive(Debug, Clone, Error)]
 pub enum Error {
-    #[error("failed to create buffer: {0}")]
+    #[error("{0}")]
     CreateBuffer(#[from] BufferError),
 
-    #[error("failed to create vertex array: {0}")]
-    CreateVertexArray(#[from] VertexArrayError),
-
-    #[error("failed to create program: {0}")]
+    #[error("{0}")]
     CreateProgram(#[from] ProgramError),
+
+    #[error("{0}")]
+    CreateTexture(#[from] TextureError),
+
+    #[error("{0}")]
+    CreateVertexArray(#[from] VertexArrayError),
 }
