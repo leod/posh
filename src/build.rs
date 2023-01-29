@@ -11,9 +11,9 @@ use crate::{
     },
     sl::{
         ConstInput, FragmentInput, FromFragmentInput, FromVertexInput, IntoFragmentOutput,
-        IntoVertexOutput, Object, Private, VertexInput,
+        IntoVertexOutput, Object, Private, Sample, VertexInput,
     },
-    Block, FragmentInterface, Numeric, Sl, UniformInterface, VertexInterface,
+    Block, FragmentInterface, Sl, UniformInterface, VertexInterface,
 };
 
 use crate::sl::{primitives::value_arg, Sampler2d, Varying, Vec4};
@@ -237,7 +237,7 @@ struct UniformVisitor {
 }
 
 impl<'a> UniformInterfaceVisitor<'a, Sl> for UniformVisitor {
-    fn accept_sampler2d<T: Numeric>(&mut self, path: &str, sampler: &Sampler2d<T>) {
+    fn accept_sampler2d<S: Sample>(&mut self, path: &str, sampler: &Sampler2d<S>) {
         todo!()
     }
 

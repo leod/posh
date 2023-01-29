@@ -1,11 +1,12 @@
 use std::{marker::PhantomData, rc::Rc};
 
 use crate::{
-    interface::UniformInterfaceVisitor, sl, FragmentInterface, Gl, Sl, UniformInterface,
-    VertexInterface,
+    interface::UniformInterfaceVisitor,
+    sl::{self, Sample},
+    FragmentInterface, Gl, Sl, UniformInterface, VertexInterface,
 };
 
-use super::{untyped, DrawParams, GeometryStream, Surface, UniformBufferBinding};
+use super::{untyped, DrawParams, GeometryStream, Sampler2d, Surface, UniformBufferBinding};
 
 #[derive(Clone)]
 pub struct Program<Unif, Vert, Frag = sl::Vec4<f32>> {
@@ -57,11 +58,7 @@ struct UniformVisitor<'a> {
 }
 
 impl<'a> UniformInterfaceVisitor<'a, Gl> for UniformVisitor<'a> {
-    fn accept_sampler2d<T: crate::Numeric>(
-        &mut self,
-        path: &str,
-        sampler: &<Gl as crate::UniformDomain>::Sampler2d<T>,
-    ) {
+    fn accept_sampler2d<S: Sample>(&mut self, path: &str, sampler: &Sampler2d<S>) {
         todo!()
     }
 

@@ -1,11 +1,7 @@
 use std::marker::PhantomData;
 
-use crate::Numeric;
+use crate::sl::Sample;
 
-pub struct Sampler2d<T: Numeric> {
-    _phantom: PhantomData<T>,
-}
-
-pub struct Sampler2dBinding<T: Numeric> {
-    _phantom: PhantomData<T>,
+pub struct Sampler2d<S: Sample> {
+    _phantom: PhantomData<S>,
 }

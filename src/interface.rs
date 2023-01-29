@@ -9,7 +9,7 @@ use sealed::sealed;
 
 use crate::{
     program_def::{VertexAttributeDef, VertexInputRate},
-    sl::{Bool, Mat2, Mat3, Mat4, Scalar, ToValue, Value, Vec2, Vec3, Vec4, F32, I32, U32},
+    sl::{Bool, Mat2, Mat3, Mat4, Sample, Scalar, ToValue, Value, Vec2, Vec3, Vec4, F32, I32, U32},
     Gl, Sl,
 };
 
@@ -276,7 +276,7 @@ pub trait UniformDomain: Copy {
     type Block<U: Block<Sl, InSl = U>>: UniformInterface<Self>;
 
     /// A two-dimensional sampler field.
-    type Sampler2d<T: Numeric>: UniformInterface<Self>;
+    type Sampler2d<V: Sample>: UniformInterface<Self>;
 
     /// A nested uniform interface field.
     type Compose<R: UniformInterface<Sl>>: UniformInterface<Self>;
@@ -332,7 +332,7 @@ unsafe impl<D: UniformDomain> UniformInterface<D> for () {
 
 #[doc(hidden)]
 pub trait UniformInterfaceVisitor<'a, D: UniformDomain> {
-    fn accept_sampler2d<T: Numeric>(&mut self, path: &str, sampler: &'a D::Sampler2d<T>);
+    fn accept_sampler2d<V: Sample>(&mut self, path: &str, sampler: &'a D::Sampler2d<V>);
 
     fn accept_uniform<U: Block<Sl, InSl = U>>(&mut self, path: &str, uniform: &'a D::Block<U>);
 }

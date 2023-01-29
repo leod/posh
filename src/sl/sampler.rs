@@ -41,14 +41,14 @@ impl<T: Numeric> Sample for Vec4<T> {
 
 /// An object which can be sampled.
 #[derive(Debug, Copy, Clone)]
-pub struct Sampler2d<V> {
+pub struct Sampler2d<S> {
     trace: Trace,
-    _phantom: PhantomData<V>,
+    _phantom: PhantomData<S>,
 }
 
-impl<V: Sample> Object for Sampler2d<V> {
+impl<S: Sample> Object for Sampler2d<S> {
     fn ty() -> Type {
-        Type::Base(BaseType::Sampler2d(V::Component::NUMERIC_TYPE))
+        Type::Base(BaseType::Sampler2d(S::Component::NUMERIC_TYPE))
     }
 
     fn expr(&self) -> Rc<Expr> {
@@ -66,9 +66,9 @@ impl<V: Sample> Object for Sampler2d<V> {
     }
 }
 
-impl<V: Sample> Sampler2d<V> {
-    pub fn lookup(self, tex_coords: Vec2<f32>) -> V {
-        let sample: Vec4<V::Component> = built_in_1("texture", tex_coords);
+impl<S: Sample> Sampler2d<S> {
+    pub fn lookup(self, tex_coords: Vec2<f32>) -> S {
+        let sample: Vec4<S::Component> = built_in_1("texture", tex_coords);
 
         cast(sample)
     }
