@@ -1,11 +1,13 @@
 use sealed::sealed;
 
+use crate::sl;
+
 #[doc(hidden)]
 pub struct RawImageData<'a> {
     size: [usize; 2],
     ty: u32,
     internal_format: u32,
-    data: &'a [u8],
+    data: Option<&'a [u8]>,
 }
 
 #[sealed]
@@ -19,6 +21,7 @@ pub trait ImageFormat {
     #[doc(hidden)]
     const FORMAT: u32;
 
+    type Sample: sl::Sample;
     type Data<'a>: ImageData;
 }
 
@@ -40,7 +43,7 @@ impl<'a> RgbaData<'a> {
             size,
             ty: glow::UNSIGNED_BYTE,
             internal_format: glow::RGBA8,
-            data,
+            data: Some(data),
         })
     }
 
@@ -52,7 +55,7 @@ impl<'a> RgbaData<'a> {
             size,
             ty: glow::UNSIGNED_BYTE,
             internal_format: glow::SRGB8_ALPHA8,
-            data,
+            data: Some(data),
         })
     }
 
@@ -64,7 +67,7 @@ impl<'a> RgbaData<'a> {
             size,
             ty: glow::BYTE,
             internal_format: glow::RGBA8_SNORM,
-            data: bytemuck::cast_slice(data),
+            data: Some(bytemuck::cast_slice(data)),
         })
     }
 
@@ -76,21 +79,71 @@ impl<'a> RgbaData<'a> {
             size,
             ty: glow::FLOAT,
             internal_format: glow::RGBA32F,
-            data: bytemuck::cast_slice(data),
+            data: Some(bytemuck::cast_slice(data)),
+        })
+    }
+
+    pub fn zeroed_u8(size: [usize; 2]) -> Self {
+        RgbaData(RawImageData {
+            size,
+            ty: glow::UNSIGNED_BYTE,
+            internal_format: glow::RGBA8,
+            data: None,
+        })
+    }
+
+    pub fn zeroed_u8_srgb(size: [usize; 2]) -> Self {
+        RgbaData(RawImageData {
+            size,
+            ty: glow::UNSIGNED_BYTE,
+            internal_format: glow::SRGB8_ALPHA8,
+            data: None,
+        })
+    }
+
+    pub fn zeroed_i8_snorm(size: [usize; 2]) -> Self {
+        RgbaData(RawImageData {
+            size,
+            ty: glow::BYTE,
+            internal_format: glow::RGBA8_SNORM,
+            data: None,
+        })
+    }
+
+    pub fn zeroed_f32(size: [usize; 2]) -> Self {
+        RgbaData(RawImageData {
+            size,
+            ty: glow::FLOAT,
+            internal_format: glow::RGBA32F,
+            data: None,
         })
     }
 }
 
-pub struct Rgba;
+pub struct RgbaFormat;
 
 #[sealed]
-impl ImageFormat for Rgba {
+impl ImageFormat for RgbaFormat {
     const FORMAT: u32 = glow::RGBA;
 
+    type Sample = sl::Vec4<f32>;
     type Data<'a> = RgbaData<'a>;
 }
 
-pub enum RgbaInt {}
+// TODO:
+// - RgbaIntFormat
+// - RgbaUnsignedIntFormat
+// - RgbFormat
+// - RgbIntFormat
+// - RgbUnsignedIntFormat
+// - RgFormat
+// - RgIntFormat
+// - RgUnsignedIntFormat
+// - RedFormat
+// - RedIntFormat
+// - RedUnsignedIntFormat
+// - DepthFormat
+// - DepthStencilFormat
 
 /*
 
