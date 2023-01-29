@@ -25,7 +25,7 @@ pub(crate) use shader::Private;
 pub use {
     array::Array,
     mat::{mat2, mat3, mat4, Mat2, Mat3, Mat4},
-    sampler::Sampler2d,
+    sampler::{Sample, Sampler2d},
     scalar::{Bool, Scalar, F32, I32, U32},
     shader::{
         ConstInput, FragmentInput, FragmentOutput, FromFragmentInput, FromVertexInput,

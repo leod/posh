@@ -1,9 +1,9 @@
 use sealed::sealed;
 
 use crate::{
-    gl::{Sampler2dBinding, Texture2dBinding, UniformBufferBinding, VertexBuffer},
+    gl::{Rgba, Sampler2d, Texture2d, UniformBufferBinding, VertexBuffer},
     program_def::VertexInputRate,
-    sl, Gl, Numeric, Sl,
+    sl, Gl, Sl,
 };
 
 use super::{
@@ -101,14 +101,14 @@ impl<V: Block<Sl>> super::VertexInterfaceField<Gl> for VertexBuffer<V> {}
 
 #[sealed]
 impl super::UniformDomain for Gl {
-    type Sampler2d<T: Numeric> = Sampler2dBinding<T>;
+    type Sampler2d<S: sl::Sample> = Sampler2d<S>;
     type Block<U: Block<Sl, InSl = U>> = UniformBufferBinding<U>;
     type Compose<R: UniformInterface<Sl>> = R::InGl;
 }
 
-unsafe impl<T: Numeric> UniformInterface<Gl> for Sampler2dBinding<T> {
+unsafe impl<S: sl::Sample> UniformInterface<Gl> for Sampler2d<S> {
     type InGl = Self;
-    type InSl = sl::Sampler2d<T>;
+    type InSl = sl::Sampler2d<S>;
 
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformInterfaceVisitor<'a, Gl>) {
         visitor.accept_sampler2d(path, self);
@@ -128,10 +128,10 @@ unsafe impl<U: Block<Sl, InSl = U>> UniformInterface<Gl> for UniformBufferBindin
 
 #[sealed]
 impl super::FragmentDomain for Gl {
-    type Attachment = Texture2dBinding;
+    type Attachment = Texture2d<Rgba>;
 }
 
-unsafe impl FragmentInterface<Gl> for Texture2dBinding {
+unsafe impl FragmentInterface<Gl> for Texture2d<Rgba> {
     type InGl = Self;
     type InSl = sl::Vec4<f32>;
 

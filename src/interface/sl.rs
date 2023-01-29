@@ -2,10 +2,10 @@ use sealed::sealed;
 
 use crate::{
     dag::{BaseType, NumericType, PrimitiveType, Type},
-    gl::{self, Texture2dBinding},
+    gl,
     program_def::{VertexAttributeDef, VertexInputRate},
-    sl::{Mat2, Mat3, Mat4, Object, Sampler2d, Scalar, Vec2, Vec3, Vec4},
-    Numeric, Sl,
+    sl::{Mat2, Mat3, Mat4, Object, Sample, Sampler2d, Scalar, Vec2, Vec3, Vec4},
+    Sl,
 };
 
 use super::{
@@ -170,13 +170,13 @@ impl<V: Block<Sl>> super::VertexInterfaceField<Sl> for V {
 
 #[sealed]
 impl super::UniformDomain for Sl {
-    type Sampler2d<T: Numeric> = Sampler2d<T>;
+    type Sampler2d<S: Sample> = Sampler2d<S>;
     type Block<U: Block<Sl, InSl = U>> = U;
     type Compose<R: UniformInterface<Sl>> = R;
 }
 
-unsafe impl<T: Numeric> UniformInterface<Sl> for Sampler2d<T> {
-    type InGl = gl::Sampler2dBinding<T>;
+unsafe impl<S: Sample> UniformInterface<Sl> for Sampler2d<S> {
+    type InGl = gl::Sampler2d<S>;
     type InSl = Self;
 
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformInterfaceVisitor<'a, Sl>) {
@@ -209,7 +209,7 @@ impl super::FragmentDomain for Sl {
 }
 
 unsafe impl FragmentInterface<Sl> for Vec4<f32> {
-    type InGl = Texture2dBinding;
+    type InGl = gl::Texture2d<gl::Rgba>;
     type InSl = Self;
 
     fn visit(&self, path: &str, visitor: &mut impl FragmentInterfaceVisitor<Sl>) {
