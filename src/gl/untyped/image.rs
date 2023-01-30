@@ -97,7 +97,7 @@ impl ImageInternalFormat {
         }
     }
 
-    pub fn format(self) -> ImageFormat {
+    pub fn to_format(self) -> ImageFormat {
         use ImageInternalFormat::*;
 
         match self {
@@ -105,7 +105,7 @@ impl ImageInternalFormat {
         }
     }
 
-    pub fn is_valid_type(self, ty: ImageType) -> bool {
+    pub fn matches_type(self, ty: ImageType) -> bool {
         use ImageInternalFormat::*;
 
         match self {
@@ -119,14 +119,14 @@ impl ImageInternalFormat {
 
 #[doc(hidden)]
 pub struct ImageData<'a> {
-    size: [usize; 2],
-    ty: ImageType,
-    internal_format: ImageInternalFormat,
-    data: Option<&'a [u8]>,
+    pub size: [usize; 2],
+    pub ty: ImageType,
+    pub internal_format: ImageInternalFormat,
+    pub data: Option<&'a [u8]>,
 }
 
 impl<'a> ImageData<'a> {
     pub fn expected_data_len(&self) -> usize {
-        self.ty.size_of() * self.internal_format.format().size()
+        self.ty.size_of() * self.internal_format.to_format().size()
     }
 }
