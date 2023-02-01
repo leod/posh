@@ -2,119 +2,98 @@ use sealed::sealed;
 
 use crate::sl;
 
-#[doc(hidden)]
-pub struct RawImageData<'a> {
-    size: [usize; 2],
-    ty: u32,
-    internal_format: u32,
-    data: Option<&'a [u8]>,
-}
+use super::raw::{self, ImageInternalFormat, ImageType};
 
 #[sealed]
 pub trait ImageData {
     #[doc(hidden)]
-    fn raw(&self) -> &RawImageData;
+    fn raw(&self) -> &raw::ImageData;
 }
 
 #[sealed]
 pub trait ImageFormat {
-    #[doc(hidden)]
-    const FORMAT: u32;
-
     type Sample: sl::Sample;
     type Data<'a>: ImageData;
 }
 
-pub struct RgbaData<'a>(RawImageData<'a>);
+pub struct RgbaData<'a>(raw::ImageData<'a>);
 
 #[sealed]
 impl<'a> ImageData for RgbaData<'a> {
-    fn raw(&self) -> &RawImageData {
+    fn raw(&self) -> &raw::ImageData {
         &self.0
     }
 }
 
 impl<'a> RgbaData<'a> {
-    pub fn from_u8(size: [usize; 2], data: &'a [u8]) -> Self {
-        // Safety: check that `data` has the correct size.
-        assert_eq!(data.len(), size[0] * size[1] * 4);
-
-        RgbaData(RawImageData {
-            size,
-            ty: glow::UNSIGNED_BYTE,
-            internal_format: glow::RGBA8,
+    pub fn from_u8(dimensions: (u32, u32), data: &'a [u8]) -> Self {
+        RgbaData(raw::ImageData {
+            dimensions,
+            ty: ImageType::U8,
+            internal_format: ImageInternalFormat::RgbaU8,
             data: Some(data),
         })
     }
 
-    pub fn from_u8_srgb(size: [usize; 2], data: &'a [u8]) -> Self {
-        // Safety: check that `data` has the correct size.
-        assert_eq!(data.len(), size[0] * size[1] * 4);
-
-        RgbaData(RawImageData {
-            size,
-            ty: glow::UNSIGNED_BYTE,
-            internal_format: glow::SRGB8_ALPHA8,
+    pub fn from_u8_srgb(dimensions: (u32, u32), data: &'a [u8]) -> Self {
+        RgbaData(raw::ImageData {
+            dimensions,
+            ty: ImageType::U8,
+            internal_format: ImageInternalFormat::SrgbU8AlphaU8,
             data: Some(data),
         })
     }
 
-    pub fn from_i8_snorm(size: [usize; 2], data: &'a [i8]) -> Self {
-        // Safety: check that `data` has the correct size.
-        assert_eq!(data.len(), size[0] * size[1] * 4);
-
-        RgbaData(RawImageData {
-            size,
-            ty: glow::BYTE,
-            internal_format: glow::RGBA8_SNORM,
+    pub fn from_i8_snorm(dimensions: (u32, u32), data: &'a [i8]) -> Self {
+        RgbaData(raw::ImageData {
+            dimensions,
+            ty: ImageType::I8,
+            internal_format: ImageInternalFormat::RgbaI8Snorm,
             data: Some(bytemuck::cast_slice(data)),
         })
     }
 
-    pub fn from_f32(size: [usize; 2], data: &'a [f32]) -> Self {
-        // Safety: check that `data` has the correct size.
-        assert_eq!(data.len(), size[0] * size[1] * 4);
-
-        RgbaData(RawImageData {
-            size,
-            ty: glow::FLOAT,
-            internal_format: glow::RGBA32F,
+    pub fn from_f32(dimensions: (u32, u32), data: &'a [f32]) -> Self {
+        RgbaData(raw::ImageData {
+            dimensions,
+            ty: ImageType::F32,
+            internal_format: ImageInternalFormat::RgbaF32,
             data: Some(bytemuck::cast_slice(data)),
         })
     }
 
-    pub fn zeroed_u8(size: [usize; 2]) -> Self {
-        RgbaData(RawImageData {
-            size,
-            ty: glow::UNSIGNED_BYTE,
-            internal_format: glow::RGBA8,
+    pub fn zeroed_u8(dimensions: (u32, u32)) -> Self {
+        RgbaData(raw::ImageData {
+            dimensions,
+            ty: ImageType::U8,
+            internal_format: ImageInternalFormat::RgbaU8,
             data: None,
         })
     }
 
-    pub fn zeroed_u8_srgb(size: [usize; 2]) -> Self {
-        RgbaData(RawImageData {
-            size,
-            ty: glow::UNSIGNED_BYTE,
-            internal_format: glow::SRGB8_ALPHA8,
+    pub fn zeroed_u8_srgb(dimensions: (u32, u32)) -> Self {
+        RgbaData(raw::ImageData {
+            dimensions,
+            ty: ImageType::U8,
+            internal_format: ImageInternalFormat::SrgbU8AlphaU8,
             data: None,
         })
     }
 
-    pub fn zeroed_i8_snorm(size: [usize; 2]) -> Self {
-        RgbaData(RawImageData {
-            size,
-            ty: glow::BYTE,
-            internal_format: glow::RGBA8_SNORM,
+    pub fn zeroed_i8_snorm(dimensions: (u32, u32)) -> Self {
+        RgbaData(raw::ImageData {
+            dimensions,
+            ty: ImageType::I8,
+            internal_format: ImageInternalFormat::RgbaI8Snorm,
             data: None,
         })
     }
 
-    pub fn zeroed_f32(size: [usize; 2]) -> Self {
-        RgbaData(RawImageData {
-            size,
-            ty: glow::FLOAT,
-            internal_format: glow::RGBA32F,
+    pub fn zeroed_f32(dimensions: (u32, u32)) -> Self {
+        RgbaData(raw::ImageData {
+            dimensions,
+            ty: ImageType::F32,
+            internal_format: ImageInternalFormat::RgbaF32,
             data: None,
         })
     }
@@ -124,8 +103,6 @@ pub struct RgbaFormat;
 
 #[sealed]
 impl ImageFormat for RgbaFormat {
-    const FORMAT: u32 = glow::RGBA;
-
     type Sample = sl::Vec4<f32>;
     type Data<'a> = RgbaData<'a>;
 }

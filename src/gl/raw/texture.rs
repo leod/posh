@@ -86,18 +86,19 @@ impl Texture2d {
     ) -> Result<Self, TextureError> {
         assert!(levels > 0);
 
-        validate_size(image_data.size, caps)?;
+        validate_size(image_data.dimensions, caps)?;
 
         let id = unsafe { gl.create_texture() }.map_err(TextureError::ObjectCreation)?;
 
         let width =
-            i32::try_from(image_data.size[0]).expect("max_texture_size is out of i32 range");
+            i32::try_from(image_data.dimensions.0).expect("max_texture_size is out of i32 range");
         let height =
-            i32::try_from(image_data.size[1]).expect("max_texture_size is out of i32 range");
+            i32::try_from(image_data.dimensions.1).expect("max_texture_size is out of i32 range");
 
         let mut buffer = Vec::new();
         let data_len = image_data.required_data_len();
         let slice = if let Some(slice) = image_data.data {
+            // Safety: check that `slice` has the correct size.
             if slice.len() != data_len {
                 return Err(TextureError::DataSizeMismatch(slice.len(), data_len));
             }
@@ -156,7 +157,8 @@ impl Texture2d {
         caps: &Caps,
         image_data: ImageData,
     ) -> Result<Self, TextureError> {
-        let num_levels = (image_data.size[0].max(image_data.size[1]) as f64).log2() as usize;
+        let num_levels =
+            (image_data.dimensions.0.max(image_data.dimensions.1) as f64).log2() as usize;
 
         let texture = Self::new_with_num_levels(gl.clone(), caps, image_data, num_levels)?;
 
@@ -192,17 +194,17 @@ pub struct Sampler2d {
     params: Sampler2dParams,
 }
 
-fn validate_size(size: [usize; 2], caps: &Caps) -> Result<(), TextureError> {
-    if size[0] == 0 || size[1] == 0 {
+fn validate_size(size: (u32, u32), caps: &Caps) -> Result<(), TextureError> {
+    if size.0 == 0 || size.1 == 0 {
         return Err(TextureError::Empty);
     }
 
-    if size[0] > caps.max_texture_size {
-        return Err(TextureError::Oversized(size[0], caps.max_texture_size));
+    if size.0 > caps.max_texture_size {
+        return Err(TextureError::Oversized(size.0, caps.max_texture_size));
     }
 
-    if size[1] > caps.max_texture_size {
-        return Err(TextureError::Oversized(size[1], caps.max_texture_size));
+    if size.1 > caps.max_texture_size {
+        return Err(TextureError::Oversized(size.1, caps.max_texture_size));
     }
 
     Ok(())

@@ -119,7 +119,7 @@ impl ImageInternalFormat {
 
 #[doc(hidden)]
 pub struct ImageData<'a> {
-    pub size: [usize; 2],
+    pub dimensions: (u32, u32),
     pub ty: ImageType,
     pub internal_format: ImageInternalFormat,
     pub data: Option<&'a [u8]>,
