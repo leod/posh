@@ -20,7 +20,7 @@ pub enum ElementType {
 }
 
 impl ElementType {
-    pub fn to_gl(self) -> u32 {
+    pub const fn to_gl(self) -> u32 {
         use ElementType::*;
 
         match self {
@@ -29,7 +29,7 @@ impl ElementType {
         }
     }
 
-    pub fn size(self) -> usize {
+    pub const fn size(self) -> usize {
         use ElementType::*;
 
         match self {
@@ -169,7 +169,7 @@ impl VertexArray {
         Ok(Self { shared })
     }
 
-    pub fn bind_range(
+    pub fn range_binding(
         &self,
         element_range: Range<usize>,
         geometry_type: GeometryType,
@@ -191,7 +191,7 @@ impl Drop for VertexArrayShared {
 }
 
 impl GeometryType {
-    pub fn to_gl(self) -> u32 {
+    pub const fn to_gl(self) -> u32 {
         use GeometryType::*;
 
         match self {

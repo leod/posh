@@ -1,15 +1,76 @@
-use std::rc::Rc;
+use std::{cell::Cell, rc::Rc};
 
 use glow::HasContext;
 
 use crate::gl::{raw::error::check_gl_error, TextureError};
 
-use super::{Caps, ImageData};
+use super::{Caps, ImageData, Sampler2dParams, SamplerCompareFunc};
 
 struct Texture2dShared {
     gl: Rc<glow::Context>,
     id: glow::Texture,
     num_levels: usize,
+    sampler_params: Cell<Sampler2dParams>,
+}
+
+impl Texture2dShared {
+    pub fn bind_with_sampler_params(&self, new: Sampler2dParams) {
+        let curr = self.sampler_params.get();
+        let gl = &self.gl;
+
+        unsafe {
+            gl.bind_texture(glow::TEXTURE_2D, Some(self.id));
+        }
+
+        if curr.compare_func != new.compare_func {
+            let (compare_mode, compare_func) = new.compare_func.map_or(
+                (glow::NONE as i32, SamplerCompareFunc::LessOrEqual),
+                |compare_func| (glow::COMPARE_REF_TO_TEXTURE as i32, compare_func),
+            );
+            let compare_func = compare_func.to_gl() as i32;
+
+            unsafe {
+                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_COMPARE_MODE, compare_mode);
+                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_COMPARE_FUNC, compare_func);
+            }
+        }
+
+        if curr.mag_filter != new.mag_filter {
+            let mag_filter = new.mag_filter.to_gl() as i32;
+
+            unsafe {
+                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MAG_FILTER, mag_filter);
+            }
+        }
+
+        if curr.min_filter != new.min_filter {
+            let min_filter = new.min_filter.to_gl() as i32;
+
+            unsafe {
+                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MIN_FILTER, min_filter);
+            }
+        }
+
+        if curr.wrap_s != new.wrap_s {
+            let wrap_s = new.wrap_s.to_gl() as i32;
+
+            unsafe {
+                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_S, wrap_s);
+            }
+        }
+
+        if curr.wrap_t != new.wrap_t {
+            let wrap_t = new.wrap_t.to_gl() as i32;
+
+            unsafe {
+                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_T, wrap_t);
+            }
+        }
+
+        self.sampler_params.set(new);
+
+        check_gl_error(gl).unwrap();
+    }
 }
 
 pub struct Texture2d {
@@ -76,6 +137,7 @@ impl Texture2d {
             gl,
             id,
             num_levels: levels,
+            sampler_params: Default::default(),
         });
 
         Ok(Texture2d { shared })
@@ -108,6 +170,13 @@ impl Texture2d {
 
         Ok(texture)
     }
+
+    pub fn sampler(&self, params: Sampler2dParams) -> Sampler2d {
+        Sampler2d {
+            shared: self.shared.clone(),
+            params,
+        }
+    }
 }
 
 impl Drop for Texture2dShared {
@@ -116,6 +185,11 @@ impl Drop for Texture2dShared {
             self.gl.delete_texture(self.id);
         }
     }
+}
+
+pub struct Sampler2d {
+    shared: Rc<Texture2dShared>,
+    params: Sampler2dParams,
 }
 
 fn validate_size(size: [usize; 2], caps: &Caps) -> Result<(), TextureError> {

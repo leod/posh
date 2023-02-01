@@ -62,13 +62,13 @@ where
         &self.element_source
     }
 
-    pub fn bind_range(
+    pub fn range_binding(
         &self,
         element_range: Range<usize>,
         geometry_type: GeometryType,
     ) -> VertexArrayBinding<V::InGl> {
         VertexArrayBinding {
-            raw: self.raw.bind_range(element_range, geometry_type),
+            raw: self.raw.range_binding(element_range, geometry_type),
             _vertex_buffers: self.vertex_buffers.clone(),
         }
     }
@@ -79,8 +79,8 @@ where
     V: VertexInterface<Sl>,
     E: Element,
 {
-    pub fn bind(&self, geometry_type: GeometryType) -> VertexArrayBinding<V::InGl> {
-        self.bind_range(0..self.element_source().len(), geometry_type)
+    pub fn binding(&self, geometry_type: GeometryType) -> VertexArrayBinding<V::InGl> {
+        self.range_binding(0..self.element_source().len(), geometry_type)
     }
 }
 

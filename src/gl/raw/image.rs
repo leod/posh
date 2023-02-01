@@ -13,7 +13,7 @@ pub enum ImageFormat {
 }
 
 impl ImageFormat {
-    pub fn to_gl(self) -> u32 {
+    pub const fn to_gl(self) -> u32 {
         use ImageFormat::*;
 
         match self {
@@ -30,7 +30,7 @@ impl ImageFormat {
         }
     }
 
-    pub fn size(self) -> usize {
+    pub const fn size(self) -> usize {
         use ImageFormat::*;
 
         match self {
@@ -56,7 +56,7 @@ pub enum ImageType {
 }
 
 impl ImageType {
-    pub fn to_gl(self) -> u32 {
+    pub const fn to_gl(self) -> u32 {
         use ImageType::*;
 
         match self {
@@ -66,7 +66,7 @@ impl ImageType {
         }
     }
 
-    pub fn size_of(self) -> usize {
+    pub const fn size_of(self) -> usize {
         use ImageType::*;
 
         match self {
@@ -86,7 +86,7 @@ pub enum ImageInternalFormat {
 }
 
 impl ImageInternalFormat {
-    pub fn to_gl(self) -> u32 {
+    pub const fn to_gl(self) -> u32 {
         use ImageInternalFormat::*;
 
         match self {
@@ -97,7 +97,7 @@ impl ImageInternalFormat {
         }
     }
 
-    pub fn to_format(self) -> ImageFormat {
+    pub const fn to_format(self) -> ImageFormat {
         use ImageInternalFormat::*;
 
         match self {
