@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use glow::HasContext;
 
-use crate::gl::{image, raw::error::check_gl_error, TextureError};
+use crate::gl::{raw::error::check_gl_error, TextureError};
 
 use super::{Caps, ImageData};
 
@@ -17,7 +17,7 @@ pub struct Texture2d {
 }
 
 impl Texture2d {
-    fn new_with_levels(
+    fn new_with_num_levels(
         gl: Rc<glow::Context>,
         caps: &Caps,
         image_data: ImageData,
@@ -75,7 +75,7 @@ impl Texture2d {
         let shared = Rc::new(Texture2dShared {
             gl,
             id,
-            num_levels: todo!(),
+            num_levels: levels,
         });
 
         Ok(Texture2d { shared })
@@ -86,7 +86,7 @@ impl Texture2d {
         caps: &Caps,
         image_data: ImageData,
     ) -> Result<Self, TextureError> {
-        Self::new_with_levels(gl, caps, image_data, 1)
+        Self::new_with_num_levels(gl, caps, image_data, 1)
     }
 
     pub(super) fn new_with_mipmap(
@@ -94,9 +94,9 @@ impl Texture2d {
         caps: &Caps,
         image_data: ImageData,
     ) -> Result<Self, TextureError> {
-        let levels = (image_data.size[0].max(image_data.size[1]) as f64).log2() as usize;
+        let num_levels = (image_data.size[0].max(image_data.size[1]) as f64).log2() as usize;
 
-        let texture = Self::new_with_levels(gl.clone(), caps, image_data, levels)?;
+        let texture = Self::new_with_num_levels(gl.clone(), caps, image_data, num_levels)?;
 
         unsafe {
             gl.bind_texture(glow::TEXTURE_2D, Some(texture.shared.id));
