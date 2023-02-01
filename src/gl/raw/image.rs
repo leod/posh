@@ -126,7 +126,7 @@ pub struct ImageData<'a> {
 }
 
 impl<'a> ImageData<'a> {
-    pub fn expected_data_len(&self) -> usize {
+    pub fn required_data_len(&self) -> usize {
         self.ty.size_of() * self.internal_format.to_format().size()
     }
 }
