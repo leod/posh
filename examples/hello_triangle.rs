@@ -95,8 +95,7 @@ impl Demo {
         self.context.clear_color([0.1, 0.2, 0.3, 1.0]);
         self.program.draw(
             self.uniform_buffer.bind(),
-            self.vertex_array
-                .stream_range(0..3, GeometryType::Triangles),
+            self.vertex_array.bind_range(0..3, GeometryType::Triangles),
             &DefaultFramebuffer,
             &DrawParams::default(),
         );

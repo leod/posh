@@ -3,11 +3,11 @@ use std::{marker::PhantomData, mem::size_of, rc::Rc};
 use bytemuck::Pod;
 use sealed::sealed;
 
-use super::{untyped, ElementType};
+use super::{raw, ElementType};
 
 pub trait ElementSource {
     #[doc(hidden)]
-    fn buffer(&self) -> Option<(&untyped::Buffer, ElementType)>;
+    fn buffer(&self) -> Option<(&raw::Buffer, ElementType)>;
 }
 
 #[sealed]
@@ -51,24 +51,24 @@ impl Element for u32 {
 /// [`Context::create_element_buffer`](crate::gl::Context::create_element_buffer).
 #[derive(Clone)]
 pub struct ElementBuffer<E> {
-    pub(crate) untyped: Rc<untyped::Buffer>,
+    pub(crate) raw: Rc<raw::Buffer>,
     _phantom: PhantomData<E>,
 }
 
 impl<E: Element> ElementBuffer<E> {
-    pub(crate) fn from_untyped(untyped: untyped::Buffer) -> Self {
-        assert_eq!(untyped.len() % size_of::<E>(), 0);
+    pub(crate) fn from_raw(raw: raw::Buffer) -> Self {
+        assert_eq!(raw.len() % size_of::<E>(), 0);
 
         Self {
-            untyped: Rc::new(untyped),
+            raw: Rc::new(raw),
             _phantom: PhantomData,
         }
     }
 
     pub fn len(&self) -> usize {
-        assert_eq!(self.untyped.len() % size_of::<E>(), 0);
+        assert_eq!(self.raw.len() % size_of::<E>(), 0);
 
-        self.untyped.len() / size_of::<E>()
+        self.raw.len() / size_of::<E>()
     }
 
     pub fn is_empty(&self) -> bool {
@@ -76,18 +76,18 @@ impl<E: Element> ElementBuffer<E> {
     }
 
     pub fn set(&self, data: &[E]) {
-        self.untyped.set(data);
+        self.raw.set(data);
     }
 }
 
 impl<E: Element> ElementSource for ElementBuffer<E> {
-    fn buffer(&self) -> Option<(&untyped::Buffer, ElementType)> {
-        Some((&self.untyped, E::TYPE))
+    fn buffer(&self) -> Option<(&raw::Buffer, ElementType)> {
+        Some((&self.raw, E::TYPE))
     }
 }
 
 impl ElementSource for () {
-    fn buffer(&self) -> Option<(&untyped::Buffer, ElementType)> {
+    fn buffer(&self) -> Option<(&raw::Buffer, ElementType)> {
         None
     }
 }

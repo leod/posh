@@ -13,28 +13,28 @@ use crate::{
 };
 
 use super::{
-    untyped, BufferError, BufferUsage, Caps, Element, ElementBuffer, ElementOrUnit, Error, Program,
+    raw, BufferError, BufferUsage, Caps, Element, ElementBuffer, ElementOrUnit, Error, Program,
     ProgramError, UniformBuffer, VertexArray, VertexArrayError, VertexBuffer,
 };
 
 /// The graphics context, which is used for creating GPU objects.
 pub struct Context {
-    pub(crate) untyped: untyped::Context,
+    pub(crate) raw: raw::Context,
 }
 
 impl Context {
     pub fn new(gl: glow::Context) -> Self {
-        let untyped = untyped::Context::new(gl);
+        let raw = raw::Context::new(gl);
 
-        Self { untyped }
+        Self { raw }
     }
 
     pub fn gl(&self) -> &Rc<glow::Context> {
-        self.untyped.gl()
+        self.raw.gl()
     }
 
     pub fn caps(&self) -> &Caps {
-        self.untyped.caps()
+        self.raw.caps()
     }
 
     pub fn create_vertex_buffer<V>(
@@ -49,9 +49,9 @@ impl Context {
         // could be eliminated if we see the need.
         let data: Vec<_> = data.iter().map(AsStd140::as_std140).collect();
 
-        let untyped = self.untyped.create_buffer(&data, usage)?;
+        let raw = self.raw.create_buffer(&data, usage)?;
 
-        Ok(VertexBuffer::from_untyped(untyped))
+        Ok(VertexBuffer::from_raw(raw))
     }
 
     pub fn create_element_buffer<E>(
@@ -62,9 +62,9 @@ impl Context {
     where
         E: Element,
     {
-        let untyped = self.untyped.create_buffer(data, usage)?;
+        let raw = self.raw.create_buffer(data, usage)?;
 
-        Ok(ElementBuffer::from_untyped(untyped))
+        Ok(ElementBuffer::from_raw(raw))
     }
 
     pub fn create_uniform_buffer<U>(
@@ -75,9 +75,9 @@ impl Context {
     where
         U: Block<Sl>,
     {
-        let untyped = self.untyped.create_buffer(&[uniform.as_std140()], usage)?;
+        let raw = self.raw.create_buffer(&[uniform.as_std140()], usage)?;
 
-        Ok(UniformBuffer::from_untyped(untyped))
+        Ok(UniformBuffer::from_raw(raw))
     }
 
     pub fn create_vertex_array<V, E>(
@@ -89,7 +89,7 @@ impl Context {
         V: VertexInterface<Sl>,
         E: ElementOrUnit,
     {
-        VertexArray::new(&self.untyped, vertex_buffers, element_source)
+        VertexArray::new(&self.raw, vertex_buffers, element_source)
     }
 
     pub fn create_simple_vertex_array<V, E>(
@@ -104,11 +104,7 @@ impl Context {
     {
         let vertex_buffer = self.create_vertex_buffer(vertices, usage)?;
 
-        Ok(VertexArray::new(
-            &self.untyped,
-            vertex_buffer,
-            element_source,
-        )?)
+        Ok(VertexArray::new(&self.raw, vertex_buffer, element_source)?)
     }
 
     pub fn create_program<Unif, Vert, Frag, Vary, VertIn, VertOut, FragIn, FragOut>(
@@ -133,9 +129,9 @@ impl Context {
             program_def.vertex_shader_source, program_def.fragment_shader_source
         );
 
-        let untyped = self.untyped.create_program(program_def)?;
+        let raw = self.raw.create_program(program_def)?;
 
-        Ok(Program::unchecked_from_untyped(untyped))
+        Ok(Program::unchecked_from_raw(raw))
     }
 
     pub fn create_program_with_consts<
@@ -172,15 +168,15 @@ impl Context {
             program_def.vertex_shader_source, program_def.fragment_shader_source
         );
 
-        let untyped = self.untyped.create_program(program_def)?;
+        let raw = self.raw.create_program(program_def)?;
 
-        Ok(Program::unchecked_from_untyped(untyped))
+        Ok(Program::unchecked_from_raw(raw))
     }
 
     // TODO: Clearing should move to some framebuffer thing.
 
     pub fn clear_color(&self, color: [f32; 4]) {
-        let gl = self.untyped.gl();
+        let gl = self.raw.gl();
 
         unsafe {
             gl.clear_color(color[0], color[1], color[2], color[3]);
