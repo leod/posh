@@ -20,7 +20,7 @@ where
     Vert: VertexInterface<Sl>,
     Frag: FragmentInterface<Sl>,
 {
-    pub(crate) fn unchecked_from_raw(raw: raw::Program) -> Self {
+    pub(super) fn unchecked_from_raw(raw: raw::Program) -> Self {
         Program {
             raw: Rc::new(raw),
             _phantom: PhantomData,

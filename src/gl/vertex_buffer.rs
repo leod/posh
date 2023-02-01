@@ -12,12 +12,12 @@ use super::{raw, BufferUsage};
 /// [`Context::create_vertex_buffer`](crate::gl::Context::create_vertex_buffer).
 #[derive(Clone)]
 pub struct VertexBuffer<V> {
-    pub(crate) raw: Rc<raw::Buffer>,
+    pub(super) raw: Rc<raw::Buffer>,
     _phantom: PhantomData<V>,
 }
 
 impl<V: Block<Sl>> VertexBuffer<V> {
-    pub(crate) fn from_raw(raw: raw::Buffer) -> Self {
+    pub(super) fn from_raw(raw: raw::Buffer) -> Self {
         assert!(vertex_size::<V>() > 0);
         assert_eq!(raw.len() % vertex_size::<V>(), 0);
 

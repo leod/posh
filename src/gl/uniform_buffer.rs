@@ -12,13 +12,13 @@ use super::{raw, BufferUsage};
 /// [`Context::create_uniform_buffer`](crate::gl::Context::create_uniform_buffer).
 #[derive(Clone)]
 pub struct UniformBuffer<U> {
-    pub(crate) raw: Rc<raw::Buffer>,
+    pub(super) raw: Rc<raw::Buffer>,
     _phantom: PhantomData<U>,
 }
 
 #[derive(Clone)]
 pub struct UniformBufferBinding<U> {
-    pub(crate) raw: Rc<raw::Buffer>,
+    pub(super) raw: Rc<raw::Buffer>,
     _phantom: PhantomData<U>,
     // TODO: Uniform buffer slicing.
 }
@@ -28,7 +28,7 @@ impl<U: Block<Sl>> UniformBuffer<U> {
     ///
     /// Panics if the length of `raw` is not a multiple of the size of `<U::InGl
     /// as AsStd140>::Output`.
-    pub(crate) fn from_raw(raw: raw::Buffer) -> Self {
+    pub(super) fn from_raw(raw: raw::Buffer) -> Self {
         assert!(Self::uniform_size() > 0);
         assert_eq!(raw.len() % Self::uniform_size(), 0);
 

@@ -6,7 +6,7 @@ use crate::{gl::ProgramError, program_def::ProgramDef};
 
 use super::{vertex_layout::VertexAttributeLayout, Buffer, VertexArrayBinding};
 
-pub(super) struct ProgramShared {
+struct ProgramShared {
     gl: Rc<glow::Context>,
     def: ProgramDef,
     id: glow::Program,
@@ -21,7 +21,7 @@ impl Program {
     ///
     /// Panics if the `def` contains duplicate texture unit bindings or
     /// duplicate uniform block bindings.
-    pub(crate) fn new(gl: Rc<glow::Context>, def: ProgramDef) -> Result<Self, ProgramError> {
+    pub(super) fn new(gl: Rc<glow::Context>, def: ProgramDef) -> Result<Self, ProgramError> {
         validate_program_def(&def);
 
         let shared = Rc::new(ProgramShared {
