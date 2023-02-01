@@ -5,7 +5,8 @@ use glow::HasContext;
 use crate::{gl::ProgramError, program_def::ProgramDef};
 
 use super::{
-    error::check_gl_error, vertex_layout::VertexAttributeLayout, Buffer, VertexArrayBinding,
+    error::check_gl_error, vertex_layout::VertexAttributeLayout, Buffer, ProgramValidationError,
+    VertexArrayBinding,
 };
 
 struct ProgramShared {
@@ -19,12 +20,8 @@ pub struct Program {
 }
 
 impl Program {
-    /// # Panics
-    ///
-    /// Panics if the `def` contains duplicate texture unit bindings or
-    /// duplicate uniform block bindings.
     pub(super) fn new(gl: Rc<glow::Context>, def: ProgramDef) -> Result<Self, ProgramError> {
-        validate_program_def(&def);
+        validate_program_def(&def)?;
 
         let shared = Rc::new(ProgramShared {
             gl: gl.clone(),
@@ -243,16 +240,14 @@ impl Drop for AttachedShader {
     }
 }
 
-fn validate_program_def(def: &ProgramDef) {
+fn validate_program_def(def: &ProgramDef) -> Result<(), ProgramValidationError> {
     {
         let mut names: BTreeSet<_> = BTreeSet::new();
 
         for info in &def.sampler_defs {
-            if names.contains(&info.name) {
-                panic!("duplicate sampler name: {}", info.name);
+            if !names.insert(info.name.clone()) {
+                return Err(ProgramValidationError::DuplicateSampler(info.name.clone()));
             }
-
-            names.insert(info.name.clone());
         }
     }
 
@@ -260,14 +255,11 @@ fn validate_program_def(def: &ProgramDef) {
         let mut texture_units: BTreeSet<_> = BTreeSet::new();
 
         for sampler_def in &def.sampler_defs {
-            if texture_units.contains(&sampler_def.texture_unit) {
-                panic!(
-                    "duplicate sampler texture unit: {}",
-                    sampler_def.texture_unit
-                );
+            if !texture_units.insert(sampler_def.texture_unit) {
+                return Err(ProgramValidationError::DuplicateSamplerTextureUnit(
+                    sampler_def.texture_unit,
+                ));
             }
-
-            texture_units.insert(sampler_def.texture_unit);
         }
     }
 
@@ -275,11 +267,11 @@ fn validate_program_def(def: &ProgramDef) {
         let mut names: BTreeSet<_> = BTreeSet::new();
 
         for info in &def.uniform_defs {
-            if names.contains(&info.block_name) {
-                panic!("duplicate uniform block name: {}", info.block_name);
+            if !names.insert(info.block_name.clone()) {
+                return Err(ProgramValidationError::DuplicateUniformBlock(
+                    info.block_name.clone(),
+                ));
             }
-
-            names.insert(info.block_name.clone());
         }
     }
 
@@ -287,11 +279,13 @@ fn validate_program_def(def: &ProgramDef) {
         let mut locations: BTreeSet<_> = BTreeSet::new();
 
         for info in &def.uniform_defs {
-            if locations.contains(&info.location) {
-                panic!("duplicate uniform block location: {}", info.location);
+            if !locations.insert(info.location) {
+                return Err(ProgramValidationError::DuplicateUniformBlockLocation(
+                    info.location,
+                ));
             }
-
-            locations.insert(info.location);
         }
     }
+
+    Ok(())
 }
