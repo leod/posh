@@ -5,6 +5,7 @@ mod draw_params;
 mod error;
 mod image;
 mod program;
+mod sampler_params;
 mod texture;
 mod vertex_array;
 mod vertex_layout;
@@ -18,4 +19,5 @@ pub use error::{
 };
 pub use image::{ImageData, ImageFormat, ImageInternalFormat, ImageType};
 pub use program::Program;
+pub use sampler_params::{Sampler2dParams, SamplerCompareFunc, SamplerMagFilter, SamplerMinFilter};
 pub use vertex_array::{ElementType, GeometryType, VertexArray, VertexArrayBinding};

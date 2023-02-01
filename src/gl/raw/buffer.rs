@@ -18,7 +18,7 @@ pub enum BufferUsage {
 }
 
 impl BufferUsage {
-    pub fn to_gl(self) -> u32 {
+    pub const fn to_gl(self) -> u32 {
         use BufferUsage::*;
 
         match self {

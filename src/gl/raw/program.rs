@@ -133,7 +133,8 @@ impl Program {
     /// # Panics
     ///
     /// Panics if any of the supplied objects do not belong to the same
-    /// `glow::Context`, or if the wrong number of uniform buffers is supplied.
+    /// `glow::Context`, or if the wrong number of uniform buffers is supplied,
+    /// or if the wrong number of samplers is specified.
     ///
     /// # Safety
     ///
