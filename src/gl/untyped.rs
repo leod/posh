@@ -1,5 +1,5 @@
 mod buffer;
-mod capabilities;
+mod caps;
 mod context;
 mod geometry_stream;
 mod image;
@@ -8,7 +8,7 @@ mod texture;
 mod vertex_array;
 
 pub use buffer::Buffer;
-pub use capabilities::Capabilities;
+pub use caps::Caps;
 pub use context::Context;
 pub use geometry_stream::GeometryStream;
 pub use image::{ImageData, ImageFormat, ImageInternalFormat, ImageType};

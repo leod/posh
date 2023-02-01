@@ -28,6 +28,6 @@ pub use sampler::Sampler2d;
 pub use surface::{DefaultFramebuffer, Surface};
 pub use texture::Texture2d;
 pub use uniform_buffer::{UniformBuffer, UniformBufferBinding};
-pub use untyped::Capabilities;
+pub use untyped::Caps;
 pub use vertex_array::VertexArray;
 pub use vertex_buffer::VertexBuffer;

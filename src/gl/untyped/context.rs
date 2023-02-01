@@ -7,20 +7,20 @@ use crate::{
     program_def::{ProgramDef, VertexDef},
 };
 
-use super::{Buffer, Capabilities, Program, VertexArray};
+use super::{Buffer, Caps, Program, VertexArray};
 
 pub struct Context {
     gl: Rc<glow::Context>,
-    capabilities: Capabilities,
+    caps: Caps,
 }
 
 impl Context {
     pub fn new(gl: glow::Context) -> Self {
-        let capabilities = Capabilities::new(&gl);
+        let caps = Caps::new(&gl);
 
         Self {
             gl: Rc::new(gl),
-            capabilities,
+            caps,
         }
     }
 
@@ -28,8 +28,8 @@ impl Context {
         &self.gl
     }
 
-    pub fn capabilities(&self) -> &Capabilities {
-        &self.capabilities
+    pub fn caps(&self) -> &Caps {
+        &self.caps
     }
 
     pub fn create_buffer<T: Pod>(
