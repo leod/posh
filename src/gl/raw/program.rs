@@ -4,7 +4,9 @@ use glow::HasContext;
 
 use crate::{gl::ProgramError, program_def::ProgramDef};
 
-use super::{vertex_layout::VertexAttributeLayout, Buffer, VertexArrayBinding};
+use super::{
+    error::check_gl_error, vertex_layout::VertexAttributeLayout, Buffer, VertexArrayBinding,
+};
 
 struct ProgramShared {
     gl: Rc<glow::Context>,
@@ -126,6 +128,8 @@ impl Program {
             }
         }
 
+        check_gl_error(&gl).map_err(ProgramError::Unexpected)?;
+
         Ok(Program { shared })
     }
 
@@ -174,6 +178,8 @@ impl Program {
         unsafe {
             gl.use_program(None);
         }
+
+        check_gl_error(&gl).unwrap();
     }
 }
 
@@ -243,7 +249,7 @@ fn validate_program_def(def: &ProgramDef) {
 
         for info in &def.sampler_defs {
             if names.contains(&info.name) {
-                panic!("Duplicate sampler name: {}", info.name);
+                panic!("duplicate sampler name: {}", info.name);
             }
 
             names.insert(info.name.clone());
@@ -256,7 +262,7 @@ fn validate_program_def(def: &ProgramDef) {
         for sampler_def in &def.sampler_defs {
             if texture_units.contains(&sampler_def.texture_unit) {
                 panic!(
-                    "Duplicate sampler texture unit: {}",
+                    "duplicate sampler texture unit: {}",
                     sampler_def.texture_unit
                 );
             }
@@ -270,7 +276,7 @@ fn validate_program_def(def: &ProgramDef) {
 
         for info in &def.uniform_defs {
             if names.contains(&info.block_name) {
-                panic!("Duplicate uniform block name: {}", info.block_name);
+                panic!("duplicate uniform block name: {}", info.block_name);
             }
 
             names.insert(info.block_name.clone());
@@ -282,7 +288,7 @@ fn validate_program_def(def: &ProgramDef) {
 
         for info in &def.uniform_defs {
             if locations.contains(&info.location) {
-                panic!("Duplicate uniform block location: {}", info.location);
+                panic!("duplicate uniform block location: {}", info.location);
             }
 
             locations.insert(info.location);

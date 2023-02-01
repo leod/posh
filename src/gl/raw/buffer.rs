@@ -5,6 +5,8 @@ use glow::HasContext;
 
 use crate::gl::BufferError;
 
+use super::error::check_gl_error;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum BufferUsage {
     StreamDraw,
@@ -57,10 +59,10 @@ impl Buffer {
         data: &[T],
         usage: BufferUsage,
     ) -> Result<Self, BufferError> {
-        let id = unsafe { gl.create_buffer() }.map_err(BufferError)?;
+        let id = unsafe { gl.create_buffer() }.map_err(BufferError::ObjectCreation)?;
 
         let shared = Rc::new(BufferShared {
-            gl,
+            gl: gl.clone(),
             id,
             usage,
             len: Cell::new(0),
@@ -69,6 +71,8 @@ impl Buffer {
         let buffer = Buffer { shared };
 
         buffer.set(data);
+
+        check_gl_error(&gl).map_err(BufferError::Unexpected)?;
 
         Ok(buffer)
     }
