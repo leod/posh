@@ -8,11 +8,17 @@ pub struct BufferError(pub String);
 /// An error that occurred while creating a texture.
 #[derive(Debug, Clone, Error)]
 pub enum TextureError {
-    #[error("failed to create texture: {0}")]
-    Create(String),
+    #[error("could not create texture object: {0}")]
+    ObjectCreation(String),
+
+    #[error("texture is empty")]
+    Empty,
 
     #[error("texture too large: requested {0}, but max size is {1}")]
-    TooLarge(usize, usize),
+    Oversized(usize, usize),
+
+    #[error("invalid data size: expected {0} bytes, but got {1}")]
+    DataSizeMismatch(usize, usize),
 }
 
 /// An error that occurred while creating a vertex array.
@@ -23,14 +29,14 @@ pub struct VertexArrayError(pub String);
 /// An error that occurred while creating a program.
 #[derive(Debug, Clone, Error)]
 pub enum ProgramError {
-    #[error("failed to create shader: {0}")]
-    CreateShader(String),
+    #[error("failed to create shader object: {0}")]
+    ShaderCreation(String),
 
     #[error("failed to create program: {0}")]
-    CreateProgram(String),
+    ProgramCreation(String),
 
     #[error("failed to compile program:\nvertex shader: {vertex_shader_info}\nfragment shader: {fragment_shader_info}\nprogram: {program_info}")]
-    CompilerError {
+    Compiler {
         vertex_shader_info: String,
         fragment_shader_info: String,
         program_info: String,
@@ -41,14 +47,14 @@ pub enum ProgramError {
 #[derive(Debug, Clone, Error)]
 pub enum Error {
     #[error("{0}")]
-    CreateBuffer(#[from] BufferError),
+    Buffer(#[from] BufferError),
 
     #[error("{0}")]
-    CreateProgram(#[from] ProgramError),
+    Program(#[from] ProgramError),
 
     #[error("{0}")]
-    CreateTexture(#[from] TextureError),
+    Texture(#[from] TextureError),
 
     #[error("{0}")]
-    CreateVertexArray(#[from] VertexArrayError),
+    VertexArray(#[from] VertexArrayError),
 }
