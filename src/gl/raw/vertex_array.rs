@@ -1,20 +1,60 @@
-use std::{mem::size_of, ops::Range, rc::Rc};
+use std::{ops::Range, rc::Rc};
 
 use glow::HasContext;
 
 use crate::{
-    dag::{BaseType, NumericType, PrimitiveType, Type},
-    gl::{ElementType, GeometryType, VertexArrayError},
+    dag::NumericType,
+    gl::{
+        raw::vertex_layout::{numeric_type_to_gl, VertexAttributeLayout},
+        VertexArrayError,
+    },
     program_def::{VertexDef, VertexInputRate},
 };
 
-use super::{buffer::BufferShared, Buffer, GeometryStream};
+use super::{buffer::BufferShared, Buffer};
 
-pub(super) struct VertexArrayShared {
-    pub(super) gl: Rc<glow::Context>,
-    pub(super) id: glow::VertexArray,
-    pub(super) vertex_buffers: Vec<(Rc<BufferShared>, VertexDef)>,
-    pub(super) element_buffer: Option<(Rc<BufferShared>, ElementType)>,
+#[derive(Debug, Copy, Clone)]
+pub enum ElementType {
+    U16,
+    U32,
+}
+
+impl ElementType {
+    pub fn to_gl(self) -> u32 {
+        use ElementType::*;
+
+        match self {
+            U16 => glow::UNSIGNED_SHORT,
+            U32 => glow::UNSIGNED_INT,
+        }
+    }
+
+    pub fn size(self) -> usize {
+        use ElementType::*;
+
+        match self {
+            U16 => 2,
+            U32 => 4,
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum GeometryType {
+    Points,
+    Lines,
+    LineStrip,
+    LineLoop,
+    Triangles,
+    TriangleStrip,
+    TriangleFan,
+}
+
+struct VertexArrayShared {
+    gl: Rc<glow::Context>,
+    id: glow::VertexArray,
+    vertex_buffers: Vec<(Rc<BufferShared>, VertexDef)>,
+    element_buffer: Option<(Rc<BufferShared>, ElementType)>,
 }
 
 pub struct VertexArray {
@@ -127,12 +167,12 @@ impl VertexArray {
         Ok(Self { shared })
     }
 
-    pub fn stream_range(
+    pub fn bind_range(
         &self,
         element_range: Range<usize>,
         geometry_type: GeometryType,
-    ) -> GeometryStream {
-        GeometryStream {
+    ) -> VertexArrayBinding {
+        VertexArrayBinding {
             vertex_array: self.shared.clone(),
             element_range,
             geometry_type,
@@ -148,91 +188,97 @@ impl Drop for VertexArrayShared {
     }
 }
 
-pub(crate) struct VertexAttributeLayout {
-    pub ty: NumericType,
-    pub num_components: usize,
-    pub num_locations: usize,
-}
+impl GeometryType {
+    pub fn to_gl(self) -> u32 {
+        use GeometryType::*;
 
-impl VertexAttributeLayout {
-    pub fn new(ty: &Type) -> Self {
-        use BaseType::*;
-        use Type::*;
-
-        match ty {
-            Base(ty) => match ty {
-                Scalar(ty) => Self {
-                    ty: get_numeric_type(*ty),
-                    num_components: 1,
-                    num_locations: 1,
-                },
-                Vec2(ty) => Self {
-                    ty: get_numeric_type(*ty),
-                    num_components: 2,
-                    num_locations: 1,
-                },
-                Vec3(ty) => Self {
-                    ty: get_numeric_type(*ty),
-                    num_components: 3,
-                    num_locations: 1,
-                },
-                Vec4(ty) => Self {
-                    ty: get_numeric_type(*ty),
-                    num_components: 4,
-                    num_locations: 1,
-                },
-                Mat2 => Self {
-                    ty: NumericType::F32,
-                    num_components: 2,
-                    num_locations: 2,
-                },
-                Mat3 => Self {
-                    ty: NumericType::F32,
-                    num_components: 3,
-                    num_locations: 3,
-                },
-                Mat4 => Self {
-                    ty: NumericType::F32,
-                    num_components: 4,
-                    num_locations: 4,
-                },
-                Struct(_) => panic!("`VertexArray` does not support struct types"),
-                Sampler2d(_) => panic!("`VertexArray` does not support sampler types"),
-            },
-            Array(_, _) => todo!(),
+        match self {
+            Points => glow::POINTS,
+            Lines => glow::LINES,
+            LineStrip => glow::LINE_STRIP,
+            LineLoop => glow::LINE_LOOP,
+            Triangles => glow::TRIANGLES,
+            TriangleStrip => glow::TRIANGLE_STRIP,
+            TriangleFan => glow::TRIANGLE_FAN,
         }
     }
-
-    pub fn location_size(&self) -> usize {
-        self.num_components * numeric_type_size(self.ty)
-    }
 }
 
-fn numeric_type_size(ty: NumericType) -> usize {
-    use NumericType::*;
-
-    match ty {
-        F32 => size_of::<f32>(),
-        I32 => size_of::<i32>(),
-        U32 => size_of::<u32>(),
-    }
+pub struct VertexArrayBinding {
+    vertex_array: Rc<VertexArrayShared>,
+    element_range: Range<usize>,
+    geometry_type: GeometryType,
 }
 
-fn numeric_type_to_gl(ty: NumericType) -> u32 {
-    use NumericType::*;
-
-    match ty {
-        F32 => glow::FLOAT,
-        I32 => glow::INT,
-        U32 => glow::UNSIGNED_INT,
+impl VertexArrayBinding {
+    pub fn gl(&self) -> &Rc<glow::Context> {
+        &self.vertex_array.gl
     }
-}
 
-fn get_numeric_type(ty: PrimitiveType) -> NumericType {
-    use PrimitiveType::*;
+    /// TODO: Instancing.
+    ///
+    /// # Panics
+    ///
+    /// TODO
+    ///
+    /// # Safety
+    ///
+    /// TODO
+    pub unsafe fn draw(&self) {
+        assert!(self.element_range.start <= self.element_range.end);
 
-    match ty {
-        Numeric(ty) => ty,
-        Bool => panic!("`VertexArray` does not support `bool`"),
+        let gl = &self.vertex_array.gl;
+        let mode = self.geometry_type.to_gl();
+        let first = self.element_range.start;
+        let count = self.element_range.end - self.element_range.start;
+
+        unsafe {
+            gl.bind_vertex_array(Some(self.vertex_array.id));
+        }
+
+        if let Some((element_buffer, element_type)) = &self.vertex_array.element_buffer {
+            let element_size = element_type.size();
+            let element_type = element_type.to_gl();
+
+            let offset = first.checked_mul(element_size).unwrap();
+
+            // Safety: check element range.
+            {
+                let size = count.checked_mul(element_size).unwrap();
+
+                assert!(offset.checked_add(size).unwrap() <= element_buffer.len());
+            }
+
+            let count = i32::try_from(count).unwrap();
+            let offset = i32::try_from(offset).unwrap();
+
+            // Safety: this is only safe if the element buffer does not have any
+            // elements which are out of bound for one of the vertex buffers.
+            // Here, we assume that this is checked by the caller.
+            unsafe {
+                gl.draw_elements(mode, count, element_type, offset);
+            }
+        } else {
+            // Safety: check vertex buffer sizes.
+            let end = first.checked_add(count).unwrap();
+
+            for (buffer, vertex_info) in &self.vertex_array.vertex_buffers {
+                let num_vertices = buffer.len() / vertex_info.stride;
+
+                assert!(num_vertices >= end);
+            }
+
+            let first = i32::try_from(first).unwrap();
+            let count = i32::try_from(count).unwrap();
+
+            unsafe {
+                gl.draw_arrays(mode, first, count);
+            }
+        }
+
+        // TODO: Remove overly conservative unbinding.
+        unsafe {
+            gl.bind_vertex_array(None);
+        }
     }
 }

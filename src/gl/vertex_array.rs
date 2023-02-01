@@ -7,8 +7,8 @@ use crate::{
 };
 
 use super::{
-    untyped, vertex_buffer::vertex_size, Element, ElementOrUnit, ElementSource, GeometryStream,
-    GeometryType, VertexArrayError, VertexBuffer,
+    raw, vertex_buffer::vertex_size, Element, ElementOrUnit, ElementSource, GeometryType,
+    VertexArrayError, VertexBuffer,
 };
 
 /// Combines buffers so that they can be used in [draw
@@ -23,7 +23,7 @@ where
     V: VertexInterface<Sl>,
     E: ElementOrUnit,
 {
-    untyped: Rc<untyped::VertexArray>,
+    raw: Rc<raw::VertexArray>,
     vertex_buffers: Rc<V::InGl>,
     element_source: Rc<E::Source>,
     _phantom: PhantomData<V>,
@@ -35,7 +35,7 @@ where
     E: ElementOrUnit,
 {
     pub(crate) fn new(
-        context: &untyped::Context,
+        context: &raw::Context,
         vertex_buffers: V::InGl,
         element_source: E::Source,
     ) -> Result<Self, VertexArrayError> {
@@ -44,11 +44,10 @@ where
         // TODO: Don't hardcode path names.
         vertex_buffers.visit("vertex_input", &mut visitor);
 
-        let untyped =
-            context.create_vertex_array(&visitor.vertex_buffers, element_source.buffer())?;
+        let raw = context.create_vertex_array(&visitor.vertex_buffers, element_source.buffer())?;
 
         Ok(VertexArray {
-            untyped: Rc::new(untyped),
+            raw: Rc::new(raw),
             vertex_buffers: Rc::new(vertex_buffers),
             element_source: Rc::new(element_source),
             _phantom: PhantomData,
@@ -63,13 +62,13 @@ where
         &self.element_source
     }
 
-    pub fn stream_range(
+    pub fn bind_range(
         &self,
         element_range: Range<usize>,
         geometry_type: GeometryType,
-    ) -> GeometryStream<V::InGl> {
-        GeometryStream {
-            untyped: self.untyped.stream_range(element_range, geometry_type),
+    ) -> VertexArrayBinding<V::InGl> {
+        VertexArrayBinding {
+            raw: self.raw.bind_range(element_range, geometry_type),
             _vertex_buffers: self.vertex_buffers.clone(),
         }
     }
@@ -80,14 +79,25 @@ where
     V: VertexInterface<Sl>,
     E: Element,
 {
-    pub fn stream(&self, geometry_type: GeometryType) -> GeometryStream<V::InGl> {
-        self.stream_range(0..self.element_source().len(), geometry_type)
+    pub fn bind(&self, geometry_type: GeometryType) -> VertexArrayBinding<V::InGl> {
+        self.bind_range(0..self.element_source().len(), geometry_type)
     }
+}
+
+/// A stream of vertices together with a geometry type.
+///
+/// A geometry stream provides vertex data for [draw
+/// calls](crate::gl::Program::draw). Geometry streams can be obtained with
+/// [`VertexArray::stream`](crate::gl::VertexArray::stream) or
+/// [`VertexArray::stream_range`](crate::gl::VertexArray::stream_range).
+pub struct VertexArrayBinding<V> {
+    pub(super) raw: raw::VertexArrayBinding,
+    _vertex_buffers: Rc<V>,
 }
 
 #[derive(Default)]
 struct VertexBufferVisitor<'a> {
-    vertex_buffers: Vec<(&'a untyped::Buffer, VertexDef)>,
+    vertex_buffers: Vec<(&'a raw::Buffer, VertexDef)>,
 }
 
 impl<'a> VertexInterfaceVisitor<'a, Gl> for VertexBufferVisitor<'a> {
@@ -105,6 +115,6 @@ impl<'a> VertexInterfaceVisitor<'a, Gl> for VertexBufferVisitor<'a> {
             attributes,
         };
 
-        self.vertex_buffers.push((&vertex.untyped, vertex_def));
+        self.vertex_buffers.push((&vertex.raw, vertex_def));
     }
 }

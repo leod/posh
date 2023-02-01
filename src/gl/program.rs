@@ -6,11 +6,11 @@ use crate::{
     FragmentInterface, Gl, Sl, UniformInterface, VertexInterface,
 };
 
-use super::{untyped, DrawParams, GeometryStream, Sampler2d, Surface, UniformBufferBinding};
+use super::{raw, DrawParams, Sampler2d, Surface, UniformBufferBinding, VertexArrayBinding};
 
 #[derive(Clone)]
 pub struct Program<Unif, Vert, Frag = sl::Vec4<f32>> {
-    untyped: Rc<untyped::Program>,
+    raw: Rc<raw::Program>,
     _phantom: PhantomData<(Unif, Vert, Frag)>,
 }
 
@@ -20,9 +20,9 @@ where
     Vert: VertexInterface<Sl>,
     Frag: FragmentInterface<Sl>,
 {
-    pub(crate) fn unchecked_from_untyped(untyped: untyped::Program) -> Self {
+    pub(crate) fn unchecked_from_raw(raw: raw::Program) -> Self {
         Program {
-            untyped: Rc::new(untyped),
+            raw: Rc::new(raw),
             _phantom: PhantomData,
         }
     }
@@ -30,7 +30,7 @@ where
     pub fn draw<S>(
         &self,
         uniforms: Unif::InGl,
-        geometry: GeometryStream<Vert::InGl>,
+        vertices: VertexArrayBinding<Vert::InGl>,
         surface: &S,
         draw_params: &DrawParams,
     ) where
@@ -46,15 +46,15 @@ where
         // values in the element buffer (if we have one).
 
         unsafe {
-            self.untyped
-                .draw(&uniform_visitor.untyped_uniform_buffers, geometry.untyped);
+            self.raw
+                .draw(&uniform_visitor.raw_uniform_buffers, vertices.raw);
         }
     }
 }
 
 #[derive(Default)]
 struct UniformVisitor<'a> {
-    untyped_uniform_buffers: Vec<&'a untyped::Buffer>,
+    raw_uniform_buffers: Vec<&'a raw::Buffer>,
 }
 
 impl<'a> UniformInterfaceVisitor<'a, Gl> for UniformVisitor<'a> {
@@ -67,6 +67,6 @@ impl<'a> UniformInterfaceVisitor<'a, Gl> for UniformVisitor<'a> {
         _: &str,
         uniform: &'a UniformBufferBinding<U>,
     ) {
-        self.untyped_uniform_buffers.push(&uniform.untyped);
+        self.raw_uniform_buffers.push(&uniform.raw);
     }
 }

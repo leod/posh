@@ -4,7 +4,7 @@ use crevice::std140::AsStd140;
 
 use crate::{Block, Sl};
 
-use super::{untyped, BufferUsage};
+use super::{raw, BufferUsage};
 
 /// Stores uniform data in a buffer on the GPU.
 ///
@@ -12,13 +12,13 @@ use super::{untyped, BufferUsage};
 /// [`Context::create_uniform_buffer`](crate::gl::Context::create_uniform_buffer).
 #[derive(Clone)]
 pub struct UniformBuffer<U> {
-    pub(crate) untyped: Rc<untyped::Buffer>,
+    pub(crate) raw: Rc<raw::Buffer>,
     _phantom: PhantomData<U>,
 }
 
 #[derive(Clone)]
 pub struct UniformBufferBinding<U> {
-    pub(crate) untyped: Rc<untyped::Buffer>,
+    pub(crate) raw: Rc<raw::Buffer>,
     _phantom: PhantomData<U>,
     // TODO: Uniform buffer slicing.
 }
@@ -26,28 +26,28 @@ pub struct UniformBufferBinding<U> {
 impl<U: Block<Sl>> UniformBuffer<U> {
     /// # Panics
     ///
-    /// Panics if the length of `untyped` is not a multiple of the size of
-    /// `<U::InGl as AsStd140>::Output`.
-    pub(crate) fn from_untyped(untyped: untyped::Buffer) -> Self {
+    /// Panics if the length of `raw` is not a multiple of the size of `<U::InGl
+    /// as AsStd140>::Output`.
+    pub(crate) fn from_raw(raw: raw::Buffer) -> Self {
         assert!(Self::uniform_size() > 0);
-        assert_eq!(untyped.len() % Self::uniform_size(), 0);
+        assert_eq!(raw.len() % Self::uniform_size(), 0);
 
         Self {
-            untyped: Rc::new(untyped),
+            raw: Rc::new(raw),
             _phantom: PhantomData,
         }
     }
 
     pub fn gl(&self) -> &Rc<glow::Context> {
-        self.untyped.gl()
+        self.raw.gl()
     }
 
     pub fn usage(&self) -> BufferUsage {
-        self.untyped.usage()
+        self.raw.usage()
     }
 
     pub fn len(&self) -> usize {
-        self.untyped.len() / Self::uniform_size()
+        self.raw.len() / Self::uniform_size()
     }
 
     pub fn is_empty(&self) -> bool {
@@ -55,12 +55,12 @@ impl<U: Block<Sl>> UniformBuffer<U> {
     }
 
     pub fn set(&self, data: U::InGl) {
-        self.untyped.set(&[data.as_std140()]);
+        self.raw.set(&[data.as_std140()]);
     }
 
     pub fn bind(&self) -> UniformBufferBinding<U> {
         UniformBufferBinding {
-            untyped: self.untyped.clone(),
+            raw: self.raw.clone(),
             _phantom: PhantomData,
         }
     }

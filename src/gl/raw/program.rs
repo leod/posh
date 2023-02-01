@@ -4,7 +4,7 @@ use glow::HasContext;
 
 use crate::{gl::ProgramError, program_def::ProgramDef};
 
-use super::{Buffer, GeometryStream, VertexAttributeLayout};
+use super::{vertex_layout::VertexAttributeLayout, Buffer, VertexArrayBinding};
 
 pub(super) struct ProgramShared {
     gl: Rc<glow::Context>,
@@ -137,7 +137,7 @@ impl Program {
     /// # Safety
     ///
     /// TODO
-    pub unsafe fn draw(&self, uniform_buffers: &[&Buffer], geometry: GeometryStream) {
+    pub unsafe fn draw(&self, uniform_buffers: &[&Buffer], vertices: VertexArrayBinding) {
         let shared = &self.shared;
         let gl = &shared.gl;
 
@@ -157,8 +157,8 @@ impl Program {
             }
         }
 
-        assert!(Rc::ptr_eq(geometry.gl(), gl));
-        geometry.draw();
+        assert!(Rc::ptr_eq(vertices.gl(), gl));
+        vertices.draw();
 
         // TODO: Remove overly conservative unbinding.
         for (_, block_info) in uniform_buffers.iter().zip(&shared.def.uniform_defs) {

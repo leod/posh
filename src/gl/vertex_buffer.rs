@@ -4,7 +4,7 @@ use crevice::std140::AsStd140;
 
 use crate::{Block, Sl};
 
-use super::{untyped, BufferUsage};
+use super::{raw, BufferUsage};
 
 /// Stores vertex data in a buffer on the GPU.
 ///
@@ -12,33 +12,33 @@ use super::{untyped, BufferUsage};
 /// [`Context::create_vertex_buffer`](crate::gl::Context::create_vertex_buffer).
 #[derive(Clone)]
 pub struct VertexBuffer<V> {
-    pub(crate) untyped: Rc<untyped::Buffer>,
+    pub(crate) raw: Rc<raw::Buffer>,
     _phantom: PhantomData<V>,
 }
 
 impl<V: Block<Sl>> VertexBuffer<V> {
-    pub(crate) fn from_untyped(untyped: untyped::Buffer) -> Self {
+    pub(crate) fn from_raw(raw: raw::Buffer) -> Self {
         assert!(vertex_size::<V>() > 0);
-        assert_eq!(untyped.len() % vertex_size::<V>(), 0);
+        assert_eq!(raw.len() % vertex_size::<V>(), 0);
 
         Self {
-            untyped: Rc::new(untyped),
+            raw: Rc::new(raw),
             _phantom: PhantomData,
         }
     }
 
     pub fn gl(&self) -> &Rc<glow::Context> {
-        self.untyped.gl()
+        self.raw.gl()
     }
 
     pub fn usage(&self) -> BufferUsage {
-        self.untyped.usage()
+        self.raw.usage()
     }
 
     pub fn len(&self) -> usize {
-        assert_eq!(self.untyped.len() % vertex_size::<V>(), 0);
+        assert_eq!(self.raw.len() % vertex_size::<V>(), 0);
 
-        self.untyped.len() / vertex_size::<V>()
+        self.raw.len() / vertex_size::<V>()
     }
 
     pub fn is_empty(&self) -> bool {
