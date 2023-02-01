@@ -34,7 +34,7 @@ where
     V: VertexInterface<Sl>,
     E: ElementOrUnit,
 {
-    pub(crate) fn new(
+    pub(super) fn new(
         context: &raw::Context,
         vertex_buffers: V::InGl,
         element_source: E::Source,
@@ -44,7 +44,7 @@ where
         // TODO: Don't hardcode path names.
         vertex_buffers.visit("vertex_input", &mut visitor);
 
-        let raw = context.create_vertex_array(&visitor.vertex_buffers, element_source.buffer())?;
+        let raw = context.create_vertex_array(&visitor.raw_vertex_buffers, element_source.raw())?;
 
         Ok(VertexArray {
             raw: Rc::new(raw),
@@ -86,10 +86,10 @@ where
 
 /// A stream of vertices together with a geometry type.
 ///
-/// A geometry stream provides vertex data for [draw
-/// calls](crate::gl::Program::draw). Geometry streams can be obtained with
-/// [`VertexArray::stream`](crate::gl::VertexArray::stream) or
-/// [`VertexArray::stream_range`](crate::gl::VertexArray::stream_range).
+/// A vertex array binding provides vertex data for [draw
+/// calls](crate::gl::Program::draw). Vertex array bindings can be obtained with
+/// [`VertexArray::bind`](VertexArray::bind) or
+/// [`VertexArray::bind_range`](VertexArray::bind_range).
 pub struct VertexArrayBinding<V> {
     pub(super) raw: raw::VertexArrayBinding,
     _vertex_buffers: Rc<V>,
@@ -97,7 +97,7 @@ pub struct VertexArrayBinding<V> {
 
 #[derive(Default)]
 struct VertexBufferVisitor<'a> {
-    vertex_buffers: Vec<(&'a raw::Buffer, VertexDef)>,
+    raw_vertex_buffers: Vec<(&'a raw::Buffer, VertexDef)>,
 }
 
 impl<'a> VertexInterfaceVisitor<'a, Gl> for VertexBufferVisitor<'a> {
@@ -115,6 +115,6 @@ impl<'a> VertexInterfaceVisitor<'a, Gl> for VertexBufferVisitor<'a> {
             attributes,
         };
 
-        self.vertex_buffers.push((&vertex.raw, vertex_def));
+        self.raw_vertex_buffers.push((&vertex.raw, vertex_def));
     }
 }

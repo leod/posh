@@ -7,7 +7,7 @@ use super::{raw, ElementType};
 
 pub trait ElementSource {
     #[doc(hidden)]
-    fn buffer(&self) -> Option<(&raw::Buffer, ElementType)>;
+    fn raw(&self) -> Option<(&raw::Buffer, ElementType)>;
 }
 
 #[sealed]
@@ -51,12 +51,12 @@ impl Element for u32 {
 /// [`Context::create_element_buffer`](crate::gl::Context::create_element_buffer).
 #[derive(Clone)]
 pub struct ElementBuffer<E> {
-    pub(crate) raw: Rc<raw::Buffer>,
+    raw: Rc<raw::Buffer>,
     _phantom: PhantomData<E>,
 }
 
 impl<E: Element> ElementBuffer<E> {
-    pub(crate) fn from_raw(raw: raw::Buffer) -> Self {
+    pub(super) fn from_raw(raw: raw::Buffer) -> Self {
         assert_eq!(raw.len() % size_of::<E>(), 0);
 
         Self {
@@ -81,13 +81,13 @@ impl<E: Element> ElementBuffer<E> {
 }
 
 impl<E: Element> ElementSource for ElementBuffer<E> {
-    fn buffer(&self) -> Option<(&raw::Buffer, ElementType)> {
+    fn raw(&self) -> Option<(&raw::Buffer, ElementType)> {
         Some((&self.raw, E::TYPE))
     }
 }
 
 impl ElementSource for () {
-    fn buffer(&self) -> Option<(&raw::Buffer, ElementType)> {
+    fn raw(&self) -> Option<(&raw::Buffer, ElementType)> {
         None
     }
 }

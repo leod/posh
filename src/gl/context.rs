@@ -19,7 +19,7 @@ use super::{
 
 /// The graphics context, which is used for creating GPU objects.
 pub struct Context {
-    pub(crate) raw: raw::Context,
+    raw: raw::Context,
 }
 
 impl Context {
