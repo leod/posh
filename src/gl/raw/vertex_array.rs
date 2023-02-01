@@ -11,7 +11,7 @@ use crate::{
     program_def::{VertexDef, VertexInputRate},
 };
 
-use super::{buffer::BufferShared, Buffer};
+use super::{buffer::BufferShared, error::check_gl_error, Buffer};
 
 #[derive(Debug, Copy, Clone)]
 pub enum ElementType {
@@ -74,7 +74,7 @@ impl VertexArray {
     ) -> Result<Self, VertexArrayError> {
         // TODO: How do we want to handle `buffers.is_empty()`?
 
-        let id = unsafe { gl.create_vertex_array() }.map_err(VertexArrayError)?;
+        let id = unsafe { gl.create_vertex_array() }.map_err(VertexArrayError::ObjectCreation)?;
 
         unsafe {
             gl.bind_vertex_array(Some(id));
@@ -148,6 +148,8 @@ impl VertexArray {
             gl.bind_vertex_array(None);
             gl.bind_buffer(glow::ARRAY_BUFFER, None);
         }
+
+        check_gl_error(&gl).map_err(VertexArrayError::Unexpected)?;
 
         let vertex_buffers = vertex_buffers
             .iter()
@@ -280,5 +282,7 @@ impl VertexArrayBinding {
         unsafe {
             gl.bind_vertex_array(None);
         }
+
+        check_gl_error(&gl).unwrap();
     }
 }

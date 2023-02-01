@@ -78,7 +78,7 @@ impl ToTokens for SpecializedTypeGenerics {
         for param in &self.params {
             match param {
                 GenericParam::Lifetime(_) => {
-                    panic!("Internal error: posh does not support lifetimes");
+                    panic!("internal error: posh does not support lifetimes");
                 }
                 GenericParam::Type(param) => {
                     // Leave off the type parameter defaults.

@@ -153,7 +153,7 @@ fn visit(
     }
 
     if temporary_mark.contains(&key) {
-        panic!("Struct definitions contain cycle");
+        panic!("struct definitions contain cycle");
     }
 
     temporary_mark.insert(key);

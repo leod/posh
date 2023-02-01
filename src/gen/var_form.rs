@@ -201,7 +201,7 @@ fn visit(
     }
 
     if temporary_mark.contains(&key) {
-        panic!("Expression contains cycle");
+        panic!("expression contains cycle");
     }
 
     temporary_mark.insert(key);

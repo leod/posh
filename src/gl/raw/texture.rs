@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use glow::HasContext;
 
-use crate::gl::{image, TextureError};
+use crate::gl::{image, raw::error::check_gl_error, TextureError};
 
 use super::{Caps, ImageData};
 
@@ -86,7 +86,15 @@ impl Texture2d {
             gl.bind_texture(glow::TEXTURE_2D, None);
         }
 
-        Ok(todo!())
+        check_gl_error(&gl).map_err(TextureError::Unexpected)?;
+
+        let shared = Rc::new(Texture2dShared {
+            gl,
+            id,
+            num_levels: todo!(),
+        });
+
+        Ok(Texture2d { shared })
     }
 
     pub(super) fn new(
@@ -111,6 +119,8 @@ impl Texture2d {
             gl.generate_mipmap(glow::TEXTURE_2D);
             gl.bind_texture(glow::TEXTURE_2D, None);
         }
+
+        check_gl_error(&gl).map_err(TextureError::Unexpected)?;
 
         Ok(texture)
     }
