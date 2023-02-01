@@ -63,9 +63,28 @@ pub enum VertexArrayError {
     Unexpected(String),
 }
 
+/// An error that was found while validating a program.
+#[derive(Debug, Clone, Error)]
+pub enum ProgramValidationError {
+    #[error("duplicate sampler name: {0}")]
+    DuplicateSampler(String),
+
+    #[error("duplicate sampler texture unit: {0}")]
+    DuplicateSamplerTextureUnit(usize),
+
+    #[error("duplicate uniform block name: {0}")]
+    DuplicateUniformBlock(String),
+
+    #[error("duplicate uniform block location: {0}")]
+    DuplicateUniformBlockLocation(usize),
+}
+
 /// An error that occurred while creating a program.
 #[derive(Debug, Clone, Error)]
 pub enum ProgramError {
+    #[error("invalid program definition: {0}")]
+    Validation(#[from] ProgramValidationError),
+
     #[error("failed to create shader object: {0}")]
     ShaderCreation(String),
 

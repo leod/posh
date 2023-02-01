@@ -13,7 +13,9 @@ pub use buffer::{Buffer, BufferUsage};
 pub use caps::Caps;
 pub use context::Context;
 pub use draw_params::DrawParams;
-pub use error::{BufferError, Error, ProgramError, TextureError, VertexArrayError};
+pub use error::{
+    BufferError, Error, ProgramError, ProgramValidationError, TextureError, VertexArrayError,
+};
 pub use image::{ImageData, ImageFormat, ImageInternalFormat, ImageType};
 pub use program::Program;
 pub use vertex_array::{ElementType, GeometryType, VertexArray, VertexArrayBinding};

@@ -18,7 +18,7 @@ pub use image::{ImageData, ImageFormat, RgbaFormat};
 pub use program::Program;
 pub use raw::{
     BufferError, BufferUsage, Caps, DrawParams, ElementType, Error, GeometryType, ProgramError,
-    TextureError, VertexArrayError,
+    ProgramValidationError, TextureError, VertexArrayError,
 };
 pub use sampler::Sampler2d;
 pub use surface::{DefaultFramebuffer, Surface};

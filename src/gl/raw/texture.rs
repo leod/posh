@@ -17,22 +17,6 @@ pub struct Texture2d {
 }
 
 impl Texture2d {
-    fn validate_size(size: [usize; 2], caps: &Caps) -> Result<(), TextureError> {
-        if size[0] == 0 || size[1] == 0 {
-            return Err(TextureError::Empty);
-        }
-
-        if size[0] > caps.max_texture_size {
-            return Err(TextureError::Oversized(size[0], caps.max_texture_size));
-        }
-
-        if size[1] > caps.max_texture_size {
-            return Err(TextureError::Oversized(size[1], caps.max_texture_size));
-        }
-
-        Ok(())
-    }
-
     fn new_with_levels(
         gl: Rc<glow::Context>,
         caps: &Caps,
@@ -41,7 +25,7 @@ impl Texture2d {
     ) -> Result<Self, TextureError> {
         assert!(levels > 0);
 
-        Self::validate_size(image_data.size, caps)?;
+        validate_size(image_data.size, caps)?;
 
         let id = unsafe { gl.create_texture() }.map_err(TextureError::ObjectCreation)?;
 
@@ -132,4 +116,20 @@ impl Drop for Texture2dShared {
             self.gl.delete_texture(self.id);
         }
     }
+}
+
+fn validate_size(size: [usize; 2], caps: &Caps) -> Result<(), TextureError> {
+    if size[0] == 0 || size[1] == 0 {
+        return Err(TextureError::Empty);
+    }
+
+    if size[0] > caps.max_texture_size {
+        return Err(TextureError::Oversized(size[0], caps.max_texture_size));
+    }
+
+    if size[1] > caps.max_texture_size {
+        return Err(TextureError::Oversized(size[1], caps.max_texture_size));
+    }
+
+    Ok(())
 }
