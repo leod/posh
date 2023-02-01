@@ -4,7 +4,7 @@ use glow::HasContext;
 
 use crate::gl::TextureError;
 
-use super::ImageData;
+use super::{Caps, ImageData};
 
 struct Texture2dShared {
     gl: Rc<glow::Context>,
@@ -17,6 +17,8 @@ pub struct Texture2d {
 }
 
 impl Texture2d {
+    //fn new_with_levels(gl: Rc<glow::Context>, caps: &Caps, )
+
     fn new(gl: Rc<glow::Context>, data: ImageData) -> Result<Self, TextureError> {
         let id = unsafe { gl.create_texture() }.map_err(TextureError::Create)?;
 

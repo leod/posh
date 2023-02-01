@@ -13,8 +13,8 @@ use crate::{
 };
 
 use super::{
-    untyped, BufferError, BufferUsage, Capabilities, Element, ElementBuffer, ElementOrUnit, Error,
-    Program, ProgramError, UniformBuffer, VertexArray, VertexArrayError, VertexBuffer,
+    untyped, BufferError, BufferUsage, Caps, Element, ElementBuffer, ElementOrUnit, Error, Program,
+    ProgramError, UniformBuffer, VertexArray, VertexArrayError, VertexBuffer,
 };
 
 /// The graphics context, which is used for creating GPU objects.
@@ -33,8 +33,8 @@ impl Context {
         self.untyped.gl()
     }
 
-    pub fn capabilities(&self) -> &Capabilities {
-        self.untyped.capabilities()
+    pub fn caps(&self) -> &Caps {
+        self.untyped.caps()
     }
 
     pub fn create_vertex_buffer<V>(
