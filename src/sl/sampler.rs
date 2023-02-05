@@ -15,7 +15,7 @@ use super::{
 /// A value returned by a sampler.
 #[sealed]
 pub trait Sample: Value {
-    const DIMENSION: usize;
+    const NUM_COMPONENTS: usize;
 
     /// Type of a single component of a sample.
     type Component: Numeric;
@@ -23,25 +23,25 @@ pub trait Sample: Value {
 
 #[sealed]
 impl<T: Numeric> Sample for Scalar<T> {
-    const DIMENSION: usize = 1;
+    const NUM_COMPONENTS: usize = 1;
     type Component = T;
 }
 
 #[sealed]
 impl<T: Numeric> Sample for Vec2<T> {
-    const DIMENSION: usize = 2;
+    const NUM_COMPONENTS: usize = 2;
     type Component = T;
 }
 
 #[sealed]
 impl<T: Numeric> Sample for Vec3<T> {
-    const DIMENSION: usize = 3;
+    const NUM_COMPONENTS: usize = 3;
     type Component = T;
 }
 
 #[sealed]
 impl<T: Numeric> Sample for Vec4<T> {
-    const DIMENSION: usize = 4;
+    const NUM_COMPONENTS: usize = 4;
     type Component = T;
 }
 
@@ -55,7 +55,7 @@ pub struct Sampler2d<S> {
 impl<S: Sample> Object for Sampler2d<S> {
     fn ty() -> Type {
         Type::Base(BaseType::Sampler(SamplerType::Sampler2d {
-            dimension: S::DIMENSION,
+            dimension: S::NUM_COMPONENTS,
             ty: <S::Component as Numeric>::NUMERIC_TYPE,
         }))
     }

@@ -1,10 +1,12 @@
 use std::time::Instant;
 
 use crevice::std140::AsStd140;
+use image::{io::Reader as ImageReader, EncodableLayout, GenericImageView};
+
 use posh::{
     gl::{
         BufferUsage, Context, DefaultFramebuffer, DrawParams, Error, GeometryType, Program,
-        RgbaFormat, Sampler2dParams, Texture2d, UniformBuffer, VertexArray,
+        RgbaFormat, RgbaImage, Sampler2dParams, Texture2d, UniformBuffer, VertexArray,
     },
     sl::{self, VaryingOutput},
     Block, BlockDomain, Gl, Sl, UniformDomain, UniformInterface,
@@ -78,7 +80,15 @@ impl Demo {
             BufferUsage::StaticDraw,
             (),
         )?;
-        let texture = todo!();
+        let image = ImageReader::open("examples/resources/smile.png")
+            .unwrap()
+            .decode()
+            .unwrap()
+            .to_rgba8(); // TODO: anyhow
+        let texture = context.create_texture_2d_with_mipmap(RgbaImage::u8_slice(
+            image.dimensions(),
+            image.as_bytes(),
+        ))?;
         let start_time = Instant::now();
 
         Ok(Self {
@@ -117,7 +127,7 @@ fn main() {
     gl_attr.set_context_version(3, 0);
 
     let window = video
-        .window("Hello triangle!", 1024, 768)
+        .window("Hello texture cube!", 1024, 768)
         .opengl()
         .resizable()
         .build()

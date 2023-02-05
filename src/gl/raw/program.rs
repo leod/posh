@@ -95,20 +95,26 @@ impl Program {
         }
 
         // Set texture units.
+        unsafe {
+            gl.use_program(Some(shared.id));
+        }
+
         for sampler_def in &shared.def.uniform_sampler_defs {
             let location = unsafe { gl.get_uniform_location(shared.id, &sampler_def.name) };
 
             // We silently ignore location lookup failures here, since program
             // linking is allowed to remove uniforms that are not used by the
             // program.
-            if let Some(location) = location {
-                unsafe {
-                    gl.uniform_1_i32(
-                        Some(&location),
-                        i32::try_from(sampler_def.texture_unit).unwrap(),
-                    );
-                }
+            unsafe {
+                gl.uniform_1_i32(
+                    location.as_ref(),
+                    i32::try_from(sampler_def.texture_unit).unwrap(),
+                );
             }
+        }
+
+        unsafe {
+            gl.use_program(None);
         }
 
         // Set uniform block locations.

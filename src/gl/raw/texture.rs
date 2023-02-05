@@ -102,7 +102,10 @@ impl Texture2d {
         let slice = if let Some(slice) = image.data {
             // Safety: check that `slice` has the correct size.
             if slice.len() != data_len {
-                return Err(TextureError::DataSizeMismatch(slice.len(), data_len));
+                return Err(TextureError::DataSizeMismatch {
+                    expected: data_len,
+                    got: slice.len(),
+                });
             }
 
             slice
@@ -212,11 +215,17 @@ fn validate_size(size: (u32, u32), caps: &Caps) -> Result<(), TextureError> {
     }
 
     if size.0 > caps.max_texture_size {
-        return Err(TextureError::Oversized(size.0, caps.max_texture_size));
+        return Err(TextureError::Oversized {
+            requested: size.0,
+            max: caps.max_texture_size,
+        });
     }
 
     if size.1 > caps.max_texture_size {
-        return Err(TextureError::Oversized(size.1, caps.max_texture_size));
+        return Err(TextureError::Oversized {
+            requested: size.1,
+            max: caps.max_texture_size,
+        });
     }
 
     Ok(())

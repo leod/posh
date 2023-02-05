@@ -72,13 +72,15 @@ pub fn write_shader_stage(
 
     writeln!(f)?;
 
-    for sampler_def in sampler_defs {}
+    for sampler_def in sampler_defs {
+        writeln!(f, "uniform {} {};", sampler_def.ty, sampler_def.name)?;
+    }
 
-    for uniform_def in block_defs {
-        let ty_name = type_name(&struct_registry, &uniform_def.ty);
+    for block_def in block_defs {
+        let ty_name = type_name(&struct_registry, &block_def.ty);
 
-        writeln!(f, "uniform {} {{", uniform_def.block_name)?;
-        writeln!(f, "    {} {};", ty_name, uniform_def.arg_name)?;
+        writeln!(f, "uniform {} {{", block_def.block_name)?;
+        writeln!(f, "    {} {};", ty_name, block_def.arg_name)?;
         writeln!(f, "}};")?;
     }
 
