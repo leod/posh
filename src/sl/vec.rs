@@ -21,20 +21,11 @@ pub struct Vec2<T> {
 }
 
 impl<T: Primitive> Vec2<T> {
-    pub fn to_vec3(self) -> Vec3<T> {
+    pub fn extend(self, z: impl ToValue<Output = Scalar<T>>) -> Vec3<T> {
         Vec3 {
             x: self.x,
             y: self.y,
-            z: Default::default(),
-        }
-    }
-
-    pub fn to_vec4(self) -> Vec4<T> {
-        Vec4 {
-            x: self.x,
-            y: self.y,
-            z: Default::default(),
-            w: Default::default(),
+            z: z.to_value(),
         }
     }
 }
@@ -48,12 +39,12 @@ pub struct Vec3<T> {
 }
 
 impl<T: Primitive> Vec3<T> {
-    pub fn to_vec4(self) -> Vec4<T> {
+    pub fn extend(self, w: impl ToValue<Output = Scalar<T>>) -> Vec4<T> {
         Vec4 {
             x: self.x,
             y: self.y,
             z: self.z,
-            w: Default::default(),
+            w: w.to_value(),
         }
     }
 }

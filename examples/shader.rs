@@ -41,7 +41,7 @@ fn vertex_shader(globals: Globals, vertex: ColorVertex) -> VaryingOutput<sl::Vec
 
     VaryingOutput {
         varying: sl::Vec4::default(),
-        position: globals.projection * globals.camera * position.to_vec4(),
+        position: globals.projection * globals.camera * position.extend(1.0).extend(1.0),
     }
 }
 
