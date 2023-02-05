@@ -128,6 +128,17 @@ pub struct Image<'a> {
 
 impl<'a> Image<'a> {
     pub fn required_data_len(&self) -> usize {
-        self.ty.size_of() * self.internal_format.to_format().size()
+        let width = usize::try_from(self.dimensions.0).unwrap();
+        let height = usize::try_from(self.dimensions.0).unwrap();
+        let bytes = self.ty.size_of();
+        let num_components = self.internal_format.to_format().size();
+
+        width
+            .checked_mul(height)
+            .unwrap()
+            .checked_mul(bytes)
+            .unwrap()
+            .checked_mul(num_components)
+            .unwrap()
     }
 }

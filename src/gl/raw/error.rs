@@ -43,11 +43,11 @@ pub enum TextureError {
     #[error("texture is empty")]
     Empty,
 
-    #[error("texture too large: requested {0}, but max size is {1}")]
-    Oversized(u32, u32),
+    #[error("texture too large: requested {requested}, but max size is {max}")]
+    Oversized { requested: u32, max: u32 },
 
-    #[error("invalid data size: expected {0} bytes, but got {1}")]
-    DataSizeMismatch(usize, usize),
+    #[error("invalid data size: expected {expected} bytes, but got {got}")]
+    DataSizeMismatch { expected: usize, got: usize },
 
     #[error("unexpected error: {0}")]
     Unexpected(String),

@@ -243,9 +243,9 @@ impl<'a> UniformInterfaceVisitor<'a, Sl> for UniformVisitor {
     fn accept_sampler2d<S: Sample>(&mut self, path: &str, _: &Sampler2d<S>) {
         // TODO: Allow user-specified sampler texture units.
         self.sampler_defs.push(UniformSamplerDef {
-            name: path.to_string() + "_posh_sampler",
+            name: path.to_string(),
             ty: SamplerType::Sampler2d {
-                dimension: S::DIMENSION,
+                dimension: S::NUM_COMPONENTS,
                 ty: <S::Component as Numeric>::NUMERIC_TYPE,
             },
             texture_unit: self.sampler_defs.len(),
