@@ -17,7 +17,7 @@ pub use draw_params::DrawParams;
 pub use error::{
     BufferError, Error, ProgramError, ProgramValidationError, TextureError, VertexArrayError,
 };
-pub use image::{ImageData, ImageFormat, ImageInternalFormat, ImageType};
+pub use image::{Image, ImageFormat, ImageInternalFormat, ImageType};
 pub use program::Program;
 pub use sampler_params::{Sampler2dParams, SamplerCompareFunc, SamplerMagFilter, SamplerMinFilter};
 pub use texture::{Sampler2d, Texture2d};

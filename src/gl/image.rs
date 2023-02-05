@@ -5,29 +5,29 @@ use crate::sl;
 use super::raw::{self, ImageInternalFormat, ImageType};
 
 #[sealed]
-pub trait ImageData {
+pub trait Image {
     #[doc(hidden)]
-    fn raw(&self) -> &raw::ImageData;
+    fn raw(&self) -> &raw::Image;
 }
 
 #[sealed]
 pub trait ImageFormat {
     type Sample: sl::Sample;
-    type Data<'a>: ImageData;
+    type Image<'a>: Image;
 }
 
-pub struct RgbaData<'a>(raw::ImageData<'a>);
+pub struct RgbaImage<'a>(raw::Image<'a>);
 
 #[sealed]
-impl<'a> ImageData for RgbaData<'a> {
-    fn raw(&self) -> &raw::ImageData {
+impl<'a> Image for RgbaImage<'a> {
+    fn raw(&self) -> &raw::Image {
         &self.0
     }
 }
 
-impl<'a> RgbaData<'a> {
+impl<'a> RgbaImage<'a> {
     pub fn from_u8(dimensions: (u32, u32), data: &'a [u8]) -> Self {
-        RgbaData(raw::ImageData {
+        RgbaImage(raw::Image {
             dimensions,
             ty: ImageType::U8,
             internal_format: ImageInternalFormat::RgbaU8,
@@ -36,7 +36,7 @@ impl<'a> RgbaData<'a> {
     }
 
     pub fn from_u8_srgb(dimensions: (u32, u32), data: &'a [u8]) -> Self {
-        RgbaData(raw::ImageData {
+        RgbaImage(raw::Image {
             dimensions,
             ty: ImageType::U8,
             internal_format: ImageInternalFormat::SrgbU8AlphaU8,
@@ -45,7 +45,7 @@ impl<'a> RgbaData<'a> {
     }
 
     pub fn from_i8_snorm(dimensions: (u32, u32), data: &'a [i8]) -> Self {
-        RgbaData(raw::ImageData {
+        RgbaImage(raw::Image {
             dimensions,
             ty: ImageType::I8,
             internal_format: ImageInternalFormat::RgbaI8Snorm,
@@ -54,7 +54,7 @@ impl<'a> RgbaData<'a> {
     }
 
     pub fn from_f32(dimensions: (u32, u32), data: &'a [f32]) -> Self {
-        RgbaData(raw::ImageData {
+        RgbaImage(raw::Image {
             dimensions,
             ty: ImageType::F32,
             internal_format: ImageInternalFormat::RgbaF32,
@@ -63,7 +63,7 @@ impl<'a> RgbaData<'a> {
     }
 
     pub fn zeroed_u8(dimensions: (u32, u32)) -> Self {
-        RgbaData(raw::ImageData {
+        RgbaImage(raw::Image {
             dimensions,
             ty: ImageType::U8,
             internal_format: ImageInternalFormat::RgbaU8,
@@ -72,7 +72,7 @@ impl<'a> RgbaData<'a> {
     }
 
     pub fn zeroed_u8_srgb(dimensions: (u32, u32)) -> Self {
-        RgbaData(raw::ImageData {
+        RgbaImage(raw::Image {
             dimensions,
             ty: ImageType::U8,
             internal_format: ImageInternalFormat::SrgbU8AlphaU8,
@@ -81,7 +81,7 @@ impl<'a> RgbaData<'a> {
     }
 
     pub fn zeroed_i8_snorm(dimensions: (u32, u32)) -> Self {
-        RgbaData(raw::ImageData {
+        RgbaImage(raw::Image {
             dimensions,
             ty: ImageType::I8,
             internal_format: ImageInternalFormat::RgbaI8Snorm,
@@ -90,7 +90,7 @@ impl<'a> RgbaData<'a> {
     }
 
     pub fn zeroed_f32(dimensions: (u32, u32)) -> Self {
-        RgbaData(raw::ImageData {
+        RgbaImage(raw::Image {
             dimensions,
             ty: ImageType::F32,
             internal_format: ImageInternalFormat::RgbaF32,
@@ -104,7 +104,7 @@ pub struct RgbaFormat;
 #[sealed]
 impl ImageFormat for RgbaFormat {
     type Sample = sl::Vec4<f32>;
-    type Data<'a> = RgbaData<'a>;
+    type Image<'a> = RgbaImage<'a>;
 }
 
 // TODO:

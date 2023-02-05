@@ -118,14 +118,14 @@ impl ImageInternalFormat {
 }
 
 #[doc(hidden)]
-pub struct ImageData<'a> {
+pub struct Image<'a> {
     pub dimensions: (u32, u32),
     pub ty: ImageType,
     pub internal_format: ImageInternalFormat,
     pub data: Option<&'a [u8]>,
 }
 
-impl<'a> ImageData<'a> {
+impl<'a> Image<'a> {
     pub fn required_data_len(&self) -> usize {
         self.ty.size_of() * self.internal_format.to_format().size()
     }
