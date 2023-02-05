@@ -46,8 +46,11 @@ where
         // values in the element buffer (if we have one).
 
         unsafe {
-            self.raw
-                .draw(&uniform_visitor.raw_uniform_buffers, vertices.raw);
+            self.raw.draw(
+                &uniform_visitor.raw_uniform_buffers,
+                &uniform_visitor.raw_samplers,
+                vertices.raw,
+            );
         }
     }
 }
@@ -55,11 +58,13 @@ where
 #[derive(Default)]
 struct UniformVisitor<'a> {
     raw_uniform_buffers: Vec<&'a raw::Buffer>,
+    raw_samplers: Vec<raw::Sampler>,
 }
 
 impl<'a> UniformInterfaceVisitor<'a, Gl> for UniformVisitor<'a> {
     fn accept_sampler2d<S: Sample>(&mut self, path: &str, sampler: &Sampler2d<S>) {
-        todo!()
+        self.raw_samplers
+            .push(raw::Sampler::Sampler2d(sampler.raw.clone()))
     }
 
     fn accept_uniform<U: Block<Sl, InSl = U>>(

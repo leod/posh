@@ -32,6 +32,6 @@ impl<Format: ImageFormat> Texture2d<Format> {
 }
 
 pub struct Sampler2d<S: sl::Sample> {
-    raw: raw::Sampler2d,
+    pub(super) raw: raw::Sampler2d,
     _phantom: PhantomData<S>,
 }

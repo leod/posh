@@ -20,5 +20,5 @@ pub use error::{
 pub use image::{Image, ImageFormat, ImageInternalFormat, ImageType};
 pub use program::Program;
 pub use sampler_params::{Sampler2dParams, SamplerCompareFunc, SamplerMagFilter, SamplerMinFilter};
-pub use texture::{Sampler2d, Texture2d};
+pub use texture::{Sampler, Sampler2d, Texture2d};
 pub use vertex_array::{ElementType, GeometryType, VertexArray, VertexArrayBinding};
