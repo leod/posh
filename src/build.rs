@@ -232,13 +232,17 @@ where
 
 #[derive(Default)]
 struct UniformVisitor {
-    uniform_defs: Vec<UniformDef>,
     sampler_defs: Vec<SamplerDef>,
+    uniform_defs: Vec<UniformDef>,
 }
 
 impl<'a> UniformInterfaceVisitor<'a, Sl> for UniformVisitor {
     fn accept_sampler2d<S: Sample>(&mut self, path: &str, sampler: &Sampler2d<S>) {
-        todo!()
+        // TODO: Allow user-specified sampler texture units.
+        self.sampler_defs.push(SamplerDef {
+            name: path.to_string() + "_posh_sampler",
+            texture_unit: self.sampler_defs.len(),
+        })
     }
 
     fn accept_uniform<U: Block<Sl>>(&mut self, path: &str, _: &U) {

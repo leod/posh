@@ -8,7 +8,7 @@ use crate::{
 };
 
 use super::{
-    primitives::{built_in_1, cast},
+    primitives::{built_in_2, cast},
     Object, Scalar, Value, Vec2, Vec3, Vec4,
 };
 
@@ -68,7 +68,7 @@ impl<S: Sample> Object for Sampler2d<S> {
 
 impl<S: Sample> Sampler2d<S> {
     pub fn lookup(self, tex_coords: Vec2<f32>) -> S {
-        let sample: Vec4<S::Component> = built_in_1("texture", tex_coords);
+        let sample: Vec4<S::Component> = built_in_2("texture", self, tex_coords);
 
         cast(sample)
     }
