@@ -1,6 +1,6 @@
+mod codegen;
 mod compile;
 mod dag;
-mod gen;
 mod interface;
 mod program_def;
 

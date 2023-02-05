@@ -3,7 +3,7 @@ use std::{marker::PhantomData, rc::Rc};
 use sealed::sealed;
 
 use crate::{
-    dag::{BaseType, Expr, Trace, Type},
+    dag::{BaseType, Expr, SamplerType, Trace, Type},
     Numeric,
 };
 
@@ -15,27 +15,33 @@ use super::{
 /// A value returned by a sampler.
 #[sealed]
 pub trait Sample: Value {
+    const DIMENSION: usize;
+
     /// Type of a single component of a sample.
     type Component: Numeric;
 }
 
 #[sealed]
 impl<T: Numeric> Sample for Scalar<T> {
+    const DIMENSION: usize = 1;
     type Component = T;
 }
 
 #[sealed]
 impl<T: Numeric> Sample for Vec2<T> {
+    const DIMENSION: usize = 2;
     type Component = T;
 }
 
 #[sealed]
 impl<T: Numeric> Sample for Vec3<T> {
+    const DIMENSION: usize = 3;
     type Component = T;
 }
 
 #[sealed]
 impl<T: Numeric> Sample for Vec4<T> {
+    const DIMENSION: usize = 4;
     type Component = T;
 }
 
@@ -48,7 +54,10 @@ pub struct Sampler2d<S> {
 
 impl<S: Sample> Object for Sampler2d<S> {
     fn ty() -> Type {
-        Type::Base(BaseType::Sampler2d(S::Component::NUMERIC_TYPE))
+        Type::Base(BaseType::Sampler(SamplerType::Sampler2d {
+            dimension: S::DIMENSION,
+            ty: <S::Component as Numeric>::NUMERIC_TYPE,
+        }))
     }
 
     fn expr(&self) -> Rc<Expr> {

@@ -51,7 +51,7 @@ impl VertexAttributeLayout {
                     num_locations: 4,
                 },
                 Struct(_) => panic!("`VertexArray` does not support struct types"),
-                Sampler2d(_) => panic!("`VertexArray` does not support sampler types"),
+                Sampler(_) => panic!("`VertexArray` does not support sampler types"),
             },
             Array(_, _) => todo!(),
         }
