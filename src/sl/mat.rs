@@ -190,8 +190,8 @@ macro_rules! impl_mat {
         }
 
         impl $ty {
-            pub fn diagonal(value: f32) -> Self {
-                built_in_1(&format!("{}", Self::ty()), value)
+            pub fn diagonal(value: impl ToValue<Output = F32>) -> Self {
+                built_in_1(&format!("{}", Self::ty()), value.to_value())
             }
 
             pub fn identity() -> Self {

@@ -9,7 +9,7 @@ where
     U: Value,
     V: Value,
 {
-    built_in_1(&format!("{}", V::ty()), u)
+    built_in_1(&format!("{}", V::ty()), u.to_value())
 }
 
 pub(crate) fn binary<U, V, R>(
@@ -36,25 +36,21 @@ where
     R::from_expr(expr)
 }
 
-pub(crate) fn built_in_1<U, R>(name: &str, u: impl ToValue<Output = U>) -> R
+pub(crate) fn built_in_1<U, R>(name: &str, u: U) -> R
 where
     U: Object,
     R: Value,
 {
     let ty = R::ty();
     let name = name.to_string();
-    let args = vec![u.to_value().expr()];
+    let args = vec![u.expr()];
 
     let expr = Expr::CallBuiltIn { ty, name, args };
 
     R::from_expr(expr)
 }
 
-pub(crate) fn built_in_2<U, V, R>(
-    name: &str,
-    u: impl ToValue<Output = U>,
-    v: impl ToValue<Output = V>,
-) -> R
+pub(crate) fn built_in_2<U, V, R>(name: &str, u: U, v: V) -> R
 where
     U: Object,
     V: Object,
@@ -62,19 +58,14 @@ where
 {
     let ty = R::ty();
     let name = name.to_string();
-    let args = vec![u.to_value().expr(), v.to_value().expr()];
+    let args = vec![u.expr(), v.expr()];
 
     let expr = Expr::CallBuiltIn { ty, name, args };
 
     R::from_expr(expr)
 }
 
-pub(crate) fn built_in_3<U, V, W, R>(
-    name: &str,
-    u: impl ToValue<Output = U>,
-    v: impl ToValue<Output = V>,
-    w: impl ToValue<Output = W>,
-) -> R
+pub(crate) fn built_in_3<U, V, W, R>(name: &str, u: U, v: V, w: W) -> R
 where
     U: Object,
     V: Object,
@@ -83,11 +74,7 @@ where
 {
     let ty = R::ty();
     let name = name.to_string();
-    let args = vec![
-        u.to_value().expr(),
-        v.to_value().expr(),
-        w.to_value().expr(),
-    ];
+    let args = vec![u.expr(), v.expr(), w.expr()];
 
     let expr = Expr::CallBuiltIn { ty, name, args };
 

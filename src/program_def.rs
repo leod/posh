@@ -2,7 +2,7 @@ use crate::dag::Type;
 
 /// Uniform input definition.
 #[derive(Debug, Clone)]
-pub struct UniformDef {
+pub struct UniformBlockDef {
     /// The name of the uniform block.
     pub block_name: String,
 
@@ -18,7 +18,7 @@ pub struct UniformDef {
 
 /// Sampler input definition.
 #[derive(Debug, Clone)]
-pub struct SamplerDef {
+pub struct UniformSamplerDef {
     pub name: String,
     pub texture_unit: usize,
 }
@@ -49,15 +49,15 @@ pub struct VertexDef {
 /// Type-erased definition of a program.
 ///
 /// This is exposed for the purpose of inspecting the generated shader code. See
-/// [`crate::util::build_program_def`] for how to construct a type-erased
+/// [`crate::util::compile_to_program_def`] for how to construct a type-erased
 /// [`ProgramDef`] from typed shader definitions.
 #[derive(Debug, Clone, Default)]
 pub struct ProgramDef {
     /// Uniforms that the program needs.
-    pub uniform_defs: Vec<UniformDef>,
+    pub uniform_block_defs: Vec<UniformBlockDef>,
 
     /// Samplers that the program needs.
-    pub sampler_defs: Vec<SamplerDef>,
+    pub uniform_sampler_defs: Vec<UniformSamplerDef>,
 
     /// Vertices that the program needs.
     pub vertex_defs: Vec<VertexDef>,

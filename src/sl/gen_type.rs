@@ -26,11 +26,11 @@ macro_rules! impl_gen_type {
             }
 
             pub fn atan2(self, x: impl super::ToValue<Output = Self>) -> Self {
-                super::primitives::built_in_2("atan", self, x)
+                super::primitives::built_in_2("atan", self, x.to_value())
             }
 
             pub fn pow(self, y: impl super::ToValue<Output = Self>) -> Self {
-                super::primitives::built_in_2("pow", self, y)
+                super::primitives::built_in_2("pow", self, y.to_value())
             }
 
             pub fn atan(self) -> Self {

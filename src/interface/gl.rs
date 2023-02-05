@@ -120,7 +120,7 @@ unsafe impl<U: Block<Sl, InSl = U>> UniformInterface<Gl> for UniformBufferBindin
     type InSl = U;
 
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformInterfaceVisitor<'a, Gl>) {
-        visitor.accept_uniform::<U::InSl>(path, self);
+        visitor.accept_block::<U::InSl>(path, self);
     }
 }
 

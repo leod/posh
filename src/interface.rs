@@ -334,7 +334,7 @@ unsafe impl<D: UniformDomain> UniformInterface<D> for () {
 pub trait UniformInterfaceVisitor<'a, D: UniformDomain> {
     fn accept_sampler2d<V: Sample>(&mut self, path: &str, sampler: &'a D::Sampler2d<V>);
 
-    fn accept_uniform<U: Block<Sl, InSl = U>>(&mut self, path: &str, uniform: &'a D::Block<U>);
+    fn accept_block<U: Block<Sl, InSl = U>>(&mut self, path: &str, block: &'a D::Block<U>);
 }
 
 // FragmentInterface

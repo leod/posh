@@ -67,7 +67,7 @@ impl<'a> UniformInterfaceVisitor<'a, Gl> for UniformVisitor<'a> {
             .push(raw::Sampler::Sampler2d(sampler.raw.clone()))
     }
 
-    fn accept_uniform<U: Block<Sl, InSl = U>>(
+    fn accept_block<U: Block<Sl, InSl = U>>(
         &mut self,
         _: &str,
         uniform: &'a UniformBufferBinding<U>,

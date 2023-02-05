@@ -4,7 +4,7 @@ use crevice::std140::AsStd140;
 use glow::HasContext;
 
 use crate::{
-    build::{build_program_def, build_program_def_with_consts},
+    compile::{compile_to_program_def, compile_to_program_def_with_consts},
     sl::{
         ConstInput, FromFragmentInput, FromVertexInput, IntoFragmentOutput, IntoVertexOutput,
         Varying,
@@ -123,7 +123,7 @@ impl Context {
         FragIn: FromFragmentInput<Vary = Vary>,
         FragOut: IntoFragmentOutput<Frag = Frag>,
     {
-        let program_def = build_program_def(vertex_shader, fragment_shader);
+        let program_def = compile_to_program_def(vertex_shader, fragment_shader);
 
         println!(
             "{}\n==================={}",
@@ -162,7 +162,8 @@ impl Context {
         FragIn: FromFragmentInput<Vary = Vary>,
         FragOut: IntoFragmentOutput<Frag = Frag>,
     {
-        let program_def = build_program_def_with_consts(consts, vertex_shader, fragment_shader);
+        let program_def =
+            compile_to_program_def_with_consts(consts, vertex_shader, fragment_shader);
 
         println!(
             "{}\n==================={}",
