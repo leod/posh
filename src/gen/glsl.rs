@@ -5,7 +5,7 @@ use std::{
 
 use crate::{
     dag::{BaseType, Expr, Type},
-    program_def::UniformDef,
+    program_def::{UniformBlockDef, UniformSamplerDef},
 };
 
 use super::{
@@ -49,12 +49,13 @@ impl Display for Indent {
 
 pub fn write_shader_stage(
     f: &mut impl Write,
-    uniform_defs: &[UniformDef],
+    block_defs: &[UniformBlockDef],
+    sampler_defs: &[UniformSamplerDef],
     attributes: impl Iterator<Item = (String, String, Type)>,
     outputs: &[(&str, Rc<Expr>)],
 ) -> Result {
     let roots: Vec<_> = outputs.iter().map(|(_, root)| root.clone()).collect();
-    let struct_registry = StructRegistry::new(&roots, uniform_defs.iter().map(|def| &def.ty));
+    let struct_registry = StructRegistry::new(&roots, block_defs.iter().map(|def| &def.ty));
     let var_form = VarForm::new(&struct_registry, &roots);
     let scope_form = ScopeForm::new(&var_form);
 
@@ -71,7 +72,9 @@ pub fn write_shader_stage(
 
     writeln!(f)?;
 
-    for uniform_def in uniform_defs {
+    for sampler_def in sampler_defs {}
+
+    for uniform_def in block_defs {
         let ty_name = type_name(&struct_registry, &uniform_def.ty);
 
         writeln!(f, "uniform {} {{", uniform_def.block_name)?;

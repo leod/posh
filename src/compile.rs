@@ -7,7 +7,8 @@ use crate::{
     gen::glsl,
     interface::{FragmentInterfaceVisitor, UniformInterfaceVisitor, VertexInterfaceVisitor},
     program_def::{
-        ProgramDef, SamplerDef, UniformDef, VertexAttributeDef, VertexDef, VertexInputRate,
+        ProgramDef, UniformBlockDef, UniformSamplerDef, VertexAttributeDef, VertexDef,
+        VertexInputRate,
     },
     sl::{
         ConstInput, FragmentInput, FromFragmentInput, FromVertexInput, IntoFragmentOutput,
@@ -24,7 +25,7 @@ use crate::sl::{primitives::value_arg, Sampler2d, Varying, Vec4};
 /// This is used internally by `posh` in order to create
 /// [`Program`](crate::gl::Program)s. It is exposed for the purpose of
 /// inspecting generated shader source code.
-pub fn build_program_def<Unif, Vert, Frag, Vary, VertIn, VertOut, FragIn, FragOut>(
+pub fn compile_to_program_def<Unif, Vert, Frag, Vary, VertIn, VertOut, FragIn, FragOut>(
     vertex_shader: fn(Unif, VertIn) -> VertOut,
     fragment_shader: fn(Unif, FragIn) -> FragOut,
 ) -> ProgramDef
@@ -38,7 +39,7 @@ where
     FragIn: FromFragmentInput<Vary = Vary>,
     FragOut: IntoFragmentOutput<Frag = Frag>,
 {
-    build_program_def_with_consts_impl(
+    compile_to_program_def_with_consts_impl(
         (),
         |(), uniforms, input| vertex_shader(uniforms, input),
         |(), uniforms, input| fragment_shader(uniforms, input),
@@ -47,8 +48,8 @@ where
 
 /// Compiles a vertex shader and a fragment shader with constant input.
 ///
-/// See also [`build_program_def`].
-pub fn build_program_def_with_consts<
+/// See also [`compile_to_program_def`].
+pub fn compile_to_program_def_with_consts<
     Consts,
     Unif,
     Vert,
@@ -74,10 +75,10 @@ where
     FragIn: FromFragmentInput<Vary = Vary>,
     FragOut: IntoFragmentOutput<Frag = Frag>,
 {
-    build_program_def_with_consts_impl(consts, vertex_shader, fragment_shader)
+    compile_to_program_def_with_consts_impl(consts, vertex_shader, fragment_shader)
 }
 
-fn build_program_def_with_consts_impl<
+fn compile_to_program_def_with_consts_impl<
     Consts,
     Unif,
     Vert,
@@ -109,7 +110,7 @@ where
         let mut uniform_visitor = UniformVisitor::default();
         uniforms.visit("uniforms", &mut uniform_visitor);
 
-        (uniform_visitor.uniform_defs, uniform_visitor.sampler_defs)
+        (uniform_visitor.block_defs, uniform_visitor.sampler_defs)
     };
 
     let (vertex_defs, varying_outputs, vertex_shader_source) = {
@@ -154,6 +155,7 @@ where
         glsl::write_shader_stage(
             &mut source,
             &block_defs,
+            &sampler_defs,
             attributes,
             &exprs.collect::<Vec<_>>(),
         )
@@ -213,6 +215,7 @@ where
         glsl::write_shader_stage(
             &mut source,
             &block_defs,
+            &sampler_defs,
             attributes,
             &exprs.collect::<Vec<_>>(),
         )
@@ -222,8 +225,8 @@ where
     };
 
     ProgramDef {
-        uniform_defs: block_defs,
-        sampler_defs,
+        uniform_block_defs: block_defs,
+        uniform_sampler_defs: sampler_defs,
         vertex_defs,
         vertex_shader_source,
         fragment_shader_source,
@@ -232,26 +235,26 @@ where
 
 #[derive(Default)]
 struct UniformVisitor {
-    sampler_defs: Vec<SamplerDef>,
-    uniform_defs: Vec<UniformDef>,
+    sampler_defs: Vec<UniformSamplerDef>,
+    block_defs: Vec<UniformBlockDef>,
 }
 
 impl<'a> UniformInterfaceVisitor<'a, Sl> for UniformVisitor {
     fn accept_sampler2d<S: Sample>(&mut self, path: &str, sampler: &Sampler2d<S>) {
         // TODO: Allow user-specified sampler texture units.
-        self.sampler_defs.push(SamplerDef {
+        self.sampler_defs.push(UniformSamplerDef {
             name: path.to_string() + "_posh_sampler",
             texture_unit: self.sampler_defs.len(),
         })
     }
 
-    fn accept_uniform<U: Block<Sl>>(&mut self, path: &str, _: &U) {
+    fn accept_block<U: Block<Sl>>(&mut self, path: &str, _: &U) {
         // TODO: Allow user-specified uniform block locations.
-        self.uniform_defs.push(UniformDef {
+        self.block_defs.push(UniformBlockDef {
             block_name: path.to_string() + "_posh_block",
             arg_name: path.to_string(),
             ty: <U::InSl as Object>::ty(),
-            location: self.uniform_defs.len(),
+            location: self.block_defs.len(),
         })
     }
 }

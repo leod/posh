@@ -193,7 +193,7 @@ unsafe impl<U: Block<Sl, InSl = U>> UniformInterface<Sl> for U {
     type InSl = Self;
 
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformInterfaceVisitor<'a, Sl>) {
-        visitor.accept_uniform(path, self)
+        visitor.accept_block(path, self)
     }
 
     fn shader_input(path: &str) -> Self {

@@ -4,7 +4,7 @@ use glow::HasContext;
 
 use crate::{
     gl::ProgramError,
-    program_def::{ProgramDef, SamplerDef},
+    program_def::{ProgramDef, UniformSamplerDef},
 };
 
 use super::{
@@ -95,7 +95,7 @@ impl Program {
         }
 
         // Set texture units.
-        for sampler_def in &shared.def.sampler_defs {
+        for sampler_def in &shared.def.uniform_sampler_defs {
             let location = unsafe { gl.get_uniform_location(shared.id, &sampler_def.name) };
 
             // We silently ignore location lookup failures here, since program
@@ -112,7 +112,7 @@ impl Program {
         }
 
         // Set uniform block locations.
-        for uniform_def in &shared.def.uniform_defs {
+        for uniform_def in &shared.def.uniform_block_defs {
             let index = unsafe { gl.get_uniform_block_index(shared.id, &uniform_def.block_name) };
 
             // As with texture units, we silently ignore uniform block index
@@ -153,15 +153,15 @@ impl Program {
         let gl = &self.shared.gl;
         let def = &self.shared.def;
 
-        assert_eq!(uniform_buffers.len(), def.uniform_defs.len());
-        assert_eq!(samplers.len(), def.sampler_defs.len());
+        assert_eq!(uniform_buffers.len(), def.uniform_block_defs.len());
+        assert_eq!(samplers.len(), def.uniform_sampler_defs.len());
         assert!(Rc::ptr_eq(vertices.gl(), gl));
 
         unsafe {
             gl.use_program(Some(self.shared.id));
         }
 
-        for (buffer, block_def) in uniform_buffers.iter().zip(&def.uniform_defs) {
+        for (buffer, block_def) in uniform_buffers.iter().zip(&def.uniform_block_defs) {
             assert!(Rc::ptr_eq(buffer.gl(), gl));
 
             let location = u32::try_from(block_def.location).unwrap();
@@ -171,7 +171,7 @@ impl Program {
             }
         }
 
-        for (sampler, sampler_def) in samplers.iter().zip(&def.sampler_defs) {
+        for (sampler, sampler_def) in samplers.iter().zip(&def.uniform_sampler_defs) {
             assert!(Rc::ptr_eq(sampler.gl(), gl));
 
             let unit = texture_unit_gl(sampler_def);
@@ -186,14 +186,14 @@ impl Program {
         vertices.draw();
 
         // TODO: Remove overly conservative unbinding.
-        for (sampler, sampler_def) in samplers.iter().zip(&def.sampler_defs) {
+        for (sampler, sampler_def) in samplers.iter().zip(&def.uniform_sampler_defs) {
             let unit = texture_unit_gl(sampler_def);
 
             sampler.unbind();
         }
 
         // TODO: Remove overly conservative unbinding.
-        for block_def in &def.uniform_defs {
+        for block_def in &def.uniform_block_defs {
             let location = u32::try_from(block_def.location).unwrap();
 
             unsafe {
@@ -275,7 +275,7 @@ fn validate_program_def(def: &ProgramDef) -> Result<(), ProgramValidationError> 
     {
         let mut names: BTreeSet<_> = BTreeSet::new();
 
-        for info in &def.sampler_defs {
+        for info in &def.uniform_sampler_defs {
             if !names.insert(info.name.clone()) {
                 return Err(ProgramValidationError::DuplicateSampler(info.name.clone()));
             }
@@ -285,7 +285,7 @@ fn validate_program_def(def: &ProgramDef) -> Result<(), ProgramValidationError> 
     {
         let mut texture_units: BTreeSet<_> = BTreeSet::new();
 
-        for sampler_def in &def.sampler_defs {
+        for sampler_def in &def.uniform_sampler_defs {
             if !texture_units.insert(sampler_def.texture_unit) {
                 return Err(ProgramValidationError::DuplicateSamplerTextureUnit(
                     sampler_def.texture_unit,
@@ -297,7 +297,7 @@ fn validate_program_def(def: &ProgramDef) -> Result<(), ProgramValidationError> 
     {
         let mut names: BTreeSet<_> = BTreeSet::new();
 
-        for info in &def.uniform_defs {
+        for info in &def.uniform_block_defs {
             if !names.insert(info.block_name.clone()) {
                 return Err(ProgramValidationError::DuplicateUniformBlock(
                     info.block_name.clone(),
@@ -309,7 +309,7 @@ fn validate_program_def(def: &ProgramDef) -> Result<(), ProgramValidationError> 
     {
         let mut locations: BTreeSet<_> = BTreeSet::new();
 
-        for info in &def.uniform_defs {
+        for info in &def.uniform_block_defs {
             if !locations.insert(info.location) {
                 return Err(ProgramValidationError::DuplicateUniformBlockLocation(
                     info.location,
@@ -321,7 +321,7 @@ fn validate_program_def(def: &ProgramDef) -> Result<(), ProgramValidationError> 
     Ok(())
 }
 
-fn texture_unit_gl(sampler_def: &SamplerDef) -> u32 {
+fn texture_unit_gl(sampler_def: &UniformSamplerDef) -> u32 {
     u32::try_from(sampler_def.texture_unit)
         .unwrap()
         .checked_add(glow::TEXTURE0)
