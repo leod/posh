@@ -14,7 +14,7 @@ mod vertex_buffer;
 
 pub use context::Context;
 pub use element_buffer::{Element, ElementBuffer, ElementOrUnit, ElementSource};
-pub use image::{ImageData, ImageFormat, RgbaFormat};
+pub use image::{Image, ImageFormat, RgbaFormat};
 pub use program::Program;
 pub use raw::{
     BufferError, BufferUsage, Caps, DrawParams, ElementType, Error, GeometryType, ProgramError,

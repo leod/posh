@@ -4,7 +4,7 @@ use glow::HasContext;
 
 use crate::gl::{raw::error::check_gl_error, TextureError};
 
-use super::{Caps, ImageData, Sampler2dParams, SamplerCompareFunc};
+use super::{Caps, Image, Sampler2dParams, SamplerCompareFunc};
 
 struct Texture2dShared {
     gl: Rc<glow::Context>,
@@ -81,23 +81,23 @@ impl Texture2d {
     fn new_with_num_levels(
         gl: Rc<glow::Context>,
         caps: &Caps,
-        image_data: ImageData,
+        image: Image,
         num_levels: usize,
     ) -> Result<Self, TextureError> {
         assert!(num_levels > 0);
 
-        validate_size(image_data.dimensions, caps)?;
+        validate_size(image.dimensions, caps)?;
 
         let id = unsafe { gl.create_texture() }.map_err(TextureError::ObjectCreation)?;
 
         let width =
-            i32::try_from(image_data.dimensions.0).expect("max_texture_size is out of i32 range");
+            i32::try_from(image.dimensions.0).expect("max_texture_size is out of i32 range");
         let height =
-            i32::try_from(image_data.dimensions.1).expect("max_texture_size is out of i32 range");
+            i32::try_from(image.dimensions.1).expect("max_texture_size is out of i32 range");
 
         let mut buffer = Vec::new();
-        let data_len = image_data.required_data_len();
-        let slice = if let Some(slice) = image_data.data {
+        let data_len = image.required_data_len();
+        let slice = if let Some(slice) = image.data {
             // Safety: check that `slice` has the correct size.
             if slice.len() != data_len {
                 return Err(TextureError::DataSizeMismatch(slice.len(), data_len));
@@ -114,7 +114,7 @@ impl Texture2d {
             gl.tex_storage_2d(
                 glow::TEXTURE_2D,
                 1,
-                image_data.internal_format.to_gl(),
+                image.internal_format.to_gl(),
                 width,
                 height,
             );
@@ -125,8 +125,8 @@ impl Texture2d {
                 0,
                 width,
                 height,
-                image_data.internal_format.to_format().to_gl(),
-                image_data.ty.to_gl(),
+                image.internal_format.to_format().to_gl(),
+                image.ty.to_gl(),
                 glow::PixelUnpackData::Slice(slice),
             );
             gl.bind_texture(glow::TEXTURE_2D, None);
@@ -147,20 +147,19 @@ impl Texture2d {
     pub(super) fn new(
         gl: Rc<glow::Context>,
         caps: &Caps,
-        image_data: ImageData,
+        image: Image,
     ) -> Result<Self, TextureError> {
-        Self::new_with_num_levels(gl, caps, image_data, 1)
+        Self::new_with_num_levels(gl, caps, image, 1)
     }
 
     pub(super) fn new_with_mipmap(
         gl: Rc<glow::Context>,
         caps: &Caps,
-        image_data: ImageData,
+        image: Image,
     ) -> Result<Self, TextureError> {
-        let num_levels =
-            (image_data.dimensions.0.max(image_data.dimensions.1) as f64).log2() as usize;
+        let num_levels = (image.dimensions.0.max(image.dimensions.1) as f64).log2() as usize;
 
-        let texture = Self::new_with_num_levels(gl.clone(), caps, image_data, num_levels)?;
+        let texture = Self::new_with_num_levels(gl.clone(), caps, image, num_levels)?;
 
         unsafe {
             gl.bind_texture(glow::TEXTURE_2D, Some(texture.shared.id));

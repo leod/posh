@@ -7,7 +7,7 @@ use crate::{
     program_def::{ProgramDef, VertexDef},
 };
 
-use super::{Buffer, Caps, ImageData, Program, Texture2d, TextureError, VertexArray};
+use super::{Buffer, Caps, Image, Program, Texture2d, TextureError, VertexArray};
 
 pub struct Context {
     gl: Rc<glow::Context>,
@@ -52,14 +52,11 @@ impl Context {
         Program::new(self.gl.clone(), def)
     }
 
-    pub fn create_texture_2d(&self, image_data: ImageData) -> Result<Texture2d, TextureError> {
-        Texture2d::new(self.gl.clone(), &self.caps, image_data)
+    pub fn create_texture_2d(&self, image: Image) -> Result<Texture2d, TextureError> {
+        Texture2d::new(self.gl.clone(), &self.caps, image)
     }
 
-    pub fn create_texture_2d_with_mipmap(
-        &self,
-        image_data: ImageData,
-    ) -> Result<Texture2d, TextureError> {
-        Texture2d::new_with_mipmap(self.gl.clone(), &self.caps, image_data)
+    pub fn create_texture_2d_with_mipmap(&self, image: Image) -> Result<Texture2d, TextureError> {
+        Texture2d::new_with_mipmap(self.gl.clone(), &self.caps, image)
     }
 }
