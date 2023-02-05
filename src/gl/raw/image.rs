@@ -118,6 +118,7 @@ impl ImageInternalFormat {
 }
 
 #[doc(hidden)]
+#[derive(Clone)]
 pub struct Image<'a> {
     pub dimensions: (u32, u32),
     pub ty: ImageType,

@@ -67,7 +67,7 @@ impl VertexArray {
     /// Panics if any of the buffers do not belong to `gl`, or if any of the
     /// vertex attribute types are not supported by `posh`, or if any of the
     /// buffers have a mismatched size.
-    pub fn new(
+    pub(super) fn new(
         gl: Rc<glow::Context>,
         vertex_buffers: &[(&Buffer, VertexDef)],
         element_buffer: Option<(&Buffer, ElementType)>,

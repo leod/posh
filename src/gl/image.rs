@@ -12,6 +12,8 @@ pub trait Image {
 
 #[sealed]
 pub trait ImageFormat {
+    const ALLOWED_INTERNAL_FORMATS: &'static [ImageInternalFormat];
+
     type Sample: sl::Sample;
     type Image<'a>: Image;
 }
@@ -103,6 +105,12 @@ pub struct RgbaFormat;
 
 #[sealed]
 impl ImageFormat for RgbaFormat {
+    const ALLOWED_INTERNAL_FORMATS: &'static [ImageInternalFormat] = &[
+        ImageInternalFormat::RgbaU8,
+        ImageInternalFormat::SrgbU8AlphaU8,
+        ImageInternalFormat::RgbaI8Snorm,
+        ImageInternalFormat::RgbaF32,
+    ];
     type Sample = sl::Vec4<f32>;
     type Image<'a> = RgbaImage<'a>;
 }
