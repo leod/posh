@@ -3,7 +3,7 @@ use std::{
     rc::Rc,
 };
 
-use super::{BaseType, BinaryOp, Expr, NumericType, PrimitiveType, Type};
+use super::{ty::SamplerType, BaseType, BinaryOp, Expr, NumericType, PrimitiveType, Type};
 
 impl Display for BinaryOp {
     fn fmt(&self, f: &mut Formatter) -> Result {
@@ -83,6 +83,16 @@ impl Display for PrimitiveType {
     }
 }
 
+impl Display for SamplerType {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        use SamplerType::*;
+
+        match self {
+            Sampler2d { ty, .. } => write!(f, "{}sampler2D", numeric_type_prefix(*ty)),
+        }
+    }
+}
+
 fn numeric_type_prefix(ty: NumericType) -> &'static str {
     use NumericType::*;
 
@@ -115,7 +125,7 @@ impl Display for BaseType {
             Mat3 => write!(f, "mat3"),
             Mat4 => write!(f, "mat4"),
             Struct(ty) => write!(f, "{}", ty.name),
-            Sampler2d(ty) => write!(f, "{}sampler2D", numeric_type_prefix(*ty)),
+            Sampler(ty) => write!(f, "{}", ty),
         }
     }
 }

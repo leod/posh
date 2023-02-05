@@ -19,6 +19,11 @@ pub struct StructType {
     pub fields: Vec<(String, Type)>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SamplerType {
+    Sampler2d { dimension: usize, ty: NumericType },
+}
+
 #[derive(Debug, Clone, Eq)]
 pub enum BaseType {
     Scalar(PrimitiveType),
@@ -29,7 +34,7 @@ pub enum BaseType {
     Mat3,
     Mat4,
     Struct(Rc<StructType>),
-    Sampler2d(NumericType),
+    Sampler(SamplerType),
 }
 
 impl BaseType {
@@ -40,7 +45,7 @@ impl BaseType {
             Mat2 => true,
             Mat3 => true,
             Mat4 => true,
-            Scalar(_) | Vec2(_) | Vec3(_) | Vec4(_) | Struct(_) | Sampler2d(_) => false,
+            Scalar(_) | Vec2(_) | Vec3(_) | Vec4(_) | Struct(_) | Sampler(_) => false,
         }
     }
 }
@@ -58,7 +63,7 @@ impl PartialEq for BaseType {
             (Mat3, Mat3) => true,
             (Mat4, Mat4) => true,
             (Struct(a), Struct(b)) => Rc::ptr_eq(a, b),
-            (Sampler2d(a), Sampler2d(b)) => a == b,
+            (Sampler(a), Sampler(b)) => a == b,
             _ => false,
         }
     }
@@ -68,10 +73,7 @@ impl BaseType {
     pub fn is_transparent(&self) -> bool {
         use BaseType::*;
 
-        match self {
-            Sampler2d(_) => false,
-            _ => true,
-        }
+        !matches!(self, Sampler(_))
     }
 }
 

@@ -1,4 +1,4 @@
-use crate::dag::Type;
+use crate::dag::{NumericType, SamplerType, Type};
 
 /// Uniform input definition.
 #[derive(Debug, Clone)]
@@ -20,6 +20,7 @@ pub struct UniformBlockDef {
 #[derive(Debug, Clone)]
 pub struct UniformSamplerDef {
     pub name: String,
+    pub ty: SamplerType,
     pub texture_unit: usize,
 }
 
