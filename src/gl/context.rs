@@ -13,8 +13,9 @@ use crate::{
 };
 
 use super::{
-    raw, BufferError, BufferUsage, Caps, Element, ElementBuffer, ElementOrUnit, Error, Program,
-    ProgramError, TextureError, UniformBuffer, VertexArray, VertexArrayError, VertexBuffer,
+    raw, BufferError, BufferUsage, Caps, Element, ElementBuffer, ElementOrUnit, Error, Image,
+    ImageFormat, Program, ProgramError, Texture2d, TextureError, UniformBuffer, VertexArray,
+    VertexArrayError, VertexBuffer,
 };
 
 /// The graphics context, which is used for creating GPU objects.
@@ -171,6 +172,26 @@ impl Context {
         let raw = self.raw.create_program(program_def)?;
 
         Ok(Program::unchecked_from_raw(raw))
+    }
+
+    pub fn create_texture_2d<Format: ImageFormat>(
+        &self,
+        image: Format::Image<'_>,
+    ) -> Result<Texture2d<Format>, TextureError> {
+        let raw = self.raw.create_texture_2d(image.raw().clone())?;
+
+        Ok(Texture2d::from_raw(raw))
+    }
+
+    pub fn create_texture_2d_with_mipmap<Format: ImageFormat>(
+        &self,
+        image: Format::Image<'_>,
+    ) -> Result<Texture2d<Format>, TextureError> {
+        let raw = self
+            .raw
+            .create_texture_2d_with_mipmap(image.raw().clone())?;
+
+        Ok(Texture2d::from_raw(raw))
     }
 
     // TODO: Clearing should move to some framebuffer thing.
