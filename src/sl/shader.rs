@@ -10,7 +10,7 @@ impl ConstInput for () {}
 #[derive(Debug, Clone)]
 pub(crate) struct Private;
 
-/// The full input given to a vertex shader.
+/// The full per-vertex input given to a vertex shader.
 #[derive(Debug, Clone)]
 pub struct VertexInput<Vert> {
     pub vertex: Vert,
@@ -96,7 +96,7 @@ impl<Vary: Varying> IntoVertexOutput for VaryingOutput<Vary> {
     }
 }
 
-/// The full input given to a fragment shader.
+/// The full per-fragment input given to a fragment shader.
 #[derive(Debug, Clone)]
 pub struct FragmentInput<Vary> {
     pub varying: Vary,

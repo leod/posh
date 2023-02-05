@@ -1,61 +1,64 @@
 use std::time::Instant;
 
 use posh::{
-    crevice::std140::AsStd140,
     gl::{
         BufferUsage, Context, DefaultFramebuffer, DrawParams, Error, GeometryType, Program,
         UniformBuffer, VertexArray,
     },
     sl::{self, VaryingOutput},
-    Block, BlockDomain, Sl,
+    Block, BlockDomain, Sl, UniformDomain, UniformInterface,
 };
 
 // Shader interface
 
-#[derive(Clone, Copy, Block)]
-struct MyUniform<D: BlockDomain = Sl> {
-    time: D::F32,
+#[derive(Clone, Copy, Block, Default)]
+struct Camera<D: BlockDomain = Sl> {
+    projection: D::Mat4,
+    view: D::Mat4,
 }
 
 #[derive(Clone, Copy, Block)]
-struct MyVertex<D: BlockDomain = Sl> {
-    pos: D::Vec2<f32>,
-    flag: D::Vec2<bool>,
+struct Vertex<D: BlockDomain = Sl> {
+    pos: D::Vec3<f32>,
+    tex_coords: D::Vec2<f32>,
+}
+
+#[derive(UniformInterface)]
+struct Uniforms<D: UniformDomain = Sl> {
+    camera: D::Block<Camera>,
+    sampler: D::Sampler2d<sl::Vec4<f32>>,
 }
 
 // Shader code
 
-fn vertex_shader<Unif>(_: Unif, vertex: MyVertex) -> VaryingOutput<sl::Vec2<f32>> {
-    let shifted_pos = vertex.pos - 0.5 * vertex.flag.x.branch(1.0, 2.0);
-    let shifted_pos = sl::Mat2::identity().x * sl::Vec2::default() + shifted_pos;
+fn vertex_shader(uniforms: Uniforms, vertex: Vertex) -> VaryingOutput<sl::Vec2<f32>> {
+    let camera = uniforms.camera;
+    let position = camera.projection * camera.view * vertex.pos.to_vec4();
 
     VaryingOutput {
-        varying: vertex.pos,
-        position: sl::vec4(shifted_pos.x, shifted_pos.y, 0.0, 1.0),
+        varying: vertex.tex_coords,
+        position,
     }
 }
 
-fn fragment_shader(uniform: MyUniform, varying: sl::Vec2<f32>) -> sl::Vec4<f32> {
-    let rg = (varying + uniform.time).cos().pow(sl::vec2(2.0, 2.0));
-
-    sl::vec4(rg.x, rg.y, 0.5, 1.0)
+fn fragment_shader(uniforms: Uniforms, tex_coords: sl::Vec2<f32>) -> sl::Vec4<f32> {
+    uniforms.sampler.lookup(tex_coords)
 }
 
 // Host code
 
 struct Demo {
     context: Context,
-    program: Program<MyUniform, MyVertex>,
-    uniform_buffer: UniformBuffer<MyUniform>,
-    vertex_array: VertexArray<MyVertex>,
+    program: Program<Uniforms, Vertex>,
+    camera: UniformBuffer<Camera>,
+    vertex_array: VertexArray<Vertex>,
     start_time: Instant,
 }
 
 impl Demo {
     pub fn new(context: Context) -> Result<Self, Error> {
         let program = context.create_program(vertex_shader, fragment_shader)?;
-        let uniform_buffer =
-            context.create_uniform_buffer(MyUniform { time: 0.0 }, BufferUsage::StreamDraw)?;
+        let camera = context.create_uniform_buffer(Camera::default(), BufferUsage::StreamDraw)?;
         let vertex_array = context.create_simple_vertex_array(
             &[
                 MyVertex {
@@ -82,7 +85,7 @@ impl Demo {
         Ok(Self {
             context,
             program,
-            uniform_buffer,
+            camera,
             vertex_array,
             start_time,
         })
@@ -90,11 +93,13 @@ impl Demo {
 
     pub fn draw(&self) {
         let time = Instant::now().duration_since(self.start_time).as_secs_f32();
-        self.uniform_buffer.set(MyUniform { time });
+        self.camera.set(MyUniform { time });
 
         self.context.clear_color([0.1, 0.2, 0.3, 1.0]);
         self.program.draw(
-            self.uniform_buffer.binding(),
+            Uniforms {
+                camera: self.camera.binding(),
+            },
             self.vertex_array
                 .range_binding(0..3, GeometryType::Triangles),
             &DefaultFramebuffer,
