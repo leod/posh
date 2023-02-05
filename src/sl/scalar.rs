@@ -178,3 +178,5 @@ impl_binary_op!(add, Add);
 impl_binary_op!(div, Div);
 impl_binary_op!(mul, Mul);
 impl_binary_op!(sub, Sub);
+
+impl_gen_type!(Scalar);
