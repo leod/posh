@@ -200,6 +200,7 @@ impl Drop for Texture2dShared {
     }
 }
 
+#[derive(Clone)]
 pub struct Sampler2d {
     shared: Rc<Texture2dShared>,
     params: Sampler2dParams,
@@ -219,4 +220,37 @@ fn validate_size(size: (u32, u32), caps: &Caps) -> Result<(), TextureError> {
     }
 
     Ok(())
+}
+
+#[derive(Clone)]
+pub enum Sampler {
+    Sampler2d(Sampler2d),
+}
+
+impl Sampler {
+    pub fn gl(&self) -> &Rc<glow::Context> {
+        use Sampler::*;
+
+        match self {
+            Sampler2d(sampler) => &sampler.shared.gl,
+        }
+    }
+
+    pub fn bind(&self) {
+        use Sampler::*;
+
+        match self {
+            Sampler2d(sampler) => sampler.shared.bind_with_sampler_params(sampler.params),
+        }
+    }
+
+    pub fn unbind(&self) {
+        use Sampler::*;
+
+        match self {
+            Sampler2d(sampler) => unsafe {
+                sampler.shared.gl.bind_texture(glow::TEXTURE_2D, None);
+            },
+        }
+    }
 }

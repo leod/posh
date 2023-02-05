@@ -2,11 +2,14 @@ use std::{collections::BTreeSet, rc::Rc};
 
 use glow::HasContext;
 
-use crate::{gl::ProgramError, program_def::ProgramDef};
+use crate::{
+    gl::ProgramError,
+    program_def::{ProgramDef, SamplerDef},
+};
 
 use super::{
     error::check_gl_error, vertex_layout::VertexAttributeLayout, Buffer, ProgramValidationError,
-    VertexArrayBinding,
+    Sampler, VertexArrayBinding,
 };
 
 struct ProgramShared {
@@ -136,35 +139,62 @@ impl Program {
     /// `glow::Context`, or if the wrong number of uniform buffers is supplied,
     /// or if the wrong number of samplers is specified.
     ///
+    /// TOOD: Check vertex array compatibility?
+    ///
     /// # Safety
     ///
     /// TODO
-    pub unsafe fn draw(&self, uniform_buffers: &[&Buffer], vertices: VertexArrayBinding) {
-        let shared = &self.shared;
-        let gl = &shared.gl;
+    pub unsafe fn draw(
+        &self,
+        uniform_buffers: &[&Buffer],
+        samplers: &[Sampler],
+        vertices: VertexArrayBinding,
+    ) {
+        let gl = &self.shared.gl;
+        let def = &self.shared.def;
+
+        assert_eq!(uniform_buffers.len(), def.uniform_defs.len());
+        assert_eq!(samplers.len(), def.sampler_defs.len());
+        assert!(Rc::ptr_eq(vertices.gl(), gl));
 
         unsafe {
-            gl.use_program(Some(shared.id));
+            gl.use_program(Some(self.shared.id));
         }
 
-        assert_eq!(uniform_buffers.len(), shared.def.uniform_defs.len());
-
-        for (buffer, block_info) in uniform_buffers.iter().zip(&shared.def.uniform_defs) {
+        for (buffer, block_def) in uniform_buffers.iter().zip(&def.uniform_defs) {
             assert!(Rc::ptr_eq(buffer.gl(), gl));
 
-            let location = u32::try_from(block_info.location).unwrap();
+            let location = u32::try_from(block_def.location).unwrap();
 
             unsafe {
                 gl.bind_buffer_base(glow::UNIFORM_BUFFER, location, Some(buffer.id()));
             }
         }
 
-        assert!(Rc::ptr_eq(vertices.gl(), gl));
+        for (sampler, sampler_def) in samplers.iter().zip(&def.sampler_defs) {
+            assert!(Rc::ptr_eq(sampler.gl(), gl));
+
+            let unit = texture_unit_gl(sampler_def);
+
+            unsafe {
+                gl.active_texture(unit);
+            }
+
+            sampler.bind();
+        }
+
         vertices.draw();
 
         // TODO: Remove overly conservative unbinding.
-        for (_, block_info) in uniform_buffers.iter().zip(&shared.def.uniform_defs) {
-            let location = u32::try_from(block_info.location).unwrap();
+        for (sampler, sampler_def) in samplers.iter().zip(&def.sampler_defs) {
+            let unit = texture_unit_gl(sampler_def);
+
+            sampler.unbind();
+        }
+
+        // TODO: Remove overly conservative unbinding.
+        for block_def in &def.uniform_defs {
+            let location = u32::try_from(block_def.location).unwrap();
 
             unsafe {
                 gl.bind_buffer_base(glow::UNIFORM_BUFFER, location, None);
@@ -289,4 +319,11 @@ fn validate_program_def(def: &ProgramDef) -> Result<(), ProgramValidationError> 
     }
 
     Ok(())
+}
+
+fn texture_unit_gl(sampler_def: &SamplerDef) -> u32 {
+    u32::try_from(sampler_def.texture_unit)
+        .unwrap()
+        .checked_add(glow::TEXTURE0)
+        .unwrap()
 }
