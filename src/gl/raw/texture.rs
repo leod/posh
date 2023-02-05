@@ -82,9 +82,9 @@ impl Texture2d {
         gl: Rc<glow::Context>,
         caps: &Caps,
         image_data: ImageData,
-        levels: usize,
+        num_levels: usize,
     ) -> Result<Self, TextureError> {
-        assert!(levels > 0);
+        assert!(num_levels > 0);
 
         validate_size(image_data.dimensions, caps)?;
 
@@ -137,7 +137,7 @@ impl Texture2d {
         let shared = Rc::new(Texture2dShared {
             gl,
             id,
-            num_levels: levels,
+            num_levels,
             sampler_params: Default::default(),
         });
 

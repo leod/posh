@@ -14,7 +14,7 @@ use crate::{
 
 use super::{
     raw, BufferError, BufferUsage, Caps, Element, ElementBuffer, ElementOrUnit, Error, Program,
-    ProgramError, UniformBuffer, VertexArray, VertexArrayError, VertexBuffer,
+    ProgramError, TextureError, UniformBuffer, VertexArray, VertexArrayError, VertexBuffer,
 };
 
 /// The graphics context, which is used for creating GPU objects.
