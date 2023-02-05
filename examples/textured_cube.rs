@@ -1,7 +1,7 @@
 use std::time::Instant;
 
 use crevice::std140::AsStd140;
-use image::{io::Reader as ImageReader, EncodableLayout, GenericImageView};
+use image::{io::Reader as ImageReader, EncodableLayout};
 
 use posh::{
     gl::{
@@ -11,6 +11,9 @@ use posh::{
     sl::{self, VaryingOutput},
     Block, BlockDomain, Gl, Sl, UniformDomain, UniformInterface,
 };
+
+const WIDTH: u32 = 1024;
+const HEIGHT: u32 = 768;
 
 // Shader interface
 
@@ -23,8 +26,14 @@ struct Camera<D: BlockDomain = Sl> {
 impl Default for Camera<Gl> {
     fn default() -> Self {
         Self {
-            projection: glam::Mat4::IDENTITY.into(),
-            view: glam::Mat4::IDENTITY.into(),
+            projection: glam::Mat4::perspective_rh_gl(
+                std::f32::consts::PI / 2.0,
+                WIDTH as f32 / HEIGHT as f32,
+                1.0,
+                10.0,
+            )
+            .into(),
+            view: glam::Mat4::from_translation(glam::Vec3::new(0.0, 0.0, -3.0)).into(),
         }
     }
 }
@@ -38,14 +47,28 @@ struct Vertex<D: BlockDomain = Sl> {
 #[derive(UniformInterface)]
 struct Uniforms<D: UniformDomain = Sl> {
     camera: D::Block<Camera>,
+    time: D::Block<sl::F32>,
     sampler: D::Sampler2d<sl::Vec4<f32>>,
 }
 
 // Shader code
 
+fn rotate(angle: sl::F32) -> sl::Mat2 {
+    sl::mat2(
+        sl::vec2(angle.cos(), angle.sin()),
+        sl::vec2(angle.sin() * -1.0, angle.cos()),
+    )
+}
+
+fn zxy(v: sl::Vec3<f32>) -> sl::Vec3<f32> {
+    sl::vec3(v.z, v.x, v.y)
+}
+
 fn vertex_shader(uniforms: Uniforms, vertex: Vertex) -> VaryingOutput<sl::Vec2<f32>> {
     let camera = uniforms.camera;
-    let position = camera.projection * camera.view * vertex.pos.extend(1.0);
+    let time = uniforms.time / 3.0;
+    let vertex_pos = (rotate(time) * sl::vec2(vertex.pos.x, vertex.pos.y)).extend(vertex.pos.z);
+    let position = camera.projection * camera.view * zxy(vertex_pos).extend(1.0);
 
     VaryingOutput {
         varying: vertex.tex_coords,
@@ -63,7 +86,8 @@ struct Demo {
     context: Context,
     program: Program<Uniforms, Vertex>,
     camera: UniformBuffer<Camera>,
-    vertex_array: VertexArray<Vertex>,
+    time: UniformBuffer<sl::F32>,
+    vertex_array: VertexArray<Vertex, u16>,
     texture: Texture2d<RgbaFormat>,
     start_time: Instant,
 }
@@ -71,21 +95,22 @@ struct Demo {
 impl Demo {
     pub fn new(context: Context) -> Result<Self, Error> {
         let program = context.create_program(vertex_shader, fragment_shader)?;
-        let camera = context.create_uniform_buffer(Camera::default(), BufferUsage::StreamDraw)?;
+        let camera = context.create_uniform_buffer(Camera::default(), BufferUsage::StaticDraw)?;
+        let time = context.create_uniform_buffer(0.0, BufferUsage::StreamDraw)?;
         let vertex_array = context.create_simple_vertex_array(
             &cube_vertices()
                 .iter()
                 .map(AsStd140::as_std140)
                 .collect::<Vec<_>>(),
             BufferUsage::StaticDraw,
-            (),
+            context.create_element_buffer(&cube_indices(), BufferUsage::StaticDraw)?,
         )?;
         let image = ImageReader::open("examples/resources/smile.png")
             .unwrap()
             .decode()
             .unwrap()
             .to_rgba8(); // TODO: anyhow
-        let texture = context.create_texture_2d_with_mipmap(RgbaImage::u8_slice(
+        let texture = context.create_texture_2d_with_mipmap(RgbaImage::slice_u8(
             image.dimensions(),
             image.as_bytes(),
         ))?;
@@ -95,6 +120,7 @@ impl Demo {
             context,
             program,
             camera,
+            time,
             vertex_array,
             texture,
             start_time,
@@ -103,15 +129,16 @@ impl Demo {
 
     pub fn draw(&self) {
         let time = Instant::now().duration_since(self.start_time).as_secs_f32();
+        self.time.set(time);
 
         self.context.clear_color([0.1, 0.2, 0.3, 1.0]);
         self.program.draw(
             Uniforms {
                 camera: self.camera.binding(),
+                time: self.time.binding(),
                 sampler: self.texture.sampler(Sampler2dParams::default()),
             },
-            self.vertex_array
-                .range_binding(0..3, GeometryType::Triangles),
+            self.vertex_array.binding(GeometryType::Triangles),
             &DefaultFramebuffer,
             &DrawParams::default(),
         );
@@ -127,7 +154,7 @@ fn main() {
     gl_attr.set_context_version(3, 0);
 
     let window = video
-        .window("Hello texture cube!", 1024, 768)
+        .window("Hello textured cube!", WIDTH, HEIGHT)
         .opengl()
         .resizable()
         .build()
@@ -156,6 +183,20 @@ fn main() {
     }
 }
 
+fn cube_indices() -> Vec<u16> {
+    let mut indices = Vec::new();
+    for face in 0..6u16 {
+        indices.push(4 * face + 0);
+        indices.push(4 * face + 1);
+        indices.push(4 * face + 2);
+        indices.push(4 * face + 0);
+        indices.push(4 * face + 2);
+        indices.push(4 * face + 3);
+    }
+
+    indices
+}
+
 fn cube_vertices() -> Vec<Vertex<Gl>> {
     let tex_coords = [
         [0.0, 0.0].into(),
@@ -175,15 +216,15 @@ fn cube_vertices() -> Vec<Vertex<Gl>> {
         },
         Vertex {
             pos: [0.5, 0.5, 0.5].into(),
-            tex_coords: tex_coords[1],
+            tex_coords: tex_coords[2],
         },
         Vertex {
             pos: [0.5, 0.5, -0.5].into(),
-            tex_coords: tex_coords[1],
+            tex_coords: tex_coords[3],
         },
         Vertex {
             pos: [-0.5, -0.5, -0.5].into(),
-            tex_coords: tex_coords[1],
+            tex_coords: tex_coords[0],
         },
         Vertex {
             pos: [-0.5, 0.5, -0.5].into(),
@@ -191,15 +232,15 @@ fn cube_vertices() -> Vec<Vertex<Gl>> {
         },
         Vertex {
             pos: [-0.5, 0.5, 0.5].into(),
-            tex_coords: tex_coords[1],
+            tex_coords: tex_coords[2],
         },
         Vertex {
             pos: [-0.5, -0.5, 0.5].into(),
-            tex_coords: tex_coords[1],
+            tex_coords: tex_coords[3],
         },
         Vertex {
             pos: [-0.5, 0.5, -0.5].into(),
-            tex_coords: tex_coords[1],
+            tex_coords: tex_coords[0],
         },
         Vertex {
             pos: [0.5, 0.5, -0.5].into(),
@@ -207,15 +248,15 @@ fn cube_vertices() -> Vec<Vertex<Gl>> {
         },
         Vertex {
             pos: [0.5, 0.5, 0.5].into(),
-            tex_coords: tex_coords[1],
+            tex_coords: tex_coords[2],
         },
         Vertex {
             pos: [-0.5, 0.5, 0.5].into(),
-            tex_coords: tex_coords[1],
+            tex_coords: tex_coords[3],
         },
         Vertex {
             pos: [-0.5, -0.5, -0.5].into(),
-            tex_coords: tex_coords[1],
+            tex_coords: tex_coords[0],
         },
         Vertex {
             pos: [-0.5, -0.5, 0.5].into(),
@@ -223,15 +264,15 @@ fn cube_vertices() -> Vec<Vertex<Gl>> {
         },
         Vertex {
             pos: [0.5, -0.5, 0.5].into(),
-            tex_coords: tex_coords[1],
+            tex_coords: tex_coords[2],
         },
         Vertex {
             pos: [0.5, -0.5, -0.5].into(),
-            tex_coords: tex_coords[1],
+            tex_coords: tex_coords[3],
         },
         Vertex {
             pos: [-0.5, -0.5, 0.5].into(),
-            tex_coords: tex_coords[1],
+            tex_coords: tex_coords[0],
         },
         Vertex {
             pos: [-0.5, 0.5, 0.5].into(),
@@ -239,15 +280,15 @@ fn cube_vertices() -> Vec<Vertex<Gl>> {
         },
         Vertex {
             pos: [0.5, 0.5, 0.5].into(),
-            tex_coords: tex_coords[1],
+            tex_coords: tex_coords[2],
         },
         Vertex {
             pos: [0.5, -0.5, 0.5].into(),
-            tex_coords: tex_coords[1],
+            tex_coords: tex_coords[3],
         },
         Vertex {
             pos: [-0.5, -0.5, -0.5].into(),
-            tex_coords: tex_coords[1],
+            tex_coords: tex_coords[0],
         },
         Vertex {
             pos: [0.5, -0.5, -0.5].into(),
@@ -255,11 +296,11 @@ fn cube_vertices() -> Vec<Vertex<Gl>> {
         },
         Vertex {
             pos: [0.5, 0.5, -0.5].into(),
-            tex_coords: tex_coords[1],
+            tex_coords: tex_coords[2],
         },
         Vertex {
             pos: [-0.5, 0.5, -0.5].into(),
-            tex_coords: tex_coords[1],
+            tex_coords: tex_coords[3],
         },
     ]
     .to_vec()

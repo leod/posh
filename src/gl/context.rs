@@ -46,10 +46,6 @@ impl Context {
     where
         V: Block<Sl>,
     {
-        // TODO: This extra allocation for converting to `V::AsStd140::Output`
-        // could be eliminated if we see the need.
-        let data: Vec<_> = data.iter().map(AsStd140::as_std140).collect();
-
         let raw = self.raw.create_buffer(&data, usage)?;
 
         Ok(VertexBuffer::from_raw(raw))
@@ -70,13 +66,13 @@ impl Context {
 
     pub fn create_uniform_buffer<U>(
         &self,
-        uniform: U::InGl,
+        data: U::InGl,
         usage: BufferUsage,
     ) -> Result<UniformBuffer<U>, BufferError>
     where
         U: Block<Sl>,
     {
-        let raw = self.raw.create_buffer(&[uniform.as_std140()], usage)?;
+        let raw = self.raw.create_buffer(&[data.as_std140()], usage)?;
 
         Ok(UniformBuffer::from_raw(raw))
     }
