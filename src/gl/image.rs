@@ -26,7 +26,7 @@ impl<'a> Image for RgbaImage<'a> {
 }
 
 impl<'a> RgbaImage<'a> {
-    pub fn from_u8(dimensions: (u32, u32), data: &'a [u8]) -> Self {
+    pub fn u8_slice(dimensions: (u32, u32), data: &'a [u8]) -> Self {
         RgbaImage(raw::Image {
             dimensions,
             ty: ImageType::U8,
@@ -35,7 +35,7 @@ impl<'a> RgbaImage<'a> {
         })
     }
 
-    pub fn from_u8_srgb(dimensions: (u32, u32), data: &'a [u8]) -> Self {
+    pub fn u8_slice_srgb(dimensions: (u32, u32), data: &'a [u8]) -> Self {
         RgbaImage(raw::Image {
             dimensions,
             ty: ImageType::U8,
@@ -44,7 +44,7 @@ impl<'a> RgbaImage<'a> {
         })
     }
 
-    pub fn from_i8_snorm(dimensions: (u32, u32), data: &'a [i8]) -> Self {
+    pub fn i8_slice_snorm(dimensions: (u32, u32), data: &'a [i8]) -> Self {
         RgbaImage(raw::Image {
             dimensions,
             ty: ImageType::I8,
@@ -53,7 +53,7 @@ impl<'a> RgbaImage<'a> {
         })
     }
 
-    pub fn from_f32(dimensions: (u32, u32), data: &'a [f32]) -> Self {
+    pub fn f32_slice(dimensions: (u32, u32), data: &'a [f32]) -> Self {
         RgbaImage(raw::Image {
             dimensions,
             ty: ImageType::F32,
@@ -62,7 +62,7 @@ impl<'a> RgbaImage<'a> {
         })
     }
 
-    pub fn zeroed_u8(dimensions: (u32, u32)) -> Self {
+    pub fn u8_zeroed(dimensions: (u32, u32)) -> Self {
         RgbaImage(raw::Image {
             dimensions,
             ty: ImageType::U8,
@@ -71,7 +71,7 @@ impl<'a> RgbaImage<'a> {
         })
     }
 
-    pub fn zeroed_u8_srgb(dimensions: (u32, u32)) -> Self {
+    pub fn u8_zeroed_srgb(dimensions: (u32, u32)) -> Self {
         RgbaImage(raw::Image {
             dimensions,
             ty: ImageType::U8,
@@ -80,7 +80,7 @@ impl<'a> RgbaImage<'a> {
         })
     }
 
-    pub fn zeroed_i8_snorm(dimensions: (u32, u32)) -> Self {
+    pub fn i8_zeroed_snorm(dimensions: (u32, u32)) -> Self {
         RgbaImage(raw::Image {
             dimensions,
             ty: ImageType::I8,
@@ -89,7 +89,7 @@ impl<'a> RgbaImage<'a> {
         })
     }
 
-    pub fn zeroed_f32(dimensions: (u32, u32)) -> Self {
+    pub fn f32_zeroed(dimensions: (u32, u32)) -> Self {
         RgbaImage(raw::Image {
             dimensions,
             ty: ImageType::F32,
