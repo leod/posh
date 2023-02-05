@@ -3,7 +3,7 @@ use std::{marker::PhantomData, rc::Rc};
 use crate::{
     interface::UniformInterfaceVisitor,
     sl::{self, Sample},
-    FragmentInterface, Gl, Sl, UniformInterface, VertexInterface,
+    Block, FragmentInterface, Gl, Sl, UniformInterface, VertexInterface,
 };
 
 use super::{raw, DrawParams, Sampler2d, Surface, UniformBufferBinding, VertexArrayBinding};
@@ -62,7 +62,7 @@ impl<'a> UniformInterfaceVisitor<'a, Gl> for UniformVisitor<'a> {
         todo!()
     }
 
-    fn accept_uniform<U: crate::Block<Sl, InSl = U>>(
+    fn accept_uniform<U: Block<Sl, InSl = U>>(
         &mut self,
         _: &str,
         uniform: &'a UniformBufferBinding<U>,
