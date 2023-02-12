@@ -4,7 +4,7 @@ use glow::HasContext;
 
 use crate::gl::{raw::error::check_gl_error, TextureError};
 
-use super::{Caps, Image, ImageInternalFormat, ImageType, Sampler2dParams, SamplerCompareFunc};
+use super::{Caps, ComparisonFunc, Image, ImageInternalFormat, ImageType, Sampler2dParams};
 
 struct Texture2dShared {
     gl: Rc<glow::Context>,
@@ -24,16 +24,17 @@ impl Texture2dShared {
             gl.bind_texture(glow::TEXTURE_2D, Some(self.id));
         }
 
-        if curr.compare_func != new.compare_func {
-            let (compare_mode, compare_func) = new.compare_func.map_or(
-                (glow::NONE as i32, SamplerCompareFunc::LessOrEqual),
-                |compare_func| (glow::COMPARE_REF_TO_TEXTURE as i32, compare_func),
-            );
-            let compare_func = compare_func.to_gl() as i32;
+        if curr.comparison_func != new.comparison_func {
+            let (mode, func) = new
+                .comparison_func
+                .map_or((glow::NONE as i32, ComparisonFunc::LessOrEqual), |func| {
+                    (glow::COMPARE_REF_TO_TEXTURE as i32, func)
+                });
+            let func = func.to_gl() as i32;
 
             unsafe {
-                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_COMPARE_MODE, compare_mode);
-                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_COMPARE_FUNC, compare_func);
+                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_COMPARE_MODE, mode);
+                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_COMPARE_FUNC, func);
             }
         }
 

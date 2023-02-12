@@ -14,6 +14,7 @@ use crate::{
 };
 
 /// A scalar value in the shading language.
+#[doc(hidden)]
 #[derive(Debug, Copy, Clone)]
 pub struct Scalar<T> {
     trace: Trace,
