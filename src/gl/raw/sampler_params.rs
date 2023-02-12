@@ -1,31 +1,4 @@
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum SamplerCompareFunc {
-    LessOrEqual,
-    GreaterOrEqual,
-    Less,
-    Greater,
-    Equal,
-    NotEqual,
-    Always,
-    Never,
-}
-
-impl SamplerCompareFunc {
-    pub const fn to_gl(self) -> u32 {
-        use SamplerCompareFunc::*;
-
-        match self {
-            LessOrEqual => glow::LEQUAL,
-            GreaterOrEqual => glow::GEQUAL,
-            Less => glow::LESS,
-            Greater => glow::GREATER,
-            Equal => glow::EQUAL,
-            NotEqual => glow::NOTEQUAL,
-            Always => glow::ALWAYS,
-            Never => glow::NEVER,
-        }
-    }
-}
+use super::ComparisonFunc;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum SamplerMagFilter {
@@ -90,7 +63,7 @@ impl SamplerWrap {
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Sampler2dParams {
-    pub compare_func: Option<SamplerCompareFunc>,
+    pub comparison_func: Option<ComparisonFunc>,
     pub mag_filter: SamplerMagFilter,
     pub min_filter: SamplerMinFilter,
     pub wrap_s: SamplerWrap,
@@ -100,7 +73,7 @@ pub struct Sampler2dParams {
 impl Default for Sampler2dParams {
     fn default() -> Self {
         Self {
-            compare_func: None,
+            comparison_func: None,
             mag_filter: SamplerMagFilter::Linear,
             min_filter: SamplerMinFilter::NearestMipmapLinear,
             wrap_s: SamplerWrap::Repeat,
