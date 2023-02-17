@@ -1,6 +1,6 @@
-mod gl;
+mod logical;
 mod numeric;
-mod sl;
+mod physical;
 #[cfg(tests)]
 mod tests;
 
@@ -9,121 +9,125 @@ use sealed::sealed;
 
 use crate::{
     program_def::{VertexAttributeDef, VertexInputRate},
-    sl::{Bool, Mat2, Mat3, Mat4, Sample, Scalar, ToValue, Value, Vec2, Vec3, Vec4, F32, I32, U32},
-    Gl, Sl,
+    sl,
 };
 
 pub use numeric::{Numeric, Primitive};
 
+/// Tag for physical data as passed in draw calls.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Physical;
+
+/// Tag for logical data as accessed in shaders.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Logical;
+
 // Block
 
-/// Provides types for [`Block`] declarations.
+/// Types for fields of [`Block`] declarations.
 ///
 /// See [`Block`] for more details.
 #[sealed]
-pub trait BlockDomain: Copy {
-    /// A scalar value.
-    ///
-    /// Maps to `T` in the graphics library and [`Scalar<T>`] in the shading language.
-    type Scalar<T: Primitive>: Block<Self> + ToValue<Output = Scalar<T>>;
-
-    /// A two-dimensional vector.
-    ///
-    /// Maps to [`mint::Vector2<T>`] in the graphics library and [`Vec2<T>`] in
-    /// the shading language.
-    type Vec2<T: Primitive>: Block<Self> + ToValue<Output = Vec2<T>>;
-
-    /// A three-dimensional vector.
-    ///
-    /// Maps to [`mint::Vector3<T>`] in the graphics library and [`Vec3<T>`] in
-    /// the shading language.
-    type Vec3<T: Primitive>: Block<Self> + ToValue<Output = Vec3<T>>;
-
-    /// A three-dimensional vector.
-    ///
-    /// Maps to [`mint::Vector4<T>`] in the graphics library and [`Vec4<T>`] in
-    /// the shading language.
-    type Vec4<T: Primitive>: Block<Self> + ToValue<Output = Vec4<T>>;
-
-    /// A two-by-two matrix.
-    ///
-    /// Maps to [`mint::ColumnMatrix2<f32>`] in the graphics library and
-    /// [`Mat2`] in the shading language.
-    type Mat2: Block<Self> + ToValue<Output = Mat2>;
-
-    /// A three-by-three matrix.
-    ///
-    /// Maps to [`mint::ColumnMatrix3<f32>`] in the graphics library and
-    /// [`Mat3`] in the shading language.
-    type Mat3: Block<Self> + ToValue<Output = Mat3>;
-
-    /// A four-by-four matrix.
-    ///
-    /// Maps to [`mint::ColumnMatrix4<f32>`] in the graphics library and
-    /// [`Mat4`] in the shading language.
-    type Mat4: Block<Self> + ToValue<Output = Mat4>;
-
+pub trait BlockView: Copy {
     /// A boolean value.
     ///
-    /// Shorthand for [`Self::Scalar<bool>`]. Maps to [`bool`] in the graphics
-    /// library and [`Bool`] in the shading language.
-    type Bool: Block<Self> + ToValue<Output = Bool>;
+    /// Has [`gl::Bool`] as its physical view and [`sl::Bool`] as its logical
+    /// view.
+    type Bool: Block<Self> + sl::ToValue<Output = sl::Bool>;
 
     /// A floating-point value.
     ///
-    /// Shorthand for [`Self::Scalar<f32>`]. Maps to [`f32`] in the graphics
-    /// library and [`F32`] in the shading language.
-    type F32: Block<Self> + ToValue<Output = F32>;
+    /// Has [`f32`] as its physical view and [`sl::F32`] as its logical view.
+    type F32: Block<Self> + sl::ToValue<Output = sl::F32>;
 
     /// A signed integer value.
     ///
-    /// Shorthand for [`Self::Scalar<i32>`]. Maps to [`i32`] in the graphics
-    /// library and [`I32`] in the shading language.
-    type I32: Block<Self> + ToValue<Output = I32>;
+    /// Has [`i32`] as its physical view and [`sl::I32`] as its logical view.
+    type I32: Block<Self> + sl::ToValue<Output = sl::I32>;
 
     /// An unsigned integer value.
     ///
-    /// Shorthand for [`Self::Scalar<u32>`]. Maps to [`u32`] in the graphics
-    /// library and [`U32`] in the shading language.
-    type U32: Block<Self> + ToValue<Output = U32>;
+    /// Has [`u32`] as its physical view and [`sl::U32`] as its logical view.
+    type U32: Block<Self> + sl::ToValue<Output = sl::U32>;
+
+    /// A two-dimensional vector of [`Self::F32`]s.
+    ///
+    /// Has [`glam::Vec2`] as its physical view and [`sl::Vec2`] as its logical
+    /// view.
+    type Vec2: Block<Self> + sl::ToValue<Output = sl::Vec2<f32>>;
+
+    /// A three-dimensional vector of [`Self::F32`]s.
+    ///
+    /// Has [`glam::Vec3`] as its physical view and [`sl::Vec3`] as its logical
+    /// view.
+    type Vec3: Block<Self> + sl::ToValue<Output = sl::Vec3<f32>>;
+
+    /// A four-dimensional vector of [`Self::F32`]s.
+    ///
+    /// Has [`glam::Vec4`] as its physical view and [`sl::Vec4`] as its logical
+    /// view.
+    type Vec4: Block<Self> + sl::ToValue<Output = sl::Vec4<f32>>;
+
+    /// A two-by-two matrix of [`Self::F32`]s.
+    ///
+    /// Has [`glam::Mat2`] as its physical view and [`sl::Mat2`] as its logical
+    /// view.
+    type Mat2: Block<Self> + sl::ToValue<Output = sl::Mat2>;
+
+    /// A three-by-three matrix of [`Self::F32`]s.
+    ///
+    /// Has [`glam::Mat3`] as its physical view and [`sl::Mat3`] as its logical
+    /// view.
+    type Mat3: Block<Self> + sl::ToValue<Output = sl::Mat3>;
+
+    /// A four-by-four matrix of [`Self::F32`]s.
+    ///
+    /// Has [`glam::Mat4`] as its physical view and [`sl::Mat4`] as its logical
+    /// view.
+    type Mat4: Block<Self> + sl::ToValue<Output = sl::Mat4>;
 }
 
 /// Plain-old-data that can be passed to shaders.
 ///
-/// Types that implement [`Block`] can appear in two parts of shader interfaces:
-/// 1. As vertex data in a [`VertexInterface`].
-/// 2. As uniform block in a [`UniformInterface`]
+/// Types that implement [`Block`] can be used as fields in types that implement
+/// [`VertexData`] or [`UniformData`]. This allows them to be passed to shaders
+/// in draw calls.
 ///
-/// [`Block`] declarations are generic in [`BlockDomain`]. By convention, the
-/// generic domain parameter should be named `D`, and its default value should
-/// be [`Sl`]. The declaration can be instantiated with either [`Gl`] or [`Sl`]:
-/// 1. `Block<Gl>` is block data that the host provides with the graphics
-///    library.
-/// 2. `Block<Sl>` gives access to block input data in the shading language.
+/// `Block` declarations are generic in [`BlockView`] and can be instantiated as
+/// their [`Logical`] view or their [`Physical`] view. The views have the
+/// following purpose respectively:
 ///
-/// User-defined types can implement this trait with a [derive
+/// 1. `Block<Logical>` is a view of block data as seen in shader definitions.
+///
+/// 2. `Block<Physical>` is a view of block data as passed to host-side draw
+///    calls in the form of buffer bindings.
+///
+/// By convention, the generic view parameter of `Block` declarations is named
+/// `V`, with [`Logical`] as the default view.
+///
+/// User-defined types should implement this trait with the [derive
 /// macro](`posh_derive::Block`).
 ///
 /// # Example
 ///
 /// ```
-/// use posh::{sl, Block, BlockDomain, Sl};
+/// use posh::{sl, Block, BlockView, Logical};
 ///
 /// #[derive(Clone, Copy, Block)]
-/// struct WeirdColor<D: BlockDomain = Sl> {
-///     rainbow: D::U32,
-///     hell: D::Vec2<f32>,
+/// struct SomeColor<V: BlockView = Logical> {
+///     rainbow: V::U32,
+///     thing: V::Vec2,
 /// }
 ///
 /// #[derive(Clone, Copy, Block)]
-/// struct MyVertex<D: BlockDomain = Sl> {
-///     position: D::Vec3<f32>,
-///     normal: D::Vec3<f32>,
-///     color: WeirdColor<D>,
+/// struct MyVertex<V: BlockView = Logical> {
+///     position: V::Vec3,
+///     normal: V::Vec3,
+///     color: SomeColor<V>,
 /// }
 ///
 /// // A function in the shading language that does something with `MyVertex`.
-/// fn my_extrude(vertex: MyVertex, offset: sl::F32) -> sl::Vec3<f32> {
+/// fn my_extrude(vertex: MyVertex, offset: sl::F32) -> sl::Vec3 {
 ///     vertex.position + vertex.normal * offset
 /// }
 /// ```
@@ -131,16 +135,17 @@ pub trait BlockDomain: Copy {
 /// # Safety
 ///
 /// TODO
-pub unsafe trait Block<D: BlockDomain>: ToValue {
-    /// The representation of [`Self`] in the graphics library domain [`Gl`].
-    ///
-    /// This is the type through which the host provides block data.
-    type InGl: Block<Gl> + AsStd140 + ToValue<Output = Self::InSl>;
-
-    /// The representation of [`Self`] in the shading language domain [`Sl`].
+pub unsafe trait Block<V: BlockView>: sl::ToValue {
+    /// The logical view of `Self`.
     ///
     /// This is the type through which shaders access block data.
-    type InSl: Block<Sl> + Value + ToValue<Output = Self::InSl>;
+    type Logical: Block<Logical> + sl::Value + sl::ToValue<Output = Self::Logical>;
+
+    /// The physical view of `Self`.
+    ///
+    /// This is the type through which the host provides block data in draw
+    /// calls.
+    type Physical: Block<Physical> + AsStd140 + sl::ToValue<Output = Self::Logical>;
 
     #[doc(hidden)]
     fn uniform_input(_path: &str) -> Self {
@@ -154,80 +159,84 @@ pub unsafe trait Block<D: BlockDomain>: ToValue {
 
     #[doc(hidden)]
     fn vertex_attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
-        <Self::InSl as Block<Sl>>::vertex_attribute_defs(path)
+        <Self::Logical as Block<Logical>>::vertex_attribute_defs(path)
     }
 }
 
-// VertexInterface
+// VertexData
 
-/// Provides types for [`VertexInterface`] declarations.
+/// Provides types for fields of [`VertexData`] declarations.
 ///
-/// See [`VertexInterface`] for more details.
+/// See [`VertexData`] for more details.
 #[sealed]
-pub trait VertexDomain: Copy {
-    /// A vertex field.
-    type Vertex<V: Block<Sl>>: VertexInterfaceField<Self>;
+pub trait VertexDataView: Copy {
+    /// A vertex block field.
+    type Block<B: Block<Logical>>: VertexDataField<Self>;
 }
 
-/// Types that are allowed to occur in a [`VertexInterface`].
+/// Types that are allowed to occur in types that implement [`VertexData`].
 #[sealed]
 #[doc(hidden)]
-pub trait VertexInterfaceField<D: VertexDomain>: Sized {
+pub trait VertexDataField<V: VertexDataView>: Sized {
     fn shader_input(_path: &str) -> Self {
         unimplemented!()
     }
 }
 
-/// A vertex shader input interface.
+/// Vertex shader input data.
 ///
-/// Vertex interfaces define how vertex data is passed from the graphics library
-/// to the shading language.
+/// Defines vertex data that can be passed to vertex shaders in draw calls.
 ///
-/// [`VertexInterface`] declarations are generic in [`VertexDomain`]. By
-/// convention, the generic domain parameter should be named `D`, and its
-/// default value should be [`Sl`]. The declaration can be instantiated with
-/// either [`Gl`] or [`Sl`]:
-/// 1. `VertexInterface<Gl>` are vertex buffer bindings provided with the
-///    graphics library. Each field corresponds to a vertex buffer.
-/// 2. `VertexInterface<Sl>` gives access to input vertex data in the shading
-///    language. Each field corresponds to the value of the current vertex.
+/// `VertexData` declarations are generic in [`VertexDataView`] and can be
+/// instantiated as their [`Logical`] view or their [`Physical`] view. The views
+/// have the following purpose respectively:
 ///
-/// User-defined types can implement this trait with a [derive
-/// macro](`posh_derive::VertexInterface`). Note, however, that types
-/// implementing `Block<Sl>` also implement `VertexInterface<Sl>`, so block data
-/// can be passed to shaders without declaring a custom `VertexInterface`.
+/// 1. `VertexData<Logical>` is a view of vertex data as seen in shader
+///    definitions. Each field corresponds to a part of the current vertex
+///    value.
+///
+/// 2. `VertexData<Physical>` is a view of vertex data in the graphics library.
+///    Each field is a vertex buffer binding.
+///
+/// By convention, the generic view parameter is named `V`, with [`Logical`] as
+/// the default view.
+///
+/// User-defined types should implement this trait with a [derive
+/// macro](`posh_derive::VertexData`). Types that implement `Block<Logical>`
+/// automatically implement `VertexData<Logical>` as well, so block data can be
+/// passed to shaders without having to declare a custom [`VertexData`] type.
 ///
 /// # Example
 ///
-/// This example declares a vertex interface where `position` is specified in
-/// one vertex buffer, and `normal` and `color` are specified in another vertex
-/// buffer.
+/// This example declares a custom [`VertexData`] type that provides `position`
+/// in one vertex buffer, while `normal` and `color` are specified in a second
+/// vertex buffer.
 ///
 /// ```
 /// use posh::{
 ///     sl::{self, VaryingOutput},
-///     Block, BlockDomain, VertexDomain, VertexInterface, Sl,
+///     Block, BlockView, Logical, VertexData,
 /// };
 ///
 /// #[derive(Clone, Copy, Block)]
-/// struct Material<D: BlockDomain = Sl> {
-///     normal: D::Vec3<f32>,
-///     color: D::Vec4<f32>,
+/// struct Material<V: BlockView = Logical> {
+///     normal: D::Vec3,
+///     color: D::Vec4,
 /// }
 ///
-/// #[derive(VertexInterface)]
-/// struct MyVertexIface<D: VertexDomain = Sl> {
-///     position: D::Vertex<sl::Vec3<f32>>,
-///     material: D::Vertex<Material>,
+/// #[derive(VertexData)]
+/// struct MyVertexData<V: VertexDataView = Logical> {
+///     position: V::Block<sl::Vec3>,
+///     material: V::Block<Material>,
 /// }
 ///
-/// // A vertex shader that uses `MyVertexIface`.
+/// // A vertex shader that receives `MyVertexData` as vertex input.
 /// fn my_vertex_shader(
 ///     uniforms: (),
-///     vertex: MyVertexIface,
-/// ) -> VaryingOutput<sl::Vec4<f32>> {
+///     vertex: MyVertexData,
+/// ) -> VaryingOutput<sl::Vec4> {
 ///     VaryingOutput {
-///         position: (vertex.position + vertex.material.normal * 1.0).to_vec4(),
+///         position: (vertex.position + vertex.material.normal * 1.3).extend(1.0),
 ///         varying: vertex.material.color,
 ///     }
 /// }
@@ -236,21 +245,20 @@ pub trait VertexInterfaceField<D: VertexDomain>: Sized {
 /// # Safety
 ///
 /// TODO
-pub unsafe trait VertexInterface<D: VertexDomain>: Sized {
-    /// The representation of [`Self`] in the graphics library domain [`Gl`].
+pub unsafe trait VertexData<V: VertexDataView>: Sized {
+    /// The logical view of `Self`.
     ///
-    /// Provides vertex buffers for creating a [`crate::gl::VertexArray`](vertex
-    /// array) that matches this vertex interface.
-    type InGl: VertexInterface<Gl>;
+    /// This is the type through which shaders access vertex data.
+    type Logical: VertexData<Logical>;
 
-    /// The representation of [`Self`] in the shading language domain [`Sl`].
+    /// The physical view of `Self`.
     ///
-    /// The input that user-defined vertex shaders using this vertex interface
-    /// receive.
-    type InSl: VertexInterface<Sl>;
+    /// This is the type through which the host provides vertex buffer bindings
+    /// for creating [`crate::gl::VertexArray`](vertex arrays).
+    type Physical: VertexData<Physical>;
 
     #[doc(hidden)]
-    fn visit<'a>(&'a self, path: &str, visitor: &mut impl VertexInterfaceVisitor<'a, D>);
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl VertexDataVisitor<'a, V>);
 
     #[doc(hidden)]
     fn shader_input(_path: &str) -> Self {
@@ -258,62 +266,74 @@ pub unsafe trait VertexInterface<D: VertexDomain>: Sized {
     }
 }
 
-pub trait VertexInterfaceVisitor<'a, D: VertexDomain> {
-    fn accept<V: Block<Sl>>(
+pub trait VertexDataVisitor<'a, V: VertexDataView> {
+    fn accept<B: Block<Logical>>(
         &mut self,
         path: &str,
         input_rate: VertexInputRate,
-        vertex: &'a D::Vertex<V>,
+        vertex: &'a V::Block<B>,
     );
 }
 
-// UniformInterface
+// UniformData
 
-/// Provides types for [`UniformInterface`] declarations.
+/// Types for fields of [`UniformData`] declarations.
+///
+/// See [`UniformData`] for more details.
 #[sealed]
-pub trait UniformDomain: Copy {
+pub trait UniformDataView: Copy {
     /// A uniform block field.
-    type Block<U: Block<Sl, InSl = U>>: UniformInterface<Self>;
+    type Block<U: Block<Logical, Logical = U>>: UniformData<Self>;
 
-    /// A two-dimensional sampler field.
-    type Sampler2d<V: Sample>: UniformInterface<Self>;
+    /// A two-dimensional uniform sampler field.
+    type Sampler2d<V: sl::Sample>: UniformData<Self>;
 
     /// A nested uniform interface field.
-    type Compose<R: UniformInterface<Sl>>: UniformInterface<Self>;
+    type Compose<R: UniformData<Logical>>: UniformData<Self>;
 }
 
-/// A uniform input interface for shaders.
+/// Uniform data.
 ///
-/// Gives shaders access to uniform blocks or samplers that are bound by the
-/// host. Uniforms can be used in both vertex shaders and fragment shaders. In
-/// order to link a vertex shader with a fragment shader, they must use the same
-/// uniform interface. See
+/// Defines uniform data that can be passed to shaders in draw calls.
+///
+/// `UniformData` declarations are generic in [`UniformDataView`] and can be
+/// instantiated as their [`Logical`] view or their [`Physical`] view. The views
+/// have the following purpose respectively:
+///
+/// 1. `UniformData<Logical>` is a view of uniform data as seen in shader
+///    definitions.
+///
+/// 2. `UniformData<Physical>` is a view of uniform data in the graphics library
+///    containing buffer and sampler bindings.
+///
+/// In order to use a vertex shader with a fragment shader, they must use the
+/// same uniform data in their signature. See
 /// [`create_program`](crate::gl::Context::create_program) for details.
 ///
-/// User-defined types can implement this trait with a [derive
-/// macro](`posh_derive::UniformInterface`).
+/// By convention, the generic view parameter is named `V`, with [`Logical`] as
+/// the default view.
+///
+/// User-defined types should implement this trait with a [derive
+/// macro](`posh_derive::UniformData`).
 ///
 /// # Safety
 ///
 /// TODO
-pub unsafe trait UniformInterface<D: UniformDomain>: Sized {
-    /// The representation of [`Self`] in the graphics library domain [`Gl`].
+pub unsafe trait UniformData<V: UniformDataView>: Sized {
+    /// The logical view of `Self`.
     ///
-    /// Provides uniform bindings such as [uniform
-    /// buffers](crate::gl::UniformBuffer) or [samplers](crate::gl::Sampler2d).
-    /// This is specified on the host through [draw
-    /// calls](crate::gl::Program::draw) with programs using this uniform
-    /// interface.
-    type InGl: UniformInterface<Gl>;
+    /// This is the type through which shaders access uniform data.
+    type Logical: UniformData<Logical>;
 
-    /// The representation of [`Self`] in the shading language domain [`Sl`].
+    /// The physical view of `Self`.
     ///
-    /// The input that user-defined shaders using this uniform interface
-    /// receive.
-    type InSl: UniformInterface<Sl>;
+    /// This is the type through which the host provides uniform bindings such
+    /// as [uniform buffer bindings](crate::gl::UniformBuffer) or
+    /// [samplers](crate::gl::Sampler2d) in [draw calls](crate::gl::Program::draw).
+    type Physical: UniformData<Physical>;
 
     #[doc(hidden)]
-    fn visit<'a>(&'a self, path: &str, visitor: &mut impl UniformInterfaceVisitor<'a, D>);
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl UniformDataVisitor<'a, V>);
 
     #[doc(hidden)]
     fn shader_input(_path: &str) -> Self {
@@ -321,55 +341,56 @@ pub unsafe trait UniformInterface<D: UniformDomain>: Sized {
     }
 }
 
-unsafe impl<D: UniformDomain> UniformInterface<D> for () {
-    type InGl = ();
-    type InSl = ();
+unsafe impl<V: UniformDataView> UniformData<V> for () {
+    type Logical = ();
+    type Physical = ();
 
-    fn visit<'a>(&self, _: &str, _: &mut impl UniformInterfaceVisitor<'a, D>) {}
+    fn visit<'a>(&self, _: &str, _: &mut impl UniformDataVisitor<'a, V>) {}
 
     fn shader_input(_: &str) -> Self {}
 }
 
 #[doc(hidden)]
-pub trait UniformInterfaceVisitor<'a, D: UniformDomain> {
-    fn accept_sampler2d<V: Sample>(&mut self, path: &str, sampler: &'a D::Sampler2d<V>);
-
-    fn accept_block<U: Block<Sl, InSl = U>>(&mut self, path: &str, block: &'a D::Block<U>);
+pub trait UniformDataVisitor<'a, V: UniformDataView> {
+    fn accept_block<U: Block<Logical, Logical = U>>(&mut self, path: &str, block: &'a V::Block<U>);
+    fn accept_sampler2d<S: sl::Sample>(&mut self, path: &str, sampler: &'a V::Sampler2d<S>);
 }
 
-// FragmentInterface
+// FragmentData
 
-/// Provides types for [`FragmentInterface`] declarations.
-#[sealed]
-pub trait FragmentDomain: Copy {
-    type Attachment: FragmentInterface<Self>;
-}
-
-/// A fragment shader output interface.
+/// Types for fields of [`FragmentData`] declarations.
 ///
-/// User-defined types can implement this trait with a [derive
-/// macro](`posh_derive::FragmentInterface`).
+/// See [`FragmentData`] for more details.
+#[sealed]
+pub trait FragmentDataView: Copy {
+    type Attachment: FragmentData<Self>;
+}
+
+/// Fragment shader output data.
+///
+/// User-defined types should implement this trait with a [derive
+/// macro](`posh_derive::FragmentData`).
 ///
 /// # Safety
 ///
 /// TODO
-pub unsafe trait FragmentInterface<D: FragmentDomain> {
-    /// The representation of [`Self`] in the graphics library domain [`Gl`].
+pub unsafe trait FragmentData<V: FragmentDataView> {
+    /// The logical view of `Self`.
     ///
-    /// Provides framebuffer attachments on the host.
-    type InGl: FragmentInterface<Gl>;
+    /// This is the type through which fragment shaders output fragment data.
+    type Logical: FragmentData<Logical>;
 
-    /// The representation of [`Self`] in the shading language domain [`Sl`].
+    /// The physical view of `Self`.
     ///
-    /// The output of user-defined fragment shaders using this fragment
-    /// interface. Contains expressions describing the shader's output.
-    type InSl: FragmentInterface<Sl>;
+    /// This is the type through which framebuffer attachments are provided on
+    /// the host.
+    type Physical: FragmentData<Physical>;
 
     #[doc(hidden)]
-    fn visit(&self, path: &str, visitor: &mut impl FragmentInterfaceVisitor<D>);
+    fn visit(&self, path: &str, visitor: &mut impl FragmentDataVisitor<V>);
 }
 
 #[doc(hidden)]
-pub trait FragmentInterfaceVisitor<D: FragmentDomain> {
+pub trait FragmentDataVisitor<D: FragmentDataView> {
     fn accept(&mut self, path: &str, attachment: &D::Attachment);
 }

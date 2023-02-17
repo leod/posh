@@ -1,9 +1,9 @@
 use std::{marker::PhantomData, ops::Range, rc::Rc};
 
 use crate::{
-    internal::VertexInterfaceVisitor,
+    internal::VertexDataVisitor,
     program_def::{VertexDef, VertexInputRate},
-    Block, Gl, Sl, VertexInterface,
+    Block, Logical, Physical, VertexData,
 };
 
 use super::{
@@ -20,23 +20,23 @@ use super::{
 #[derive(Clone)]
 pub struct VertexArray<V, E = ()>
 where
-    V: VertexInterface<Sl>,
+    V: VertexData<Logical>,
     E: ElementOrUnit,
 {
     raw: Rc<raw::VertexArray>,
-    vertex_buffers: Rc<V::InGl>,
+    vertex_buffers: Rc<V::Physical>,
     element_source: Rc<E::Source>,
     _phantom: PhantomData<V>,
 }
 
 impl<V, E> VertexArray<V, E>
 where
-    V: VertexInterface<Sl>,
+    V: VertexData<Logical>,
     E: ElementOrUnit,
 {
     pub(super) fn new(
         context: &raw::Context,
-        vertex_buffers: V::InGl,
+        vertex_buffers: V::Physical,
         element_source: E::Source,
     ) -> Result<Self, VertexArrayError> {
         let mut visitor = VertexBufferVisitor::default();
@@ -54,7 +54,7 @@ where
         })
     }
 
-    pub fn vertex_buffers(&self) -> &V::InGl {
+    pub fn vertex_buffers(&self) -> &V::Physical {
         &self.vertex_buffers
     }
 
@@ -66,7 +66,7 @@ where
         &self,
         element_range: Range<usize>,
         geometry_type: GeometryType,
-    ) -> VertexArrayBinding<V::InGl> {
+    ) -> VertexArrayBinding<V::Physical> {
         VertexArrayBinding {
             raw: self.raw.range_binding(element_range, geometry_type),
             _vertex_buffers: self.vertex_buffers.clone(),
@@ -76,10 +76,10 @@ where
 
 impl<V, E> VertexArray<V, E>
 where
-    V: VertexInterface<Sl>,
+    V: VertexData<Logical>,
     E: Element,
 {
-    pub fn binding(&self, geometry_type: GeometryType) -> VertexArrayBinding<V::InGl> {
+    pub fn binding(&self, geometry_type: GeometryType) -> VertexArrayBinding<V::Physical> {
         self.range_binding(0..self.element_source().len(), geometry_type)
     }
 }
@@ -100,8 +100,8 @@ struct VertexBufferVisitor<'a> {
     raw_vertex_buffers: Vec<(&'a raw::Buffer, VertexDef)>,
 }
 
-impl<'a> VertexInterfaceVisitor<'a, Gl> for VertexBufferVisitor<'a> {
-    fn accept<V: Block<Sl>>(
+impl<'a> VertexDataVisitor<'a, Physical> for VertexBufferVisitor<'a> {
+    fn accept<V: Block<Logical>>(
         &mut self,
         path: &str,
         input_rate: VertexInputRate,

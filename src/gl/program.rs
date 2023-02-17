@@ -1,9 +1,9 @@
 use std::{marker::PhantomData, rc::Rc};
 
 use crate::{
-    interface::UniformInterfaceVisitor,
+    interface::UniformDataVisitor,
     sl::{self, Sample},
-    Block, FragmentInterface, Gl, Sl, UniformInterface, VertexInterface,
+    Block, FragmentData, Logical, Physical, UniformData, VertexData,
 };
 
 use super::{raw, DrawParams, Sampler2d, Surface, UniformBufferBinding, VertexArrayBinding};
@@ -16,9 +16,9 @@ pub struct Program<Unif, Vert, Frag = sl::Vec4<f32>> {
 
 impl<Unif, Vert, Frag> Program<Unif, Vert, Frag>
 where
-    Unif: UniformInterface<Sl>,
-    Vert: VertexInterface<Sl>,
-    Frag: FragmentInterface<Sl>,
+    Unif: UniformData<Logical>,
+    Vert: VertexData<Logical>,
+    Frag: FragmentData<Logical>,
 {
     pub(super) fn unchecked_from_raw(raw: raw::Program) -> Self {
         Program {
@@ -29,8 +29,8 @@ where
 
     pub fn draw<S>(
         &self,
-        uniforms: Unif::InGl,
-        vertices: VertexArrayBinding<Vert::InGl>,
+        uniforms: Unif::Physical,
+        vertices: VertexArrayBinding<Vert::Physical>,
         surface: &S,
         draw_params: &DrawParams,
     ) where
@@ -61,13 +61,13 @@ struct UniformVisitor<'a> {
     raw_samplers: Vec<raw::Sampler>,
 }
 
-impl<'a> UniformInterfaceVisitor<'a, Gl> for UniformVisitor<'a> {
+impl<'a> UniformDataVisitor<'a, Physical> for UniformVisitor<'a> {
     fn accept_sampler2d<S: Sample>(&mut self, path: &str, sampler: &Sampler2d<S>) {
         self.raw_samplers
             .push(raw::Sampler::Sampler2d(sampler.raw.clone()))
     }
 
-    fn accept_block<U: Block<Sl, InSl = U>>(
+    fn accept_block<U: Block<Logical, Logical = U>>(
         &mut self,
         _: &str,
         uniform: &'a UniformBufferBinding<U>,

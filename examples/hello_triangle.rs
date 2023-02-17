@@ -1,37 +1,29 @@
 use std::time::Instant;
 
 use posh::{
-    crevice::std140::AsStd140,
     gl::{
         BufferUsage, Context, DefaultFramebuffer, DrawParams, Error, GeometryType, Program,
         UniformBuffer, VertexArray,
     },
     sl::{self, VaryingOutput},
-    Block, BlockDomain, Sl,
+    Block, BlockView, Logical,
 };
 
 // Shader interface
 
 #[derive(Clone, Copy, Block)]
-struct MyUniform<D: BlockDomain = Sl> {
-    time: D::F32,
-}
-
-#[derive(Clone, Copy, Block)]
-struct MyVertex<D: BlockDomain = Sl> {
-    pos: D::Vec2<f32>,
-    flag: D::Vec2<bool>,
+struct MyUniform<V: BlockView = Logical> {
+    time: V::F32,
 }
 
 // Shader code
 
-fn vertex_shader<Unif>(_: Unif, vertex: MyVertex) -> VaryingOutput<sl::Vec2<f32>> {
-    let shifted_pos = vertex.pos - 0.5 * vertex.flag.x.branch(1.0, 2.0);
-    let shifted_pos = sl::Mat2::identity().x * sl::Vec2::default() + shifted_pos;
+fn vertex_shader(_: MyUniform, vertex: sl::Vec2<f32>) -> VaryingOutput<sl::Vec2<f32>> {
+    let vertex = vertex - sl::vec2(0.5, 0.5);
 
     VaryingOutput {
-        varying: vertex.pos,
-        position: sl::vec4(shifted_pos.x, shifted_pos.y, 0.0, 1.0),
+        varying: vertex,
+        position: sl::vec4(vertex.x, vertex.y, 0.0, 1.0),
     }
 }
 
@@ -45,9 +37,9 @@ fn fragment_shader(uniform: MyUniform, varying: sl::Vec2<f32>) -> sl::Vec4<f32> 
 
 struct Demo {
     context: Context,
-    program: Program<MyUniform, MyVertex>,
+    program: Program<MyUniform, sl::Vec2<f32>>,
     uniform_buffer: UniformBuffer<MyUniform>,
-    vertex_array: VertexArray<MyVertex>,
+    vertex_array: VertexArray<sl::Vec2<f32>>,
     start_time: Instant,
 }
 
@@ -57,23 +49,7 @@ impl Demo {
         let uniform_buffer =
             context.create_uniform_buffer(MyUniform { time: 0.0 }, BufferUsage::StreamDraw)?;
         let vertex_array = context.create_simple_vertex_array(
-            &[
-                MyVertex {
-                    pos: [0.5f32, 1.0].into(),
-                    flag: [false, true].into(),
-                }
-                .as_std140(),
-                MyVertex {
-                    pos: [0.0, 0.0].into(),
-                    flag: [false, false].into(),
-                }
-                .as_std140(),
-                MyVertex {
-                    pos: [1.0, 0.0].into(),
-                    flag: [true, true].into(),
-                }
-                .as_std140(),
-            ],
+            &[[0.5f32, 1.0].into(), [0.0, 0.0].into(), [1.0, 0.0].into()],
             BufferUsage::StaticDraw,
             (),
         )?;

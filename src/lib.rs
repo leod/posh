@@ -8,11 +8,11 @@ pub mod gl;
 pub mod sl;
 
 pub use interface::{
-    Block, BlockDomain, FragmentDomain, FragmentInterface, Numeric, Primitive, UniformDomain,
-    UniformInterface, VertexDomain, VertexInterface,
+    Block, BlockView, FragmentData, FragmentDataView, Logical, Numeric, Physical, Primitive,
+    UniformData, UniformDataView, VertexData, VertexDataView,
 };
 
-pub use posh_derive::{Block, UniformInterface, VertexInterface};
+pub use posh_derive::{Block, UniformData, VertexData};
 
 pub use crevice;
 
@@ -31,24 +31,12 @@ pub mod util {
     };
 }
 
-/// The graphics library domain.
-///
-/// This is the domain in which data for draw calls are specified.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Gl;
-
-/// The shading language domain.
-///
-/// This is the domain in which shaders are defined.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Sl;
-
 // Hidden unstable symbols, needed for `posh-derive`.
 #[doc(hidden)]
 pub mod internal {
     pub use super::{
         dag::{BaseType, Expr, StructType, Type},
-        interface::{UniformInterfaceVisitor, VertexInterfaceField, VertexInterfaceVisitor},
+        interface::{UniformDataVisitor, VertexDataField, VertexDataVisitor},
         sl::{
             primitives::{field, simplify_struct_literal, value_arg},
             unique_struct_type,

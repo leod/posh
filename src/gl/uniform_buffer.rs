@@ -2,7 +2,7 @@ use std::{marker::PhantomData, rc::Rc};
 
 use crevice::std140::AsStd140;
 
-use crate::{Block, Sl};
+use crate::{Block, Logical};
 
 use super::{raw, BufferUsage};
 
@@ -11,23 +11,23 @@ use super::{raw, BufferUsage};
 /// Instances of `UniformBuffer` can be created with
 /// [`Context::create_uniform_buffer`](crate::gl::Context::create_uniform_buffer).
 #[derive(Clone)]
-pub struct UniformBuffer<U> {
+pub struct UniformBuffer<B> {
     pub(super) raw: Rc<raw::Buffer>,
-    _phantom: PhantomData<U>,
+    _phantom: PhantomData<B>,
 }
 
 #[derive(Clone)]
-pub struct UniformBufferBinding<U> {
+pub struct UniformBufferBinding<B> {
     pub(super) raw: Rc<raw::Buffer>,
-    _phantom: PhantomData<U>,
+    _phantom: PhantomData<B>,
     // TODO: Uniform buffer slicing.
 }
 
-impl<U: Block<Sl>> UniformBuffer<U> {
+impl<B: Block<Logical>> UniformBuffer<B> {
     /// # Panics
     ///
-    /// Panics if the length of `raw` is not a multiple of the size of `<U::InGl
-    /// as AsStd140>::Output`.
+    /// Panics if the length of `raw` is not a multiple of the size of
+    /// `<U::Physical as AsStd140>::Output`.
     pub(super) fn from_raw(raw: raw::Buffer) -> Self {
         assert!(Self::uniform_size() > 0);
         assert_eq!(raw.len() % Self::uniform_size(), 0);
@@ -54,11 +54,11 @@ impl<U: Block<Sl>> UniformBuffer<U> {
         self.len() == 0
     }
 
-    pub fn set(&self, data: U::InGl) {
+    pub fn set(&self, data: B::Physical) {
         self.raw.set(&[data.as_std140()]);
     }
 
-    pub fn binding(&self) -> UniformBufferBinding<U> {
+    pub fn binding(&self) -> UniformBufferBinding<B> {
         UniformBufferBinding {
             raw: self.raw.clone(),
             _phantom: PhantomData,
@@ -66,6 +66,6 @@ impl<U: Block<Sl>> UniformBuffer<U> {
     }
 
     fn uniform_size() -> usize {
-        std::mem::size_of::<<U::InGl as AsStd140>::Output>()
+        std::mem::size_of::<<B::Physical as AsStd140>::Output>()
     }
 }
