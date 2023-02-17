@@ -1,6 +1,6 @@
-use crate::{sl, FragmentInterface, Sl};
+use crate::{sl, FragmentData, Logical};
 
-pub trait Surface<F: FragmentInterface<Sl>> {}
+pub trait Surface<F: FragmentData<Logical>> {}
 
 pub struct DefaultFramebuffer;
 

@@ -1,4 +1,4 @@
-use crate::{FragmentInterface, Sl, VertexInterface};
+use crate::{FragmentData, Logical, VertexData};
 
 use super::{Bool, Varying, Vec2, Vec4, F32, U32};
 
@@ -21,12 +21,12 @@ pub struct VertexInput<Vert> {
 
 /// Types that can be used as vertex input for a vertex shader.
 pub trait FromVertexInput {
-    type Vert: VertexInterface<Sl>;
+    type Vert: VertexData<Logical>;
 
     fn from(input: VertexInput<Self::Vert>) -> Self;
 }
 
-impl<Vert: VertexInterface<Sl>> FromVertexInput for VertexInput<Vert> {
+impl<Vert: VertexData<Logical>> FromVertexInput for VertexInput<Vert> {
     type Vert = Vert;
 
     fn from(input: Self) -> Self {
@@ -34,7 +34,7 @@ impl<Vert: VertexInterface<Sl>> FromVertexInput for VertexInput<Vert> {
     }
 }
 
-impl<Vert: VertexInterface<Sl>> FromVertexInput for Vert {
+impl<Vert: VertexData<Logical>> FromVertexInput for Vert {
     type Vert = Self;
 
     fn from(input: VertexInput<Self>) -> Self {
@@ -147,12 +147,12 @@ impl<Frag> FragmentOutput<Frag> {
 
 /// Types that can be used as fragment output for a fragment shader.
 pub trait IntoFragmentOutput {
-    type Frag: FragmentInterface<Sl>;
+    type Frag: FragmentData<Logical>;
 
     fn into(self) -> FragmentOutput<Self::Frag>;
 }
 
-impl<Frag: FragmentInterface<Sl>> IntoFragmentOutput for FragmentOutput<Frag> {
+impl<Frag: FragmentData<Logical>> IntoFragmentOutput for FragmentOutput<Frag> {
     type Frag = Frag;
 
     fn into(self) -> Self {
@@ -160,7 +160,7 @@ impl<Frag: FragmentInterface<Sl>> IntoFragmentOutput for FragmentOutput<Frag> {
     }
 }
 
-impl<Frag: FragmentInterface<Sl>> IntoFragmentOutput for Frag {
+impl<Frag: FragmentData<Logical>> IntoFragmentOutput for Frag {
     type Frag = Self;
 
     fn into(self) -> FragmentOutput<Self> {

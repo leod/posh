@@ -9,7 +9,7 @@ use crate::{
         ConstInput, FromFragmentInput, FromVertexInput, IntoFragmentOutput, IntoVertexOutput,
         Varying,
     },
-    Block, FragmentInterface, Sl, UniformInterface, VertexInterface,
+    Block, FragmentData, Logical, UniformData, VertexData,
 };
 
 use super::{
@@ -38,13 +38,13 @@ impl Context {
         self.raw.caps()
     }
 
-    pub fn create_vertex_buffer<V>(
+    pub fn create_vertex_buffer<B>(
         &self,
-        data: &[<V::InGl as AsStd140>::Output],
+        data: &[<B::Physical as AsStd140>::Output],
         usage: BufferUsage,
-    ) -> Result<VertexBuffer<V>, BufferError>
+    ) -> Result<VertexBuffer<B>, BufferError>
     where
-        V: Block<Sl>,
+        B: Block<Logical>,
     {
         let raw = self.raw.create_buffer(&data, usage)?;
 
@@ -64,13 +64,13 @@ impl Context {
         Ok(ElementBuffer::from_raw(raw))
     }
 
-    pub fn create_uniform_buffer<U>(
+    pub fn create_uniform_buffer<B>(
         &self,
-        data: U::InGl,
+        data: B::Physical,
         usage: BufferUsage,
-    ) -> Result<UniformBuffer<U>, BufferError>
+    ) -> Result<UniformBuffer<B>, BufferError>
     where
-        U: Block<Sl>,
+        B: Block<Logical>,
     {
         let raw = self.raw.create_buffer(&[data.as_std140()], usage)?;
 
@@ -79,11 +79,11 @@ impl Context {
 
     pub fn create_vertex_array<V, E>(
         &self,
-        vertex_buffers: V::InGl,
+        vertex_buffers: V::Physical,
         element_source: E::Source,
     ) -> Result<VertexArray<V, E>, VertexArrayError>
     where
-        V: VertexInterface<Sl>,
+        V: VertexData<Logical>,
         E: ElementOrUnit,
     {
         VertexArray::new(&self.raw, vertex_buffers, element_source)
@@ -91,15 +91,18 @@ impl Context {
 
     pub fn create_simple_vertex_array<V, E>(
         &self,
-        vertices: &[<V::InGl as AsStd140>::Output],
+        vertices: &[V::Physical],
         usage: BufferUsage,
         element_source: E::Source,
     ) -> Result<VertexArray<V, E>, Error>
     where
-        V: Block<Sl>,
+        V: Block<Logical>,
         E: ElementOrUnit,
     {
-        let vertex_buffer = self.create_vertex_buffer(vertices, usage)?;
+        // TODO
+        let vertices: Vec<_> = vertices.iter().map(|vertex| vertex.as_std140()).collect();
+
+        let vertex_buffer = self.create_vertex_buffer(&vertices, usage)?;
 
         Ok(VertexArray::new(&self.raw, vertex_buffer, element_source)?)
     }
@@ -110,9 +113,9 @@ impl Context {
         fragment_shader: fn(Unif, FragIn) -> FragOut,
     ) -> Result<Program<Unif, Vert, Frag>, ProgramError>
     where
-        Unif: UniformInterface<Sl>,
-        Vert: VertexInterface<Sl>,
-        Frag: FragmentInterface<Sl>,
+        Unif: UniformData<Logical>,
+        Vert: VertexData<Logical>,
+        Frag: FragmentData<Logical>,
         Vary: Varying,
         VertIn: FromVertexInput<Vert = Vert>,
         VertOut: IntoVertexOutput<Vary = Vary>,
@@ -149,9 +152,9 @@ impl Context {
     ) -> Result<Program<Unif, Vert, Frag>, ProgramError>
     where
         Consts: ConstInput,
-        Unif: UniformInterface<Sl, InSl = Unif>,
-        Vert: VertexInterface<Sl, InSl = Vert>,
-        Frag: FragmentInterface<Sl, InSl = Frag>,
+        Unif: UniformData<Logical, Logical = Unif>,
+        Vert: VertexData<Logical, Logical = Vert>,
+        Frag: FragmentData<Logical, Logical = Frag>,
         Vary: Varying,
         VertIn: FromVertexInput<Vert = Vert>,
         VertOut: IntoVertexOutput<Vary = Vary>,

@@ -5,35 +5,32 @@ use crate::{
     gl,
     program_def::{VertexAttributeDef, VertexInputRate},
     sl::{Mat2, Mat3, Mat4, Object, Sample, Sampler2d, Scalar, Vec2, Vec3, Vec4},
-    Sl,
+    Logical,
 };
 
 use super::{
-    Block, FragmentInterface, FragmentInterfaceVisitor, Primitive, UniformInterface,
-    VertexInterface, VertexInterfaceVisitor,
+    Block, FragmentData, FragmentDataVisitor, Primitive, UniformData, VertexData, VertexDataVisitor,
 };
 
 // Block
 
 #[sealed]
-impl super::BlockDomain for Sl {
-    type Scalar<T: Primitive> = Scalar<T>;
-    type Vec2<T: Primitive> = Vec2<T>;
-    type Vec3<T: Primitive> = Vec3<T>;
-    type Vec4<T: Primitive> = Vec4<T>;
-    type Mat2 = Mat2;
-    type Mat3 = Mat3;
-    type Mat4 = Mat4;
-
+impl super::BlockView for Logical {
     type Bool = Scalar<bool>;
     type F32 = Scalar<f32>;
     type I32 = Scalar<i32>;
     type U32 = Scalar<u32>;
+    type Vec2 = Vec2<f32>;
+    type Vec3 = Vec3<f32>;
+    type Vec4 = Vec4<f32>;
+    type Mat2 = Mat2;
+    type Mat3 = Mat3;
+    type Mat4 = Mat4;
 }
 
-unsafe impl<T: Primitive> Block<Sl> for Scalar<T> {
-    type InGl = T;
-    type InSl = Self;
+unsafe impl<T: Primitive> Block<Logical> for Scalar<T> {
+    type Physical = T;
+    type Logical = Self;
 
     fn uniform_input(path: &str) -> Self {
         <Self as Object>::from_arg(path)
@@ -60,9 +57,9 @@ unsafe impl<T: Primitive> Block<Sl> for Scalar<T> {
 
 macro_rules! impl_block_for_vec {
     ($ty:ident) => {
-        unsafe impl<T: Primitive> Block<Sl> for $ty<T> {
-            type InGl = T::$ty;
-            type InSl = Self;
+        unsafe impl<T: Primitive> Block<Logical> for $ty<T> {
+            type Logical = Self;
+            type Physical = T::$ty;
 
             fn uniform_input(path: &str) -> Self {
                 <Self as Object>::from_arg(path)
@@ -95,9 +92,9 @@ impl_block_for_vec!(Vec4);
 
 macro_rules! impl_block_for_mat {
     ($ty:ident, $mint_ty:ident) => {
-        unsafe impl Block<Sl> for $ty {
-            type InGl = mint::$mint_ty<f32>;
-            type InSl = Self;
+        unsafe impl Block<Logical> for $ty {
+            type Logical = Self;
+            type Physical = mint::$mint_ty<f32>;
 
             fn uniform_input(path: &str) -> Self {
                 <Self as Object>::from_arg(path)
@@ -139,47 +136,60 @@ fn vertex_attribute_numeric_repr(ty: PrimitiveType) -> PrimitiveType {
     })
 }
 
-// VertexInterface
+// VertexData
 
 #[sealed]
-impl super::VertexDomain for Sl {
-    type Vertex<V: Block<Sl>> = V;
+impl super::VertexDataView for Logical {
+    type Block<B: Block<Logical>> = B;
 }
 
-unsafe impl<V: Block<Sl>> VertexInterface<Sl> for V {
-    type InGl = gl::VertexBuffer<V>;
-    type InSl = V::InSl;
+unsafe impl<B: Block<Logical>> VertexData<Logical> for B {
+    type Physical = gl::VertexBuffer<B>;
+    type Logical = B::Logical;
 
-    fn visit<'a>(&'a self, path: &str, visitor: &mut impl VertexInterfaceVisitor<'a, Sl>) {
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl VertexDataVisitor<'a, Logical>) {
         visitor.accept(path, VertexInputRate::Vertex, self);
     }
 
     fn shader_input(path: &str) -> Self {
-        V::vertex_input(path)
+        B::vertex_input(path)
     }
 }
 
 #[sealed]
-impl<V: Block<Sl>> super::VertexInterfaceField<Sl> for V {
+impl<B: Block<Logical>> super::VertexDataField<Logical> for B {
     fn shader_input(path: &str) -> Self {
-        V::vertex_input(path)
+        B::vertex_input(path)
     }
 }
 
-// UniformInterface
+// UniformData
 
 #[sealed]
-impl super::UniformDomain for Sl {
+impl super::UniformDataView for Logical {
+    type Block<B: Block<Logical, Logical = B>> = B;
     type Sampler2d<S: Sample> = Sampler2d<S>;
-    type Block<U: Block<Sl, InSl = U>> = U;
-    type Compose<R: UniformInterface<Sl>> = R;
+    type Compose<R: UniformData<Logical>> = R;
 }
 
-unsafe impl<S: Sample> UniformInterface<Sl> for Sampler2d<S> {
-    type InGl = gl::Sampler2d<S>;
-    type InSl = Self;
+unsafe impl<B: Block<Logical, Logical = B>> UniformData<Logical> for B {
+    type Logical = Self;
+    type Physical = gl::UniformBufferBinding<B>;
 
-    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformInterfaceVisitor<'a, Sl>) {
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformDataVisitor<'a, Logical>) {
+        visitor.accept_block(path, self)
+    }
+
+    fn shader_input(path: &str) -> Self {
+        <B as Block<Logical>>::uniform_input(path)
+    }
+}
+
+unsafe impl<S: Sample> UniformData<Logical> for Sampler2d<S> {
+    type Logical = Self;
+    type Physical = gl::Sampler2d<S>;
+
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformDataVisitor<'a, Logical>) {
         visitor.accept_sampler2d(path, self)
     }
 
@@ -188,31 +198,18 @@ unsafe impl<S: Sample> UniformInterface<Sl> for Sampler2d<S> {
     }
 }
 
-unsafe impl<U: Block<Sl, InSl = U>> UniformInterface<Sl> for U {
-    type InGl = gl::UniformBufferBinding<U>;
-    type InSl = Self;
-
-    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformInterfaceVisitor<'a, Sl>) {
-        visitor.accept_block(path, self)
-    }
-
-    fn shader_input(path: &str) -> Self {
-        <U as Block<Sl>>::uniform_input(path)
-    }
-}
-
-// FragmentInterface
+// FragmentData
 
 #[sealed]
-impl super::FragmentDomain for Sl {
+impl super::FragmentDataView for Logical {
     type Attachment = Vec4<f32>;
 }
 
-unsafe impl FragmentInterface<Sl> for Vec4<f32> {
-    type InGl = gl::Texture2d<gl::RgbaFormat>;
-    type InSl = Self;
+unsafe impl FragmentData<Logical> for Vec4<f32> {
+    type Logical = Self;
+    type Physical = gl::Texture2d<gl::RgbaFormat>;
 
-    fn visit(&self, path: &str, visitor: &mut impl FragmentInterfaceVisitor<Sl>) {
+    fn visit(&self, path: &str, visitor: &mut impl FragmentDataVisitor<Logical>) {
         visitor.accept(path, self);
     }
 }

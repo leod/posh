@@ -5,7 +5,7 @@ use sealed::sealed;
 use crate::{
     dag::{NumericType, PrimitiveType},
     sl::{Scalar, ToValue, Vec2, Vec3, Vec4},
-    Block, Gl,
+    Block, Physical,
 };
 
 /// One of `bool`, `f32`, `i32`, or `u32`.
@@ -15,24 +15,24 @@ pub trait Primitive:
     + AsStd140
     + Default
     + ToString
-    + Block<Gl, InGl = Self, InSl = Scalar<Self>>
+    + Block<Physical, Physical = Self, Logical = Scalar<Self>>
     + ToValue<Output = Scalar<Self>>
 {
     #[doc(hidden)]
     const PRIMITIVE_TYPE: PrimitiveType;
 
     #[doc(hidden)]
-    type Vec2: Block<Gl, InGl = Self::Vec2, InSl = Vec2<Self>>
+    type Vec2: Block<Physical, Physical = Self::Vec2, Logical = Vec2<Self>>
         + AsStd140
         + ToValue<Output = Vec2<Self>>;
 
     #[doc(hidden)]
-    type Vec3: Block<Gl, InGl = Self::Vec3, InSl = Vec3<Self>>
+    type Vec3: Block<Physical, Physical = Self::Vec3, Logical = Vec3<Self>>
         + AsStd140
         + ToValue<Output = Vec3<Self>>;
 
     #[doc(hidden)]
-    type Vec4: Block<Gl, InGl = Self::Vec4, InSl = Vec4<Self>>
+    type Vec4: Block<Physical, Physical = Self::Vec4, Logical = Vec4<Self>>
         + AsStd140
         + ToValue<Output = Vec4<Self>>;
 }
@@ -62,7 +62,7 @@ pub trait Numeric: Pod + Primitive {
     const NUMERIC_TYPE: NumericType;
 
     #[doc(hidden)]
-    type Vec2: Block<Gl>;
+    type Vec2: Block<Physical>;
 }
 
 #[sealed]

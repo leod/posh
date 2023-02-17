@@ -2,19 +2,19 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{parse_quote, DeriveInput, Result};
 
-use crate::utils::{get_domain_param, SpecializedTypeGenerics, StructFields};
+use crate::utils::{get_view_param, SpecializedTypeGenerics, StructFields};
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let ident = &input.ident;
 
-    let generics_d_type = get_domain_param(ident, &input.generics)?;
+    let generics_view_type = get_view_param(ident, &input.generics)?;
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
-    let ty_generics_gl =
-        SpecializedTypeGenerics::new(parse_quote!(::posh::Gl), ident, &input.generics)?;
-    let ty_generics_sl =
-        SpecializedTypeGenerics::new(parse_quote!(::posh::Sl), ident, &input.generics)?;
+    let ty_generics_logical =
+        SpecializedTypeGenerics::new(parse_quote!(::posh::Logical), ident, &input.generics)?;
+    let ty_generics_physical =
+        SpecializedTypeGenerics::new(parse_quote!(::posh::Physical), ident, &input.generics)?;
 
     let fields = StructFields::new(&input.ident, &input.data)?;
     let field_idents = fields.idents();
@@ -22,18 +22,18 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let field_strings = fields.strings();
 
     Ok(quote! {
-        // Implement `VertexInterface<D>` for the struct.
-        unsafe impl #impl_generics ::posh::VertexInterface<#generics_d_type>
+        // Implement `VertexData<V>` for the struct.
+        unsafe impl #impl_generics ::posh::VertexData<#generics_view_type>
         for #ident #ty_generics
         #where_clause
         {
-            type InGl = #ident #ty_generics_gl;
-            type InSl = #ident #ty_generics_sl;
+            type Logical = #ident #ty_generics_logical;
+            type Physical = #ident #ty_generics_physical;
 
             fn visit<'a>(
                 &'a self,
                 path: &str,
-                visitor: &mut impl ::posh::internal::VertexInterfaceVisitor<'a, D>,
+                visitor: &mut impl ::posh::internal::VertexDataVisitor<'a, #generics_view_type>,
             ) {
                 #(
                     visitor.accept(
@@ -51,7 +51,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                             <
                                 #field_types
                                 as
-                                ::posh::internal::VertexInterfaceField<#generics_d_type>
+                                ::posh::internal::VertexDataField<#generics_view_type>
                             >::shader_input(
                                 &::posh::internal::join_ident_path(path, #field_strings),
                             ),
@@ -60,17 +60,17 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             }
         }
 
-        // Check that all field types implement `VertexInterfaceField<D>`.
+        // Check that all field types implement `VertexDataField<V>`.
         const _: fn() = || {
-            fn check_field<D, V>()
+            fn check_field<V, F>()
             where
-                D: ::posh::VertexDomain,
-                V: ::posh::internal::VertexInterfaceField<D>,
+                V: ::posh::VertexDataView,
+                F: ::posh::internal::VertexDataField<V>,
             {}
 
             fn check_struct #impl_generics(value: &#ident #ty_generics) #where_clause {
                 #(
-                    check_field::<#generics_d_type, #field_types>();
+                    check_field::<#generics_view_type, #field_types>();
                 )*
             }
         };

@@ -1,7 +1,6 @@
 use posh::{
     sl::{self, Value},
-    Block, BlockDomain, Numeric, Sl, UniformDomain, UniformInterface, VertexDomain,
-    VertexInterface,
+    Block, BlockView, Logical, Numeric, UniformData, UniformDataView, VertexData, VertexDataView,
 };
 
 #[derive(Clone, Copy, Value)]
@@ -10,52 +9,52 @@ struct Foo<T: Numeric> {
 }
 
 #[derive(Clone, Copy, Block)]
-struct MyUniform1<D: BlockDomain = Sl> {
-    x: D::Vec2<f32>,
-    y: D::Bool,
+struct MyUniform1<V: BlockView = Logical> {
+    x: V::Vec2,
+    y: V::Bool,
 }
 
 #[derive(Clone, Copy, Block)]
-struct MyUniform2<D: BlockDomain = Sl> {
-    x: D::Vec2<f32>,
-    y: MyUniform1<D>,
+struct MyUniform2<V: BlockView = Logical> {
+    x: V::Vec2,
+    y: MyUniform1<V>,
 }
 
 #[derive(Clone, Copy, Block)]
-struct MyVertex<D: BlockDomain = Sl> {
+struct MyVertex<V: BlockView = Logical> {
+    x: V::F32,
+    y: V::Vec2,
+}
+
+#[derive(Clone, Copy, Block)]
+struct MyNestedVertex<D: BlockView = Logical> {
     x: D::F32,
-    y: D::Vec2<f32>,
-}
-
-#[derive(Clone, Copy, Block)]
-struct MyNestedVertex<D: BlockDomain = Sl> {
-    x: D::Scalar<f32>,
     zzz: MyUniform1<D>,
-    y: D::Vec2<f32>,
+    y: D::Vec2,
 }
 
-#[derive(VertexInterface)]
-struct MyVertexIface<D: VertexDomain = Sl> {
-    vertex: D::Vertex<MyVertex>,
-    instance: D::Vertex<MyNestedVertex>,
+#[derive(VertexData)]
+struct MyVertexIface<D: VertexDataView = Logical> {
+    vertex: D::Block<MyVertex>,
+    instance: D::Block<MyNestedVertex>,
 }
 
-#[derive(UniformInterface)]
-struct MyUniformIface<D: UniformDomain = Sl> {
+#[derive(UniformData)]
+struct MyUniformIface<D: UniformDataView = Logical> {
     uniform: D::Block<MyUniform1>,
 }
 
-#[derive(UniformInterface)]
-struct MyUniformIface2<D: UniformDomain = Sl> {
+#[derive(UniformData)]
+struct MyUniformIface2<D: UniformDataView = Logical> {
     uniformxy: D::Block<MyUniform1>,
     bla: MyUniformIface<D>,
     zzz: D::Block<MyUniform1>,
 }
 
-#[derive(UniformInterface)]
-struct GenericUniformIface<R, D: UniformDomain = Sl>
+#[derive(UniformData)]
+struct GenericUniformIface<R, D: UniformDataView = Logical>
 where
-    R: UniformInterface<Sl>,
+    R: UniformData<Logical>,
 {
     uniformxy: D::Block<MyUniform1>,
     x: D::Compose<R>,

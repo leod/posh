@@ -1,13 +1,13 @@
 mod block;
-mod uniform_interface;
+mod uniform_data;
 mod utils;
 mod value;
-mod vertex_interface;
+mod vertex_data;
 
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput};
 
-/// Derives `Block` for a struct that is generic in `BlockDomain`.
+/// Derives `Block` for a struct that is generic in `BlockView`.
 #[proc_macro_derive(Block)]
 pub fn derive_block(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -18,11 +18,11 @@ pub fn derive_block(input: TokenStream) -> TokenStream {
     .into()
 }
 
-/// Derives `UniformInterface` for a struct that is generic in `UniformDomain`.
-#[proc_macro_derive(UniformInterface)]
-pub fn derive_uniform_interface(input: TokenStream) -> TokenStream {
+/// Derives `UniformData` for a struct that is generic in `UniformDataView`.
+#[proc_macro_derive(UniformData)]
+pub fn derive_uniform_data(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    match uniform_interface::derive(input) {
+    match uniform_data::derive(input) {
         Ok(ts) => ts,
         Err(e) => e.to_compile_error(),
     }
@@ -40,11 +40,11 @@ pub fn derive_value(input: TokenStream) -> TokenStream {
     .into()
 }
 
-/// Derives `VertexInterface` for a struct that is generic in `VertexDomain`.
-#[proc_macro_derive(VertexInterface)]
-pub fn derive_vertex_interface(input: TokenStream) -> TokenStream {
+/// Derives `VertexData` for a struct that is generic in `VertexDataView`.
+#[proc_macro_derive(VertexData)]
+pub fn derive_vertex_data(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    match vertex_interface::derive(input) {
+    match vertex_data::derive(input) {
         Ok(ts) => ts,
         Err(e) => e.to_compile_error(),
     }

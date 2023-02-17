@@ -5,7 +5,7 @@ use crevice::std140::AsStd140;
 use crate::{
     codegen::glsl,
     dag::{Expr, SamplerType},
-    interface::{FragmentInterfaceVisitor, UniformInterfaceVisitor, VertexInterfaceVisitor},
+    interface::{FragmentDataVisitor, UniformDataVisitor, VertexDataVisitor},
     program_def::{
         ProgramDef, UniformBlockDef, UniformSamplerDef, VertexAttributeDef, VertexDef,
         VertexInputRate,
@@ -14,7 +14,7 @@ use crate::{
         ConstInput, FragmentInput, FromFragmentInput, FromVertexInput, IntoFragmentOutput,
         IntoVertexOutput, Object, Private, Sample, VertexInput,
     },
-    Block, FragmentInterface, Numeric, Sl, UniformInterface, VertexInterface,
+    Block, FragmentData, Logical, Numeric, UniformData, VertexData,
 };
 
 use crate::sl::{primitives::value_arg, Sampler2d, Varying, Vec4};
@@ -30,9 +30,9 @@ pub fn compile_to_program_def<Unif, Vert, Frag, Vary, VertIn, VertOut, FragIn, F
     fragment_shader: fn(Unif, FragIn) -> FragOut,
 ) -> ProgramDef
 where
-    Unif: UniformInterface<Sl>,
-    Vert: VertexInterface<Sl>,
-    Frag: FragmentInterface<Sl>,
+    Unif: UniformData<Logical>,
+    Vert: VertexData<Logical>,
+    Frag: FragmentData<Logical>,
     Vary: Varying,
     VertIn: FromVertexInput<Vert = Vert>,
     VertOut: IntoVertexOutput<Vary = Vary>,
@@ -66,9 +66,9 @@ pub fn compile_to_program_def_with_consts<
 ) -> ProgramDef
 where
     Consts: ConstInput,
-    Unif: UniformInterface<Sl>,
-    Vert: VertexInterface<Sl>,
-    Frag: FragmentInterface<Sl>,
+    Unif: UniformData<Logical>,
+    Vert: VertexData<Logical>,
+    Frag: FragmentData<Logical>,
     Vary: Varying,
     VertIn: FromVertexInput<Vert = Vert>,
     VertOut: IntoVertexOutput<Vary = Vary>,
@@ -95,9 +95,9 @@ fn compile_to_program_def_with_consts_impl<
 ) -> ProgramDef
 where
     Consts: ConstInput,
-    Unif: UniformInterface<Sl>,
-    Vert: VertexInterface<Sl>,
-    Frag: FragmentInterface<Sl>,
+    Unif: UniformData<Logical>,
+    Vert: VertexData<Logical>,
+    Frag: FragmentData<Logical>,
     Vary: Varying,
     VertIn: FromVertexInput<Vert = Vert>,
     VertOut: IntoVertexOutput<Vary = Vary>,
@@ -239,7 +239,7 @@ struct UniformVisitor {
     block_defs: Vec<UniformBlockDef>,
 }
 
-impl<'a> UniformInterfaceVisitor<'a, Sl> for UniformVisitor {
+impl<'a> UniformDataVisitor<'a, Logical> for UniformVisitor {
     fn accept_sampler2d<S: Sample>(&mut self, path: &str, _: &Sampler2d<S>) {
         // TODO: Allow user-specified sampler texture units.
         self.sampler_defs.push(UniformSamplerDef {
@@ -252,12 +252,12 @@ impl<'a> UniformInterfaceVisitor<'a, Sl> for UniformVisitor {
         })
     }
 
-    fn accept_block<U: Block<Sl>>(&mut self, path: &str, _: &U) {
+    fn accept_block<U: Block<Logical>>(&mut self, path: &str, _: &U) {
         // TODO: Allow user-specified uniform block locations.
         self.block_defs.push(UniformBlockDef {
             block_name: path.to_string() + "_posh_block",
             arg_name: path.to_string(),
-            ty: <U::InSl as Object>::ty(),
+            ty: <U::Logical as Object>::ty(),
             location: self.block_defs.len(),
         })
     }
@@ -269,12 +269,12 @@ struct VertexVisitor {
     vertex_defs: Vec<VertexDef>,
 }
 
-impl<'a> VertexInterfaceVisitor<'a, Sl> for VertexVisitor {
-    fn accept<V: Block<Sl>>(&mut self, path: &str, input_rate: VertexInputRate, _: &V) {
+impl<'a> VertexDataVisitor<'a, Logical> for VertexVisitor {
+    fn accept<V: Block<Logical>>(&mut self, path: &str, input_rate: VertexInputRate, _: &V) {
         self.attribute_defs.extend(V::vertex_attribute_defs(path));
         self.vertex_defs.push(VertexDef {
             input_rate,
-            stride: std::mem::size_of::<<V::InGl as AsStd140>::Output>(),
+            stride: std::mem::size_of::<<V::Physical as AsStd140>::Output>(),
             attributes: V::vertex_attribute_defs(path),
         })
     }
@@ -285,7 +285,7 @@ struct FragmentVisitor {
     outputs: Vec<(String, Rc<Expr>)>,
 }
 
-impl FragmentInterfaceVisitor<Sl> for FragmentVisitor {
+impl FragmentDataVisitor<Logical> for FragmentVisitor {
     fn accept(&mut self, path: &str, output: &Vec4<f32>) {
         self.outputs.push((path.to_string(), output.expr()));
     }

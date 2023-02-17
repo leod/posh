@@ -1,6 +1,5 @@
 use std::time::Instant;
 
-use crevice::std140::AsStd140;
 use image::{io::Reader as ImageReader, EncodableLayout};
 
 use posh::{
@@ -9,7 +8,7 @@ use posh::{
         RgbaFormat, RgbaImage, Sampler2dParams, Texture2d, UniformBuffer, VertexArray,
     },
     sl::{self, VaryingOutput},
-    Block, BlockDomain, Gl, Sl, UniformDomain, UniformInterface,
+    Block, BlockView, Logical, Physical, UniformData, UniformDataView,
 };
 
 const WIDTH: u32 = 1024;
@@ -18,12 +17,12 @@ const HEIGHT: u32 = 768;
 // Shader interface
 
 #[derive(Clone, Copy, Block)]
-struct Camera<D: BlockDomain = Sl> {
-    projection: D::Mat4,
-    view: D::Mat4,
+struct Camera<V: BlockView = Logical> {
+    projection: V::Mat4,
+    view: V::Mat4,
 }
 
-impl Default for Camera<Gl> {
+impl Default for Camera<Physical> {
     fn default() -> Self {
         Self {
             projection: glam::Mat4::perspective_rh_gl(
@@ -39,16 +38,16 @@ impl Default for Camera<Gl> {
 }
 
 #[derive(Clone, Copy, Block)]
-struct Vertex<D: BlockDomain = Sl> {
-    pos: D::Vec3<f32>,
-    tex_coords: D::Vec2<f32>,
+struct Vertex<V: BlockView = Logical> {
+    pos: V::Vec3,
+    tex_coords: V::Vec2,
 }
 
-#[derive(UniformInterface)]
-struct Uniforms<D: UniformDomain = Sl> {
-    camera: D::Block<Camera>,
-    time: D::Block<sl::F32>,
-    sampler: D::Sampler2d<sl::Vec4<f32>>,
+#[derive(UniformData)]
+struct Uniforms<V: UniformDataView = Logical> {
+    camera: V::Block<Camera>,
+    time: V::Block<sl::F32>,
+    sampler: V::Sampler2d<sl::Vec4<f32>>,
 }
 
 // Shader code
@@ -98,10 +97,7 @@ impl Demo {
         let camera = context.create_uniform_buffer(Camera::default(), BufferUsage::StaticDraw)?;
         let time = context.create_uniform_buffer(0.0, BufferUsage::StreamDraw)?;
         let vertex_array = context.create_simple_vertex_array(
-            &cube_vertices()
-                .iter()
-                .map(AsStd140::as_std140)
-                .collect::<Vec<_>>(),
+            &cube_vertices(),
             BufferUsage::StaticDraw,
             context.create_element_buffer(&cube_indices(), BufferUsage::StaticDraw)?,
         )?;
@@ -197,7 +193,7 @@ fn cube_indices() -> Vec<u16> {
     indices
 }
 
-fn cube_vertices() -> Vec<Vertex<Gl>> {
+fn cube_vertices() -> Vec<Vertex<Physical>> {
     let tex_coords = [
         [0.0, 0.0].into(),
         [0.0, 1.0].into(),
