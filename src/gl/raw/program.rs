@@ -214,7 +214,7 @@ impl Program {
             gl.use_program(None);
         }
 
-        check_gl_error(&gl).unwrap();
+        check_gl_error(gl).unwrap();
     }
 }
 
