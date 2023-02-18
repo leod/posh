@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::dag::{BaseType, BinaryOp, Expr, FuncDef, StructType, Type};
+use crate::dag::{BinaryOp, Expr, FuncDef, StructType, Type};
 
 use super::{Object, ToValue, Value};
 
@@ -132,7 +132,7 @@ pub fn simplify_struct_literal(ty: Rc<StructType>, args: &[Rc<Expr>]) -> Rc<Expr
     assert!(ty.fields.len() == args.len());
 
     let fields = ty.fields.iter().map(|(name, _)| name.as_str());
-    let common_base = common_field_base(&BaseType::Struct(ty.clone()), fields, args);
+    let common_base = common_field_base(&Type::Struct(ty.clone()), fields, args);
 
     if let Some(common_base) = common_base {
         common_base
@@ -156,7 +156,7 @@ pub fn value_arg<R: Value>(name: &str) -> R {
 
 #[doc(hidden)]
 pub fn common_field_base<'a>(
-    base_ty: &BaseType,
+    ty: &Type,
     required_fields: impl Iterator<Item = &'a str>,
     args: &[Rc<Expr>],
 ) -> Option<Rc<Expr>> {
@@ -173,11 +173,7 @@ pub fn common_field_base<'a>(
         return None;
     };
 
-    if let Type::Base(first_ty) = first_base.ty() {
-        if first_ty != *base_ty {
-            return None;
-        }
-    } else {
+    if first_base.ty() != *ty {
         return None;
     }
 

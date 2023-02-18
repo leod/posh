@@ -18,7 +18,7 @@ struct MyUniform<V: BlockView = Logical> {
 
 // Shader code
 
-fn vertex_shader(_: MyUniform, vertex: sl::Vec2<f32>) -> VaryingOutput<sl::Vec2<f32>> {
+fn vertex_shader(_: MyUniform, vertex: sl::Vec2) -> VaryingOutput<sl::Vec2> {
     let vertex = vertex - sl::vec2(0.5, 0.5);
 
     VaryingOutput {
@@ -27,7 +27,7 @@ fn vertex_shader(_: MyUniform, vertex: sl::Vec2<f32>) -> VaryingOutput<sl::Vec2<
     }
 }
 
-fn fragment_shader(uniform: MyUniform, varying: sl::Vec2<f32>) -> sl::Vec4<f32> {
+fn fragment_shader(uniform: MyUniform, varying: sl::Vec2) -> sl::Vec4 {
     let rg = (varying + uniform.time).cos().pow(sl::vec2(2.0, 2.0));
 
     sl::vec4(rg.x, rg.y, 0.5, 1.0)
@@ -37,9 +37,9 @@ fn fragment_shader(uniform: MyUniform, varying: sl::Vec2<f32>) -> sl::Vec4<f32> 
 
 struct Demo {
     context: Context,
-    program: Program<MyUniform, sl::Vec2<f32>>,
+    program: Program<MyUniform, sl::Vec2>,
     uniform_buffer: UniformBuffer<MyUniform>,
-    vertex_array: VertexArray<sl::Vec2<f32>>,
+    vertex_array: VertexArray<sl::Vec2>,
     start_time: Instant,
 }
 

@@ -1,9 +1,6 @@
 use std::rc::Rc;
 
-use super::{
-    ty::{PrimitiveType, StructType},
-    BaseType, Type,
-};
+use super::{BuiltInType, StructType, Type};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum BinaryOp {
@@ -31,7 +28,7 @@ pub enum Expr {
     },
     ScalarLiteral {
         value: String,
-        ty: PrimitiveType,
+        ty: BuiltInType,
     },
     // TOOD: Rename to `Construct`
     StructLiteral {
@@ -77,8 +74,8 @@ impl Expr {
 
         match self {
             Arg { ty, .. } => ty.clone(),
-            ScalarLiteral { ty, .. } => Type::Base(BaseType::Scalar(*ty)),
-            StructLiteral { ty, .. } => Type::Base(BaseType::Struct(ty.clone())),
+            ScalarLiteral { ty, .. } => Type::BuiltIn(*ty),
+            StructLiteral { ty, .. } => Type::Struct(ty.clone()),
             Binary { ty, .. } => ty.clone(),
             CallFuncDef { def, .. } => def.result.ty(),
             CallBuiltIn { ty, .. } => ty.clone(),

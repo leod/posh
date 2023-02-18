@@ -59,6 +59,9 @@ pub enum VertexArrayError {
     #[error("could not create vertex array object: {0}")]
     ObjectCreation(String),
 
+    #[error("invalid vertex attribute: {0}")]
+    InvalidVertexAttribute(String),
+
     #[error("unexpected error: {0}")]
     Unexpected(String),
 }
@@ -97,6 +100,9 @@ pub enum ProgramError {
         fragment_shader_info: String,
         program_info: String,
     },
+
+    #[error("invalid vertex attribute: {0}")]
+    InvalidVertexAttribute(String),
 
     #[error("unexpected error: {0}")]
     Unexpected(String),

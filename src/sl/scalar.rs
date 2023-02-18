@@ -1,115 +1,190 @@
 use std::{
-    marker::PhantomData,
     ops::{Add, Div, Mul, Sub},
     rc::Rc,
 };
 
 use super::{
-    primitives::{binary, built_in_1, value_arg},
+    primitives::{binary, value_arg},
     Object, ToValue, Value, ValueNonArray,
 };
-use crate::{
-    dag::{BaseType, BinaryOp, Expr, Trace, Type},
-    Numeric, Primitive,
-};
+use crate::dag::{BinaryOp, Expr, Trace, Type};
 
-/// A scalar value in the shading language.
-#[doc(hidden)]
-#[derive(Debug, Copy, Clone)]
-pub struct Scalar<T> {
-    trace: Trace,
-    _phantom: PhantomData<T>,
+// Maps from logical scalar type to physical scalar type.
+macro_rules! scalar_physical {
+    (F32) => {
+        f32
+    };
+    (U32) => {
+        u32
+    };
+    (I32) => {
+        i32
+    };
+    (Bool) => {
+        bool
+    };
 }
 
-/// A boolean value in the shading language.
-pub type Bool = Scalar<bool>;
+pub(crate) use scalar_physical;
 
-/// A floating-point value in the shading language.
-pub type F32 = Scalar<f32>;
-
-/// A signed integer value in the shading language.
-pub type I32 = Scalar<i32>;
-
-/// An unsigned integer value in the shading language.
-pub type U32 = Scalar<u32>;
-
-impl<T: Primitive> Default for Scalar<T> {
-    fn default() -> Self {
-        T::default().to_value()
-    }
+// The built-in type of a scalar.
+macro_rules! scalar_built_in_type {
+    (F32) => {
+        crate::dag::BuiltInType::F32
+    };
+    (U32) => {
+        crate::dag::BuiltInType::I32
+    };
+    (I32) => {
+        crate::dag::BuiltInType::U32
+    };
+    (Bool) => {
+        crate::dag::BuiltInType::Bool
+    };
 }
 
-impl<T: Primitive> Object for Scalar<T> {
-    fn ty() -> Type {
-        Type::Base(Self::base_type())
-    }
-
-    fn expr(&self) -> Rc<Expr> {
-        self.trace.expr()
-    }
-
-    fn from_arg(path: &str) -> Self {
-        value_arg(path)
-    }
+// The name of a scalar as it appears in documentation.
+macro_rules! scalar_name {
+    (F32) => {
+        "floating-point"
+    };
+    (U32) => {
+        "unsigned integer"
+    };
+    (I32) => {
+        "signed integer"
+    };
+    (Bool) => {
+        "boolean"
+    };
 }
 
-impl<T: Primitive> Value for Scalar<T> {
-    fn from_expr(expr: Expr) -> Self {
-        assert!(expr.ty() == Self::ty());
+// Implements `$scalar <op> $scalar` and `$scalar <op> $physical` and `$physical
+// <op> $scalar`.
+macro_rules! impl_binary_op {
+    ($scalar:ident, $op:ident, $fn:ident) => {
+        impl $op<$scalar> for $scalar {
+            type Output = Self;
 
-        Self {
-            trace: Trace::new(expr),
-            _phantom: PhantomData,
+            fn $fn(self, right: $scalar) -> Self {
+                binary(self, BinaryOp::$op, right)
+            }
         }
-    }
+
+        impl $op<scalar_physical!($scalar)> for $scalar {
+            type Output = Self;
+
+            fn $fn(self, right: scalar_physical!($scalar)) -> Self {
+                binary(self, BinaryOp::$op, right)
+            }
+        }
+
+        impl $op<$scalar> for scalar_physical!($scalar) {
+            type Output = $scalar;
+
+            fn $fn(self, right: $scalar) -> $scalar {
+                binary(self, BinaryOp::$op, right)
+            }
+        }
+    };
 }
 
-impl<T: Primitive> ValueNonArray for Scalar<T> {
-    fn base_type() -> BaseType {
-        BaseType::Scalar(T::PRIMITIVE_TYPE)
-    }
+// Implements numeric ops for `$scalar`.
+macro_rules! impl_numeric_ops {
+    ($scalar:ident) => {
+        impl_binary_op!($scalar, Add, add);
+        impl_binary_op!($scalar, Div, div);
+        impl_binary_op!($scalar, Mul, mul);
+        impl_binary_op!($scalar, Sub, sub);
+    };
 }
 
-impl<T: Primitive> ToValue for T {
-    type Output = Scalar<T>;
+// Implements a `$scalar` value.
+macro_rules! impl_scalar {
+    ($scalar:ident, $physical:ident) => {
+        #[doc = concat!("A ", scalar_name!($scalar), " in the shading language.")]
+        #[derive(Debug, Copy, Clone)]
+        pub struct $scalar(Trace);
 
-    fn to_value(self) -> Self::Output {
-        Scalar::new(self)
-    }
+        impl Default for $scalar {
+            fn default() -> Self {
+                $physical::default().to_value()
+            }
+        }
+
+        impl Object for $scalar {
+            fn ty() -> Type {
+                Type::BuiltIn(scalar_built_in_type!($scalar))
+            }
+
+            fn expr(&self) -> Rc<Expr> {
+                self.0.expr()
+            }
+
+            fn from_arg(path: &str) -> Self {
+                value_arg(path)
+            }
+        }
+
+        impl Value for $scalar {
+            fn from_expr(expr: Expr) -> Self {
+                assert!(expr.ty() == Self::ty());
+
+                Self(Trace::new(expr))
+            }
+        }
+
+        impl ValueNonArray for $scalar {}
+
+        impl ToValue for $physical {
+            type Output = $scalar;
+
+            fn to_value(self) -> Self::Output {
+                $scalar::new(self)
+            }
+        }
+
+        impl ToValue for $scalar {
+            type Output = Self;
+
+            fn to_value(self) -> Self::Output {
+                self
+            }
+        }
+
+        impl From<$physical> for $scalar {
+            fn from(x: $physical) -> Self {
+                x.to_value()
+            }
+        }
+
+        impl $scalar {
+            pub fn new(x: $physical) -> Self {
+                Self::from_expr(Expr::ScalarLiteral {
+                    ty: scalar_built_in_type!($scalar),
+                    value: x.to_string(),
+                })
+            }
+
+            pub fn eq(&self, right: impl ToValue<Output = Self>) -> Bool {
+                binary(*self, BinaryOp::Eq, right)
+            }
+        }
+    };
 }
 
-impl<T: Primitive> ToValue for Scalar<T> {
-    type Output = Self;
+impl_scalar!(F32, f32);
+impl_scalar!(I32, i32);
+impl_scalar!(U32, u32);
+impl_scalar!(Bool, bool);
 
-    fn to_value(self) -> Self::Output {
-        self
-    }
-}
+impl_numeric_ops!(F32);
+impl_numeric_ops!(I32);
+impl_numeric_ops!(U32);
 
-impl<T: Primitive> From<T> for Scalar<T> {
-    fn from(x: T) -> Self {
-        x.to_value()
-    }
-}
+impl_gen_type!(F32);
 
-impl<T: Primitive> Scalar<T> {
-    pub fn new(x: T) -> Self {
-        Self::from_expr(Expr::ScalarLiteral {
-            ty: T::PRIMITIVE_TYPE,
-            value: x.to_string(),
-        })
-    }
-
-    pub fn eq(&self, right: impl ToValue<Output = Self>) -> Scalar<bool> {
-        binary(*self, BinaryOp::Eq, right)
-    }
-
-    pub fn cast<U: Primitive>(self) -> Scalar<U> {
-        built_in_1(&format!("{}", U::PRIMITIVE_TYPE), self)
-    }
-}
-
-impl Scalar<bool> {
+impl Bool {
     pub fn and(self, right: impl ToValue<Output = Self>) -> Self {
         binary(self, BinaryOp::And, right)
     }
@@ -133,51 +208,3 @@ impl Scalar<bool> {
         V::from_expr(expr)
     }
 }
-
-// Implements `Scalar<T> <op> impl ToValue<Output = Scalar<T>>` for all `T:
-// Numeric`.
-macro_rules! impl_binary_op_lhs {
-    ($fn:ident, $op:ident) => {
-        impl<T, Rhs> $op<Rhs> for Scalar<T>
-        where
-            T: Numeric,
-            Rhs: ToValue<Output = Scalar<T>>,
-        {
-            type Output = Self;
-
-            fn $fn(self, right: Rhs) -> Self::Output {
-                binary(self, BinaryOp::$op, right)
-            }
-        }
-    };
-}
-
-// Implements `$ty <op> Scalar<$ty>` where `$ty: Numeric`.
-macro_rules! impl_binary_op_rhs {
-    ($fn:ident, $op:ident, $ty:ty) => {
-        impl $op<Scalar<Self>> for $ty {
-            type Output = Scalar<Self>;
-
-            fn $fn(self, right: Scalar<Self>) -> Self::Output {
-                binary(self, BinaryOp::$op, right)
-            }
-        }
-    };
-}
-
-// Implements a binary op for `Scalar<T>` for all `T: Numeric`.
-macro_rules! impl_binary_op {
-    ($fn:ident, $op:ident) => {
-        impl_binary_op_lhs!($fn, $op);
-        impl_binary_op_rhs!($fn, $op, i32);
-        impl_binary_op_rhs!($fn, $op, u32);
-        impl_binary_op_rhs!($fn, $op, f32);
-    };
-}
-
-impl_binary_op!(add, Add);
-impl_binary_op!(div, Div);
-impl_binary_op!(mul, Mul);
-impl_binary_op!(sub, Sub);
-
-impl_gen_type!(Scalar);

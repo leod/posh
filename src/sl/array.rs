@@ -13,7 +13,7 @@ pub struct Array<V, const N: usize> {
 
 impl<V: ValueNonArray, const N: usize> Object for Array<V, N> {
     fn ty() -> Type {
-        Type::Array(V::base_type(), N)
+        Type::Array(Box::new(V::ty()), N)
     }
 
     fn expr(&self) -> Rc<Expr> {
