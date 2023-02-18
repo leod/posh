@@ -4,10 +4,11 @@
 
 #[macro_use]
 mod gen_type;
+#[macro_use]
+mod scalar;
 mod array;
 mod mat;
 mod sampler;
-mod scalar;
 mod shader;
 mod tuple;
 mod varying;
@@ -17,22 +18,23 @@ pub(crate) mod primitives;
 
 use std::{collections::BTreeMap, rc::Rc};
 
-use crate::dag::BaseType;
-
 use super::dag::{Expr, StructType, Type};
 
 pub(crate) use shader::Private;
 pub use {
     array::Array,
     mat::{mat2, mat3, mat4, Mat2, Mat3, Mat4},
-    sampler::{Sample, Sampler2d},
-    scalar::{Bool, Scalar, F32, I32, U32},
+    sampler::Sampler2d,
+    scalar::{Bool, F32, I32, U32},
     shader::{
         ConstInput, FragmentInput, FragmentOutput, FromFragmentInput, FromVertexInput,
         IntoFragmentOutput, IntoVertexOutput, VaryingOutput, VertexInput, VertexOutput,
     },
     varying::Varying,
-    vec::{vec2, vec3, vec4, Vec2, Vec3, Vec4},
+    vec::{
+        bvec2, bvec3, bvec4, ivec2, ivec3, ivec4, uvec2, uvec3, uvec4, vec2, vec3, vec4, BVec2,
+        BVec3, BVec4, IVec2, IVec3, IVec4, UVec2, UVec3, UVec4, Vec2, Vec3, Vec4,
+    },
 };
 
 pub use posh_derive::Value;
@@ -73,10 +75,7 @@ pub trait Value: Object + Copy {
 /// A transparent non-array value in the shading value.
 ///
 /// The interface of this trait is a private implementation detail.
-pub trait ValueNonArray: Value {
-    #[doc(hidden)]
-    fn base_type() -> BaseType;
-}
+pub trait ValueNonArray: Value {}
 
 #[doc(hidden)]
 pub trait Struct: ValueNonArray {
@@ -117,3 +116,23 @@ pub trait ToValue: Copy {
 
     fn to_value(self) -> Self::Output;
 }
+
+macro_rules! expand_for_vec {
+    ($macro:ident) => {
+        $macro!(Vec2);
+        $macro!(IVec2);
+        $macro!(UVec2);
+        $macro!(BVec2);
+        $macro!(Vec3);
+        $macro!(IVec3);
+        $macro!(UVec3);
+        $macro!(BVec3);
+        $macro!(Vec4);
+        $macro!(IVec4);
+        $macro!(UVec4);
+        $macro!(BVec4);
+    };
+}
+
+pub(crate) use expand_for_vec;
+pub(crate) use scalar::scalar_physical;

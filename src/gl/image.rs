@@ -1,7 +1,5 @@
 use sealed::sealed;
 
-use crate::sl;
-
 use super::raw::{self, ImageInternalFormat, ImageType};
 
 #[sealed]
@@ -14,7 +12,6 @@ pub trait Image {
 pub trait ImageFormat {
     const ALLOWED_INTERNAL_FORMATS: &'static [ImageInternalFormat];
 
-    type Sample: sl::Sample;
     type Image<'a>: Image;
 }
 
@@ -111,7 +108,6 @@ impl ImageFormat for RgbaFormat {
         ImageInternalFormat::RgbaI8Snorm,
         ImageInternalFormat::RgbaF32,
     ];
-    type Sample = sl::Vec4<f32>;
     type Image<'a> = RgbaImage<'a>;
 }
 

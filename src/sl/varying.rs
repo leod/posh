@@ -25,7 +25,7 @@ impl Varying for () {
 
 // TODO: Impl Varying.
 
-impl Varying for Vec2<f32> {
+impl Varying for Vec2 {
     fn shader_outputs(&self, path: &str) -> Vec<(String, Rc<Expr>)> {
         vec![(path.to_string(), self.expr())]
     }
@@ -35,7 +35,7 @@ impl Varying for Vec2<f32> {
     }
 }
 
-impl Varying for Vec4<f32> {
+impl Varying for Vec4 {
     fn shader_outputs(&self, path: &str) -> Vec<(String, Rc<Expr>)> {
         vec![(path.to_string(), self.expr())]
     }

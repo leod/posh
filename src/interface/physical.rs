@@ -6,9 +6,7 @@ use crate::{
     sl, Logical, Physical,
 };
 
-use super::{
-    Block, FragmentData, FragmentDataVisitor, Primitive, UniformData, VertexData, VertexDataVisitor,
-};
+use super::{Block, FragmentData, FragmentDataVisitor, UniformData, VertexData, VertexDataVisitor};
 
 // Block
 
@@ -18,63 +16,59 @@ impl super::BlockView for Physical {
     type F32 = f32;
     type I32 = i32;
     type U32 = u32;
-    type Vec2 = mint::Vector2<f32>;
-    type Vec3 = mint::Vector3<f32>;
-    type Vec4 = mint::Vector4<f32>;
-    type Mat2 = mint::ColumnMatrix2<f32>;
-    type Mat3 = mint::ColumnMatrix3<f32>;
-    type Mat4 = mint::ColumnMatrix4<f32>;
+    type Vec2 = glam::Vec2;
+    type Vec3 = glam::Vec3;
+    type Vec4 = glam::Vec4;
+    type Mat2 = glam::Mat2;
+    type Mat3 = glam::Mat3;
+    type Mat4 = glam::Mat4;
 }
 
-unsafe impl Block<Physical> for bool {
-    type Physical = Self;
-    type Logical = sl::Scalar<Self>;
+macro_rules! impl_block_for_scalar {
+    ($scalar:ident) => {
+        unsafe impl Block<Physical> for sl::scalar_physical!($scalar) {
+            type Physical = Self;
+            type Logical = sl::$scalar;
+        }
+    };
 }
 
-unsafe impl Block<Physical> for f32 {
-    type Physical = Self;
-    type Logical = sl::Scalar<Self>;
+macro_rules! impl_block_for_vec {
+    ($vec:ident) => {
+        unsafe impl Block<Physical> for glam::$vec {
+            type Physical = Self;
+            type Logical = sl::$vec;
+        }
+    };
 }
 
-unsafe impl Block<Physical> for i32 {
-    type Physical = Self;
-    type Logical = sl::Scalar<Self>;
+macro_rules! impl_block_for_mat {
+    ($mat:ident) => {
+        unsafe impl Block<Physical> for glam::$mat {
+            type Physical = Self;
+            type Logical = sl::$mat;
+        }
+    };
 }
 
-unsafe impl Block<Physical> for u32 {
-    type Physical = Self;
-    type Logical = sl::Scalar<Self>;
-}
+impl_block_for_scalar!(F32);
+impl_block_for_scalar!(I32);
+impl_block_for_scalar!(U32);
+impl_block_for_scalar!(Bool);
 
-unsafe impl<T: Primitive> Block<Physical> for mint::Vector2<T> {
-    type Physical = T::Vec2;
-    type Logical = sl::Vec2<T>;
-}
+impl_block_for_vec!(Vec2);
+impl_block_for_vec!(IVec2);
+impl_block_for_vec!(UVec2);
+impl_block_for_vec!(Vec3);
+impl_block_for_vec!(IVec3);
+impl_block_for_vec!(UVec3);
+impl_block_for_vec!(Vec4);
+impl_block_for_vec!(IVec4);
+impl_block_for_vec!(UVec4);
 
-unsafe impl<T: Primitive> Block<Physical> for mint::Vector3<T> {
-    type Physical = T::Vec3;
-    type Logical = sl::Vec3<T>;
-}
-
-unsafe impl<T: Primitive> Block<Physical> for mint::Vector4<T> {
-    type Physical = T::Vec4;
-    type Logical = sl::Vec4<T>;
-}
-
-unsafe impl Block<Physical> for mint::ColumnMatrix2<f32> {
-    type Physical = Self;
-    type Logical = sl::Mat2;
-}
-
-unsafe impl Block<Physical> for mint::ColumnMatrix3<f32> {
-    type Physical = Self;
-    type Logical = sl::Mat3;
-}
-
-unsafe impl Block<Physical> for mint::ColumnMatrix4<f32> {
-    type Physical = Self;
-    type Logical = sl::Mat4;
-}
+impl_block_for_mat!(Mat2);
+impl_block_for_mat!(Mat3);
+impl_block_for_mat!(Mat4);
 
 // VertexData
 
@@ -100,7 +94,7 @@ impl<B: Block<Logical>> super::VertexDataField<Physical> for VertexBuffer<B> {}
 #[sealed]
 impl super::UniformDataView for Physical {
     type Block<B: Block<Logical, Logical = B>> = UniformBufferBinding<B>;
-    type Sampler2d<S: sl::Sample> = Sampler2d<S>;
+    type Sampler2d = Sampler2d;
     type Compose<R: UniformData<Logical>> = R::Physical;
 }
 
@@ -113,9 +107,9 @@ unsafe impl<U: Block<Logical, Logical = U>> UniformData<Physical> for UniformBuf
     }
 }
 
-unsafe impl<S: sl::Sample> UniformData<Physical> for Sampler2d<S> {
+unsafe impl UniformData<Physical> for Sampler2d {
     type Physical = Self;
-    type Logical = sl::Sampler2d<S>;
+    type Logical = sl::Sampler2d;
 
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformDataVisitor<'a, Physical>) {
         visitor.accept_sampler2d(path, self);
@@ -131,7 +125,7 @@ impl super::FragmentDataView for Physical {
 
 unsafe impl FragmentData<Physical> for Texture2d<RgbaFormat> {
     type Physical = Self;
-    type Logical = sl::Vec4<f32>;
+    type Logical = sl::Vec4;
 
     fn visit(&self, path: &str, visitor: &mut impl FragmentDataVisitor<Physical>) {
         visitor.accept(path, self);

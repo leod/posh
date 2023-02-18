@@ -46,7 +46,7 @@ impl Context {
     where
         B: Block<Logical>,
     {
-        let raw = self.raw.create_buffer(&data, usage)?;
+        let raw = self.raw.create_buffer(data, usage)?;
 
         Ok(VertexBuffer::from_raw(raw))
     }
@@ -107,20 +107,20 @@ impl Context {
         Ok(VertexArray::new(&self.raw, vertex_buffer, element_source)?)
     }
 
-    pub fn create_program<Unif, Vert, Frag, Vary, VertIn, VertOut, FragIn, FragOut>(
+    pub fn create_program<UData, VData, FData, Vary, VertIn, VertOut, FragIn, FragOut>(
         &self,
-        vertex_shader: fn(Unif, VertIn) -> VertOut,
-        fragment_shader: fn(Unif, FragIn) -> FragOut,
-    ) -> Result<Program<Unif, Vert, Frag>, ProgramError>
+        vertex_shader: fn(UData, VertIn) -> VertOut,
+        fragment_shader: fn(UData, FragIn) -> FragOut,
+    ) -> Result<Program<UData, VData, FData>, ProgramError>
     where
-        Unif: UniformData<Logical>,
-        Vert: VertexData<Logical>,
-        Frag: FragmentData<Logical>,
+        UData: UniformData<Logical>,
+        VData: VertexData<Logical>,
+        FData: FragmentData<Logical>,
         Vary: Varying,
-        VertIn: FromVertexInput<Vert = Vert>,
+        VertIn: FromVertexInput<Vert = VData>,
         VertOut: IntoVertexOutput<Vary = Vary>,
         FragIn: FromFragmentInput<Vary = Vary>,
-        FragOut: IntoFragmentOutput<Frag = Frag>,
+        FragOut: IntoFragmentOutput<Frag = FData>,
     {
         let program_def = compile_to_program_def(vertex_shader, fragment_shader);
 
@@ -136,9 +136,9 @@ impl Context {
 
     pub fn create_program_with_consts<
         Consts,
-        Unif,
-        Vert,
-        Frag,
+        UData,
+        VData,
+        FData,
         Vary,
         VertIn,
         VertOut,
@@ -147,19 +147,19 @@ impl Context {
     >(
         &self,
         consts: Consts,
-        vertex_shader: fn(Consts, Unif, VertIn) -> VertOut,
-        fragment_shader: fn(Consts, Unif, FragIn) -> FragOut,
-    ) -> Result<Program<Unif, Vert, Frag>, ProgramError>
+        vertex_shader: fn(Consts, UData, VertIn) -> VertOut,
+        fragment_shader: fn(Consts, UData, FragIn) -> FragOut,
+    ) -> Result<Program<UData, VData, FData>, ProgramError>
     where
         Consts: ConstInput,
-        Unif: UniformData<Logical, Logical = Unif>,
-        Vert: VertexData<Logical, Logical = Vert>,
-        Frag: FragmentData<Logical, Logical = Frag>,
+        UData: UniformData<Logical, Logical = UData>,
+        VData: VertexData<Logical, Logical = VData>,
+        FData: FragmentData<Logical, Logical = FData>,
         Vary: Varying,
-        VertIn: FromVertexInput<Vert = Vert>,
+        VertIn: FromVertexInput<Vert = VData>,
         VertOut: IntoVertexOutput<Vary = Vary>,
         FragIn: FromFragmentInput<Vary = Vary>,
-        FragOut: IntoFragmentOutput<Frag = Frag>,
+        FragOut: IntoFragmentOutput<Frag = FData>,
     {
         let program_def =
             compile_to_program_def_with_consts(consts, vertex_shader, fragment_shader);

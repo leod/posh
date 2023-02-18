@@ -3,7 +3,7 @@ use std::{
     rc::Rc,
 };
 
-use crate::dag::{BaseType, BinaryOp, Expr, Type};
+use crate::dag::{BinaryOp, BuiltInType, Expr, Type};
 
 use super::{
     primitives::{binary, built_in_1, common_field_base, field, value_arg},
@@ -13,59 +13,48 @@ use super::{
 /// A two-by-two matrix in the shading language.
 #[derive(Debug, Copy, Clone)]
 pub struct Mat2 {
-    pub x: Vec2<f32>,
-    pub y: Vec2<f32>,
+    pub x_axis: Vec2,
+    pub y_axis: Vec2,
 }
 
 /// A three-by-three matrix in the shading language.
 #[derive(Debug, Copy, Clone)]
 pub struct Mat3 {
-    pub x: Vec3<f32>,
-    pub y: Vec3<f32>,
-    pub z: Vec3<f32>,
+    pub x_axis: Vec3,
+    pub y_axis: Vec3,
+    pub z_axis: Vec3,
 }
 
 /// A four-by-four matrix in the shading language.
 #[derive(Debug, Copy, Clone)]
 pub struct Mat4 {
-    pub x: Vec4<f32>,
-    pub y: Vec4<f32>,
-    pub z: Vec4<f32>,
-    pub w: Vec4<f32>,
+    pub x_axis: Vec4,
+    pub y_axis: Vec4,
+    pub z_axis: Vec4,
+    pub w_axis: Vec4,
 }
 
-// Implements `Object` and `Value` for `$ty`.
+// Implements `Object` and `Value` for `$mat`.
 macro_rules! impl_value {
-    ($ty:ident, $mint_ty: ident, $($member:ident),+) => {
-        impl Object for $ty {
+    ($mat:ident, $($member:ident),+) => {
+        impl Object for $mat {
             fn ty() -> Type {
-                Type::Base(Self::base_type())
+                Type::BuiltIn(BuiltInType::$mat)
             }
 
             fn expr(&self) -> Rc<Expr> {
-                if let Some(base) = common_field_base(
-                    &BaseType::$ty,
-                    [
-                        $(
-                            std::stringify!($member)
-                        ),+
-                    ]
-                    .into_iter(),
-                    &[
-                        $(
-                            self.$member.expr()
-                        ),+,
-                    ],
-                ) {
+                let base = common_field_base(
+                    &Self::ty(),
+                    [$(std::stringify!($member)),+].into_iter(),
+                    &[$(self.$member.expr()),+],
+                );
+
+                if let Some(base) = base {
                     base
                 } else {
                     let ty = Self::ty();
                     let name = format!("{}", ty);
-                    let args = vec![
-                        $(
-                            self.$member.expr()
-                        ),+,
-                    ];
+                    let args = vec![$(self.$member.expr()),+];
 
                     let expr = Expr::CallBuiltIn { ty, name, args };
 
@@ -78,7 +67,7 @@ macro_rules! impl_value {
             }
         }
 
-        impl Value for $ty {
+        impl Value for $mat {
             fn from_expr(expr: Expr) -> Self {
                 let base = Rc::new(expr);
 
@@ -90,14 +79,10 @@ macro_rules! impl_value {
             }
         }
 
-        impl ValueNonArray for $ty {
-            fn base_type() -> BaseType {
-                BaseType::$ty
-            }
-        }
+        impl ValueNonArray for $mat {}
 
-        impl ToValue for mint::$mint_ty<f32> {
-            type Output = $ty;
+        impl ToValue for glam::$mat {
+            type Output = $mat;
 
             fn to_value(self) -> Self::Output {
                 Self::Output {
@@ -108,7 +93,7 @@ macro_rules! impl_value {
             }
         }
 
-        impl ToValue for $ty {
+        impl ToValue for $mat {
             type Output = Self;
 
             fn to_value(self) -> Self::Output {
@@ -118,10 +103,10 @@ macro_rules! impl_value {
     };
 }
 
-// Implements `$ty <op> $ty`.
+// Implements `$mat <op> $mat`.
 macro_rules! impl_binary_op_symmetric {
-    ($ty:ident, $fn:ident, $op:ident) => {
-        impl $op<$ty> for $ty {
+    ($mat:ident, $fn:ident, $op:ident) => {
+        impl $op<$mat> for $mat {
             type Output = Self;
 
             fn $fn(self, right: Self) -> Self::Output {
@@ -131,14 +116,14 @@ macro_rules! impl_binary_op_symmetric {
     };
 }
 
-// Implements `$ty <op> $vec_ty`.
+// Implements `$mat <op> $vec`.
 macro_rules! impl_binary_op_vec_rhs {
-    ($ty:ident, $vec_ty:ident, $fn:ident, $op:ident) => {
-        impl<Rhs> $op<Rhs> for $ty
+    ($mat:ident, $vec:ident, $fn:ident, $op:ident) => {
+        impl<Rhs> $op<Rhs> for $mat
         where
-            Rhs: ToValue<Output = $vec_ty<f32>>,
+            Rhs: ToValue<Output = $vec>,
         {
-            type Output = $vec_ty<f32>;
+            type Output = $vec;
 
             fn $fn(self, right: Rhs) -> Self::Output {
                 binary(self, BinaryOp::$op, right)
@@ -147,10 +132,10 @@ macro_rules! impl_binary_op_vec_rhs {
     };
 }
 
-// Implements `$ty <op> f32` and `$ty <op> F32`.
+// Implements `$mat <op> $scalar`.
 macro_rules! impl_binary_op_scalar_rhs {
-    ($ty:ident, $fn:ident, $op:ident) => {
-        impl $op<f32> for $ty {
+    ($mat:ident, $fn:ident, $op:ident) => {
+        impl $op<f32> for $mat {
             type Output = Self;
 
             fn $fn(self, right: f32) -> Self::Output {
@@ -158,7 +143,7 @@ macro_rules! impl_binary_op_scalar_rhs {
             }
         }
 
-        impl $op<F32> for $ty {
+        impl $op<F32> for $mat {
             type Output = Self;
 
             fn $fn(self, right: F32) -> Self::Output {
@@ -168,28 +153,28 @@ macro_rules! impl_binary_op_scalar_rhs {
     };
 }
 
-// Implements all the things for `$ty`.
+// Implements all the things for `$mat`.
 macro_rules! impl_mat {
-    ($ty:ident, $mint_ty:ident, $vec_ty:ident, $($member:ident),+) => {
-        impl_value!($ty, $mint_ty, $($member),+);
+    ($mat:ident, $vec_ty:ident, $($member:ident),+) => {
+        impl_value!($mat, $($member),+);
 
-        impl_binary_op_symmetric!($ty, add, Add);
-        impl_binary_op_symmetric!($ty, mul, Mul);
-        impl_binary_op_symmetric!($ty, sub, Sub);
+        impl_binary_op_symmetric!($mat, add, Add);
+        impl_binary_op_symmetric!($mat, mul, Mul);
+        impl_binary_op_symmetric!($mat, sub, Sub);
 
-        impl_binary_op_vec_rhs!($ty, $vec_ty, mul, Mul);
+        impl_binary_op_vec_rhs!($mat, $vec_ty, mul, Mul);
 
-        impl_binary_op_scalar_rhs!($ty, add, Add);
-        impl_binary_op_scalar_rhs!($ty, mul, Mul);
-        impl_binary_op_scalar_rhs!($ty, sub, Sub);
+        impl_binary_op_scalar_rhs!($mat, add, Add);
+        impl_binary_op_scalar_rhs!($mat, mul, Mul);
+        impl_binary_op_scalar_rhs!($mat, sub, Sub);
 
-        impl Default for $ty {
+        impl Default for $mat {
             fn default() -> Self {
                 Self::identity()
             }
         }
 
-        impl $ty {
+        impl $mat {
             pub fn diagonal(value: impl ToValue<Output = F32>) -> Self {
                 built_in_1(&format!("{}", Self::ty()), value.to_value())
             }
@@ -213,42 +198,42 @@ macro_rules! impl_mat {
     };
 }
 
-impl_mat!(Mat2, ColumnMatrix2, Vec2, x, y);
-impl_mat!(Mat3, ColumnMatrix3, Vec3, x, y, z);
-impl_mat!(Mat4, ColumnMatrix4, Vec4, x, y, z, w);
+impl_mat!(Mat2, Vec2, x_axis, y_axis);
+impl_mat!(Mat3, Vec3, x_axis, y_axis, z_axis);
+impl_mat!(Mat4, Vec4, x_axis, y_axis, z_axis, w_axis);
 
 /// Constructs a [`Mat2`] column-by-column.
-pub fn mat2(x: impl ToValue<Output = Vec2<f32>>, y: impl ToValue<Output = Vec2<f32>>) -> Mat2 {
+pub fn mat2(x: impl ToValue<Output = Vec2>, y: impl ToValue<Output = Vec2>) -> Mat2 {
     Mat2 {
-        x: x.to_value(),
-        y: y.to_value(),
+        x_axis: x.to_value(),
+        y_axis: y.to_value(),
     }
 }
 
 /// Constructs a [`Mat3`] column-by-column.
 pub fn mat3(
-    x: impl ToValue<Output = Vec3<f32>>,
-    y: impl ToValue<Output = Vec3<f32>>,
-    z: impl ToValue<Output = Vec3<f32>>,
+    x: impl ToValue<Output = Vec3>,
+    y: impl ToValue<Output = Vec3>,
+    z: impl ToValue<Output = Vec3>,
 ) -> Mat3 {
     Mat3 {
-        x: x.to_value(),
-        y: y.to_value(),
-        z: z.to_value(),
+        x_axis: x.to_value(),
+        y_axis: y.to_value(),
+        z_axis: z.to_value(),
     }
 }
 
 /// Constructs a [`Mat4`] column-by-column.
 pub fn mat4(
-    x: impl ToValue<Output = Vec4<f32>>,
-    y: impl ToValue<Output = Vec4<f32>>,
-    z: impl ToValue<Output = Vec4<f32>>,
-    w: impl ToValue<Output = Vec4<f32>>,
+    x: impl ToValue<Output = Vec4>,
+    y: impl ToValue<Output = Vec4>,
+    z: impl ToValue<Output = Vec4>,
+    w: impl ToValue<Output = Vec4>,
 ) -> Mat4 {
     Mat4 {
-        x: x.to_value(),
-        y: y.to_value(),
-        z: z.to_value(),
-        w: w.to_value(),
+        x_axis: x.to_value(),
+        y_axis: y.to_value(),
+        z_axis: z.to_value(),
+        w_axis: w.to_value(),
     }
 }

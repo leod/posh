@@ -1,11 +1,11 @@
 use posh::{
     sl::{self, Value},
-    Block, BlockView, Logical, Numeric, UniformData, UniformDataView, VertexData, VertexDataView,
+    Block, BlockView, Logical, UniformData, UniformDataView, VertexData, VertexDataView,
 };
 
 #[derive(Clone, Copy, Value)]
-struct Foo<T: Numeric> {
-    x: sl::Scalar<T>,
+struct Foo {
+    x: sl::Vec3,
 }
 
 #[derive(Clone, Copy, Block)]

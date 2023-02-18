@@ -1,5 +1,4 @@
 mod logical;
-mod numeric;
 mod physical;
 #[cfg(tests)]
 mod tests;
@@ -11,8 +10,6 @@ use crate::{
     program_def::{VertexAttributeDef, VertexInputRate},
     sl,
 };
-
-pub use numeric::{Numeric, Primitive};
 
 /// Tag for physical data as passed in draw calls.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -29,12 +26,6 @@ pub struct Logical;
 /// See [`Block`] for more details.
 #[sealed]
 pub trait BlockView: Copy {
-    /// A boolean value.
-    ///
-    /// Has [`gl::Bool`] as its physical view and [`sl::Bool`] as its logical
-    /// view.
-    type Bool: Block<Self> + sl::ToValue<Output = sl::Bool>;
-
     /// A floating-point value.
     ///
     /// Has [`f32`] as its physical view and [`sl::F32`] as its logical view.
@@ -50,37 +41,43 @@ pub trait BlockView: Copy {
     /// Has [`u32`] as its physical view and [`sl::U32`] as its logical view.
     type U32: Block<Self> + sl::ToValue<Output = sl::U32>;
 
-    /// A two-dimensional vector of [`Self::F32`]s.
+    /// A boolean value.
+    ///
+    /// Has [`gl::Bool`] as its physical view and [`sl::Bool`] as its logical
+    /// view.
+    type Bool: Block<Self> + sl::ToValue<Output = sl::Bool>;
+
+    /// A two-dimensional floating-point vector.
     ///
     /// Has [`glam::Vec2`] as its physical view and [`sl::Vec2`] as its logical
     /// view.
-    type Vec2: Block<Self> + sl::ToValue<Output = sl::Vec2<f32>>;
+    type Vec2: Block<Self> + sl::ToValue<Output = sl::Vec2>;
 
-    /// A three-dimensional vector of [`Self::F32`]s.
+    /// A three-dimensional floating-point vector.
     ///
     /// Has [`glam::Vec3`] as its physical view and [`sl::Vec3`] as its logical
     /// view.
-    type Vec3: Block<Self> + sl::ToValue<Output = sl::Vec3<f32>>;
+    type Vec3: Block<Self> + sl::ToValue<Output = sl::Vec3>;
 
-    /// A four-dimensional vector of [`Self::F32`]s.
+    /// A four-dimensional floating-point vector.
     ///
     /// Has [`glam::Vec4`] as its physical view and [`sl::Vec4`] as its logical
     /// view.
-    type Vec4: Block<Self> + sl::ToValue<Output = sl::Vec4<f32>>;
+    type Vec4: Block<Self> + sl::ToValue<Output = sl::Vec4>;
 
-    /// A two-by-two matrix of [`Self::F32`]s.
+    /// A two-by-two floating-point matrix.
     ///
     /// Has [`glam::Mat2`] as its physical view and [`sl::Mat2`] as its logical
     /// view.
     type Mat2: Block<Self> + sl::ToValue<Output = sl::Mat2>;
 
-    /// A three-by-three matrix of [`Self::F32`]s.
+    /// A three-by-three floating-point matrix.
     ///
     /// Has [`glam::Mat3`] as its physical view and [`sl::Mat3`] as its logical
     /// view.
     type Mat3: Block<Self> + sl::ToValue<Output = sl::Mat3>;
 
-    /// A four-by-four matrix of [`Self::F32`]s.
+    /// A four-by-four floating-point matrix.
     ///
     /// Has [`glam::Mat4`] as its physical view and [`sl::Mat4`] as its logical
     /// view.
@@ -215,13 +212,13 @@ pub trait VertexDataField<V: VertexDataView>: Sized {
 /// ```
 /// use posh::{
 ///     sl::{self, VaryingOutput},
-///     Block, BlockView, Logical, VertexData,
+///     Block, BlockView, Logical, VertexData, VertexDataView,
 /// };
 ///
 /// #[derive(Clone, Copy, Block)]
 /// struct Material<V: BlockView = Logical> {
-///     normal: D::Vec3,
-///     color: D::Vec4,
+///     normal: V::Vec3,
+///     color: V::Vec4,
 /// }
 ///
 /// #[derive(VertexData)]
@@ -286,7 +283,7 @@ pub trait UniformDataView: Copy {
     type Block<U: Block<Logical, Logical = U>>: UniformData<Self>;
 
     /// A two-dimensional uniform sampler field.
-    type Sampler2d<V: sl::Sample>: UniformData<Self>;
+    type Sampler2d: UniformData<Self>;
 
     /// A nested uniform interface field.
     type Compose<R: UniformData<Logical>>: UniformData<Self>;
@@ -353,7 +350,7 @@ unsafe impl<V: UniformDataView> UniformData<V> for () {
 #[doc(hidden)]
 pub trait UniformDataVisitor<'a, V: UniformDataView> {
     fn accept_block<U: Block<Logical, Logical = U>>(&mut self, path: &str, block: &'a V::Block<U>);
-    fn accept_sampler2d<S: sl::Sample>(&mut self, path: &str, sampler: &'a V::Sampler2d<S>);
+    fn accept_sampler2d(&mut self, path: &str, sampler: &'a V::Sampler2d);
 }
 
 // FragmentData

@@ -3,7 +3,7 @@ use std::{
     rc::Rc,
 };
 
-use super::{ty::SamplerType, BaseType, BinaryOp, Expr, NumericType, PrimitiveType, Type};
+use super::{BinaryOp, BuiltInType, Expr, SamplerType, Type};
 
 impl Display for BinaryOp {
     fn fmt(&self, f: &mut Formatter) -> Result {
@@ -58,75 +58,46 @@ impl Display for Expr {
     }
 }
 
-impl Display for NumericType {
+impl Display for SamplerType {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        use NumericType::*;
+        use SamplerType::*;
 
         let s = match self {
-            F32 => "float",
-            I32 => "int",
-            U32 => "uint",
+            Sampler2d => "sampler2D",
         };
 
         f.write_str(s)
     }
 }
 
-impl Display for PrimitiveType {
+impl Display for BuiltInType {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        use PrimitiveType::*;
+        use BuiltInType::*;
 
-        match self {
-            Numeric(ty) => write!(f, "{ty}"),
-            Bool => write!(f, "bool"),
-        }
-    }
-}
+        let s = match self {
+            F32 => "float",
+            I32 => "int",
+            U32 => "uint",
+            Bool => "bool",
+            Vec2 => "vec2",
+            IVec2 => "ivec2",
+            UVec2 => "uvec2",
+            BVec2 => "bvec2",
+            Vec3 => "vec3",
+            IVec3 => "ivec3",
+            UVec3 => "uvec3",
+            BVec3 => "bvec3",
+            Vec4 => "vec4",
+            IVec4 => "ivec4",
+            UVec4 => "uvec4",
+            BVec4 => "bvec4",
+            Mat2 => "mat2",
+            Mat3 => "mat3",
+            Mat4 => "mat4",
+            Sampler(sampler) => return write!(f, "{sampler}"),
+        };
 
-impl Display for SamplerType {
-    fn fmt(&self, f: &mut Formatter) -> Result {
-        use SamplerType::*;
-
-        match self {
-            Sampler2d { ty, .. } => write!(f, "{}sampler2D", numeric_type_prefix(*ty)),
-        }
-    }
-}
-
-fn numeric_type_prefix(ty: NumericType) -> &'static str {
-    use NumericType::*;
-
-    match ty {
-        F32 => "",
-        I32 => "i",
-        U32 => "u",
-    }
-}
-
-fn primitive_type_prefix(ty: PrimitiveType) -> &'static str {
-    use PrimitiveType::*;
-
-    match ty {
-        Numeric(ty) => numeric_type_prefix(ty),
-        Bool => "b",
-    }
-}
-
-impl Display for BaseType {
-    fn fmt(&self, f: &mut Formatter) -> Result {
-        use BaseType::*;
-
-        match self {
-            Scalar(ty) => write!(f, "{ty}"),
-            Vec2(ty) => write!(f, "{}vec2", primitive_type_prefix(*ty)),
-            Vec3(ty) => write!(f, "{}vec3", primitive_type_prefix(*ty)),
-            Vec4(ty) => write!(f, "{}vec4", primitive_type_prefix(*ty)),
-            Mat2 => write!(f, "mat2"),
-            Mat3 => write!(f, "mat3"),
-            Mat4 => write!(f, "mat4"),
-            Struct(ty) => write!(f, "{}", ty.name),
-            Sampler(ty) => write!(f, "{}", ty),
-        }
+        f.write_str(s)
     }
 }
 
@@ -135,7 +106,8 @@ impl Display for Type {
         use Type::*;
 
         match self {
-            Base(ty) => write!(f, "{ty}"),
+            BuiltIn(ty) => write!(f, "{ty}"),
+            Struct(ty) => write!(f, "{}", ty.name),
             Array(ty, size) => write!(f, "{ty}[{size}]"),
         }
     }

@@ -47,7 +47,7 @@ struct Vertex<V: BlockView = Logical> {
 struct Uniforms<V: UniformDataView = Logical> {
     camera: V::Block<Camera>,
     time: V::Block<sl::F32>,
-    sampler: V::Sampler2d<sl::Vec4<f32>>,
+    sampler: V::Sampler2d,
 }
 
 // Shader code
@@ -59,11 +59,11 @@ fn rotate(angle: sl::F32) -> sl::Mat2 {
     )
 }
 
-fn zxy(v: sl::Vec3<f32>) -> sl::Vec3<f32> {
+fn zxy(v: sl::Vec3) -> sl::Vec3 {
     sl::vec3(v.z, v.x, v.y)
 }
 
-fn vertex_shader(uniforms: Uniforms, vertex: Vertex) -> VaryingOutput<sl::Vec2<f32>> {
+fn vertex_shader(uniforms: Uniforms, vertex: Vertex) -> VaryingOutput<sl::Vec2> {
     let camera = uniforms.camera;
     let time = uniforms.time / 3.0;
     let vertex_pos = (rotate(time) * sl::vec2(vertex.pos.x, vertex.pos.y)).extend(vertex.pos.z);
@@ -75,7 +75,7 @@ fn vertex_shader(uniforms: Uniforms, vertex: Vertex) -> VaryingOutput<sl::Vec2<f
     }
 }
 
-fn fragment_shader(uniforms: Uniforms, tex_coords: sl::Vec2<f32>) -> sl::Vec4<f32> {
+fn fragment_shader(uniforms: Uniforms, tex_coords: sl::Vec2) -> sl::Vec4 {
     uniforms.sampler.lookup(tex_coords)
 }
 
