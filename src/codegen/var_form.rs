@@ -3,7 +3,7 @@ use std::{
     rc::Rc,
 };
 
-use crate::dag::{BaseType, Expr, Type};
+use crate::dag::{Expr, Type};
 
 use super::{
     simplified_expr::{SimplifiedExpr, VarId},
@@ -76,7 +76,7 @@ impl VarForm {
             Expr::StructLiteral { args, ty } => SimplifiedExpr::CallFunc {
                 name: struct_registry.name(&ty),
                 args: args.into_iter().map(map_succ).collect(),
-                ty: Type::Base(BaseType::Struct(ty)),
+                ty: Type::Struct(ty),
             },
             Expr::Binary {
                 left,

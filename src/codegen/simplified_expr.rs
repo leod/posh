@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter, Result, Write};
 
-use crate::dag::{BaseType, BinaryOp, PrimitiveType, Type};
+use crate::dag::{BinaryOp, BuiltInType, Type};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct VarId(pub usize);
@@ -13,7 +13,7 @@ pub enum SimplifiedExpr {
     },
     ScalarLiteral {
         value: String,
-        ty: PrimitiveType,
+        ty: BuiltInType,
     },
     Binary {
         left: Box<SimplifiedExpr>,
@@ -54,7 +54,7 @@ impl SimplifiedExpr {
 
         match self {
             Arg { ty, .. } => ty.clone(),
-            ScalarLiteral { ty, .. } => Type::Base(BaseType::Scalar(*ty)),
+            ScalarLiteral { ty, .. } => Type::BuiltIn(*ty),
             Binary { ty, .. } => ty.clone(),
             CallFunc { ty, .. } => ty.clone(),
             Field { ty, .. } => ty.clone(),
@@ -98,12 +98,12 @@ impl Display for SimplifiedExpr {
             } => write!(f, "({left} {op} {right})"),
             CallFunc { name, args, .. } => write_call(f, name, args),
             Field { base, name, .. } => match base.ty() {
-                Type::Base(ty) if ty.is_mat() => {
+                Type::BuiltIn(ty) if ty.is_mat() => {
                     let index = match *name {
-                        "x" => 0,
-                        "y" => 1,
-                        "z" => 2,
-                        "w" => 3,
+                        "x_axis" => 0,
+                        "y_axis" => 1,
+                        "z_axis" => 2,
+                        "w_axis" => 3,
                         _ => unreachable!(),
                     };
 

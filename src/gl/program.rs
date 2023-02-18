@@ -1,24 +1,23 @@
 use std::{marker::PhantomData, rc::Rc};
 
 use crate::{
-    interface::UniformDataVisitor,
-    sl::{self, Sample},
-    Block, FragmentData, Logical, Physical, UniformData, VertexData,
+    interface::UniformDataVisitor, sl, Block, FragmentData, Logical, Physical, UniformData,
+    VertexData,
 };
 
 use super::{raw, DrawParams, Sampler2d, Surface, UniformBufferBinding, VertexArrayBinding};
 
 #[derive(Clone)]
-pub struct Program<Unif, Vert, Frag = sl::Vec4<f32>> {
+pub struct Program<UData, VData, FData = sl::Vec4> {
     raw: Rc<raw::Program>,
-    _phantom: PhantomData<(Unif, Vert, Frag)>,
+    _phantom: PhantomData<(UData, VData, FData)>,
 }
 
-impl<Unif, Vert, Frag> Program<Unif, Vert, Frag>
+impl<UData, VData, FData> Program<UData, VData, FData>
 where
-    Unif: UniformData<Logical>,
-    Vert: VertexData<Logical>,
-    Frag: FragmentData<Logical>,
+    UData: UniformData<Logical>,
+    VData: VertexData<Logical>,
+    FData: FragmentData<Logical>,
 {
     pub(super) fn unchecked_from_raw(raw: raw::Program) -> Self {
         Program {
@@ -29,12 +28,12 @@ where
 
     pub fn draw<S>(
         &self,
-        uniforms: Unif::Physical,
-        vertices: VertexArrayBinding<Vert::Physical>,
+        uniforms: UData::Physical,
+        vertices: VertexArrayBinding<VData::Physical>,
         surface: &S,
         draw_params: &DrawParams,
     ) where
-        S: Surface<Frag>,
+        S: Surface<FData>,
     {
         // TODO: Surface stuff.
 
@@ -62,15 +61,15 @@ struct UniformVisitor<'a> {
 }
 
 impl<'a> UniformDataVisitor<'a, Physical> for UniformVisitor<'a> {
-    fn accept_sampler2d<S: Sample>(&mut self, path: &str, sampler: &Sampler2d<S>) {
+    fn accept_sampler2d(&mut self, path: &str, sampler: &Sampler2d) {
         self.raw_samplers
             .push(raw::Sampler::Sampler2d(sampler.raw.clone()))
     }
 
-    fn accept_block<U: Block<Logical, Logical = U>>(
+    fn accept_block<B: Block<Logical, Logical = B>>(
         &mut self,
         _: &str,
-        uniform: &'a UniformBufferBinding<U>,
+        uniform: &'a UniformBufferBinding<B>,
     ) {
         self.raw_uniform_buffers.push(&uniform.raw);
     }

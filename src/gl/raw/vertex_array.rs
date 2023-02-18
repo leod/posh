@@ -3,9 +3,8 @@ use std::{ops::Range, rc::Rc};
 use glow::HasContext;
 
 use crate::{
-    dag::NumericType,
     gl::{
-        raw::vertex_layout::{numeric_type_to_gl, VertexAttributeLayout},
+        raw::vertex_layout::{VertexAttributeLayout, VertexAttributeType},
         VertexArrayError,
     },
     program_def::{VertexDef, VertexInputRate},
@@ -92,10 +91,10 @@ impl VertexArray {
             }
 
             for attribute in &vertex_def.attributes {
-                let attribute_info = VertexAttributeLayout::new(&attribute.ty);
+                let attribute_info = VertexAttributeLayout::new(attribute.ty)
+                    .map_err(VertexArrayError::InvalidVertexAttribute)?;
 
-                for i in 0..attribute_info.num_locations {
-                    let data_type = numeric_type_to_gl(attribute_info.ty);
+                for i in 0..attribute_info.locations {
                     let offset = attribute.offset + i * attribute_info.location_size();
 
                     assert!(offset + attribute_info.location_size() <= vertex_def.stride);
@@ -112,21 +111,21 @@ impl VertexArray {
                     }
 
                     match attribute_info.ty {
-                        NumericType::F32 => unsafe {
+                        VertexAttributeType::F32 => unsafe {
                             gl.vertex_attrib_pointer_f32(
                                 index,
-                                i32::try_from(attribute_info.num_components).unwrap(),
-                                data_type,
+                                i32::try_from(attribute_info.components).unwrap(),
+                                attribute_info.ty.to_gl(),
                                 false,
                                 i32::try_from(vertex_def.stride).unwrap(),
                                 i32::try_from(offset).unwrap(),
                             )
                         },
-                        NumericType::I32 | NumericType::U32 => unsafe {
+                        VertexAttributeType::I32 | VertexAttributeType::U32 => unsafe {
                             gl.vertex_attrib_pointer_i32(
                                 index,
-                                i32::try_from(attribute_info.num_components).unwrap(),
-                                data_type,
+                                i32::try_from(attribute_info.components).unwrap(),
+                                attribute_info.ty.to_gl(),
                                 i32::try_from(vertex_def.stride).unwrap(),
                                 i32::try_from(offset).unwrap(),
                             )

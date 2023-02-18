@@ -1,4 +1,4 @@
-use crate::dag::{NumericType, SamplerType, Type};
+use crate::dag::{BuiltInType, SamplerType, Type};
 
 /// Uniform input definition.
 #[derive(Debug, Clone)]
@@ -28,7 +28,7 @@ pub struct UniformSamplerDef {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VertexAttributeDef {
     pub name: String,
-    pub ty: Type,
+    pub ty: BuiltInType,
     pub offset: usize,
 }
 

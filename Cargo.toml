@@ -5,12 +5,13 @@ edition = "2021"
 
 [dependencies]
 bytemuck = { version = "1.12.3", features = ["derive"] }
-crevice = "0.12.0"
+crevice = { version = "0.12.0", features = ["glam"] }
 mint = "0.5.9"
 sealed = "0.4.0"
 posh-derive = { path = "derive" }
 glow = "0.11.2"
 thiserror = "1.0.38"
+glam = "0.22.0"
 
 [workspace]
 members = ["derive"]

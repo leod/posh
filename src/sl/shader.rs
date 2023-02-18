@@ -46,7 +46,7 @@ impl<Vert: VertexData<Logical>> FromVertexInput for Vert {
 #[derive(Debug, Clone)]
 pub struct VertexOutput<Vary> {
     pub varying: Vary,
-    pub position: Vec4<f32>,
+    pub position: Vec4,
     pub point_size: Option<F32>,
 }
 
@@ -65,7 +65,7 @@ impl<Vary: Varying> IntoVertexOutput for VertexOutput<Vary> {
     }
 }
 
-impl IntoVertexOutput for Vec4<f32> {
+impl IntoVertexOutput for Vec4 {
     type Vary = ();
 
     fn into(self) -> VertexOutput<()> {
@@ -81,7 +81,7 @@ impl IntoVertexOutput for Vec4<f32> {
 #[derive(Debug, Clone)]
 pub struct VaryingOutput<Vary> {
     pub varying: Vary,
-    pub position: Vec4<f32>,
+    pub position: Vec4,
 }
 
 impl<Vary: Varying> IntoVertexOutput for VaryingOutput<Vary> {
@@ -100,9 +100,9 @@ impl<Vary: Varying> IntoVertexOutput for VaryingOutput<Vary> {
 #[derive(Debug, Clone)]
 pub struct FragmentInput<Vary> {
     pub varying: Vary,
-    pub fragment_coord: Vec4<f32>,
+    pub fragment_coord: Vec4,
     pub front_facing: Bool,
-    pub point_coord: Vec2<f32>,
+    pub point_coord: Vec2,
     pub(crate) _private: Private,
 }
 
