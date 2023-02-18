@@ -33,12 +33,7 @@ impl BuiltInType {
     pub fn is_mat(&self) -> bool {
         use BuiltInType::*;
 
-        match self {
-            Mat2 => true,
-            Mat3 => true,
-            Mat4 => true,
-            _ => false,
-        }
+        matches!(self, Mat2 | Mat3 | Mat4)
     }
 }
 
@@ -81,7 +76,7 @@ impl Type {
         use Type::*;
 
         match self {
-            BuiltIn(ty) => Some(ty.clone()),
+            BuiltIn(ty) => Some(*ty),
             _ => None,
         }
     }

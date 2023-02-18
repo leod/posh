@@ -282,6 +282,6 @@ impl VertexArrayBinding {
             gl.bind_vertex_array(None);
         }
 
-        check_gl_error(&gl).unwrap();
+        check_gl_error(gl).unwrap();
     }
 }

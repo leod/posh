@@ -46,7 +46,7 @@ impl Context {
     where
         B: Block<Logical>,
     {
-        let raw = self.raw.create_buffer(&data, usage)?;
+        let raw = self.raw.create_buffer(data, usage)?;
 
         Ok(VertexBuffer::from_raw(raw))
     }
