@@ -1,6 +1,6 @@
 macro_rules! impl_gen_type {
     ($ty:ident) => {
-        impl $ty<f32> {
+        impl $ty {
             pub fn normalize(self) -> Self {
                 super::primitives::built_in_1("normalize", self)
             }
@@ -59,6 +59,26 @@ macro_rules! impl_gen_type {
 
             pub fn atanh(self) -> Self {
                 super::primitives::built_in_1("atanh", self)
+            }
+
+            pub fn dot(self, y: impl super::ToValue<Output = Self>) -> Self {
+                super::primitives::built_in_2("dot", self, y.to_value())
+            }
+
+            pub fn min(self, y: impl super::ToValue<Output = Self>) -> Self {
+                super::primitives::built_in_2("min", self, y.to_value())
+            }
+
+            pub fn max(self, y: impl super::ToValue<Output = Self>) -> Self {
+                super::primitives::built_in_2("min", self, y.to_value())
+            }
+
+            pub fn clamp(
+                self,
+                min: impl super::ToValue<Output = Self>,
+                max: impl super::ToValue<Output = Self>,
+            ) -> Self {
+                super::primitives::built_in_3("clamp", self, min.to_value(), max.to_value())
             }
         }
     };

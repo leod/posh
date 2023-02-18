@@ -1,7 +1,5 @@
 use std::{marker::PhantomData, rc::Rc};
 
-use crate::sl;
-
 use super::{
     raw::{self, Sampler2dParams},
     ImageFormat,
@@ -23,15 +21,13 @@ impl<Format: ImageFormat> Texture2d<Format> {
         }
     }
 
-    pub fn sampler(&self, params: Sampler2dParams) -> Sampler2d<Format::Sample> {
+    pub fn sampler(&self, params: Sampler2dParams) -> Sampler2d {
         Sampler2d {
             raw: self.raw.sampler(params),
-            _phantom: PhantomData,
         }
     }
 }
 
-pub struct Sampler2d<S: sl::Sample> {
+pub struct Sampler2d {
     pub(super) raw: raw::Sampler2d,
-    _phantom: PhantomData<S>,
 }

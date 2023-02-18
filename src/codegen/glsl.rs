@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::{
-    dag::{BaseType, Expr, Type},
+    dag::{Expr, Type},
     program_def::{UniformBlockDef, UniformSamplerDef},
 };
 
@@ -172,12 +172,12 @@ fn write_scope(f: &mut impl Write, ctx: WriteFuncContext, scope: &Scope) -> Resu
     Ok(())
 }
 
-fn write_struct_defs(f: &mut impl Write, struct_registry: &StructRegistry) -> Result {
-    for (name, ty) in struct_registry.defs() {
+fn write_struct_defs(f: &mut impl Write, struct_reg: &StructRegistry) -> Result {
+    for (name, ty) in struct_reg.defs() {
         writeln!(f, "struct {name} {{")?;
 
         for (field_name, field_ty) in ty.fields.iter() {
-            let field_ty_name = type_name(struct_registry, field_ty);
+            let field_ty_name = type_name(struct_reg, field_ty);
 
             writeln!(f, "    {field_ty_name} {field_name};")?;
         }
@@ -188,12 +188,12 @@ fn write_struct_defs(f: &mut impl Write, struct_registry: &StructRegistry) -> Re
     Ok(())
 }
 
-fn type_name(struct_registry: &StructRegistry, ty: &Type) -> String {
+fn type_name(struct_reg: &StructRegistry, ty: &Type) -> String {
     use Type::*;
 
     match ty {
-        Base(BaseType::Struct(ty)) => struct_registry.name(ty),
-        Array(BaseType::Struct(ty), size) => format!("{}[{}]", struct_registry.name(ty), size),
-        ty => format!("{ty}"),
+        BuiltIn(ty) => format!("{ty}"),
+        Struct(ty) => struct_reg.name(ty),
+        Array(ty, size) => format!("{}[{}]", type_name(struct_reg, ty), size),
     }
 }

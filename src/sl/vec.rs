@@ -3,93 +3,34 @@ use std::{
     rc::Rc,
 };
 
-use crate::{
-    dag::{BaseType, BinaryOp, Expr, Type},
-    Numeric, Primitive,
-};
+use crate::dag::{BinaryOp, BuiltInType, Expr, Type};
 
 use super::{
-    primitives::{binary, built_in_1, built_in_2, common_field_base, field, value_arg},
-    Mat2, Mat3, Mat4, Object, Scalar, ToValue, Value, ValueNonArray,
+    primitives::{binary, common_field_base, field, value_arg},
+    Bool, Object, ToValue, Value, ValueNonArray, F32, I32, U32,
 };
 
-/// A two-dimensional vector in the shading language.
-#[derive(Debug, Copy, Clone)]
-pub struct Vec2<T> {
-    pub x: Scalar<T>,
-    pub y: Scalar<T>,
-}
-
-impl<T: Primitive> Vec2<T> {
-    pub fn extend(self, z: impl ToValue<Output = Scalar<T>>) -> Vec3<T> {
-        Vec3 {
-            x: self.x,
-            y: self.y,
-            z: z.to_value(),
-        }
-    }
-}
-
-/// A three-dimensional vector in the shading language.
-#[derive(Debug, Copy, Clone)]
-pub struct Vec3<T> {
-    pub x: Scalar<T>,
-    pub y: Scalar<T>,
-    pub z: Scalar<T>,
-}
-
-impl<T: Primitive> Vec3<T> {
-    pub fn extend(self, w: impl ToValue<Output = Scalar<T>>) -> Vec4<T> {
-        Vec4 {
-            x: self.x,
-            y: self.y,
-            z: self.z,
-            w: w.to_value(),
-        }
-    }
-}
-
-/// A four-dimensional vector in the shading language.
-#[derive(Debug, Copy, Clone)]
-pub struct Vec4<T> {
-    pub x: Scalar<T>,
-    pub y: Scalar<T>,
-    pub z: Scalar<T>,
-    pub w: Scalar<T>,
-}
-
-// Implements `Object` and `Value` for `$ty<T>`.
+// Implements `Object` and `Value` for `$vec`.
 macro_rules! impl_value {
-    ($ty:ident, $mint_ty: ident, $($member:ident),+) => {
-        impl<T: Primitive> Object for $ty<T> {
+    ($vec:ident, $scalar:ident, $($member:ident),+) => {
+        impl Object for $vec {
             fn ty() -> Type {
-                Type::Base(Self::base_type())
+                Type::BuiltIn(BuiltInType::$vec)
             }
 
             fn expr(&self) -> Rc<Expr> {
-                if let Some(base) = common_field_base(
-                    &BaseType::$ty(T::PRIMITIVE_TYPE),
-                    [
-                        $(
-                            std::stringify!($member)
-                        ),+
-                    ]
-                    .into_iter(),
-                    &[
-                        $(
-                            self.$member.expr()
-                        ),+,
-                    ],
-                ) {
+                let base = common_field_base(
+                    &Self::ty(),
+                    [$(std::stringify!($member)),+].into_iter(),
+                    &[$(self.$member.expr()),+],
+                );
+
+                if let Some(base) = base {
                     base
                 } else {
                     let ty = Self::ty();
                     let name = format!("{}", ty);
-                    let args = vec![
-                        $(
-                            self.$member.expr()
-                        ),+,
-                    ];
+                    let args = vec![$(self.$member.expr()),+];
 
                     let expr = Expr::CallBuiltIn { ty, name, args };
 
@@ -102,7 +43,7 @@ macro_rules! impl_value {
             }
         }
 
-        impl<T: Primitive> Value for $ty<T> {
+        impl Value for $vec {
             fn from_expr(expr: Expr) -> Self {
                 let base = Rc::new(expr);
 
@@ -114,14 +55,10 @@ macro_rules! impl_value {
             }
         }
 
-        impl<T: Primitive> ValueNonArray for $ty<T> {
-            fn base_type() -> BaseType {
-                BaseType::$ty(T::PRIMITIVE_TYPE)
-            }
-        }
+        impl ValueNonArray for $vec {}
 
-        impl<T: Primitive> ToValue for mint::$mint_ty<T> {
-            type Output = $ty<T>;
+        impl ToValue for glam::$vec {
+            type Output = $vec;
 
             fn to_value(self) -> Self::Output {
                 Self::Output {
@@ -132,7 +69,7 @@ macro_rules! impl_value {
             }
         }
 
-        impl<T: Primitive> ToValue for $ty<T> {
+        impl ToValue for $vec {
             type Output = Self;
 
             fn to_value(self) -> Self::Output {
@@ -142,120 +79,244 @@ macro_rules! impl_value {
     };
 }
 
-// Implements `$ty<T> <op> $ty<T>` for all `T: Numeric`.
-macro_rules! impl_binary_op_symmetric {
-    ($ty:ident, $fn:ident, $op:ident) => {
-        impl<T> $op<$ty<T>> for $ty<T>
-        where
-            T: Numeric,
-        {
+// Implements `$vec <op> $vec` and `$vec <op> $scalar` and `$scalar <op> $vec`.
+macro_rules! impl_binary_op {
+    ($vec:ident, $scalar:ident, $op:ident, $fn:ident) => {
+        impl $op<$vec> for $vec {
             type Output = Self;
 
-            fn $fn(self, right: Self) -> Self::Output {
+            fn $fn(self, right: Self) -> Self {
+                binary(self, BinaryOp::$op, right)
+            }
+        }
+
+        impl $op<$scalar> for $vec {
+            type Output = Self;
+
+            fn $fn(self, right: $scalar) -> Self {
+                binary(self, BinaryOp::$op, right)
+            }
+        }
+
+        impl $op<scalar_physical!($scalar)> for $vec {
+            type Output = Self;
+
+            fn $fn(self, right: scalar_physical!($scalar)) -> Self {
+                binary(self, BinaryOp::$op, right)
+            }
+        }
+
+        impl $op<$vec> for $scalar {
+            type Output = $vec;
+
+            fn $fn(self, right: $vec) -> $vec {
+                binary(self, BinaryOp::$op, right)
+            }
+        }
+
+        impl $op<$vec> for scalar_physical!($scalar) {
+            type Output = $vec;
+
+            fn $fn(self, right: $vec) -> $vec {
                 binary(self, BinaryOp::$op, right)
             }
         }
     };
 }
 
-// Implements `$ty<T> <op> impl ToValue<Output = Scalar<T>>` for all `T:
-// Numeric`.
-macro_rules! impl_binary_op_scalar_rhs {
-    ($ty:ident, $fn:ident, $op:ident) => {
-        impl<T, Rhs> $op<Rhs> for $ty<T>
-        where
-            T: Numeric,
-            Rhs: ToValue<Output = Scalar<T>>,
-        {
-            type Output = Self;
-
-            fn $fn(self, right: Rhs) -> Self::Output {
-                binary(self, BinaryOp::$op, right)
-            }
-        }
+// Implements numeric ops for `$vec`.
+macro_rules! impl_numeric_ops {
+    ($vec:ident, $scalar:ident) => {
+        impl_binary_op!($vec, $scalar, Add, add);
+        impl_binary_op!($vec, $scalar, Div, div);
+        impl_binary_op!($vec, $scalar, Mul, mul);
+        impl_binary_op!($vec, $scalar, Sub, sub);
     };
 }
 
-// Implements all the things for `$ty`.
-macro_rules! impl_vec {
-    ($ty:ident, $mint_ty:ident, $mat_ty:ident, $($member:ident),+) => {
-        impl_value!($ty, $mint_ty, $($member),+);
+// Implements ops for `$vec`.
+macro_rules! impl_ops {
+    ($vec:ident, Bool, bool) => {};
+    ($vec:ident, $logical:ident) => {
+        impl_numeric_ops!($vec, $logical);
+    };
+}
 
-        impl_binary_op_symmetric!($ty, add, Add);
-        impl_binary_op_symmetric!($ty, div, Div);
-        impl_binary_op_symmetric!($ty, mul, Mul);
-        impl_binary_op_symmetric!($ty, sub, Sub);
+// Implements two-dimensional `$vec`.
+macro_rules! impl_vec2 {
+    ($vec:ident, $vec_lower:ident, $scalar:ident, $extension:ident) => {
+        #[doc = concat!("A two-dimensional ", scalar_name!($scalar), " vector in the shading language.")]
+        #[derive(Debug, Copy, Clone)]
+        pub struct $vec {
+            pub x: $scalar,
+            pub y: $scalar,
+        }
 
-        impl_binary_op_scalar_rhs!($ty, add, Add);
-        impl_binary_op_scalar_rhs!($ty, div, Div);
-        impl_binary_op_scalar_rhs!($ty, mul, Mul);
-        impl_binary_op_scalar_rhs!($ty, sub, Sub);
+        impl $vec {
+            /// Creates a new vector.
+            pub fn new(
+                x: impl ToValue<Output = $scalar>,
+                y: impl ToValue<Output = $scalar>,
+            ) -> Self {
+                Self {
+                    x: x.to_value(),
+                    y: y.to_value(),
+                }
+            }
 
-        impl_gen_type!($ty);
+            /// Creates a vector with all elements set to `v`.
+            pub fn splat(v: impl ToValue<Output = $scalar>) -> Self {
+                let v = v.to_value();
 
-        impl<T: Primitive> Default for $ty<T> {
-            fn default() -> Self {
-                $ty {
-                    $(
-                        $member: Default::default()
-                    ),*
+                Self { x: v, y: v }
+            }
+
+            /// Creates a three-dimensional vector from `self` and the given `z` value.
+            pub fn extend(self, z: impl ToValue<Output = $scalar>) -> $extension {
+                $extension {
+                    x: self.x,
+                    y: self.y,
+                    z: z.to_value(),
                 }
             }
         }
 
-        impl<T: Primitive> $ty<T> {
-            pub fn cast<U: Primitive>(self) -> $ty<U> {
-                built_in_1(&format!("{}", $ty::<U>::ty()), self)
-            }
+        #[doc = concat!("Creates a two-dimensional ", scalar_name!($scalar), " vector.")]
+        pub fn $vec_lower(
+            x: impl ToValue<Output = $scalar>,
+            y: impl ToValue<Output = $scalar>,
+        ) -> $vec {
+            $vec::new(x, y)
         }
 
-        impl $ty<f32> {
-            pub fn outer_product(self, r: Self) -> $mat_ty {
-                built_in_2("outerProduct", self, r)
-            }
-        }
+        impl_value!($vec, $scalar, x, y);
+        impl_ops!($vec, $scalar);
     };
 }
 
-impl_vec!(Vec2, Vector2, Mat2, x, y);
-impl_vec!(Vec3, Vector3, Mat3, x, y, z);
-impl_vec!(Vec4, Vector4, Mat4, x, y, z, w);
+// Implements three-dimensional `$vec`.
+macro_rules! impl_vec3 {
+    ($vec:ident, $vec_lower:ident, $scalar:ident, $extension:ident) => {
+        #[doc = concat!("A three-dimensional ", scalar_name!($scalar), " vector in the shading language.")]
+        #[derive(Debug, Copy, Clone)]
+        pub struct $vec {
+            pub x: $scalar,
+            pub y: $scalar,
+            pub z: $scalar,
+        }
 
-/// Constructs a [`Vec2`] conveniently.
-pub fn vec2<T: Primitive>(
-    x: impl ToValue<Output = Scalar<T>>,
-    y: impl ToValue<Output = Scalar<T>>,
-) -> Vec2<T> {
-    Vec2 {
-        x: x.to_value(),
-        y: y.to_value(),
-    }
+        impl $vec {
+            /// Creates a new vector.
+            pub fn new(
+                x: impl ToValue<Output = $scalar>,
+                y: impl ToValue<Output = $scalar>,
+                z: impl ToValue<Output = $scalar>,
+            ) -> Self {
+                Self {
+                    x: x.to_value(),
+                    y: y.to_value(),
+                    z: z.to_value(),
+                }
+            }
+
+            /// Creates a vector with all elements set to `v`.
+            pub fn splat(v: impl ToValue<Output = $scalar>) -> Self {
+                let v = v.to_value();
+
+                Self { x: v, y: v, z: v }
+            }
+
+            /// Creates a four-dimensional vector from `self` and the given `w` value.
+            pub fn extend(self, w: impl ToValue<Output = $scalar>) -> $extension {
+                $extension {
+                    x: self.x,
+                    y: self.y,
+                    z: self.z,
+                    w: w.to_value(),
+                }
+            }
+        }
+
+        #[doc = concat!("Creates a three-dimensional ", scalar_name!($scalar), " vector.")]
+        pub fn $vec_lower(
+            x: impl ToValue<Output = $scalar>,
+            y: impl ToValue<Output = $scalar>,
+            z: impl ToValue<Output = $scalar>,
+        ) -> $vec {
+            $vec::new(x, y, z)
+        }
+
+        impl_value!($vec, $scalar, x, y, z);
+        impl_ops!($vec, $scalar);
+    };
 }
 
-/// Constructs a [`Vec3`] conveniently.
-pub fn vec3<T: Primitive>(
-    x: impl ToValue<Output = Scalar<T>>,
-    y: impl ToValue<Output = Scalar<T>>,
-    z: impl ToValue<Output = Scalar<T>>,
-) -> Vec3<T> {
-    Vec3 {
-        x: x.to_value(),
-        y: y.to_value(),
-        z: z.to_value(),
-    }
+// Implements four-dimensional `$vec`.
+macro_rules! impl_vec4 {
+    ($vec:ident, $vec_lower:ident, $scalar:ident) => {
+        #[doc = concat!("A four-dimensional ", scalar_name!($scalar), " vector in the shading language.")]
+        #[derive(Debug, Copy, Clone)]
+        pub struct $vec {
+            pub x: $scalar,
+            pub y: $scalar,
+            pub z: $scalar,
+            pub w: $scalar,
+        }
+
+        impl $vec {
+            /// Creates a new vector.
+            pub fn new(
+                x: impl ToValue<Output = $scalar>,
+                y: impl ToValue<Output = $scalar>,
+                z: impl ToValue<Output = $scalar>,
+                w: impl ToValue<Output = $scalar>,
+            ) -> Self {
+                Self {
+                    x: x.to_value(),
+                    y: y.to_value(),
+                    z: z.to_value(),
+                    w: w.to_value(),
+                }
+            }
+
+            /// Creates a vector with all elements set to `v`.
+            pub fn splat(v: impl ToValue<Output = $scalar>) -> Self {
+                let v = v.to_value();
+
+                Self { x: v, y: v, z: v, w: v }
+            }
+        }
+
+        #[doc = concat!("Creates a four-dimensional ", scalar_name!($scalar), " vector.")]
+        pub fn $vec_lower(
+            x: impl ToValue<Output = $scalar>,
+            y: impl ToValue<Output = $scalar>,
+            z: impl ToValue<Output = $scalar>,
+            w: impl ToValue<Output = $scalar>,
+        ) -> $vec {
+            $vec::new(x, y, z, w)
+        }
+
+        impl_value!($vec, $scalar, x, y, z, w);
+        impl_ops!($vec, $scalar);
+    };
 }
 
-/// Constructs a [`Vec4`] conveniently.
-pub fn vec4<T: Primitive>(
-    x: impl ToValue<Output = Scalar<T>>,
-    y: impl ToValue<Output = Scalar<T>>,
-    z: impl ToValue<Output = Scalar<T>>,
-    w: impl ToValue<Output = Scalar<T>>,
-) -> Vec4<T> {
-    Vec4 {
-        x: x.to_value(),
-        y: y.to_value(),
-        z: z.to_value(),
-        w: w.to_value(),
-    }
-}
+impl_vec2!(Vec2, vec2, F32, Vec3);
+impl_vec2!(IVec2, ivec2, I32, IVec3);
+impl_vec2!(UVec2, uvec2, U32, UVec3);
+impl_vec2!(BVec2, bvec2, Bool, BVec3);
+
+impl_vec3!(Vec3, vec3, F32, Vec4);
+impl_vec3!(IVec3, ivec3, I32, IVec4);
+impl_vec3!(UVec3, uvec3, U32, UVec4);
+impl_vec3!(BVec3, bvec3, Bool, BVec4);
+
+impl_vec4!(Vec4, vec4, F32);
+impl_vec4!(IVec4, ivec4, I32);
+impl_vec4!(UVec4, uvec4, U32);
+impl_vec4!(BVec4, bvec4, Bool);
+
+impl_gen_type!(Vec2);
+impl_gen_type!(Vec3);
+impl_gen_type!(Vec4);

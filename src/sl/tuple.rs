@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::dag::{BaseType, Expr, StructType, Type};
+use crate::dag::{Expr, StructType, Type};
 
 use super::{
     primitives::{field, simplify_struct_literal, value_arg},
@@ -11,7 +11,7 @@ macro_rules! impl_value {
     ($($name: ident),*) => {
         impl<$($name: Value),*> Object for ($($name),*) {
             fn ty() -> Type {
-                Type::Base(BaseType::Struct(Self::struct_type()))
+                Type::Struct(Self::struct_type())
             }
 
             fn expr(&self) -> Rc<Expr> {
@@ -46,11 +46,7 @@ macro_rules! impl_value {
             }
         }
 
-        impl<$($name: Value),*> ValueNonArray for ($($name),*) {
-            fn base_type() -> BaseType {
-                BaseType::Struct(Self::struct_type())
-            }
-        }
+        impl<$($name: Value),*> ValueNonArray for ($($name),*) {}
 
         impl<$($name: Value),*> Struct for ($($name),*) {
             fn struct_type() -> Rc<StructType> {

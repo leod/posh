@@ -25,7 +25,7 @@ struct ColorVertex<V: BlockView = Logical> {
     flag: V::Bool,
 }
 
-fn vertex_shader(globals: Globals, vertex: ColorVertex) -> VaryingOutput<sl::Vec4<f32>> {
+fn vertex_shader(globals: Globals, vertex: ColorVertex) -> VaryingOutput<sl::Vec4> {
     let shift = globals.offset * globals.time;
     let shift = globals
         .invert
@@ -37,15 +37,15 @@ fn vertex_shader(globals: Globals, vertex: ColorVertex) -> VaryingOutput<sl::Vec
         false.to_value().branch(x * -1.0, x * -2.0)
     });
 
-    let position = sl::Mat2::identity() * vertex.position + shift2 + sl::Mat2::diagonal(4.0).x;
+    let position = sl::Mat2::identity() * vertex.position + shift2 + sl::Mat2::diagonal(4.0).x_axis;
 
     VaryingOutput {
-        varying: sl::Vec4::default(),
+        varying: sl::Vec4::splat(0.0),
         position: globals.projection * globals.camera * position.extend(1.0).extend(1.0),
     }
 }
 
-fn fragment_shader<Res>(_: Res, varying: sl::Vec4<f32>) -> sl::Vec4<f32> {
+fn fragment_shader<Res>(_: Res, varying: sl::Vec4) -> sl::Vec4 {
     varying * 3.0
 }
 

@@ -5,20 +5,17 @@ mod interface;
 mod program_def;
 
 pub mod gl;
+#[macro_use]
 pub mod sl;
 
 pub use interface::{
-    Block, BlockView, FragmentData, FragmentDataView, Logical, Numeric, Physical, Primitive,
-    UniformData, UniformDataView, VertexData, VertexDataView,
+    Block, BlockView, FragmentData, FragmentDataView, Logical, Physical, UniformData,
+    UniformDataView, VertexData, VertexDataView,
 };
 
 pub use posh_derive::{Block, UniformData, VertexData};
 
 pub use crevice;
-
-// Only re-exported for `posh-derive`.
-#[doc(hidden)]
-pub use bytemuck;
 
 /// Utilities.
 pub mod util {
@@ -31,11 +28,16 @@ pub mod util {
     };
 }
 
+// Only re-exported for `posh-derive`.
+// FIXME: Use `crevice`'s re-export.
+#[doc(hidden)]
+pub use bytemuck;
+
 // Hidden unstable symbols, needed for `posh-derive`.
 #[doc(hidden)]
 pub mod internal {
     pub use super::{
-        dag::{BaseType, Expr, StructType, Type},
+        dag::{Expr, StructType, Type},
         interface::{UniformDataVisitor, VertexDataField, VertexDataVisitor},
         sl::{
             primitives::{field, simplify_struct_literal, value_arg},

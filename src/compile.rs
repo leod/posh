@@ -4,7 +4,7 @@ use crevice::std140::AsStd140;
 
 use crate::{
     codegen::glsl,
-    dag::{Expr, SamplerType},
+    dag::{Expr, SamplerType, Type},
     interface::{FragmentDataVisitor, UniformDataVisitor, VertexDataVisitor},
     program_def::{
         ProgramDef, UniformBlockDef, UniformSamplerDef, VertexAttributeDef, VertexDef,
@@ -12,9 +12,9 @@ use crate::{
     },
     sl::{
         ConstInput, FragmentInput, FromFragmentInput, FromVertexInput, IntoFragmentOutput,
-        IntoVertexOutput, Object, Private, Sample, VertexInput,
+        IntoVertexOutput, Object, Private, VertexInput,
     },
-    Block, FragmentData, Logical, Numeric, UniformData, VertexData,
+    Block, FragmentData, Logical, UniformData, VertexData,
 };
 
 use crate::sl::{primitives::value_arg, Sampler2d, Varying, Vec4};
@@ -25,19 +25,19 @@ use crate::sl::{primitives::value_arg, Sampler2d, Varying, Vec4};
 /// This is used internally by `posh` in order to create
 /// [`Program`](crate::gl::Program)s. It is exposed for the purpose of
 /// inspecting generated shader source code.
-pub fn compile_to_program_def<Unif, Vert, Frag, Vary, VertIn, VertOut, FragIn, FragOut>(
-    vertex_shader: fn(Unif, VertIn) -> VertOut,
-    fragment_shader: fn(Unif, FragIn) -> FragOut,
+pub fn compile_to_program_def<UData, VData, FData, Vary, VertIn, VertOut, FragIn, FragOut>(
+    vertex_shader: fn(UData, VertIn) -> VertOut,
+    fragment_shader: fn(UData, FragIn) -> FragOut,
 ) -> ProgramDef
 where
-    Unif: UniformData<Logical>,
-    Vert: VertexData<Logical>,
-    Frag: FragmentData<Logical>,
+    UData: UniformData<Logical>,
+    VData: VertexData<Logical>,
+    FData: FragmentData<Logical>,
     Vary: Varying,
-    VertIn: FromVertexInput<Vert = Vert>,
+    VertIn: FromVertexInput<Vert = VData>,
     VertOut: IntoVertexOutput<Vary = Vary>,
     FragIn: FromFragmentInput<Vary = Vary>,
-    FragOut: IntoFragmentOutput<Frag = Frag>,
+    FragOut: IntoFragmentOutput<Frag = FData>,
 {
     compile_to_program_def_with_consts_impl(
         (),
@@ -51,9 +51,9 @@ where
 /// See also [`compile_to_program_def`].
 pub fn compile_to_program_def_with_consts<
     Consts,
-    Unif,
-    Vert,
-    Frag,
+    UData,
+    VData,
+    FData,
     Vary,
     VertIn,
     VertOut,
@@ -61,28 +61,28 @@ pub fn compile_to_program_def_with_consts<
     FragOut,
 >(
     consts: Consts,
-    vertex_shader: fn(Consts, Unif, VertIn) -> VertOut,
-    fragment_shader: fn(Consts, Unif, FragIn) -> FragOut,
+    vertex_shader: fn(Consts, UData, VertIn) -> VertOut,
+    fragment_shader: fn(Consts, UData, FragIn) -> FragOut,
 ) -> ProgramDef
 where
     Consts: ConstInput,
-    Unif: UniformData<Logical>,
-    Vert: VertexData<Logical>,
-    Frag: FragmentData<Logical>,
+    UData: UniformData<Logical>,
+    VData: VertexData<Logical>,
+    FData: FragmentData<Logical>,
     Vary: Varying,
-    VertIn: FromVertexInput<Vert = Vert>,
+    VertIn: FromVertexInput<Vert = VData>,
     VertOut: IntoVertexOutput<Vary = Vary>,
     FragIn: FromFragmentInput<Vary = Vary>,
-    FragOut: IntoFragmentOutput<Frag = Frag>,
+    FragOut: IntoFragmentOutput<Frag = FData>,
 {
     compile_to_program_def_with_consts_impl(consts, vertex_shader, fragment_shader)
 }
 
 fn compile_to_program_def_with_consts_impl<
     Consts,
-    Unif,
-    Vert,
-    Frag,
+    UData,
+    VData,
+    FData,
     Vary,
     VertIn,
     VertOut,
@@ -90,21 +90,21 @@ fn compile_to_program_def_with_consts_impl<
     FragOut,
 >(
     consts: Consts,
-    vertex_shader: impl FnOnce(Consts, Unif, VertIn) -> VertOut,
-    fragment_shader: impl FnOnce(Consts, Unif, FragIn) -> FragOut,
+    vertex_shader: impl FnOnce(Consts, UData, VertIn) -> VertOut,
+    fragment_shader: impl FnOnce(Consts, UData, FragIn) -> FragOut,
 ) -> ProgramDef
 where
     Consts: ConstInput,
-    Unif: UniformData<Logical>,
-    Vert: VertexData<Logical>,
-    Frag: FragmentData<Logical>,
+    UData: UniformData<Logical>,
+    VData: VertexData<Logical>,
+    FData: FragmentData<Logical>,
     Vary: Varying,
-    VertIn: FromVertexInput<Vert = Vert>,
+    VertIn: FromVertexInput<Vert = VData>,
     VertOut: IntoVertexOutput<Vary = Vary>,
     FragIn: FromFragmentInput<Vary = Vary>,
-    FragOut: IntoFragmentOutput<Frag = Frag>,
+    FragOut: IntoFragmentOutput<Frag = FData>,
 {
-    let uniforms = Unif::shader_input("uniforms");
+    let uniforms = UData::shader_input("uniforms");
 
     let (block_defs, sampler_defs) = {
         let mut uniform_visitor = UniformVisitor::default();
@@ -115,7 +115,7 @@ where
 
     let (vertex_defs, varying_outputs, vertex_shader_source) = {
         let input = || VertexInput {
-            vertex: Vert::shader_input("vertex_input"),
+            vertex: VData::shader_input("vertex_input"),
             vertex_id: value_arg("gl_VertexID"),
             instance_id: value_arg("gl_InstanceID"),
             _private: Private,
@@ -132,7 +132,13 @@ where
 
         let attributes = vertex_attributes
             .into_iter()
-            .map(|attribute_def| ("in".to_string(), attribute_def.name, attribute_def.ty))
+            .map(|attribute_def| {
+                (
+                    "in".to_string(),
+                    attribute_def.name,
+                    Type::BuiltIn(attribute_def.ty),
+                )
+            })
             .chain(
                 // TODO: Interpolation type.
                 varying_outputs
@@ -164,7 +170,7 @@ where
         (vertex_defs, varying_outputs, source)
     };
 
-    let uniforms = Unif::shader_input("uniforms");
+    let uniforms = UData::shader_input("uniforms");
 
     let fragment_shader_source = {
         let input = FragmentInput {
@@ -240,14 +246,11 @@ struct UniformVisitor {
 }
 
 impl<'a> UniformDataVisitor<'a, Logical> for UniformVisitor {
-    fn accept_sampler2d<S: Sample>(&mut self, path: &str, _: &Sampler2d<S>) {
+    fn accept_sampler2d(&mut self, path: &str, _: &Sampler2d) {
         // TODO: Allow user-specified sampler texture units.
         self.sampler_defs.push(UniformSamplerDef {
             name: path.to_string(),
-            ty: SamplerType::Sampler2d {
-                dimension: S::NUM_COMPONENTS,
-                ty: <S::Component as Numeric>::NUMERIC_TYPE,
-            },
+            ty: SamplerType::Sampler2d,
             texture_unit: self.sampler_defs.len(),
         })
     }
@@ -286,7 +289,7 @@ struct FragmentVisitor {
 }
 
 impl FragmentDataVisitor<Logical> for FragmentVisitor {
-    fn accept(&mut self, path: &str, output: &Vec4<f32>) {
+    fn accept(&mut self, path: &str, output: &Vec4) {
         self.outputs.push((path.to_string(), output.expr()));
     }
 }

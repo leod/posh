@@ -1,100 +1,88 @@
 use sealed::sealed;
 
 use crate::{
-    dag::{BaseType, NumericType, PrimitiveType, Type},
+    dag::BuiltInType,
     gl,
     program_def::{VertexAttributeDef, VertexInputRate},
-    sl::{Mat2, Mat3, Mat4, Object, Sample, Sampler2d, Scalar, Vec2, Vec3, Vec4},
+    sl::{self, Object},
     Logical,
 };
 
-use super::{
-    Block, FragmentData, FragmentDataVisitor, Primitive, UniformData, VertexData, VertexDataVisitor,
-};
+use super::{Block, FragmentData, FragmentDataVisitor, UniformData, VertexData, VertexDataVisitor};
 
 // Block
 
 #[sealed]
 impl super::BlockView for Logical {
-    type Bool = Scalar<bool>;
-    type F32 = Scalar<f32>;
-    type I32 = Scalar<i32>;
-    type U32 = Scalar<u32>;
-    type Vec2 = Vec2<f32>;
-    type Vec3 = Vec3<f32>;
-    type Vec4 = Vec4<f32>;
-    type Mat2 = Mat2;
-    type Mat3 = Mat3;
-    type Mat4 = Mat4;
+    type F32 = sl::F32;
+    type I32 = sl::I32;
+    type U32 = sl::U32;
+    type Bool = sl::Bool;
+    type Vec2 = sl::Vec2;
+    type Vec3 = sl::Vec3;
+    type Vec4 = sl::Vec4;
+    type Mat2 = sl::Mat2;
+    type Mat3 = sl::Mat3;
+    type Mat4 = sl::Mat4;
 }
 
-unsafe impl<T: Primitive> Block<Logical> for Scalar<T> {
-    type Physical = T;
-    type Logical = Self;
+macro_rules! impl_block_for_scalar {
+    ($scalar:ident) => {
+        unsafe impl Block<Logical> for sl::$scalar {
+            type Physical = sl::scalar_physical!($scalar);
+            type Logical = Self;
 
-    fn uniform_input(path: &str) -> Self {
-        <Self as Object>::from_arg(path)
-    }
+            fn uniform_input(path: &str) -> Self {
+                <Self as Object>::from_arg(path)
+            }
 
-    fn vertex_input(path: &str) -> Self {
-        if T::PRIMITIVE_TYPE != PrimitiveType::Bool {
-            <Self as Object>::from_arg(path)
-        } else {
-            Scalar::<u32>::from_arg(path).cast()
+            fn vertex_input(path: &str) -> Self {
+                // FIXME: Cast from u32 to bool!
+                <Self as Object>::from_arg(path)
+            }
+
+            fn vertex_attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
+                vec![VertexAttributeDef {
+                    name: path.to_string(),
+                    ty: BuiltInType::$scalar,
+                    offset: 0,
+                }]
+            }
         }
-    }
-
-    fn vertex_attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
-        vec![VertexAttributeDef {
-            name: path.to_string(),
-            ty: Type::Base(BaseType::Scalar(vertex_attribute_numeric_repr(
-                T::PRIMITIVE_TYPE,
-            ))),
-            offset: 0,
-        }]
-    }
+    };
 }
 
 macro_rules! impl_block_for_vec {
-    ($ty:ident) => {
-        unsafe impl<T: Primitive> Block<Logical> for $ty<T> {
+    ($vec:ident) => {
+        unsafe impl Block<Logical> for sl::$vec {
             type Logical = Self;
-            type Physical = T::$ty;
+            type Physical = glam::$vec;
 
             fn uniform_input(path: &str) -> Self {
                 <Self as Object>::from_arg(path)
             }
 
             fn vertex_input(path: &str) -> Self {
-                if T::PRIMITIVE_TYPE != PrimitiveType::Bool {
-                    <Self as Object>::from_arg(path)
-                } else {
-                    $ty::<u32>::from_arg(path).cast()
-                }
+                // FIXME: Cast from u32 to bool!
+                <Self as Object>::from_arg(path)
             }
 
             fn vertex_attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
                 vec![VertexAttributeDef {
                     name: path.to_string(),
-                    ty: Type::Base(BaseType::$ty(vertex_attribute_numeric_repr(
-                        T::PRIMITIVE_TYPE,
-                    ))),
+                    ty: <Self as Object>::ty().built_in_type().unwrap(),
                     offset: 0,
                 }]
             }
         }
     };
 }
-
-impl_block_for_vec!(Vec2);
-impl_block_for_vec!(Vec3);
-impl_block_for_vec!(Vec4);
 
 macro_rules! impl_block_for_mat {
-    ($ty:ident, $mint_ty:ident) => {
-        unsafe impl Block<Logical> for $ty {
+    ($mat:ident) => {
+        unsafe impl Block<Logical> for sl::$mat {
             type Logical = Self;
-            type Physical = mint::$mint_ty<f32>;
+            type Physical = glam::$mat;
 
             fn uniform_input(path: &str) -> Self {
                 <Self as Object>::from_arg(path)
@@ -107,7 +95,7 @@ macro_rules! impl_block_for_mat {
             fn vertex_attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
                 vec![VertexAttributeDef {
                     name: path.to_string(),
-                    ty: Type::Base(BaseType::$ty),
+                    ty: BuiltInType::$mat,
                     offset: 0,
                 }]
             }
@@ -115,26 +103,24 @@ macro_rules! impl_block_for_mat {
     };
 }
 
-impl_block_for_mat!(Mat2, ColumnMatrix2);
-impl_block_for_mat!(Mat3, ColumnMatrix3);
-impl_block_for_mat!(Mat4, ColumnMatrix4);
+impl_block_for_scalar!(F32);
+impl_block_for_scalar!(I32);
+impl_block_for_scalar!(U32);
+impl_block_for_scalar!(Bool);
 
-/// Returns the type that is used to specify a value of a given primitive type
-/// in vertex arrays.
-///
-/// This exists because OpenGL does not like `bool`s in attributes, but, for
-/// completeness, we want to be able to provide the same basic types in uniforms
-/// as in vertices. Among other things, this allows deriving both `Vertex` and
-/// `Uniform` for the same `struct`, which might be useful for supporting
-/// different instancing methods for the same data.
-fn vertex_attribute_numeric_repr(ty: PrimitiveType) -> PrimitiveType {
-    use PrimitiveType::*;
+impl_block_for_vec!(Vec2);
+impl_block_for_vec!(IVec2);
+impl_block_for_vec!(UVec2);
+impl_block_for_vec!(Vec3);
+impl_block_for_vec!(IVec3);
+impl_block_for_vec!(UVec3);
+impl_block_for_vec!(Vec4);
+impl_block_for_vec!(IVec4);
+impl_block_for_vec!(UVec4);
 
-    PrimitiveType::Numeric(match ty {
-        Numeric(ty) => ty,
-        Bool => NumericType::U32,
-    })
-}
+impl_block_for_mat!(Mat2);
+impl_block_for_mat!(Mat3);
+impl_block_for_mat!(Mat4);
 
 // VertexData
 
@@ -168,7 +154,7 @@ impl<B: Block<Logical>> super::VertexDataField<Logical> for B {
 #[sealed]
 impl super::UniformDataView for Logical {
     type Block<B: Block<Logical, Logical = B>> = B;
-    type Sampler2d<S: Sample> = Sampler2d<S>;
+    type Sampler2d = sl::Sampler2d;
     type Compose<R: UniformData<Logical>> = R;
 }
 
@@ -185,9 +171,9 @@ unsafe impl<B: Block<Logical, Logical = B>> UniformData<Logical> for B {
     }
 }
 
-unsafe impl<S: Sample> UniformData<Logical> for Sampler2d<S> {
+unsafe impl UniformData<Logical> for sl::Sampler2d {
     type Logical = Self;
-    type Physical = gl::Sampler2d<S>;
+    type Physical = gl::Sampler2d;
 
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformDataVisitor<'a, Logical>) {
         visitor.accept_sampler2d(path, self)
@@ -202,10 +188,10 @@ unsafe impl<S: Sample> UniformData<Logical> for Sampler2d<S> {
 
 #[sealed]
 impl super::FragmentDataView for Logical {
-    type Attachment = Vec4<f32>;
+    type Attachment = sl::Vec4;
 }
 
-unsafe impl FragmentData<Logical> for Vec4<f32> {
+unsafe impl FragmentData<Logical> for sl::Vec4 {
     type Logical = Self;
     type Physical = gl::Texture2d<gl::RgbaFormat>;
 

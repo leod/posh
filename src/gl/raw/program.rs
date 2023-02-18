@@ -62,12 +62,13 @@ impl Program {
                         );
                     }
 
-                    let attribute_info = VertexAttributeLayout::new(&attribute.ty);
+                    let attribute_info = VertexAttributeLayout::new(attribute.ty)
+                        .map_err(ProgramError::InvalidVertexAttribute)?;
 
                     // Some attributes (e.g. matrices) take up multiple
                     // locations. We only need to bind to the first location,
                     // though.
-                    index += attribute_info.num_locations;
+                    index += attribute_info.locations;
                 }
             }
         }
@@ -213,7 +214,7 @@ impl Program {
             gl.use_program(None);
         }
 
-        check_gl_error(&gl).unwrap();
+        check_gl_error(gl).unwrap();
     }
 }
 
