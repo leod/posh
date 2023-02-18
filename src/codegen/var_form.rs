@@ -14,7 +14,6 @@ use super::{
 #[derive(Default)]
 pub struct VarForm {
     var_exprs: Vec<SimplifiedExpr>,
-    expr_to_var: HashMap<ExprKey, VarId>,
     simplified_exprs: HashMap<ExprKey, SimplifiedExpr>,
     roots: Vec<ExprKey>,
 }
@@ -38,10 +37,14 @@ impl VarForm {
             if Self::should_have_var(count, expr) && Self::can_have_var(expr) {
                 let var_id = VarId(var_form.var_exprs.len());
 
-                //println!("{:?} {} = {}", var_id, expr.ty(), simplified_expr);
-
                 var_form.var_exprs.push(simplified_expr);
-                var_form.expr_to_var.insert(key, var_id);
+                var_form.simplified_exprs.insert(
+                    key,
+                    SimplifiedExpr::Var {
+                        id: var_id,
+                        ty: expr.ty(),
+                    },
+                );
             } else {
                 var_form.simplified_exprs.insert(key, simplified_expr);
             }
@@ -65,18 +68,7 @@ impl VarForm {
     }
 
     fn map_expr(&self, struct_registry: &StructRegistry, expr: Expr) -> SimplifiedExpr {
-        let map_succ = |succ: Rc<Expr>| {
-            let key = ExprKey::from(&succ);
-
-            if let Some(&var_id) = self.expr_to_var.get(&key) {
-                SimplifiedExpr::Var {
-                    id: var_id,
-                    ty: succ.ty(),
-                }
-            } else {
-                self.simplified_exprs[&key].clone()
-            }
-        };
+        let map_succ = |succ: Rc<Expr>| self.simplified_exprs[&ExprKey::from(&succ)].clone();
 
         match expr {
             Expr::Arg { name, ty } => SimplifiedExpr::Arg { name, ty },
