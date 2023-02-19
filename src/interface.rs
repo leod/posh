@@ -429,7 +429,7 @@ pub trait UniformDataVisitor<'a, V: UniformDataView> {
 
 // FragmentData
 
-/// A view fragment data attributes.
+/// A view of fragment data attributes.
 ///
 /// See [`FragmentData`] for more details.
 #[sealed]

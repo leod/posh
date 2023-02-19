@@ -30,9 +30,8 @@ impl Default for Camera<Physical> {
                 WIDTH as f32 / HEIGHT as f32,
                 1.0,
                 10.0,
-            )
-            .into(),
-            view: glam::Mat4::from_translation(glam::Vec3::new(0.0, 0.0, -3.0)).into(),
+            ),
+            view: glam::Mat4::from_translation(glam::Vec3::new(0.0, 0.0, -3.0)),
         }
     }
 }
@@ -74,10 +73,6 @@ fn vertex_shader(uniforms: Uniforms, vertex: Vertex) -> VaryingOutput<sl::Vec2> 
     }
 }
 
-fn fragment_shader(sampler: sl::Sampler2d, tex_coords: sl::Vec2) -> sl::Vec4 {
-    sampler.lookup(tex_coords)
-}
-
 // Host code
 
 struct Demo {
@@ -92,7 +87,7 @@ struct Demo {
 
 impl Demo {
     pub fn new(context: Context) -> Result<Self, Error> {
-        let program = context.create_program(vertex_shader, fragment_shader)?;
+        let program = context.create_program(vertex_shader, sl::Sampler2d::lookup)?;
         let camera = context.create_uniform_buffer(Camera::default(), BufferUsage::StaticDraw)?;
         let time = context.create_uniform_buffer(0.0, BufferUsage::StreamDraw)?;
         let vertex_array = context.create_simple_vertex_array(
