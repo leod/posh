@@ -88,8 +88,8 @@ where
 ///
 /// A vertex array binding provides vertex data for [draw
 /// calls](crate::gl::Program::draw). Vertex array bindings can be obtained with
-/// [`VertexArray::bind`](VertexArray::bind) or
-/// [`VertexArray::bind_range`](VertexArray::bind_range).
+/// [`VertexArray::bind`](VertexArray::binding) or
+/// [`VertexArray::bind_range`](VertexArray::range_binding).
 pub struct VertexArrayBinding<V> {
     pub(super) raw: raw::VertexArrayBinding,
     _vertex_buffers: Rc<V>,

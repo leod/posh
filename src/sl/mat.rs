@@ -10,14 +10,14 @@ use super::{
     Object, ToValue, Value, ValueNonArray, Vec2, Vec3, Vec4, F32,
 };
 
-/// A two-by-two matrix in the shading language.
+/// A two-by-two floating-point matrix.
 #[derive(Debug, Copy, Clone)]
 pub struct Mat2 {
     pub x_axis: Vec2,
     pub y_axis: Vec2,
 }
 
-/// A three-by-three matrix in the shading language.
+/// A three-by-three floating-point matrix.
 #[derive(Debug, Copy, Clone)]
 pub struct Mat3 {
     pub x_axis: Vec3,
@@ -25,7 +25,7 @@ pub struct Mat3 {
     pub z_axis: Vec3,
 }
 
-/// A four-by-four matrix in the shading language.
+/// A four-by-four floating-point matrix.
 #[derive(Debug, Copy, Clone)]
 pub struct Mat4 {
     pub x_axis: Vec4,
@@ -202,7 +202,7 @@ impl_mat!(Mat2, Vec2, x_axis, y_axis);
 impl_mat!(Mat3, Vec3, x_axis, y_axis, z_axis);
 impl_mat!(Mat4, Vec4, x_axis, y_axis, z_axis, w_axis);
 
-/// Constructs a [`Mat2`] column-by-column.
+/// Creates a two-by-two floating-point matrix from column vectors.
 pub fn mat2(x: impl ToValue<Output = Vec2>, y: impl ToValue<Output = Vec2>) -> Mat2 {
     Mat2 {
         x_axis: x.to_value(),
@@ -210,7 +210,7 @@ pub fn mat2(x: impl ToValue<Output = Vec2>, y: impl ToValue<Output = Vec2>) -> M
     }
 }
 
-/// Constructs a [`Mat3`] column-by-column.
+/// Creates a three-by-three floating-point matrix from column vectors.
 pub fn mat3(
     x: impl ToValue<Output = Vec3>,
     y: impl ToValue<Output = Vec3>,
@@ -223,7 +223,7 @@ pub fn mat3(
     }
 }
 
-/// Constructs a [`Mat4`] column-by-column.
+/// Creates a four-by-four floating-point matrix from column vectors.
 pub fn mat4(
     x: impl ToValue<Output = Vec4>,
     y: impl ToValue<Output = Vec4>,
