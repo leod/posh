@@ -11,17 +11,17 @@ use crate::{
     sl,
 };
 
-/// Tag for physical data as passed in draw calls.
+/// The graphics library's view of shader input and output data.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Physical;
 
-/// Tag for logical data as accessed in shaders.
+/// The shading language's view of shader input and output data.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Logical;
 
 // Block
 
-/// Types for fields of [`Block`] declarations.
+/// A view of block attributes.
 ///
 /// See [`Block`] for more details.
 #[sealed]
@@ -84,7 +84,7 @@ pub trait BlockView: Copy {
     type Mat4: Block<Self> + sl::ToValue<Output = sl::Mat4>;
 }
 
-/// Plain-old-data that can be passed to shaders.
+/// Plain-old vertex or uniform block data.
 ///
 /// Types that implement [`Block`] can be used as fields in types that implement
 /// [`VertexData`] or [`UniformData`]. This allows them to be passed to shaders
@@ -162,7 +162,7 @@ pub unsafe trait Block<V: BlockView>: sl::ToValue {
 
 // VertexData
 
-/// Provides types for fields of [`VertexData`] declarations.
+/// A view of vertex data attributes.
 ///
 /// See [`VertexData`] for more details.
 #[sealed]
@@ -274,7 +274,7 @@ pub trait VertexDataVisitor<'a, V: VertexDataView> {
 
 // UniformData
 
-/// Types for fields of [`UniformData`] declarations.
+/// A view of uniform data attributes.
 ///
 /// See [`UniformData`] for more details.
 #[sealed]
@@ -355,7 +355,7 @@ pub trait UniformDataVisitor<'a, V: UniformDataView> {
 
 // FragmentData
 
-/// Types for fields of [`FragmentData`] declarations.
+/// A view fragment data attributes.
 ///
 /// See [`FragmentData`] for more details.
 #[sealed]

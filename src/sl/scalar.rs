@@ -102,7 +102,7 @@ macro_rules! impl_numeric_ops {
 // Implements a `$scalar` value.
 macro_rules! impl_scalar {
     ($scalar:ident, $physical:ident) => {
-        #[doc = concat!("A ", scalar_name!($scalar), " in the shading language.")]
+        #[doc = concat!("A ", scalar_name!($scalar), " scalar.")]
         #[derive(Debug, Copy, Clone)]
         pub struct $scalar(Trace);
 

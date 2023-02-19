@@ -145,7 +145,7 @@ macro_rules! impl_ops {
 // Implements two-dimensional `$vec`.
 macro_rules! impl_vec2 {
     ($vec:ident, $vec_lower:ident, $scalar:ident, $extension:ident) => {
-        #[doc = concat!("A two-dimensional ", scalar_name!($scalar), " vector in the shading language.")]
+        #[doc = concat!("A two-dimensional ", scalar_name!($scalar), " vector.")]
         #[derive(Debug, Copy, Clone)]
         pub struct $vec {
             pub x: $scalar,
@@ -197,7 +197,7 @@ macro_rules! impl_vec2 {
 // Implements three-dimensional `$vec`.
 macro_rules! impl_vec3 {
     ($vec:ident, $vec_lower:ident, $scalar:ident, $extension:ident) => {
-        #[doc = concat!("A three-dimensional ", scalar_name!($scalar), " vector in the shading language.")]
+        #[doc = concat!("A three-dimensional ", scalar_name!($scalar), " vector.")]
         #[derive(Debug, Copy, Clone)]
         pub struct $vec {
             pub x: $scalar,
@@ -254,7 +254,7 @@ macro_rules! impl_vec3 {
 // Implements four-dimensional `$vec`.
 macro_rules! impl_vec4 {
     ($vec:ident, $vec_lower:ident, $scalar:ident) => {
-        #[doc = concat!("A four-dimensional ", scalar_name!($scalar), " vector in the shading language.")]
+        #[doc = concat!("A four-dimensional ", scalar_name!($scalar), " vector.")]
         #[derive(Debug, Copy, Clone)]
         pub struct $vec {
             pub x: $scalar,
@@ -283,7 +283,12 @@ macro_rules! impl_vec4 {
             pub fn splat(v: impl ToValue<Output = $scalar>) -> Self {
                 let v = v.to_value();
 
-                Self { x: v, y: v, z: v, w: v }
+                Self {
+                    x: v,
+                    y: v,
+                    z: v,
+                    w: v,
+                }
             }
         }
 
