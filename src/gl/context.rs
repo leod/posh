@@ -108,9 +108,9 @@ impl Context {
     }
 
     pub fn create_program<
+        UData,
         UDataVert,
         UDataFrag,
-        UData,
         VData,
         FData,
         Vary,
@@ -124,9 +124,9 @@ impl Context {
         fragment_shader: fn(UDataFrag, FragIn) -> FragOut,
     ) -> Result<Program<UData, VData, FData>, ProgramError>
     where
+        UData: UniformDataUnion<UDataVert, UDataFrag>,
         UDataVert: UniformData<Logical>,
         UDataFrag: UniformData<Logical>,
-        UData: UniformDataUnion<UDataVert, UDataFrag>,
         VData: VertexData<Logical>,
         FData: FragmentData<Logical>,
         Vary: Varying,

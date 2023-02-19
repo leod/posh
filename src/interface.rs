@@ -356,11 +356,11 @@ where
 }
 
 /// Non-empty uniform data.
-pub trait UniformDataNonEmpty: UniformData<Logical> {}
+pub trait UniformDataNonUnit: UniformData<Logical> {}
 
 unsafe impl<Lhs> UniformDataUnion<Lhs, ()> for Lhs
 where
-    Lhs: UniformDataNonEmpty,
+    Lhs: UniformDataNonUnit,
 {
     fn lhs(self) -> Lhs {
         self
@@ -373,7 +373,7 @@ where
 
 unsafe impl<Rhs> UniformDataUnion<(), Rhs> for Rhs
 where
-    Rhs: UniformDataNonEmpty,
+    Rhs: UniformDataNonUnit,
 {
     fn lhs(self) -> () {
         ()
@@ -396,7 +396,7 @@ unsafe impl UniformDataUnion<(), ()> for () {
 
 unsafe impl<U> UniformDataUnion<U, U> for U
 where
-    U: UniformDataNonEmpty,
+    U: UniformDataNonUnit,
 {
     fn lhs(self) -> U {
         self

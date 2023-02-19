@@ -58,8 +58,8 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             }
         }
 
-        // Implement `UniformDataNomEmpty` for the struct
-        impl #impl_generics_init ::posh::UniformDataNonEmpty for #ident #ty_generics_logical
+        // Implement `UniformDataNomUnit` for the struct
+        impl #impl_generics_init ::posh::UniformDataNonUnit for #ident #ty_generics_logical
         #where_clause_init
         {}
 
