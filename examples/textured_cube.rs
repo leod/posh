@@ -4,8 +4,8 @@ use image::{io::Reader as ImageReader, EncodableLayout};
 
 use posh::{
     gl::{
-        BufferUsage, Context, DefaultFramebuffer, DrawParams, Error, PrimitiveType, Program,
-        RgbaFormat, RgbaImage, Sampler2dParams, Texture2d, UniformBuffer, VertexArray,
+        BufferUsage, Context, DefaultFramebuffer, DrawParams, Error, Image, PrimitiveType, Program,
+        Sampler2dParams, Texture2d, UniformBuffer, VertexArray,
     },
     sl::{self, VaryingOutput},
     Block, BlockView, Logical, Physical, UniformData, UniformDataView,
@@ -77,11 +77,11 @@ fn vertex_shader(uniforms: Uniforms, vertex: Vertex) -> VaryingOutput<sl::Vec2> 
 
 struct Demo {
     context: Context,
-    program: Program<(Uniforms, sl::Sampler2d), Vertex>,
+    program: Program<(Uniforms, sl::Sampler2d<sl::Vec4>), Vertex>,
     camera: UniformBuffer<Camera>,
     time: UniformBuffer<sl::F32>,
     vertex_array: VertexArray<Vertex, u16>,
-    texture: Texture2d<RgbaFormat>,
+    texture: Texture2d<sl::Vec4>,
     start_time: Instant,
 }
 
@@ -100,10 +100,8 @@ impl Demo {
             .decode()
             .unwrap()
             .to_rgba8();
-        let texture = context.create_texture_2d_with_mipmap(RgbaImage::slice_u8(
-            image.dimensions(),
-            image.as_bytes(),
-        ))?;
+        let texture = context
+            .create_texture_2d_with_mipmap(Image::slice_u8(image.dimensions(), image.as_bytes()))?;
         let start_time = Instant::now();
 
         Ok(Self {

@@ -7,15 +7,15 @@ use crate::{
     sl::{
         transpile::{transpile_to_program_def, transpile_to_program_def_with_consts},
         transpile::{FromFragmentInput, FromVertexInput, IntoFragmentOutput, IntoVertexOutput},
-        ConstParams, Varying,
+        ConstParams, Sample, Varying,
     },
     Block, FragmentData, Logical, UniformData, UniformDataUnion, VertexData,
 };
 
 use super::{
     raw, BufferError, BufferUsage, Caps, Element, ElementBuffer, ElementOrUnit, Error, Image,
-    ImageFormat, Program, ProgramError, Texture2d, TextureError, UniformBuffer, VertexArray,
-    VertexArrayError, VertexBuffer,
+    Program, ProgramError, Texture2d, TextureError, UniformBuffer, VertexArray, VertexArrayError,
+    VertexBuffer,
 };
 
 /// The graphics context, which is used for creating GPU objects.
@@ -193,19 +193,19 @@ impl Context {
         }
     */
 
-    pub fn create_texture_2d<Format: ImageFormat>(
+    pub fn create_texture_2d<S: Sample>(
         &self,
-        image: Format::Image<'_>,
-    ) -> Result<Texture2d<Format>, TextureError> {
+        image: Image<'_, S>,
+    ) -> Result<Texture2d<S>, TextureError> {
         let raw = self.raw.create_texture_2d(image.raw().clone())?;
 
         Ok(Texture2d::from_raw(raw))
     }
 
-    pub fn create_texture_2d_with_mipmap<Format: ImageFormat>(
+    pub fn create_texture_2d_with_mipmap<S: Sample>(
         &self,
-        image: Format::Image<'_>,
-    ) -> Result<Texture2d<Format>, TextureError> {
+        image: Image<'_, S>,
+    ) -> Result<Texture2d<S>, TextureError> {
         let raw = self
             .raw
             .create_texture_2d_with_mipmap(image.raw().clone())?;

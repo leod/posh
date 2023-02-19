@@ -11,7 +11,7 @@ mod uniform_buffer;
 mod vertex_array;
 mod vertex_buffer;
 
-pub use self::image::{Image, ImageFormat, RgbaFormat, RgbaImage};
+pub use self::image::Image;
 pub use context::Context;
 pub use element_buffer::{Element, ElementBuffer, ElementOrUnit, ElementSource};
 pub use program::Program;

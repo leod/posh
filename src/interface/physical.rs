@@ -1,9 +1,9 @@
 use sealed::sealed;
 
 use crate::{
-    gl::{RgbaFormat, Sampler2d, Texture2d, UniformBufferBinding, VertexBuffer},
+    gl::{Sampler2d, Texture2d, UniformBufferBinding, VertexBuffer},
     internal::join_ident_path,
-    sl::{self, program_def::VertexInputRate},
+    sl::{self, program_def::VertexInputRate, Sample},
 };
 
 use super::{
@@ -97,7 +97,7 @@ impl<B: Block<Logical>> super::VertexDataField<Physical> for VertexBuffer<B> {}
 #[sealed]
 impl super::UniformDataView for Physical {
     type Block<B: Block<Logical, Logical = B>> = UniformBufferBinding<B>;
-    type Sampler2d = Sampler2d;
+    type Sampler2d<S: Sample> = Sampler2d<S>;
     type Compose<R: UniformData<Logical>> = R::Physical;
 }
 
@@ -110,9 +110,9 @@ unsafe impl<U: Block<Logical, Logical = U>> UniformData<Physical> for UniformBuf
     }
 }
 
-unsafe impl UniformData<Physical> for Sampler2d {
+unsafe impl<S: Sample> UniformData<Physical> for Sampler2d<S> {
     type Physical = Self;
-    type Logical = sl::Sampler2d;
+    type Logical = sl::Sampler2d<S>;
 
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformDataVisitor<'a, Physical>) {
         visitor.accept_sampler2d(path, self);
@@ -137,10 +137,10 @@ where
 
 #[sealed]
 impl super::FragmentDataView for Physical {
-    type Attachment = Texture2d<RgbaFormat>;
+    type Attachment = Texture2d<sl::Vec4>;
 }
 
-unsafe impl FragmentData<Physical> for Texture2d<RgbaFormat> {
+unsafe impl FragmentData<Physical> for Texture2d<sl::Vec4> {
     type Physical = Self;
     type Logical = sl::Vec4;
 

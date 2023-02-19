@@ -20,8 +20,8 @@ use super::{
         ProgramDef, UniformBlockDef, UniformSamplerDef, VertexAttributeDef, VertexDef,
         VertexInputRate,
     },
-    ConstParams, FragmentInput, FragmentOutput, Object, Private, Sampler2d, Varying, VaryingOutput,
-    Vec4, VertexInput, VertexOutput,
+    ConstParams, FragmentInput, FragmentOutput, Object, Private, Sample, Sampler2d, Varying,
+    VaryingOutput, Vec4, VertexInput, VertexOutput,
 };
 
 /// Types that can be used as vertex input for a vertex shader.
@@ -383,7 +383,7 @@ struct UniformVisitor {
 }
 
 impl<'a> UniformDataVisitor<'a, Logical> for UniformVisitor {
-    fn accept_sampler2d(&mut self, path: &str, _: &Sampler2d) {
+    fn accept_sampler2d<S: Sample>(&mut self, path: &str, _: &Sampler2d<S>) {
         // TODO: Allow user-specified sampler texture units.
         self.sampler_defs.push(UniformSamplerDef {
             name: path.to_string(),
