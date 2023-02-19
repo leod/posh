@@ -1,19 +1,20 @@
 use std::{marker::PhantomData, rc::Rc};
 
-use super::{
-    raw::{self, Sampler2dParams},
-    ImageFormat,
-};
+use crate::{gl::raw::ImageInternalFormat, sl::Sample};
+
+use super::raw::{self, Sampler2dParams};
 
 #[derive(Clone)]
-pub struct Texture2d<Format: ImageFormat> {
+pub struct Texture2d<S> {
     raw: Rc<raw::Texture2d>,
-    _phantom: PhantomData<Format>,
+    _phantom: PhantomData<S>,
 }
 
-impl<Format: ImageFormat> Texture2d<Format> {
+impl<S: Sample> Texture2d<S> {
     pub(super) fn from_raw(raw: raw::Texture2d) -> Self {
-        assert!(Format::ALLOWED_INTERNAL_FORMATS.contains(&raw.internal_format()));
+        use ImageInternalFormat::*;
+
+        assert!([RgbaU8, SrgbU8AlphaU8, RgbaI8Snorm, RgbaF32].contains(&raw.internal_format()));
 
         Self {
             raw: Rc::new(raw),
@@ -21,13 +22,15 @@ impl<Format: ImageFormat> Texture2d<Format> {
         }
     }
 
-    pub fn binding(&self, params: Sampler2dParams) -> Sampler2d {
+    pub fn binding(&self, params: Sampler2dParams) -> Sampler2d<S> {
         Sampler2d {
             raw: self.raw.sampler(params),
+            _phantom: PhantomData,
         }
     }
 }
 
-pub struct Sampler2d {
+pub struct Sampler2d<S> {
     pub(super) raw: raw::Sampler2d,
+    _phantom: PhantomData<S>,
 }

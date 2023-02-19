@@ -1,8 +1,9 @@
 use std::{marker::PhantomData, rc::Rc};
 
 use crate::{
-    interface::UniformDataVisitor, sl, Block, FragmentData, Logical, Physical, UniformData,
-    VertexData,
+    interface::UniformDataVisitor,
+    sl::{self, Sample},
+    Block, FragmentData, Logical, Physical, UniformData, VertexData,
 };
 
 use super::{raw, DrawParams, Sampler2d, Surface, UniformBufferBinding, VertexArrayBinding};
@@ -61,7 +62,7 @@ struct UniformVisitor<'a> {
 }
 
 impl<'a> UniformDataVisitor<'a, Physical> for UniformVisitor<'a> {
-    fn accept_sampler2d(&mut self, path: &str, sampler: &Sampler2d) {
+    fn accept_sampler2d<S: Sample>(&mut self, path: &str, sampler: &Sampler2d<S>) {
         self.raw_samplers
             .push(raw::Sampler::Sampler2d(sampler.raw.clone()))
     }

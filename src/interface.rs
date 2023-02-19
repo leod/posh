@@ -7,6 +7,7 @@ use sealed::sealed;
 use crate::sl::{
     self,
     program_def::{VertexAttributeDef, VertexInputRate},
+    Sample,
 };
 
 /// The graphics library's view of shader input and output data.
@@ -281,7 +282,7 @@ pub trait UniformDataView: Copy {
     type Block<U: Block<Logical, Logical = U>>: UniformData<Self>;
 
     /// A two-dimensional uniform sampler field.
-    type Sampler2d: UniformData<Self>;
+    type Sampler2d<S: Sample>: UniformData<Self>;
 
     /// A nested uniform interface field.
     type Compose<R: UniformData<Logical>>: UniformData<Self>;
@@ -424,7 +425,7 @@ where
 #[doc(hidden)]
 pub trait UniformDataVisitor<'a, V: UniformDataView> {
     fn accept_block<U: Block<Logical, Logical = U>>(&mut self, path: &str, block: &'a V::Block<U>);
-    fn accept_sampler2d(&mut self, path: &str, sampler: &'a V::Sampler2d);
+    fn accept_sampler2d<S: Sample>(&mut self, path: &str, sampler: &'a V::Sampler2d<S>);
 }
 
 // FragmentData

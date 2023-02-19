@@ -7,13 +7,13 @@ use crate::{
         self,
         dag::BuiltInType,
         program_def::{VertexAttributeDef, VertexInputRate},
-        Object,
+        Object, Sample,
     },
 };
 
 use super::{
-    Block, FragmentData, FragmentDataVisitor, Logical, UniformData, UniformDataNonUnit,
-    UniformDataUnion, VertexData, VertexDataVisitor,
+    Block, FragmentData, FragmentDataVisitor, Logical, UniformData, UniformDataNonUnit, VertexData,
+    VertexDataVisitor,
 };
 
 // Block
@@ -160,7 +160,7 @@ impl<B: Block<Logical>> super::VertexDataField<Logical> for B {
 #[sealed]
 impl super::UniformDataView for Logical {
     type Block<B: Block<Logical, Logical = B>> = B;
-    type Sampler2d = sl::Sampler2d;
+    type Sampler2d<S: Sample> = sl::Sampler2d<S>;
     type Compose<R: UniformData<Logical>> = R;
 }
 
@@ -179,9 +179,9 @@ unsafe impl<B: Block<Logical, Logical = B>> UniformData<Logical> for B {
 
 impl<B: Block<Logical, Logical = B>> UniformDataNonUnit for B {}
 
-unsafe impl UniformData<Logical> for sl::Sampler2d {
+unsafe impl<S: Sample> UniformData<Logical> for sl::Sampler2d<S> {
     type Logical = Self;
-    type Physical = gl::Sampler2d;
+    type Physical = gl::Sampler2d<S>;
 
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformDataVisitor<'a, Logical>) {
         visitor.accept_sampler2d(path, self)
@@ -192,7 +192,7 @@ unsafe impl UniformData<Logical> for sl::Sampler2d {
     }
 }
 
-impl UniformDataNonUnit for sl::Sampler2d {}
+impl<S: Sample> UniformDataNonUnit for sl::Sampler2d<S> {}
 
 unsafe impl<U, V> UniformData<Logical> for (U, V)
 where
@@ -231,7 +231,7 @@ impl super::FragmentDataView for Logical {
 
 unsafe impl FragmentData<Logical> for sl::Vec4 {
     type Logical = Self;
-    type Physical = gl::Texture2d<gl::RgbaFormat>;
+    type Physical = gl::Texture2d<sl::Vec4>;
 
     fn visit(&self, path: &str, visitor: &mut impl FragmentDataVisitor<Logical>) {
         visitor.accept(path, self);

@@ -10,7 +10,7 @@ mod texture;
 mod vertex_array;
 mod vertex_layout;
 
-pub use self::image::{Image, ImageFormat, ImageInternalFormat, ImageType};
+pub use self::image::{Image, ImageComponentType, ImageFormat, ImageInternalFormat};
 pub use buffer::{Buffer, BufferUsage};
 pub use caps::Caps;
 pub use context::Context;
