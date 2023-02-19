@@ -3,12 +3,11 @@ use std::{
     rc::Rc,
 };
 
-use crate::dag::{Expr, Type};
+use crate::sl::dag::{Expr, Type};
 
 use super::{
-    simplified_expr::{SimplifiedExpr, VarId},
+    simplified_expr::{ExprKey, SimplifiedExpr, VarId},
     struct_registry::StructRegistry,
-    ExprKey,
 };
 
 #[derive(Default)]

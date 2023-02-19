@@ -1,8 +1,7 @@
 use std::rc::Rc;
 
-use crate::dag::{Expr, StructType, Type};
-
 use super::{
+    dag::{Expr, StructType, Type},
     primitives::{field, simplify_struct_literal, value_arg},
     unique_struct_type, Object, Struct, ToValue, Value, ValueNonArray,
 };

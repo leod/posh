@@ -1,14 +1,12 @@
 mod logical;
 mod physical;
-#[cfg(tests)]
-mod tests;
 
 use crevice::std140::AsStd140;
 use sealed::sealed;
 
-use crate::{
+use crate::sl::{
+    self,
     program_def::{VertexAttributeDef, VertexInputRate},
-    sl,
 };
 
 /// The graphics library's view of shader input and output data.

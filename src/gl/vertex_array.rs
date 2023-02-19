@@ -2,7 +2,7 @@ use std::{marker::PhantomData, ops::Range, rc::Rc};
 
 use crate::{
     internal::VertexDataVisitor,
-    program_def::{VertexDef, VertexInputRate},
+    sl::program_def::{VertexDef, VertexInputRate},
     Block, Logical, Physical, VertexData,
 };
 

@@ -4,7 +4,7 @@ use glow::HasContext;
 
 use crate::{
     gl::ProgramError,
-    program_def::{ProgramDef, UniformSamplerDef},
+    sl::program_def::{ProgramDef, UniformSamplerDef},
 };
 
 use super::{

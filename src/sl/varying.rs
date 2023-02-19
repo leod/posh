@@ -1,8 +1,6 @@
 use std::rc::Rc;
 
-use crate::dag::Expr;
-
-use super::{primitives::value_arg, Object, Value, Vec2, Vec4};
+use super::{dag::Expr, primitives::value_arg, Object, Value, Vec2, Vec4};
 
 /// Data passed from a vertex stage to a fragment stage.
 ///

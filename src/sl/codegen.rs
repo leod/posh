@@ -1,18 +1,23 @@
+mod scope_form;
+mod simplified_expr;
+mod struct_registry;
+mod var_form;
+
 use std::{
     fmt::{Display, Formatter, Result, Write},
     rc::Rc,
 };
 
-use crate::{
-    dag::{Expr, Type},
-    program_def::{UniformBlockDef, UniformSamplerDef},
-};
-
-use super::{
+use self::{
     scope_form::{Scope, ScopeForm, VarInit},
     simplified_expr::VarId,
     struct_registry::StructRegistry,
     var_form::VarForm,
+};
+
+use super::{
+    dag::{Expr, Type},
+    program_def::{UniformBlockDef, UniformSamplerDef},
 };
 
 #[derive(Debug, Clone)]

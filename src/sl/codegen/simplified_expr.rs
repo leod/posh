@@ -1,6 +1,18 @@
-use std::fmt::{Display, Formatter, Result, Write};
+use std::{
+    fmt::{Display, Formatter, Result, Write},
+    rc::Rc,
+};
 
-use crate::dag::{BinaryOp, BuiltInType, Type};
+use crate::sl::dag::{BinaryOp, BuiltInType, Expr, Type};
+
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub struct ExprKey(*const Expr);
+
+impl<'a> From<&'a Rc<Expr>> for ExprKey {
+    fn from(value: &'a Rc<Expr>) -> Self {
+        ExprKey(&**value as *const _)
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct VarId(pub usize);

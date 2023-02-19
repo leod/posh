@@ -1,10 +1,13 @@
 use sealed::sealed;
 
 use crate::{
-    dag::BuiltInType,
     gl,
-    program_def::{VertexAttributeDef, VertexInputRate},
-    sl::{self, Object},
+    sl::{
+        self,
+        dag::BuiltInType,
+        program_def::{VertexAttributeDef, VertexInputRate},
+        Object,
+    },
     Logical,
 };
 

@@ -2,8 +2,8 @@ use sealed::sealed;
 
 use crate::{
     gl::{RgbaFormat, Sampler2d, Texture2d, UniformBufferBinding, VertexBuffer},
-    program_def::VertexInputRate,
-    sl, Logical, Physical,
+    sl::{self, program_def::VertexInputRate},
+    Logical, Physical,
 };
 
 use super::{Block, FragmentData, FragmentDataVisitor, UniformData, VertexData, VertexDataVisitor};

@@ -7,7 +7,7 @@ use crate::{
         raw::vertex_layout::{VertexAttributeLayout, VertexAttributeType},
         VertexArrayError,
     },
-    program_def::{VertexDef, VertexInputRate},
+    sl::program_def::{VertexDef, VertexInputRate},
 };
 
 use super::{buffer::BufferShared, error::check_gl_error, Buffer};

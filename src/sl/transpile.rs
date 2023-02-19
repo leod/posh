@@ -1,31 +1,146 @@
+//! Transpile a typed program to GLSL source code.
+//!
+//! This is exposed only in order to make the internally generated source code
+//! more transparent. It is typically not necessary to use this module.
+
 use std::{iter::once, rc::Rc};
 
 use crevice::std140::AsStd140;
 
 use crate::{
-    codegen::glsl,
-    dag::{Expr, SamplerType, Type},
     interface::{FragmentDataVisitor, UniformDataVisitor, VertexDataVisitor},
+    Block, FragmentData, Logical, UniformData, VertexData,
+};
+
+use super::{
+    codegen,
+    dag::{Expr, SamplerType, Type},
+    primitives::value_arg,
     program_def::{
         ProgramDef, UniformBlockDef, UniformSamplerDef, VertexAttributeDef, VertexDef,
         VertexInputRate,
     },
-    sl::{
-        ConstInput, FragmentInput, FromFragmentInput, FromVertexInput, IntoFragmentOutput,
-        IntoVertexOutput, Object, Private, VertexInput,
-    },
-    Block, FragmentData, Logical, UniformData, VertexData,
+    ConstParams, FragmentInput, FragmentOutput, Object, Private, Sampler2d, Varying, VaryingOutput,
+    Vec4, VertexInput, VertexOutput,
 };
 
-use crate::sl::{primitives::value_arg, Sampler2d, Varying, Vec4};
+/// Types that can be used as vertex input for a vertex shader.
+pub trait FromVertexInput {
+    type Vert: VertexData<Logical>;
 
-/// Compiles a vertex shader and a fragment shader into a type-erased program
-/// definition.
+    fn from(input: VertexInput<Self::Vert>) -> Self;
+}
+
+impl<VData: VertexData<Logical>> FromVertexInput for VertexInput<VData> {
+    type Vert = VData;
+
+    fn from(input: Self) -> Self {
+        input
+    }
+}
+
+impl<Vert: VertexData<Logical>> FromVertexInput for Vert {
+    type Vert = Self;
+
+    fn from(input: VertexInput<Self>) -> Self {
+        input.vertex
+    }
+}
+
+/// Types that can be used as vertex output for a vertex shader.
+pub trait IntoVertexOutput {
+    type Vary: Varying;
+
+    fn into(self) -> VertexOutput<Self::Vary>;
+}
+
+impl<Vary: Varying> IntoVertexOutput for VertexOutput<Vary> {
+    type Vary = Vary;
+
+    fn into(self) -> Self {
+        self
+    }
+}
+
+impl<Vary: Varying> IntoVertexOutput for VaryingOutput<Vary> {
+    type Vary = Vary;
+
+    fn into(self) -> VertexOutput<Vary> {
+        VertexOutput {
+            position: self.position,
+            varying: self.varying,
+            point_size: None,
+        }
+    }
+}
+
+impl IntoVertexOutput for Vec4 {
+    type Vary = ();
+
+    fn into(self) -> VertexOutput<()> {
+        VertexOutput {
+            varying: (),
+            position: self,
+            point_size: None,
+        }
+    }
+}
+
+/// Types that can be used as fragment input for a fragment shader.
+pub trait FromFragmentInput {
+    type Vary: Varying;
+
+    fn from(input: FragmentInput<Self::Vary>) -> Self;
+}
+
+impl<Vary: Varying> FromFragmentInput for FragmentInput<Vary> {
+    type Vary = Vary;
+
+    fn from(input: Self) -> Self {
+        input
+    }
+}
+
+impl<Vary: Varying> FromFragmentInput for Vary {
+    type Vary = Self;
+
+    fn from(input: FragmentInput<Self>) -> Self {
+        input.varying
+    }
+}
+
+/// Types that can be used as fragment output for a fragment shader.
+pub trait IntoFragmentOutput {
+    type Frag: FragmentData<Logical>;
+
+    fn into(self) -> FragmentOutput<Self::Frag>;
+}
+
+impl<Frag: FragmentData<Logical>> IntoFragmentOutput for FragmentOutput<Frag> {
+    type Frag = Frag;
+
+    fn into(self) -> Self {
+        self
+    }
+}
+
+impl<Frag: FragmentData<Logical>> IntoFragmentOutput for Frag {
+    type Frag = Self;
+
+    fn into(self) -> FragmentOutput<Self> {
+        FragmentOutput {
+            fragment: self,
+            fragment_depth: None,
+        }
+    }
+}
+
+/// Transpiles a vertex shader and a fragment shader to GLSL source code.
 ///
 /// This is used internally by `posh` in order to create
 /// [`Program`](crate::gl::Program)s. It is exposed for the purpose of
 /// inspecting generated shader source code.
-pub fn compile_to_program_def<UData, VData, FData, Vary, VertIn, VertOut, FragIn, FragOut>(
+pub fn transpile_to_program_def<UData, VData, FData, Vary, VertIn, VertOut, FragIn, FragOut>(
     vertex_shader: fn(UData, VertIn) -> VertOut,
     fragment_shader: fn(UData, FragIn) -> FragOut,
 ) -> ProgramDef
@@ -39,17 +154,18 @@ where
     FragIn: FromFragmentInput<Vary = Vary>,
     FragOut: IntoFragmentOutput<Frag = FData>,
 {
-    compile_to_program_def_with_consts_impl(
+    transpile_to_program_def_with_consts_impl(
         (),
         |(), uniforms, input| vertex_shader(uniforms, input),
         |(), uniforms, input| fragment_shader(uniforms, input),
     )
 }
 
-/// Compiles a vertex shader and a fragment shader with constant input.
+/// Transpiles a vertex shader and a fragment shader with constant input to GLSL
+/// source code.
 ///
-/// See also [`compile_to_program_def`].
-pub fn compile_to_program_def_with_consts<
+/// See also [`transpile_to_program_def`].
+pub fn transpile_to_program_def_with_consts<
     Consts,
     UData,
     VData,
@@ -65,7 +181,7 @@ pub fn compile_to_program_def_with_consts<
     fragment_shader: fn(Consts, UData, FragIn) -> FragOut,
 ) -> ProgramDef
 where
-    Consts: ConstInput,
+    Consts: ConstParams,
     UData: UniformData<Logical>,
     VData: VertexData<Logical>,
     FData: FragmentData<Logical>,
@@ -75,10 +191,10 @@ where
     FragIn: FromFragmentInput<Vary = Vary>,
     FragOut: IntoFragmentOutput<Frag = FData>,
 {
-    compile_to_program_def_with_consts_impl(consts, vertex_shader, fragment_shader)
+    transpile_to_program_def_with_consts_impl(consts, vertex_shader, fragment_shader)
 }
 
-fn compile_to_program_def_with_consts_impl<
+fn transpile_to_program_def_with_consts_impl<
     Consts,
     UData,
     VData,
@@ -94,7 +210,7 @@ fn compile_to_program_def_with_consts_impl<
     fragment_shader: impl FnOnce(Consts, UData, FragIn) -> FragOut,
 ) -> ProgramDef
 where
-    Consts: ConstInput,
+    Consts: ConstParams,
     UData: UniformData<Logical>,
     VData: VertexData<Logical>,
     FData: FragmentData<Logical>,
@@ -158,7 +274,7 @@ where
             );
 
         let mut source = String::new();
-        glsl::write_shader_stage(
+        codegen::write_shader_stage(
             &mut source,
             &block_defs,
             &sampler_defs,
@@ -218,7 +334,7 @@ where
             );
 
         let mut source = String::new();
-        glsl::write_shader_stage(
+        codegen::write_shader_stage(
             &mut source,
             &block_defs,
             &sampler_defs,

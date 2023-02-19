@@ -1,8 +1,9 @@
 use std::rc::Rc;
 
-use crate::dag::{BinaryOp, Expr, FuncDef, StructType, Type};
-
-use super::{Object, ToValue, Value};
+use super::{
+    dag::{BinaryOp, Expr, FuncDef, StructType, Type},
+    Object, ToValue, Value,
+};
 
 pub(crate) fn cast<U, V>(u: impl ToValue<Output = U>) -> V
 where
