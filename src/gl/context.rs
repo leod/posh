@@ -4,10 +4,10 @@ use crevice::std140::AsStd140;
 use glow::HasContext;
 
 use crate::{
-    compile::{compile_to_program_def, compile_to_program_def_with_consts},
     sl::{
-        ConstInput, FromFragmentInput, FromVertexInput, IntoFragmentOutput, IntoVertexOutput,
-        Varying,
+        transpile::{transpile_to_program_def, transpile_to_program_def_with_consts},
+        transpile::{FromFragmentInput, FromVertexInput, IntoFragmentOutput, IntoVertexOutput},
+        ConstParams, Varying,
     },
     Block, FragmentData, Logical, UniformData, VertexData,
 };
@@ -122,7 +122,7 @@ impl Context {
         FragIn: FromFragmentInput<Vary = Vary>,
         FragOut: IntoFragmentOutput<Frag = FData>,
     {
-        let program_def = compile_to_program_def(vertex_shader, fragment_shader);
+        let program_def = transpile_to_program_def(vertex_shader, fragment_shader);
 
         println!(
             "{}\n==================={}",
@@ -151,7 +151,7 @@ impl Context {
         fragment_shader: fn(Consts, UData, FragIn) -> FragOut,
     ) -> Result<Program<UData, VData, FData>, ProgramError>
     where
-        Consts: ConstInput,
+        Consts: ConstParams,
         UData: UniformData<Logical, Logical = UData>,
         VData: VertexData<Logical, Logical = VData>,
         FData: FragmentData<Logical, Logical = FData>,
@@ -162,7 +162,7 @@ impl Context {
         FragOut: IntoFragmentOutput<Frag = FData>,
     {
         let program_def =
-            compile_to_program_def_with_consts(consts, vertex_shader, fragment_shader);
+            transpile_to_program_def_with_consts(consts, vertex_shader, fragment_shader);
 
         println!(
             "{}\n==================={}",

@@ -202,7 +202,8 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                 }
             }
 
-            fn vertex_attribute_defs(path: &str) -> Vec<::posh::util::VertexAttributeDef> {
+            fn vertex_attribute_defs(path: &str) -> Vec<::posh::sl::program_def::VertexAttributeDef>
+            {
                 let mut result = Vec::new();
 
                 // Passing this type to `offset_of` directly didn't work for me.
@@ -224,7 +225,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                     );
 
                     for attr in attrs {
-                        result.push(::posh::util::VertexAttributeDef {
+                        result.push(::posh::sl::program_def::VertexAttributeDef {
                             offset: attr.offset + offset,
                             ..attr
                         });

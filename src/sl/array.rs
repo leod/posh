@@ -1,8 +1,10 @@
 use std::{marker::PhantomData, rc::Rc};
 
-use crate::dag::{Expr, Trace, Type};
-
-use super::{primitives::value_arg, Object, ToValue, Value, ValueNonArray, U32};
+use super::{
+    dag::{Expr, Trace, Type},
+    primitives::value_arg,
+    Object, ToValue, Value, ValueNonArray, U32,
+};
 
 /// An array value in the shading language.
 #[derive(Debug, Copy, Clone)]

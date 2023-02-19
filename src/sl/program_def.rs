@@ -1,4 +1,9 @@
-use crate::dag::{BuiltInType, SamplerType, Type};
+//! Definitions for generated GLSL source code.
+//!
+//! This is exposed only in order to make the internally generated source code
+//! more transparent. It is typically not necessary to use this module.
+
+use super::dag::{BuiltInType, SamplerType, Type};
 
 /// Uniform input definition.
 #[derive(Debug, Clone)]
@@ -50,8 +55,8 @@ pub struct VertexDef {
 /// Type-erased definition of a program.
 ///
 /// This is exposed for the purpose of inspecting the generated shader code. See
-/// [`crate::util::compile_to_program_def`] for how to construct a type-erased
-/// [`ProgramDef`] from typed shader definitions.
+/// [`crate::sl::transpile::transpile_to_program_def`] for how to construct a
+/// type-erased [`ProgramDef`] from typed shader definitions.
 #[derive(Debug, Clone, Default)]
 pub struct ProgramDef {
     /// Uniforms that the program needs.

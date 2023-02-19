@@ -30,7 +30,6 @@ pub enum Expr {
         value: String,
         ty: BuiltInType,
     },
-    // TOOD: Rename to `Construct`
     StructLiteral {
         args: Vec<Rc<Expr>>,
         ty: Rc<StructType>,

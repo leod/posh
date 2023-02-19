@@ -3,9 +3,9 @@ use std::{
     rc::Rc,
 };
 
-use crate::dag::{Expr, StructType, Type};
+use crate::sl::dag::{Expr, StructType, Type};
 
-use super::ExprKey;
+use super::simplified_expr::ExprKey;
 
 type StructId = usize;
 

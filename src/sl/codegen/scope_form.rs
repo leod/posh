@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::dag::Type;
+use crate::sl::dag::Type;
 
 use super::{
     simplified_expr::{SimplifiedExpr, VarId},

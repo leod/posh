@@ -3,9 +3,8 @@ use std::{
     rc::Rc,
 };
 
-use crate::dag::{BinaryOp, BuiltInType, Expr, Type};
-
 use super::{
+    dag::{BinaryOp, BuiltInType, Expr, Type},
     primitives::{binary, common_field_base, field, value_arg},
     Bool, Object, ToValue, Value, ValueNonArray, F32, I32, U32,
 };

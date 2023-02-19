@@ -4,10 +4,10 @@ use std::{
 };
 
 use super::{
+    dag::{BinaryOp, Expr, Trace, Type},
     primitives::{binary, value_arg},
     Object, ToValue, Value, ValueNonArray,
 };
-use crate::dag::{BinaryOp, Expr, Trace, Type};
 
 // Maps from logical scalar type to physical scalar type.
 macro_rules! scalar_physical {
@@ -30,16 +30,16 @@ pub(crate) use scalar_physical;
 // The built-in type of a scalar.
 macro_rules! scalar_built_in_type {
     (F32) => {
-        crate::dag::BuiltInType::F32
+        super::dag::BuiltInType::F32
     };
     (U32) => {
-        crate::dag::BuiltInType::I32
+        super::dag::BuiltInType::I32
     };
     (I32) => {
-        crate::dag::BuiltInType::U32
+        super::dag::BuiltInType::U32
     };
     (Bool) => {
-        crate::dag::BuiltInType::Bool
+        super::dag::BuiltInType::Bool
     };
 }
 

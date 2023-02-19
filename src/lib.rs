@@ -1,8 +1,4 @@
-mod codegen;
-mod compile;
-mod dag;
 mod interface;
-mod program_def;
 
 pub mod gl;
 #[macro_use]
@@ -17,17 +13,6 @@ pub use posh_derive::{Block, UniformData, VertexData};
 
 pub use crevice;
 
-/// Utilities.
-pub mod util {
-    pub use super::{
-        compile::{compile_to_program_def, compile_to_program_def_with_consts},
-        program_def::{
-            ProgramDef, UniformBlockDef, UniformSamplerDef, VertexAttributeDef, VertexDef,
-            VertexInputRate,
-        },
-    };
-}
-
 // Only re-exported for `posh-derive`.
 // FIXME: Use `crevice`'s re-export.
 #[doc(hidden)]
@@ -37,9 +22,9 @@ pub use bytemuck;
 #[doc(hidden)]
 pub mod internal {
     pub use super::{
-        dag::{Expr, StructType, Type},
         interface::{UniformDataVisitor, VertexDataField, VertexDataVisitor},
         sl::{
+            dag::{Expr, StructType, Type},
             primitives::{field, simplify_struct_literal, value_arg},
             unique_struct_type,
         },

@@ -1,6 +1,6 @@
 use std::mem::size_of;
 
-use crate::dag::BuiltInType;
+use crate::sl::dag::BuiltInType;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum VertexAttributeType {

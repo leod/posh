@@ -9,27 +9,30 @@ mod scalar;
 mod array;
 mod mat;
 mod sampler;
-mod shader;
+mod sig;
 mod tuple;
 mod varying;
 mod vec;
 
+pub(crate) mod codegen;
 pub(crate) mod primitives;
+
+pub mod dag;
+pub mod program_def;
+pub mod transpile;
 
 use std::{collections::BTreeMap, rc::Rc};
 
-use super::dag::{Expr, StructType, Type};
+use dag::{Expr, StructType, Type};
 
-pub(crate) use shader::Private;
+pub(crate) use scalar::scalar_physical;
+pub(crate) use sig::Private;
 pub use {
     array::Array,
     mat::{mat2, mat3, mat4, Mat2, Mat3, Mat4},
     sampler::Sampler2d,
     scalar::{Bool, F32, I32, U32},
-    shader::{
-        ConstInput, FragmentInput, FragmentOutput, FromFragmentInput, FromVertexInput,
-        IntoFragmentOutput, IntoVertexOutput, VaryingOutput, VertexInput, VertexOutput,
-    },
+    sig::{ConstParams, FragmentInput, FragmentOutput, VaryingOutput, VertexInput, VertexOutput},
     varying::Varying,
     vec::{
         bvec2, bvec3, bvec4, ivec2, ivec3, ivec4, uvec2, uvec3, uvec4, vec2, vec3, vec4, BVec2,
@@ -46,13 +49,11 @@ pub use posh_derive::Value;
 ///
 /// Internally, implementations of [`Object`] carry around expressions
 /// describing their computation. This enables generation of shader source code.
-///
-/// The interface of this trait is a private implementation detail.
 pub trait Object: 'static {
-    #[doc(hidden)]
+    /// Returns the type of the object.
     fn ty() -> Type;
 
-    #[doc(hidden)]
+    /// Returns an expression for computing the object.
     fn expr(&self) -> Rc<Expr>;
 
     #[doc(hidden)]
@@ -63,7 +64,7 @@ pub trait Object: 'static {
 ///
 /// Only types that implement [`Value`] can be used in `struct` definitions.
 ///
-/// Most types in the shader language implement [`Value`]. A notable exception
+/// Most types in the shading language implement [`Value`]. A notable exception
 /// is [`Sampler2d`].
 ///
 /// The interface of this trait is a private implementation detail.
@@ -79,7 +80,7 @@ pub trait ValueNonArray: Value {}
 
 #[doc(hidden)]
 pub trait Struct: ValueNonArray {
-    #[doc(hidden)]
+    /// Returns the type of the struct.
     fn struct_type() -> Rc<StructType>;
 }
 
@@ -116,23 +117,3 @@ pub trait ToValue: Copy {
 
     fn to_value(self) -> Self::Output;
 }
-
-macro_rules! expand_for_vec {
-    ($macro:ident) => {
-        $macro!(Vec2);
-        $macro!(IVec2);
-        $macro!(UVec2);
-        $macro!(BVec2);
-        $macro!(Vec3);
-        $macro!(IVec3);
-        $macro!(UVec3);
-        $macro!(BVec3);
-        $macro!(Vec4);
-        $macro!(IVec4);
-        $macro!(UVec4);
-        $macro!(BVec4);
-    };
-}
-
-pub(crate) use expand_for_vec;
-pub(crate) use scalar::scalar_physical;

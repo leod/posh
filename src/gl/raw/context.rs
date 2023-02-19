@@ -4,7 +4,7 @@ use bytemuck::Pod;
 
 use crate::{
     gl::{BufferError, BufferUsage, ElementType, ProgramError, VertexArrayError},
-    program_def::{ProgramDef, VertexDef},
+    sl::program_def::{ProgramDef, VertexDef},
 };
 
 use super::{Buffer, Caps, Image, Program, Texture2d, TextureError, VertexArray};
