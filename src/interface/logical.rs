@@ -12,7 +12,7 @@ use crate::{
 };
 
 use super::{
-    Block, FragmentData, FragmentDataVisitor, Logical, UniformData, UniformDataNonEmpty,
+    Block, FragmentData, FragmentDataVisitor, Logical, UniformData, UniformDataNonUnit,
     UniformDataUnion, VertexData, VertexDataVisitor,
 };
 
@@ -177,7 +177,7 @@ unsafe impl<B: Block<Logical, Logical = B>> UniformData<Logical> for B {
     }
 }
 
-impl<B: Block<Logical, Logical = B>> UniformDataNonEmpty for B {}
+impl<B: Block<Logical, Logical = B>> UniformDataNonUnit for B {}
 
 unsafe impl UniformData<Logical> for sl::Sampler2d {
     type Logical = Self;
@@ -192,7 +192,7 @@ unsafe impl UniformData<Logical> for sl::Sampler2d {
     }
 }
 
-impl UniformDataNonEmpty for sl::Sampler2d {}
+impl UniformDataNonUnit for sl::Sampler2d {}
 
 unsafe impl<U, V> UniformData<Logical> for (U, V)
 where
@@ -215,7 +215,7 @@ where
     }
 }
 
-impl<U, V> UniformDataNonEmpty for (U, V)
+impl<U, V> UniformDataNonUnit for (U, V)
 where
     U: UniformData<Logical>,
     V: UniformData<Logical>,

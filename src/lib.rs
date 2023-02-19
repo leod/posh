@@ -6,7 +6,7 @@ pub mod sl;
 
 pub use interface::{
     Block, BlockView, FragmentData, FragmentDataView, Logical, Physical, UniformData,
-    UniformDataNonEmpty, UniformDataUnion, UniformDataView, VertexData, VertexDataView,
+    UniformDataNonUnit, UniformDataUnion, UniformDataView, VertexData, VertexDataView,
 };
 
 pub use posh_derive::{Block, UniformData, VertexData};
