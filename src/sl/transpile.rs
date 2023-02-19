@@ -8,7 +8,7 @@ use std::{iter::once, rc::Rc};
 use crevice::std140::AsStd140;
 
 use crate::{
-    interface::{FragmentDataVisitor, UniformDataVisitor, VertexDataVisitor},
+    interface::{FragmentDataVisitor, UniformDataUnion, UniformDataVisitor, VertexDataVisitor},
     Block, FragmentData, Logical, UniformData, VertexData,
 };
 
@@ -140,12 +140,25 @@ impl<Frag: FragmentData<Logical>> IntoFragmentOutput for Frag {
 /// This is used internally by `posh` in order to create
 /// [`Program`](crate::gl::Program)s. It is exposed for the purpose of
 /// inspecting generated shader source code.
-pub fn transpile_to_program_def<UData, VData, FData, Vary, VertIn, VertOut, FragIn, FragOut>(
-    vertex_shader: fn(UData, VertIn) -> VertOut,
-    fragment_shader: fn(UData, FragIn) -> FragOut,
+pub fn transpile_to_program_def<
+    UData,
+    UDataVert,
+    UDataFrag,
+    VData,
+    FData,
+    Vary,
+    VertIn,
+    VertOut,
+    FragIn,
+    FragOut,
+>(
+    vertex_shader: fn(UDataVert, VertIn) -> VertOut,
+    fragment_shader: fn(UDataFrag, FragIn) -> FragOut,
 ) -> ProgramDef
 where
-    UData: UniformData<Logical>,
+    UDataVert: UniformData<Logical>,
+    UDataFrag: UniformData<Logical>,
+    UData: UniformDataUnion<UDataVert, UDataFrag>,
     VData: VertexData<Logical>,
     FData: FragmentData<Logical>,
     Vary: Varying,
@@ -156,8 +169,8 @@ where
 {
     transpile_to_program_def_with_consts_impl(
         (),
-        |(), uniforms, input| vertex_shader(uniforms, input),
-        |(), uniforms, input| fragment_shader(uniforms, input),
+        |(), uniforms: UData, input| vertex_shader(uniforms.lhs(), input),
+        |(), uniforms: UData, input| fragment_shader(uniforms.rhs(), input),
     )
 }
 
@@ -166,8 +179,10 @@ where
 ///
 /// See also [`transpile_to_program_def`].
 pub fn transpile_to_program_def_with_consts<
-    Consts,
     UData,
+    Consts,
+    UDataVert,
+    UDataFrag,
     VData,
     FData,
     Vary,
@@ -177,12 +192,14 @@ pub fn transpile_to_program_def_with_consts<
     FragOut,
 >(
     consts: Consts,
-    vertex_shader: fn(Consts, UData, VertIn) -> VertOut,
-    fragment_shader: fn(Consts, UData, FragIn) -> FragOut,
+    vertex_shader: fn(Consts, UDataVert, VertIn) -> VertOut,
+    fragment_shader: fn(Consts, UDataFrag, FragIn) -> FragOut,
 ) -> ProgramDef
 where
     Consts: ConstParams,
-    UData: UniformData<Logical>,
+    UDataVert: UniformData<Logical>,
+    UDataFrag: UniformData<Logical>,
+    UData: UniformDataUnion<UDataVert, UDataFrag>,
     VData: VertexData<Logical>,
     FData: FragmentData<Logical>,
     Vary: Varying,
@@ -191,7 +208,11 @@ where
     FragIn: FromFragmentInput<Vary = Vary>,
     FragOut: IntoFragmentOutput<Frag = FData>,
 {
-    transpile_to_program_def_with_consts_impl(consts, vertex_shader, fragment_shader)
+    transpile_to_program_def_with_consts_impl(
+        consts,
+        |consts, uniforms: UData, input| vertex_shader(consts, uniforms.lhs(), input),
+        |consts, uniforms: UData, input| fragment_shader(consts, uniforms.rhs(), input),
+    )
 }
 
 fn transpile_to_program_def_with_consts_impl<

@@ -2,11 +2,14 @@ use sealed::sealed;
 
 use crate::{
     gl::{RgbaFormat, Sampler2d, Texture2d, UniformBufferBinding, VertexBuffer},
+    internal::join_ident_path,
     sl::{self, program_def::VertexInputRate},
-    Logical, Physical,
 };
 
-use super::{Block, FragmentData, FragmentDataVisitor, UniformData, VertexData, VertexDataVisitor};
+use super::{
+    Block, FragmentData, FragmentDataVisitor, Logical, Physical, UniformData, VertexData,
+    VertexDataVisitor,
+};
 
 // Block
 
@@ -113,6 +116,20 @@ unsafe impl UniformData<Physical> for Sampler2d {
 
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformDataVisitor<'a, Physical>) {
         visitor.accept_sampler2d(path, self);
+    }
+}
+
+unsafe impl<U, V> UniformData<Physical> for (U, V)
+where
+    U: UniformData<Physical>,
+    V: UniformData<Physical>,
+{
+    type Logical = (U::Logical, V::Logical);
+    type Physical = Self;
+
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformDataVisitor<'a, Physical>) {
+        self.0.visit(&join_ident_path(path, "a"), visitor);
+        self.1.visit(&join_ident_path(path, "b"), visitor);
     }
 }
 

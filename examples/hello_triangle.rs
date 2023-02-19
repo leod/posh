@@ -18,7 +18,7 @@ struct MyUniform<V: BlockView = Logical> {
 
 // Shader code
 
-fn vertex_shader(_: MyUniform, vertex: sl::Vec2) -> VaryingOutput<sl::Vec2> {
+fn vertex_shader(_: (), vertex: sl::Vec2) -> VaryingOutput<sl::Vec2> {
     let vertex = vertex - sl::vec2(0.5, 0.5);
 
     VaryingOutput {

@@ -21,7 +21,7 @@ impl<Format: ImageFormat> Texture2d<Format> {
         }
     }
 
-    pub fn sampler(&self, params: Sampler2dParams) -> Sampler2d {
+    pub fn binding(&self, params: Sampler2dParams) -> Sampler2d {
         Sampler2d {
             raw: self.raw.sampler(params),
         }

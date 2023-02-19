@@ -100,6 +100,7 @@ impl ToTokens for SpecializedTypeGenerics {
 }
 
 pub fn associated_type_to_trait(ty: &str) -> Option<Path> {
+    // TODO: Update associated type list, or see if we can do without it by now.
     if ty == "Scalar"
         || ty == "Vec2"
         || ty == "Vec3"

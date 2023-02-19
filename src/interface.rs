@@ -345,6 +345,82 @@ unsafe impl<V: UniformDataView> UniformData<V> for () {
     fn shader_input(_: &str) -> Self {}
 }
 
+/// A union of two uniform data types.
+pub unsafe trait UniformDataUnion<Lhs, Rhs>: UniformData<Logical>
+where
+    Lhs: UniformData<Logical>,
+    Rhs: UniformData<Logical>,
+{
+    fn lhs(self) -> Lhs;
+    fn rhs(self) -> Rhs;
+}
+
+/// Non-empty uniform data.
+pub trait UniformDataNonEmpty: UniformData<Logical> {}
+
+unsafe impl<Lhs> UniformDataUnion<Lhs, ()> for Lhs
+where
+    Lhs: UniformDataNonEmpty,
+{
+    fn lhs(self) -> Lhs {
+        self
+    }
+
+    fn rhs(self) -> () {
+        ()
+    }
+}
+
+unsafe impl<Rhs> UniformDataUnion<(), Rhs> for Rhs
+where
+    Rhs: UniformDataNonEmpty,
+{
+    fn lhs(self) -> () {
+        ()
+    }
+
+    fn rhs(self) -> Rhs {
+        self
+    }
+}
+
+unsafe impl UniformDataUnion<(), ()> for () {
+    fn lhs(self) -> () {
+        ()
+    }
+
+    fn rhs(self) -> () {
+        ()
+    }
+}
+
+unsafe impl<U> UniformDataUnion<U, U> for U
+where
+    U: UniformDataNonEmpty,
+{
+    fn lhs(self) -> U {
+        self
+    }
+
+    fn rhs(self) -> U {
+        self
+    }
+}
+
+unsafe impl<Lhs, Rhs> UniformDataUnion<Lhs, Rhs> for (Lhs, Rhs)
+where
+    Lhs: UniformData<Logical>,
+    Rhs: UniformData<Logical>,
+{
+    fn lhs(self) -> Lhs {
+        self.0
+    }
+
+    fn rhs(self) -> Rhs {
+        self.1
+    }
+}
+
 #[doc(hidden)]
 pub trait UniformDataVisitor<'a, V: UniformDataView> {
     fn accept_block<U: Block<Logical, Logical = U>>(&mut self, path: &str, block: &'a V::Block<U>);
