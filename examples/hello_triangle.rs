@@ -2,7 +2,7 @@ use std::time::Instant;
 
 use posh::{
     gl::{
-        BufferUsage, Context, DefaultFramebuffer, DrawParams, Error, GeometryType, Program,
+        BufferUsage, Context, DefaultFramebuffer, DrawParams, Error, PrimitiveType, Program,
         UniformBuffer, VertexArray,
     },
     sl::{self, VaryingOutput},
@@ -72,7 +72,7 @@ impl Demo {
         self.program.draw(
             self.uniform_buffer.binding(),
             self.vertex_array
-                .range_binding(0..3, GeometryType::Triangles),
+                .range_binding(0..3, PrimitiveType::Triangles),
             &DefaultFramebuffer,
             &DrawParams::default(),
         );

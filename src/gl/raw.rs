@@ -21,4 +21,4 @@ pub use error::{
 pub use program::Program;
 pub use sampler_params::{Sampler2dParams, SamplerMagFilter, SamplerMinFilter};
 pub use texture::{Sampler, Sampler2d, Texture2d};
-pub use vertex_array::{ElementType, GeometryType, VertexArray, VertexArrayBinding};
+pub use vertex_array::{ElementType, PrimitiveType, VertexArray, VertexArrayBinding};

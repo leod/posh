@@ -4,7 +4,7 @@ use image::{io::Reader as ImageReader, EncodableLayout};
 
 use posh::{
     gl::{
-        BufferUsage, Context, DefaultFramebuffer, DrawParams, Error, GeometryType, Program,
+        BufferUsage, Context, DefaultFramebuffer, DrawParams, Error, PrimitiveType, Program,
         RgbaFormat, RgbaImage, Sampler2dParams, Texture2d, UniformBuffer, VertexArray,
     },
     sl::{self, VaryingOutput},
@@ -134,7 +134,7 @@ impl Demo {
                 time: self.time.binding(),
                 sampler: self.texture.sampler(Sampler2dParams::default()),
             },
-            self.vertex_array.binding(GeometryType::Triangles),
+            self.vertex_array.binding(PrimitiveType::Triangles),
             &DefaultFramebuffer,
             &DrawParams::default(),
         );
