@@ -16,7 +16,7 @@ pub use context::Context;
 pub use element_buffer::{Element, ElementBuffer, ElementOrUnit, ElementSource};
 pub use program::Program;
 pub use raw::{
-    BufferError, BufferUsage, Caps, ComparisonFunc, DrawParams, ElementType, Error, GeometryType,
+    BufferError, BufferUsage, Caps, ComparisonFunc, DrawParams, ElementType, Error, PrimitiveType,
     ProgramError, ProgramValidationError, Sampler2dParams, TextureError, VertexArrayError,
 };
 pub use surface::{DefaultFramebuffer, Surface};

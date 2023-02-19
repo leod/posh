@@ -7,7 +7,7 @@ use crate::{
 };
 
 use super::{
-    raw, vertex_buffer::vertex_size, Element, ElementOrUnit, ElementSource, GeometryType,
+    raw, vertex_buffer::vertex_size, Element, ElementOrUnit, ElementSource, PrimitiveType,
     VertexArrayError, VertexBuffer,
 };
 
@@ -65,10 +65,10 @@ where
     pub fn range_binding(
         &self,
         element_range: Range<usize>,
-        geometry_type: GeometryType,
+        primitive_type: PrimitiveType,
     ) -> VertexArrayBinding<V::Physical> {
         VertexArrayBinding {
-            raw: self.raw.range_binding(element_range, geometry_type),
+            raw: self.raw.range_binding(element_range, primitive_type),
             _vertex_buffers: self.vertex_buffers.clone(),
         }
     }
@@ -79,12 +79,12 @@ where
     V: VertexData<Logical>,
     E: Element,
 {
-    pub fn binding(&self, geometry_type: GeometryType) -> VertexArrayBinding<V::Physical> {
-        self.range_binding(0..self.element_source().len(), geometry_type)
+    pub fn binding(&self, primitive_type: PrimitiveType) -> VertexArrayBinding<V::Physical> {
+        self.range_binding(0..self.element_source().len(), primitive_type)
     }
 }
 
-/// A stream of vertices together with a geometry type.
+/// A stream of vertices together with a primitive type.
 ///
 /// A vertex array binding provides vertex data for [draw
 /// calls](crate::gl::Program::draw). Vertex array bindings can be obtained with

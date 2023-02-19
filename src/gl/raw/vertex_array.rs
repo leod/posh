@@ -39,7 +39,7 @@ impl ElementType {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum GeometryType {
+pub enum PrimitiveType {
     Points,
     Lines,
     LineStrip,
@@ -171,12 +171,12 @@ impl VertexArray {
     pub fn range_binding(
         &self,
         element_range: Range<usize>,
-        geometry_type: GeometryType,
+        primitive_type: PrimitiveType,
     ) -> VertexArrayBinding {
         VertexArrayBinding {
             vertex_array: self.shared.clone(),
             element_range,
-            geometry_type,
+            primitive_type,
         }
     }
 }
@@ -189,9 +189,9 @@ impl Drop for VertexArrayShared {
     }
 }
 
-impl GeometryType {
+impl PrimitiveType {
     pub const fn to_gl(self) -> u32 {
-        use GeometryType::*;
+        use PrimitiveType::*;
 
         match self {
             Points => glow::POINTS,
@@ -208,7 +208,7 @@ impl GeometryType {
 pub struct VertexArrayBinding {
     vertex_array: Rc<VertexArrayShared>,
     element_range: Range<usize>,
-    geometry_type: GeometryType,
+    primitive_type: PrimitiveType,
 }
 
 impl VertexArrayBinding {
@@ -229,7 +229,7 @@ impl VertexArrayBinding {
         assert!(self.element_range.start <= self.element_range.end);
 
         let gl = &self.vertex_array.gl;
-        let mode = self.geometry_type.to_gl();
+        let mode = self.primitive_type.to_gl();
         let first = self.element_range.start;
         let count = self.element_range.end - self.element_range.start;
 
