@@ -47,7 +47,6 @@ struct Vertex<V: BlockView = Logical> {
 struct Uniforms<V: UniformDataView = Logical> {
     camera: V::Block<Camera>,
     time: V::Block<sl::F32>,
-    sampler: V::Sampler2d,
 }
 
 // Shader code
@@ -75,15 +74,15 @@ fn vertex_shader(uniforms: Uniforms, vertex: Vertex) -> VaryingOutput<sl::Vec2> 
     }
 }
 
-fn fragment_shader(uniforms: Uniforms, tex_coords: sl::Vec2) -> sl::Vec4 {
-    uniforms.sampler.lookup(tex_coords)
+fn fragment_shader(sampler: sl::Sampler2d, tex_coords: sl::Vec2) -> sl::Vec4 {
+    sampler.lookup(tex_coords)
 }
 
 // Host code
 
 struct Demo {
     context: Context,
-    program: Program<Uniforms, Vertex>,
+    program: Program<(Uniforms, sl::Sampler2d), Vertex>,
     camera: UniformBuffer<Camera>,
     time: UniformBuffer<sl::F32>,
     vertex_array: VertexArray<Vertex, u16>,
@@ -105,7 +104,7 @@ impl Demo {
             .unwrap()
             .decode()
             .unwrap()
-            .to_rgba8(); // TODO: anyhow
+            .to_rgba8();
         let texture = context.create_texture_2d_with_mipmap(RgbaImage::slice_u8(
             image.dimensions(),
             image.as_bytes(),
@@ -129,11 +128,13 @@ impl Demo {
 
         self.context.clear_color([0.1, 0.2, 0.3, 1.0]);
         self.program.draw(
-            Uniforms {
-                camera: self.camera.binding(),
-                time: self.time.binding(),
-                sampler: self.texture.sampler(Sampler2dParams::default()),
-            },
+            (
+                Uniforms {
+                    camera: self.camera.binding(),
+                    time: self.time.binding(),
+                },
+                self.texture.binding(Sampler2dParams::default()),
+            ),
             self.vertex_array.binding(PrimitiveType::Triangles),
             &DefaultFramebuffer,
             &DrawParams::default(),

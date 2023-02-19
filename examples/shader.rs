@@ -45,12 +45,16 @@ fn vertex_shader(globals: Globals, vertex: ColorVertex) -> VaryingOutput<sl::Vec
     }
 }
 
-fn fragment_shader<Res>(_: Res, varying: sl::Vec4) -> sl::Vec4 {
+fn fragment_shader(_: (), varying: sl::Vec4) -> sl::Vec4 {
     varying * 3.0
 }
 
 fn main() {
-    let program_def = posh::sl::transpile::transpile_to_program_def(vertex_shader, fragment_shader);
+    let program_def =
+        posh::sl::transpile::transpile_to_program_def::<Globals, _, _, _, _, _, _, _, _, _>(
+            vertex_shader,
+            fragment_shader,
+        );
 
     println!("{}", program_def.vertex_shader_source);
     println!("{}", program_def.fragment_shader_source);

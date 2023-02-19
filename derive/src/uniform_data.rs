@@ -2,14 +2,16 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{parse_quote, DeriveInput, Result};
 
-use crate::utils::{get_view_param, SpecializedTypeGenerics, StructFields};
+use crate::utils::{get_view_param, remove_view_param, SpecializedTypeGenerics, StructFields};
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let ident = &input.ident;
 
     let generics_view_type = get_view_param(ident, &input.generics)?;
+    let generics_tail = remove_view_param(ident, &input.generics)?;
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+    let (impl_generics_init, _, where_clause_init) = generics_tail.split_for_impl();
 
     let ty_generics_physical =
         SpecializedTypeGenerics::new(parse_quote!(::posh::Physical), ident, &input.generics)?;
@@ -55,6 +57,11 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                 }
             }
         }
+
+        // Implement `UniformDataNomEmpty` for the struct
+        impl #impl_generics_init ::posh::UniformDataNonEmpty for #ident #ty_generics_logical
+        #where_clause_init
+        {}
 
         // Check that all field types implement `UniformData<V>`.
         const _: fn() = || {

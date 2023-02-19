@@ -9,7 +9,7 @@ use crate::{
         transpile::{FromFragmentInput, FromVertexInput, IntoFragmentOutput, IntoVertexOutput},
         ConstParams, Varying,
     },
-    Block, FragmentData, Logical, UniformData, VertexData,
+    Block, FragmentData, Logical, UniformData, UniformDataUnion, VertexData,
 };
 
 use super::{
@@ -107,35 +107,9 @@ impl Context {
         Ok(VertexArray::new(&self.raw, vertex_buffer, element_source)?)
     }
 
-    pub fn create_program<UData, VData, FData, Vary, VertIn, VertOut, FragIn, FragOut>(
-        &self,
-        vertex_shader: fn(UData, VertIn) -> VertOut,
-        fragment_shader: fn(UData, FragIn) -> FragOut,
-    ) -> Result<Program<UData, VData, FData>, ProgramError>
-    where
-        UData: UniformData<Logical>,
-        VData: VertexData<Logical>,
-        FData: FragmentData<Logical>,
-        Vary: Varying,
-        VertIn: FromVertexInput<Vert = VData>,
-        VertOut: IntoVertexOutput<Vary = Vary>,
-        FragIn: FromFragmentInput<Vary = Vary>,
-        FragOut: IntoFragmentOutput<Frag = FData>,
-    {
-        let program_def = transpile_to_program_def(vertex_shader, fragment_shader);
-
-        println!(
-            "{}\n==================={}",
-            program_def.vertex_shader_source, program_def.fragment_shader_source
-        );
-
-        let raw = self.raw.create_program(program_def)?;
-
-        Ok(Program::unchecked_from_raw(raw))
-    }
-
-    pub fn create_program_with_consts<
-        Consts,
+    pub fn create_program<
+        UDataVert,
+        UDataFrag,
         UData,
         VData,
         FData,
@@ -146,23 +120,25 @@ impl Context {
         FragOut,
     >(
         &self,
-        consts: Consts,
-        vertex_shader: fn(Consts, UData, VertIn) -> VertOut,
-        fragment_shader: fn(Consts, UData, FragIn) -> FragOut,
+        vertex_shader: fn(UDataVert, VertIn) -> VertOut,
+        fragment_shader: fn(UDataFrag, FragIn) -> FragOut,
     ) -> Result<Program<UData, VData, FData>, ProgramError>
     where
-        Consts: ConstParams,
-        UData: UniformData<Logical, Logical = UData>,
-        VData: VertexData<Logical, Logical = VData>,
-        FData: FragmentData<Logical, Logical = FData>,
+        UDataVert: UniformData<Logical>,
+        UDataFrag: UniformData<Logical>,
+        UData: UniformDataUnion<UDataVert, UDataFrag>,
+        VData: VertexData<Logical>,
+        FData: FragmentData<Logical>,
         Vary: Varying,
         VertIn: FromVertexInput<Vert = VData>,
         VertOut: IntoVertexOutput<Vary = Vary>,
         FragIn: FromFragmentInput<Vary = Vary>,
         FragOut: IntoFragmentOutput<Frag = FData>,
     {
-        let program_def =
-            transpile_to_program_def_with_consts(consts, vertex_shader, fragment_shader);
+        let program_def = transpile_to_program_def::<UData, _, _, _, _, _, _, _, _, _>(
+            vertex_shader,
+            fragment_shader,
+        );
 
         println!(
             "{}\n==================={}",
@@ -173,6 +149,49 @@ impl Context {
 
         Ok(Program::unchecked_from_raw(raw))
     }
+
+    // TODO: Program creation with consts
+    /*
+        pub fn create_program_with_consts<
+            Consts,
+            UData,
+            VData,
+            FData,
+            Vary,
+            VertIn,
+            VertOut,
+            FragIn,
+            FragOut,
+        >(
+            &self,
+            consts: Consts,
+            vertex_shader: fn(Consts, UData, VertIn) -> VertOut,
+            fragment_shader: fn(Consts, UData, FragIn) -> FragOut,
+        ) -> Result<Program<UData, VData, FData>, ProgramError>
+        where
+            Consts: ConstParams,
+            UData: UniformData<Logical, Logical = UData>,
+            VData: VertexData<Logical, Logical = VData>,
+            FData: FragmentData<Logical, Logical = FData>,
+            Vary: Varying,
+            VertIn: FromVertexInput<Vert = VData>,
+            VertOut: IntoVertexOutput<Vary = Vary>,
+            FragIn: FromFragmentInput<Vary = Vary>,
+            FragOut: IntoFragmentOutput<Frag = FData>,
+        {
+            let program_def =
+                transpile_to_program_def_with_consts(consts, vertex_shader, fragment_shader);
+
+            println!(
+                "{}\n==================={}",
+                program_def.vertex_shader_source, program_def.fragment_shader_source
+            );
+
+            let raw = self.raw.create_program(program_def)?;
+
+            Ok(Program::unchecked_from_raw(raw))
+        }
+    */
 
     pub fn create_texture_2d<Format: ImageFormat>(
         &self,

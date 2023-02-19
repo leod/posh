@@ -2,16 +2,19 @@ use sealed::sealed;
 
 use crate::{
     gl,
+    internal::join_ident_path,
     sl::{
         self,
         dag::BuiltInType,
         program_def::{VertexAttributeDef, VertexInputRate},
         Object,
     },
-    Logical,
 };
 
-use super::{Block, FragmentData, FragmentDataVisitor, UniformData, VertexData, VertexDataVisitor};
+use super::{
+    Block, FragmentData, FragmentDataVisitor, Logical, UniformData, UniformDataNonEmpty,
+    UniformDataUnion, VertexData, VertexDataVisitor,
+};
 
 // Block
 
@@ -174,6 +177,8 @@ unsafe impl<B: Block<Logical, Logical = B>> UniformData<Logical> for B {
     }
 }
 
+impl<B: Block<Logical, Logical = B>> UniformDataNonEmpty for B {}
+
 unsafe impl UniformData<Logical> for sl::Sampler2d {
     type Logical = Self;
     type Physical = gl::Sampler2d;
@@ -185,6 +190,36 @@ unsafe impl UniformData<Logical> for sl::Sampler2d {
     fn shader_input(path: &str) -> Self {
         <Self as Object>::from_arg(path)
     }
+}
+
+impl UniformDataNonEmpty for sl::Sampler2d {}
+
+unsafe impl<U, V> UniformData<Logical> for (U, V)
+where
+    U: UniformData<Logical>,
+    V: UniformData<Logical>,
+{
+    type Logical = Self;
+    type Physical = (U::Physical, V::Physical);
+
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformDataVisitor<'a, Logical>) {
+        self.0.visit(&join_ident_path(path, "a"), visitor);
+        self.1.visit(&join_ident_path(path, "b"), visitor);
+    }
+
+    fn shader_input(path: &str) -> Self {
+        (
+            U::shader_input(&join_ident_path(path, "a")),
+            V::shader_input(&join_ident_path(path, "b")),
+        )
+    }
+}
+
+impl<U, V> UniformDataNonEmpty for (U, V)
+where
+    U: UniformData<Logical>,
+    V: UniformData<Logical>,
+{
 }
 
 // FragmentData
