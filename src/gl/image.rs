@@ -16,10 +16,10 @@ impl<'a, S: Sample> Image<'a, S> {
 }
 
 impl<'a> Image<'a, sl::Vec4> {
-    pub fn slice_u8(dimensions: (u32, u32), data: &'a [u8]) -> Self {
+    pub fn slice_u8(size: glam::UVec2, data: &'a [u8]) -> Self {
         Image {
             raw: raw::Image {
-                dimensions,
+                size,
                 ty: ImageComponentType::U8,
                 internal_format: ImageInternalFormat::RgbaU8,
                 data: Some(data),
@@ -28,10 +28,10 @@ impl<'a> Image<'a, sl::Vec4> {
         }
     }
 
-    pub fn slice_u8_srgb(dimensions: (u32, u32), data: &'a [u8]) -> Self {
+    pub fn slice_u8_srgb(size: glam::UVec2, data: &'a [u8]) -> Self {
         Image {
             raw: raw::Image {
-                dimensions,
+                size,
                 ty: ImageComponentType::U8,
                 internal_format: ImageInternalFormat::SrgbU8AlphaU8,
                 data: Some(data),
@@ -40,10 +40,10 @@ impl<'a> Image<'a, sl::Vec4> {
         }
     }
 
-    pub fn slice_i8_snorm(dimensions: (u32, u32), data: &'a [i8]) -> Self {
+    pub fn slice_i8_snorm(size: glam::UVec2, data: &'a [i8]) -> Self {
         Image {
             raw: raw::Image {
-                dimensions,
+                size,
                 ty: ImageComponentType::I8,
                 internal_format: ImageInternalFormat::RgbaI8Snorm,
                 data: Some(bytemuck::cast_slice(data)),
@@ -52,10 +52,10 @@ impl<'a> Image<'a, sl::Vec4> {
         }
     }
 
-    pub fn slice_f32(dimensions: (u32, u32), data: &'a [f32]) -> Self {
+    pub fn slice_f32(size: glam::UVec2, data: &'a [f32]) -> Self {
         Image {
             raw: raw::Image {
-                dimensions,
+                size,
                 ty: ImageComponentType::F32,
                 internal_format: ImageInternalFormat::RgbaF32,
                 data: Some(bytemuck::cast_slice(data)),
@@ -64,10 +64,10 @@ impl<'a> Image<'a, sl::Vec4> {
         }
     }
 
-    pub fn zeroed_u8(dimensions: (u32, u32)) -> Self {
+    pub fn zeroed_u8(size: glam::UVec2) -> Self {
         Image {
             raw: raw::Image {
-                dimensions,
+                size,
                 ty: ImageComponentType::U8,
                 internal_format: ImageInternalFormat::RgbaU8,
                 data: None,
@@ -76,10 +76,10 @@ impl<'a> Image<'a, sl::Vec4> {
         }
     }
 
-    pub fn zeroed_u8_srgb(dimensions: (u32, u32)) -> Self {
+    pub fn zeroed_u8_srgb(size: glam::UVec2) -> Self {
         Image {
             raw: raw::Image {
-                dimensions,
+                size,
                 ty: ImageComponentType::U8,
                 internal_format: ImageInternalFormat::SrgbU8AlphaU8,
                 data: None,
@@ -88,10 +88,10 @@ impl<'a> Image<'a, sl::Vec4> {
         }
     }
 
-    pub fn zeroed_i8_snorm(dimensions: (u32, u32)) -> Self {
+    pub fn zeroed_i8_snorm(size: glam::UVec2) -> Self {
         Image {
             raw: raw::Image {
-                dimensions,
+                size,
                 ty: ImageComponentType::I8,
                 internal_format: ImageInternalFormat::RgbaI8Snorm,
                 data: None,
@@ -100,10 +100,10 @@ impl<'a> Image<'a, sl::Vec4> {
         }
     }
 
-    pub fn zeroed_f32(dimensions: (u32, u32)) -> Self {
+    pub fn zeroed_f32(size: glam::UVec2) -> Self {
         Image {
             raw: raw::Image {
-                dimensions,
+                size,
                 ty: ImageComponentType::F32,
                 internal_format: ImageInternalFormat::RgbaF32,
                 data: None,

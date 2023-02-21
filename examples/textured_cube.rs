@@ -100,8 +100,10 @@ impl Demo {
             .decode()
             .unwrap()
             .to_rgba8();
-        let texture = context
-            .create_texture_2d_with_mipmap(Image::slice_u8(image.dimensions(), image.as_bytes()))?;
+        let texture = context.create_texture_2d_with_mipmap(Image::slice_u8(
+            image.dimensions().into(),
+            image.as_bytes(),
+        ))?;
         let start_time = Instant::now();
 
         Ok(Self {
