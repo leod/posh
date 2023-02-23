@@ -2,7 +2,7 @@ use std::{marker::PhantomData, rc::Rc};
 
 use crevice::std140::AsStd140;
 
-use crate::{Block, Logical};
+use crate::{Block, SlView};
 
 use super::{raw, BufferUsage};
 
@@ -16,7 +16,7 @@ pub struct VertexBuffer<V> {
     _phantom: PhantomData<V>,
 }
 
-impl<V: Block<Logical>> VertexBuffer<V> {
+impl<V: Block<SlView>> VertexBuffer<V> {
     pub(super) fn from_raw(raw: raw::Buffer) -> Self {
         assert!(vertex_size::<V>() > 0);
         assert_eq!(raw.len() % vertex_size::<V>(), 0);
@@ -50,6 +50,6 @@ impl<V: Block<Logical>> VertexBuffer<V> {
     }
 }
 
-pub(super) const fn vertex_size<V: Block<Logical>>() -> usize {
-    std::mem::size_of::<<V::Physical as AsStd140>::Output>()
+pub(super) const fn vertex_size<V: Block<SlView>>() -> usize {
+    std::mem::size_of::<<V::GlView as AsStd140>::Output>()
 }
