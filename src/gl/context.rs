@@ -9,7 +9,7 @@ use crate::{
         transpile::{FromFragmentInput, FromVertexInput, IntoFragmentOutput, IntoVertexOutput},
         ConstParams, Sample, Varying,
     },
-    Block, FragmentData, Logical, UniformData, UniformDataUnion, VertexData,
+    Block, Fragment, SlView, Uniform, UniformUnion, Vertex,
 };
 
 use super::{
@@ -40,11 +40,11 @@ impl Context {
 
     pub fn create_vertex_buffer<B>(
         &self,
-        data: &[<B::Physical as AsStd140>::Output],
+        data: &[<B::GlView as AsStd140>::Output],
         usage: BufferUsage,
     ) -> Result<VertexBuffer<B>, BufferError>
     where
-        B: Block<Logical>,
+        B: Block<SlView>,
     {
         let raw = self.raw.create_buffer(data, usage)?;
 
@@ -66,11 +66,11 @@ impl Context {
 
     pub fn create_uniform_buffer<B>(
         &self,
-        data: B::Physical,
+        data: B::GlView,
         usage: BufferUsage,
     ) -> Result<UniformBuffer<B>, BufferError>
     where
-        B: Block<Logical>,
+        B: Block<SlView>,
     {
         let raw = self.raw.create_buffer(&[data.as_std140()], usage)?;
 
@@ -79,11 +79,11 @@ impl Context {
 
     pub fn create_vertex_array<V, E>(
         &self,
-        vertex_buffers: V::Physical,
+        vertex_buffers: V::GlView,
         element_source: E::Source,
     ) -> Result<VertexArray<V, E>, VertexArrayError>
     where
-        V: VertexData<Logical>,
+        V: Vertex<SlView>,
         E: ElementOrUnit,
     {
         VertexArray::new(&self.raw, vertex_buffers, element_source)
@@ -91,12 +91,12 @@ impl Context {
 
     pub fn create_simple_vertex_array<V, E>(
         &self,
-        vertices: &[V::Physical],
+        vertices: &[V::GlView],
         usage: BufferUsage,
         element_source: E::Source,
     ) -> Result<VertexArray<V, E>, Error>
     where
-        V: Block<Logical>,
+        V: Block<SlView>,
         E: ElementOrUnit,
     {
         // TODO
@@ -107,35 +107,24 @@ impl Context {
         Ok(VertexArray::new(&self.raw, vertex_buffer, element_source)?)
     }
 
-    pub fn create_program<
-        UData,
-        UDataVert,
-        UDataFrag,
-        VData,
-        FData,
-        Vary,
-        VertIn,
-        VertOut,
-        FragIn,
-        FragOut,
-    >(
+    pub fn create_program<U, U1, U2, V, F, W, InV, OutW, InW, OutF>(
         &self,
-        vertex_shader: fn(UDataVert, VertIn) -> VertOut,
-        fragment_shader: fn(UDataFrag, FragIn) -> FragOut,
-    ) -> Result<Program<UData, VData, FData>, ProgramError>
+        vertex_shader: fn(U1, InV) -> OutW,
+        fragment_shader: fn(U2, InW) -> OutF,
+    ) -> Result<Program<U, V, F>, ProgramError>
     where
-        UData: UniformDataUnion<UDataVert, UDataFrag>,
-        UDataVert: UniformData<Logical>,
-        UDataFrag: UniformData<Logical>,
-        VData: VertexData<Logical>,
-        FData: FragmentData<Logical>,
-        Vary: Varying,
-        VertIn: FromVertexInput<Vert = VData>,
-        VertOut: IntoVertexOutput<Vary = Vary>,
-        FragIn: FromFragmentInput<Vary = Vary>,
-        FragOut: IntoFragmentOutput<Frag = FData>,
+        U: UniformUnion<U1, U2>,
+        U1: Uniform<SlView>,
+        U2: Uniform<SlView>,
+        V: Vertex<SlView>,
+        F: Fragment<SlView>,
+        W: Varying,
+        InV: FromVertexInput<Vertex = V>,
+        OutW: IntoVertexOutput<Varying = W>,
+        InW: FromFragmentInput<Varying = W>,
+        OutF: IntoFragmentOutput<Fragment = F>,
     {
-        let program_def = transpile_to_program_def::<UData, _, _, _, _, _, _, _, _, _>(
+        let program_def = transpile_to_program_def::<U, _, _, _, _, _, _, _, _, _>(
             vertex_shader,
             fragment_shader,
         );
@@ -170,9 +159,9 @@ impl Context {
         ) -> Result<Program<UData, VData, FData>, ProgramError>
         where
             Consts: ConstParams,
-            UData: UniformData<Logical, Logical = UData>,
-            VData: VertexData<Logical, Logical = VData>,
-            FData: FragmentData<Logical, Logical = FData>,
+            UData: Uniform<SlView, SlView = UData>,
+            VData: Vertex<SlView, SlView = VData>,
+            FData: Fragment<SlView, SlView = FData>,
             Vary: Varying,
             VertIn: FromVertexInput<Vert = VData>,
             VertOut: IntoVertexOutput<Vary = Vary>,

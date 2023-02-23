@@ -18,31 +18,31 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
     let (impl_generics_init, ty_generics_init, where_clause_init) = generics_tail.split_for_impl();
 
-    let ty_generics_logical =
-        SpecializedTypeGenerics::new(parse_quote!(::posh::Logical), ident, &input.generics)?;
-    let ty_generics_physical =
-        SpecializedTypeGenerics::new(parse_quote!(::posh::Physical), ident, &input.generics)?;
+    let ty_generics_sl =
+        SpecializedTypeGenerics::new(parse_quote!(::posh::SlView), ident, &input.generics)?;
+    let ty_generics_gl =
+        SpecializedTypeGenerics::new(parse_quote!(::posh::GlView), ident, &input.generics)?;
 
     let fields = StructFields::new(&input.ident, &input.data)?;
     let field_idents = fields.idents();
     let field_strings = fields.strings();
 
-    let field_types_logical = specialize_field_types(
-        parse_quote!(::posh::Logical),
+    let field_types_sl = specialize_field_types(
+        parse_quote!(::posh::SlView),
         ident,
         &input.generics,
         &fields,
     )?;
-    let field_types_physical = specialize_field_types(
-        parse_quote!(::posh::Physical),
+    let field_types_gl = specialize_field_types(
+        parse_quote!(::posh::GlView),
         ident,
         &input.generics,
         &fields,
     )?;
 
     Ok(quote! {
-        // Implement `Object` for the `Logical` view of the struct.
-        impl #impl_generics_init ::posh::sl::Object for #ident #ty_generics_logical
+        // Implement `Object` for the `SlView` of the struct.
+        impl #impl_generics_init ::posh::sl::Object for #ident #ty_generics_sl
         #where_clause_init
         {
             fn ty() -> ::posh::internal::Type {
@@ -65,8 +65,8 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             }
         }
 
-        // Implement `Value` for the logical view of the struct.
-        impl #impl_generics_init ::posh::sl::Value for #ident #ty_generics_logical
+        // Implement `Value` for the `SlView` of the struct.
+        impl #impl_generics_init ::posh::sl::Value for #ident #ty_generics_sl
         #where_clause_init
         {
             fn from_expr(expr: ::posh::internal::Expr) -> Self {
@@ -83,13 +83,13 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             }
         }
 
-        // Implement `ValueNonArray` for the logical view of the struct.
-        impl #impl_generics_init ::posh::sl::ValueNonArray for #ident #ty_generics_logical
+        // Implement `ValueNonArray` for the `SlView` of the struct.
+        impl #impl_generics_init ::posh::sl::ValueNonArray for #ident #ty_generics_sl
         #where_clause
         {}
 
-        // Implement `Struct` for the logical view of the struct.
-        impl #impl_generics_init ::posh::sl::Struct for #ident #ty_generics_logical
+        // Implement `Struct` for the `SlView` of the struct.
+        impl #impl_generics_init ::posh::sl::Struct for #ident #ty_generics_sl
         #where_clause
         {
             fn struct_type() -> ::std::rc::Rc<::posh::internal::StructType> {
@@ -100,7 +100,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                             #(
                                 (
                                     #field_strings.to_string(),
-                                    <#field_types_logical as ::posh::sl::Object>::ty(),
+                                    <#field_types_sl as ::posh::sl::Object>::ty(),
                                 )
                             ),*
                         ],
@@ -114,7 +114,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         impl #impl_generics ::posh::sl::ToValue for #ident #ty_generics
         #where_clause
         {
-            type Output = #ident #ty_generics_logical;
+            type Output = #ident #ty_generics_sl;
 
             fn to_value(self) -> Self::Output {
                 Self::Output {
@@ -130,12 +130,12 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         #[derive(::posh::crevice::std140::AsStd140)]
         #visibility struct #as_std140_ident #impl_generics_init {
             #(
-                #field_idents: #field_types_physical
+                #field_idents: #field_types_gl
             ),*
         }
 
-        // Implement `AsStd140` for the physical view of the struct via the helper type above.
-        impl #impl_generics_init ::posh::crevice::std140::AsStd140 for #ident #ty_generics_physical
+        // Implement `AsStd140` for the `GlView` of the struct via the helper type above.
+        impl #impl_generics_init ::posh::crevice::std140::AsStd140 for #ident #ty_generics_gl
         #where_clause
         {
             type Output = <
@@ -162,13 +162,13 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             }
         }
 
-        // Implement `Block<Physical>` for the physical view of the struct.
-        unsafe impl #impl_generics_init ::posh::Block<::posh::Physical>
-        for #ident #ty_generics_physical
+        // Implement `Block<GlView>` for the `GlView` of the struct.
+        unsafe impl #impl_generics_init ::posh::Block<::posh::GlView>
+        for #ident #ty_generics_gl
         #where_clause_init
         {
-            type Logical = #ident #ty_generics_logical;
-            type Physical = #ident #ty_generics_physical;
+            type SlView = #ident #ty_generics_sl;
+            type GlView = #ident #ty_generics_gl;
 
             fn uniform_input(path: &str) -> Self {
                 unimplemented!()
@@ -179,13 +179,13 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             }
         }
 
-        // Implement `Block<Logical>` for the logical view of the struct.
-        unsafe impl #impl_generics_init ::posh::Block<::posh::Logical>
-        for #ident #ty_generics_logical
+        // Implement `Block<SlView>` for the `SlView` of the struct.
+        unsafe impl #impl_generics_init ::posh::Block<::posh::SlView>
+        for #ident #ty_generics_sl
         #where_clause_init
         {
-            type Logical = #ident #ty_generics_logical;
-            type Physical = #ident #ty_generics_physical;
+            type SlView = #ident #ty_generics_sl;
+            type GlView = #ident #ty_generics_gl;
 
             fn uniform_input(path: &str) -> Self {
                 ::posh::internal::value_arg(path)
@@ -194,7 +194,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             fn vertex_input(path: &str) -> Self {
                 Self {
                     #(
-                        #field_idents: <#field_types_logical as ::posh::Block<::posh::Logical>>::
+                        #field_idents: <#field_types_sl as ::posh::Block<::posh::SlView>>::
                             vertex_input(
                                 &::posh::internal::join_ident_path(path, #field_strings),
                             ),
@@ -219,7 +219,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                     );
 
                     let attrs = <
-                        #field_types_logical as ::posh::Block<::posh::Logical>
+                        #field_types_sl as ::posh::Block<::posh::SlView>
                     >::vertex_attribute_defs(
                         &::posh::internal::join_ident_path(path, #field_strings),
                     );
@@ -237,24 +237,24 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
         }
 
-        // Check that all field types in `Logical` implement `Block<Logical>`.
+        // Check that all field types in `SlView` implement `Block<SlView>`.
         const _: fn() = || {
-            fn check_field<T: ::posh::Block<::posh::Logical>>() {}
+            fn check_field<T: ::posh::Block<::posh::SlView>>() {}
 
             fn check_struct #impl_generics(value: &#ident #ty_generics) #where_clause {
                 #(
-                    check_field::<#field_types_logical>();
+                    check_field::<#field_types_sl>();
                 )*
             }
         };
 
-        // Check that all field types in `Physical` implement `Block<Physical>`.
+        // Check that all field types in `GlView` implement `Block<GlView>`.
         const _: fn() = || {
-            fn check_field<T: ::posh::Block<::posh::Physical>>() {}
+            fn check_field<T: ::posh::Block<::posh::GlView>>() {}
 
             fn check_struct #impl_generics(value: &#ident #ty_generics) #where_clause {
                 #(
-                    check_field::<#field_types_physical>();
+                    check_field::<#field_types_gl>();
                 )*
             }
         };
