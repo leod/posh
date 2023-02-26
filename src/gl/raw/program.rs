@@ -196,6 +196,10 @@ impl Program {
         for (sampler, sampler_def) in samplers.iter().zip(&def.uniform_sampler_defs) {
             let unit = texture_unit_gl(sampler_def);
 
+            unsafe {
+                gl.active_texture(unit);
+            }
+
             sampler.unbind();
         }
 

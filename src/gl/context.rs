@@ -5,9 +5,9 @@ use glow::HasContext;
 
 use crate::{
     sl::{
-        transpile::{transpile_to_program_def, transpile_to_program_def_with_consts},
+        transpile::transpile_to_program_def,
         transpile::{FromFragmentInput, FromVertexInput, IntoFragmentOutput, IntoVertexOutput},
-        ConstParams, Sample, Varying,
+        Sample, Varying,
     },
     Block, Fragment, SlView, Uniform, UniformUnion, Vertex,
 };

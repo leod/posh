@@ -347,6 +347,10 @@ unsafe impl<F: UniformFields> Uniform<F> for () {
 }
 
 /// A union of two uniform data types.
+///
+/// # Safety
+///
+/// TODO
 pub unsafe trait UniformUnion<U1, U2>: Uniform<SlView>
 where
     U1: Uniform<SlView>,
@@ -367,18 +371,14 @@ where
         self
     }
 
-    fn rhs(self) -> () {
-        ()
-    }
+    fn rhs(self) {}
 }
 
 unsafe impl<U> UniformUnion<(), U> for U
 where
     U: UniformNonUnit,
 {
-    fn lhs(self) -> () {
-        ()
-    }
+    fn lhs(self) {}
 
     fn rhs(self) -> U {
         self
@@ -386,13 +386,9 @@ where
 }
 
 unsafe impl UniformUnion<(), ()> for () {
-    fn lhs(self) -> () {
-        ()
-    }
+    fn lhs(self) {}
 
-    fn rhs(self) -> () {
-        ()
-    }
+    fn rhs(self) {}
 }
 
 unsafe impl<U> UniformUnion<U, U> for U
