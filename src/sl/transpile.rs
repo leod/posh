@@ -17,7 +17,7 @@ use super::{
     dag::{Expr, SamplerType, Type},
     primitives::value_arg,
     program_def::{
-        ProgramDef, UniformBlockDef, UniformSamplerDef, VertexAttributeDef, VertexDef,
+        ProgramDef, UniformBlockDef, UniformSamplerDef, VertexAttributeDef, VertexBlockDef,
         VertexInputRate,
     },
     ConstParams, FragmentInput, FragmentOutput, Object, Private, Sample, Sampler2d, Varying,
@@ -210,14 +210,14 @@ where
 {
     let uniforms = U::shader_input("uniforms");
 
-    let (block_defs, sampler_defs) = {
+    let (uniform_block_defs, uniform_sampler_defs) = {
         let mut visitor = CollectUniforms::default();
         uniforms.visit("uniforms", &mut visitor);
 
         (visitor.block_defs, visitor.sampler_defs)
     };
 
-    let (vertex_defs, varying_outputs, vertex_shader_source) = {
+    let (vertex_block_defs, varying_outputs, vertex_shader_source) = {
         let input = || VertexInput {
             vertex: V::shader_input("vertex_input"),
             vertex_id: value_arg("gl_VertexID"),
@@ -227,19 +227,20 @@ where
         let output = vertex_shader(consts, uniforms, InV::from(input())).into();
 
         let varying_outputs = output.varying.shader_outputs("vertex_output");
-        let (vertex_attributes, vertex_defs) = {
-            let mut visitor = CollectAttributes::default();
+        let vertex_block_defs = {
+            let mut visitor = CollectVertexBlocks::default();
             input().vertex.visit("vertex_input", &mut visitor);
 
-            (visitor.attribute_defs, visitor.vertex_defs)
+            visitor.block_defs
         };
 
-        let attributes = vertex_attributes
-            .into_iter()
+        let attributes = vertex_block_defs
+            .iter()
+            .flat_map(|block_def| block_def.attributes.iter())
             .map(|attribute_def| {
                 (
                     "in".to_string(),
-                    attribute_def.name,
+                    attribute_def.name.clone(),
                     Type::BuiltIn(attribute_def.ty),
                 )
             })
@@ -264,14 +265,14 @@ where
         let mut source = String::new();
         codegen::write_shader_stage(
             &mut source,
-            &block_defs,
-            &sampler_defs,
+            &uniform_block_defs,
+            &uniform_sampler_defs,
             attributes,
             &exprs.collect::<Vec<_>>(),
         )
         .unwrap();
 
-        (vertex_defs, varying_outputs, source)
+        (vertex_block_defs, varying_outputs, source)
     };
 
     let uniforms = U::shader_input("uniforms");
@@ -316,8 +317,8 @@ where
         let mut source = String::new();
         codegen::write_shader_stage(
             &mut source,
-            &block_defs,
-            &sampler_defs,
+            &uniform_block_defs,
+            &uniform_sampler_defs,
             attributes,
             &exprs.collect::<Vec<_>>(),
         )
@@ -327,9 +328,9 @@ where
     };
 
     ProgramDef {
-        uniform_block_defs: block_defs,
-        uniform_sampler_defs: sampler_defs,
-        vertex_defs,
+        uniform_block_defs,
+        uniform_sampler_defs,
+        vertex_block_defs,
         vertex_shader_source,
         fragment_shader_source,
     }
@@ -363,15 +364,13 @@ impl<'a> UniformVisitor<'a, SlView> for CollectUniforms {
 }
 
 #[derive(Default)]
-struct CollectAttributes {
-    attribute_defs: Vec<VertexAttributeDef>,
-    vertex_defs: Vec<VertexDef>,
+struct CollectVertexBlocks {
+    block_defs: Vec<VertexBlockDef>,
 }
 
-impl<'a> VertexVisitor<'a, SlView> for CollectAttributes {
+impl<'a> VertexVisitor<'a, SlView> for CollectVertexBlocks {
     fn accept<V: Block<SlView>>(&mut self, path: &str, input_rate: VertexInputRate, _: &V) {
-        self.attribute_defs.extend(V::vertex_attribute_defs(path));
-        self.vertex_defs.push(VertexDef {
+        self.block_defs.push(VertexBlockDef {
             input_rate,
             stride: std::mem::size_of::<<V::GlView as AsStd140>::Output>(),
             attributes: V::vertex_attribute_defs(path),

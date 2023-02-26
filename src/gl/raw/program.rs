@@ -52,8 +52,8 @@ impl Program {
         {
             let mut index = 0;
 
-            for vertex_info in &shared.def.vertex_defs {
-                for attribute in &vertex_info.attributes {
+            for block_def in &shared.def.vertex_block_defs {
+                for attribute in &block_def.attributes {
                     unsafe {
                         gl.bind_attrib_location(
                             shared.id,
