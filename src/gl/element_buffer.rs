@@ -1,37 +1,12 @@
-use std::{marker::PhantomData, mem::size_of, rc::Rc};
+use std::{marker::PhantomData, mem::size_of, ops::Range, rc::Rc};
 
 use bytemuck::Pod;
 use sealed::sealed;
 
 use super::{raw, ElementType};
 
-pub trait ElementSource {
-    #[doc(hidden)]
-    fn raw(&self) -> Option<(&raw::Buffer, ElementType)>;
-}
-
 #[sealed]
-pub trait ElementOrUnit {
-    type Source: ElementSource;
-}
-
-#[sealed]
-impl ElementOrUnit for u16 {
-    type Source = ElementBuffer<Self>;
-}
-
-#[sealed]
-impl ElementOrUnit for u32 {
-    type Source = ElementBuffer<Self>;
-}
-
-#[sealed]
-impl ElementOrUnit for () {
-    type Source = ();
-}
-
-#[sealed]
-pub trait Element: Pod + ElementOrUnit<Source = ElementBuffer<Self>> {
+pub trait Element: Pod {
     const TYPE: ElementType;
 }
 
@@ -50,9 +25,17 @@ impl Element for u32 {
 /// Instances of `ElementBuffer` can be created with
 /// [`Context::create_element_buffer`](crate::gl::Context::create_element_buffer).
 #[derive(Clone)]
-pub struct ElementBuffer<E> {
+pub struct ElementBuffer<E = u32> {
     raw: Rc<raw::Buffer>,
     _phantom: PhantomData<E>,
+}
+
+#[derive(Clone)]
+pub struct ElementBufferBinding {
+    pub raw: Rc<raw::Buffer>,
+    pub ty: ElementType,
+    pub element_size: usize,
+    pub range: Range<usize>,
 }
 
 impl<E: Element> ElementBuffer<E> {
@@ -78,16 +61,33 @@ impl<E: Element> ElementBuffer<E> {
     pub fn set(&self, data: &[E]) {
         self.raw.set(data);
     }
-}
 
-impl<E: Element> ElementSource for ElementBuffer<E> {
-    fn raw(&self) -> Option<(&raw::Buffer, ElementType)> {
-        Some((&self.raw, E::TYPE))
+    pub fn binding(&self) -> ElementBufferBinding {
+        self.range_binding(0..self.len())
+    }
+
+    pub fn range_binding(&self, range: Range<usize>) -> ElementBufferBinding {
+        assert!(range.start <= range.end);
+
+        ElementBufferBinding {
+            raw: self.raw.clone(),
+            ty: E::TYPE,
+            element_size: size_of::<E>(),
+            range,
+        }
     }
 }
 
-impl ElementSource for () {
-    fn raw(&self) -> Option<(&raw::Buffer, ElementType)> {
-        None
+impl ElementBufferBinding {
+    pub(crate) fn raw(&self) -> &raw::Buffer {
+        &self.raw
+    }
+
+    pub(crate) fn ty(&self) -> ElementType {
+        self.ty
+    }
+
+    pub fn range(&self) -> Range<usize> {
+        self.range.clone()
     }
 }

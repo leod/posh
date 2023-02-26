@@ -24,6 +24,16 @@ pub(super) fn check_gl_error(gl: &glow::Context) -> Result<(), String> {
     }
 }
 
+/// An error that occurred while creating a context.
+#[derive(Debug, Clone, Error)]
+pub enum ContextError {
+    #[error("could not create main vertex array object: {0}")]
+    ObjectCreation(String),
+
+    #[error("unexpected error: {0}")]
+    Unexpected(String),
+}
+
 /// An error that occurred while creating a buffer.
 #[derive(Debug, Clone, Error)]
 pub enum BufferError {
