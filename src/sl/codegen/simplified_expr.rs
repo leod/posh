@@ -82,7 +82,7 @@ fn write_call(f: &mut impl Write, name: &str, args: &[SimplifiedExpr]) -> Result
     f.write_char('(')?;
 
     for (i, arg) in args.iter().enumerate() {
-        write!(f, "{}", arg)?;
+        write!(f, "{arg}")?;
 
         if i + 1 < args.len() {
             f.write_str(", ")?;

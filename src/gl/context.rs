@@ -13,9 +13,8 @@ use crate::{
 };
 
 use super::{
-    raw, BufferError, BufferUsage, Caps, Element, ElementBuffer, ElementOrUnit, Error, Image,
-    Program, ProgramError, Texture2d, TextureError, UniformBuffer, VertexArray, VertexArrayError,
-    VertexBuffer,
+    raw, BufferError, BufferUsage, Caps, ContextError, Element, ElementBuffer, Image, Program,
+    ProgramError, Texture2d, TextureError, UniformBuffer, VertexBuffer,
 };
 
 /// The graphics context, which is used for creating GPU objects.
@@ -24,10 +23,10 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn new(gl: glow::Context) -> Self {
-        let raw = raw::Context::new(gl);
+    pub fn new(gl: glow::Context) -> Result<Self, ContextError> {
+        let raw = raw::Context::new(gl)?;
 
-        Self { raw }
+        Ok(Self { raw })
     }
 
     pub fn gl(&self) -> &Rc<glow::Context> {
@@ -40,13 +39,16 @@ impl Context {
 
     pub fn create_vertex_buffer<B>(
         &self,
-        data: &[<B::GlView as AsStd140>::Output],
+        data: &[B::GlView],
         usage: BufferUsage,
     ) -> Result<VertexBuffer<B>, BufferError>
     where
         B: Block<SlView>,
     {
-        let raw = self.raw.create_buffer(data, usage)?;
+        // TODO
+        let data: Vec<_> = data.iter().map(|vertex| vertex.as_std140()).collect();
+
+        let raw = self.raw.create_buffer(&data, usage)?;
 
         Ok(VertexBuffer::from_raw(raw))
     }
@@ -75,36 +77,6 @@ impl Context {
         let raw = self.raw.create_buffer(&[data.as_std140()], usage)?;
 
         Ok(UniformBuffer::from_raw(raw))
-    }
-
-    pub fn create_vertex_array<V, E>(
-        &self,
-        vertex_buffers: V::GlView,
-        element_source: E::Source,
-    ) -> Result<VertexArray<V, E>, VertexArrayError>
-    where
-        V: Vertex<SlView>,
-        E: ElementOrUnit,
-    {
-        VertexArray::new(&self.raw, vertex_buffers, element_source)
-    }
-
-    pub fn create_simple_vertex_array<V, E>(
-        &self,
-        vertices: &[V::GlView],
-        usage: BufferUsage,
-        element_source: E::Source,
-    ) -> Result<VertexArray<V, E>, Error>
-    where
-        V: Block<SlView>,
-        E: ElementOrUnit,
-    {
-        // TODO
-        let vertices: Vec<_> = vertices.iter().map(|vertex| vertex.as_std140()).collect();
-
-        let vertex_buffer = self.create_vertex_buffer(&vertices, usage)?;
-
-        Ok(VertexArray::new(&self.raw, vertex_buffer, element_source)?)
     }
 
     pub fn create_program<U, U1, U2, V, F, W, InV, OutW, InW, OutF>(
