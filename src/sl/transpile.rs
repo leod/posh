@@ -17,8 +17,7 @@ use super::{
     dag::{Expr, SamplerType, Type},
     primitives::value_arg,
     program_def::{
-        ProgramDef, UniformBlockDef, UniformSamplerDef, VertexAttributeDef, VertexBlockDef,
-        VertexInputRate,
+        ProgramDef, UniformBlockDef, UniformSamplerDef, VertexBlockDef, VertexInputRate,
     },
     ConstParams, FragmentInput, FragmentOutput, Object, Private, Sample, Sampler2d, Varying,
     VaryingOutput, Vec4, VertexInput, VertexOutput,

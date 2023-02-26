@@ -44,10 +44,7 @@ impl BuiltInType {
     pub fn is_transparent(&self) -> bool {
         use BuiltInType::*;
 
-        match self {
-            Sampler(_) => false,
-            _ => true,
-        }
+        !matches!(self, Sampler(_))
     }
 }
 
