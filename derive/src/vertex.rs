@@ -11,10 +11,10 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
-    let ty_generics_logical =
-        SpecializedTypeGenerics::new(parse_quote!(::posh::Logical), ident, &input.generics)?;
-    let ty_generics_physical =
-        SpecializedTypeGenerics::new(parse_quote!(::posh::Physical), ident, &input.generics)?;
+    let ty_generics_sl =
+        SpecializedTypeGenerics::new(parse_quote!(::posh::SlView), ident, &input.generics)?;
+    let ty_generics_gl =
+        SpecializedTypeGenerics::new(parse_quote!(::posh::GlView), ident, &input.generics)?;
 
     let fields = StructFields::new(&input.ident, &input.data)?;
     let field_idents = fields.idents();
@@ -22,18 +22,18 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let field_strings = fields.strings();
 
     Ok(quote! {
-        // Implement `VertexData<V>` for the struct.
-        unsafe impl #impl_generics ::posh::VertexData<#generics_view_type>
+        // Implement `Vertex<F>` for the struct.
+        unsafe impl #impl_generics ::posh::Vertex<#generics_view_type>
         for #ident #ty_generics
         #where_clause
         {
-            type Logical = #ident #ty_generics_logical;
-            type Physical = #ident #ty_generics_physical;
+            type SlView = #ident #ty_generics_sl;
+            type GlView = #ident #ty_generics_gl;
 
             fn visit<'a>(
                 &'a self,
                 path: &str,
-                visitor: &mut impl ::posh::internal::VertexDataVisitor<'a, #generics_view_type>,
+                visitor: &mut impl ::posh::internal::VertexVisitor<'a, #generics_view_type>,
             ) {
                 #(
                     visitor.accept(
@@ -51,7 +51,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                             <
                                 #field_types
                                 as
-                                ::posh::internal::VertexDataField<#generics_view_type>
+                                ::posh::internal::VertexField<#generics_view_type>
                             >::shader_input(
                                 &::posh::internal::join_ident_path(path, #field_strings),
                             ),
@@ -60,12 +60,12 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             }
         }
 
-        // Check that all field types implement `VertexDataField<V>`.
+        // Check that all field types implement `VertexField<F>`.
         const _: fn() = || {
-            fn check_field<V, F>()
+            fn check_field<F, T>()
             where
-                V: ::posh::VertexDataView,
-                F: ::posh::internal::VertexDataField<V>,
+                F: ::posh::VertexFields,
+                T: ::posh::internal::VertexField<F>,
             {}
 
             fn check_struct #impl_generics(value: &#ident #ty_generics) #where_clause {

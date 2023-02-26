@@ -4,12 +4,14 @@ use glow::HasContext;
 
 use crate::gl::{raw::error::check_gl_error, TextureError};
 
-use super::{Caps, ComparisonFunc, Image, ImageInternalFormat, ImageType, Sampler2dParams};
+use super::{
+    Caps, ComparisonFunc, Image, ImageComponentType, ImageInternalFormat, Sampler2dParams,
+};
 
 struct Texture2dShared {
     gl: Rc<glow::Context>,
     id: glow::Texture,
-    ty: ImageType,
+    ty: ImageComponentType,
     internal_format: ImageInternalFormat,
     num_levels: usize,
     sampler_params: Cell<Sampler2dParams>,
@@ -89,14 +91,12 @@ impl Texture2d {
     ) -> Result<Self, TextureError> {
         assert!(num_levels > 0);
 
-        validate_size(image.dimensions, caps)?;
+        validate_size(image.size, caps)?;
 
         let id = unsafe { gl.create_texture() }.map_err(TextureError::ObjectCreation)?;
 
-        let width =
-            i32::try_from(image.dimensions.0).expect("max_texture_size is out of i32 range");
-        let height =
-            i32::try_from(image.dimensions.1).expect("max_texture_size is out of i32 range");
+        let width = i32::try_from(image.size.x).expect("max_texture_size is out of i32 range");
+        let height = i32::try_from(image.size.y).expect("max_texture_size is out of i32 range");
 
         let mut buffer = Vec::new();
         let data_len = image.required_data_len();
@@ -165,7 +165,7 @@ impl Texture2d {
         caps: &Caps,
         image: Image,
     ) -> Result<Self, TextureError> {
-        let num_levels = (image.dimensions.0.max(image.dimensions.1) as f64).log2() as usize;
+        let num_levels = (image.size.x.max(image.size.y) as f64).log2() as usize;
 
         let texture = Self::new_with_num_levels(gl.clone(), caps, image, num_levels)?;
 
@@ -180,7 +180,7 @@ impl Texture2d {
         Ok(texture)
     }
 
-    pub fn ty(&self) -> ImageType {
+    pub fn ty(&self) -> ImageComponentType {
         self.shared.ty
     }
 
@@ -210,21 +210,21 @@ pub struct Sampler2d {
     params: Sampler2dParams,
 }
 
-fn validate_size(size: (u32, u32), caps: &Caps) -> Result<(), TextureError> {
-    if size.0 == 0 || size.1 == 0 {
+fn validate_size(size: glam::UVec2, caps: &Caps) -> Result<(), TextureError> {
+    if size.x == 0 || size.y == 0 {
         return Err(TextureError::Empty);
     }
 
-    if size.0 > caps.max_texture_size {
+    if size.x > caps.max_texture_size {
         return Err(TextureError::Oversized {
-            requested: size.0,
+            requested: size.x,
             max: caps.max_texture_size,
         });
     }
 
-    if size.1 > caps.max_texture_size {
+    if size.y > caps.max_texture_size {
         return Err(TextureError::Oversized {
-            requested: size.1,
+            requested: size.y,
             max: caps.max_texture_size,
         });
     }

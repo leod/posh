@@ -64,6 +64,9 @@ impl Display for SamplerType {
 
         let s = match self {
             Sampler2d => "sampler2D",
+            ISampler2d => "isampler2D",
+            USampler2d => "usampler2D",
+            Sampler2dShadow => "sampler2DShadow",
         };
 
         f.write_str(s)

@@ -7,19 +7,18 @@ use crate::{
         self,
         dag::BuiltInType,
         program_def::{VertexAttributeDef, VertexInputRate},
-        Object,
+        Object, Sample,
     },
 };
 
 use super::{
-    Block, FragmentData, FragmentDataVisitor, Logical, UniformData, UniformDataNonUnit,
-    UniformDataUnion, VertexData, VertexDataVisitor,
+    Block, Fragment, FragmentVisitor, SlView, Uniform, UniformNonUnit, Vertex, VertexVisitor,
 };
 
 // Block
 
 #[sealed]
-impl super::BlockView for Logical {
+impl super::BlockFields for SlView {
     type F32 = sl::F32;
     type I32 = sl::I32;
     type U32 = sl::U32;
@@ -34,9 +33,9 @@ impl super::BlockView for Logical {
 
 macro_rules! impl_block_for_scalar {
     ($scalar:ident) => {
-        unsafe impl Block<Logical> for sl::$scalar {
-            type Physical = sl::scalar_physical!($scalar);
-            type Logical = Self;
+        unsafe impl Block<SlView> for sl::$scalar {
+            type GlView = sl::scalar_physical!($scalar);
+            type SlView = Self;
 
             fn uniform_input(path: &str) -> Self {
                 <Self as Object>::from_arg(path)
@@ -60,9 +59,9 @@ macro_rules! impl_block_for_scalar {
 
 macro_rules! impl_block_for_vec {
     ($vec:ident) => {
-        unsafe impl Block<Logical> for sl::$vec {
-            type Logical = Self;
-            type Physical = glam::$vec;
+        unsafe impl Block<SlView> for sl::$vec {
+            type SlView = Self;
+            type GlView = glam::$vec;
 
             fn uniform_input(path: &str) -> Self {
                 <Self as Object>::from_arg(path)
@@ -86,9 +85,9 @@ macro_rules! impl_block_for_vec {
 
 macro_rules! impl_block_for_mat {
     ($mat:ident) => {
-        unsafe impl Block<Logical> for sl::$mat {
-            type Logical = Self;
-            type Physical = glam::$mat;
+        unsafe impl Block<SlView> for sl::$mat {
+            type SlView = Self;
+            type GlView = glam::$mat;
 
             fn uniform_input(path: &str) -> Self {
                 <Self as Object>::from_arg(path)
@@ -128,18 +127,18 @@ impl_block_for_mat!(Mat2);
 impl_block_for_mat!(Mat3);
 impl_block_for_mat!(Mat4);
 
-// VertexData
+// Vertex
 
 #[sealed]
-impl super::VertexDataView for Logical {
-    type Block<B: Block<Logical>> = B;
+impl super::VertexFields for SlView {
+    type Block<B: Block<SlView>> = B;
 }
 
-unsafe impl<B: Block<Logical>> VertexData<Logical> for B {
-    type Physical = gl::VertexBuffer<B>;
-    type Logical = B::Logical;
+unsafe impl<B: Block<SlView>> Vertex<SlView> for B {
+    type GlView = gl::VertexBuffer<B>;
+    type SlView = B::SlView;
 
-    fn visit<'a>(&'a self, path: &str, visitor: &mut impl VertexDataVisitor<'a, Logical>) {
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl VertexVisitor<'a, SlView>) {
         visitor.accept(path, VertexInputRate::Vertex, self);
     }
 
@@ -149,41 +148,41 @@ unsafe impl<B: Block<Logical>> VertexData<Logical> for B {
 }
 
 #[sealed]
-impl<B: Block<Logical>> super::VertexDataField<Logical> for B {
+impl<B: Block<SlView>> super::VertexField<SlView> for B {
     fn shader_input(path: &str) -> Self {
         B::vertex_input(path)
     }
 }
 
-// UniformData
+// Uniform
 
 #[sealed]
-impl super::UniformDataView for Logical {
-    type Block<B: Block<Logical, Logical = B>> = B;
-    type Sampler2d = sl::Sampler2d;
-    type Compose<R: UniformData<Logical>> = R;
+impl super::UniformFields for SlView {
+    type Block<B: Block<SlView, SlView = B>> = B;
+    type Sampler2d<S: Sample> = sl::Sampler2d<S>;
+    type Compose<R: Uniform<SlView>> = R;
 }
 
-unsafe impl<B: Block<Logical, Logical = B>> UniformData<Logical> for B {
-    type Logical = Self;
-    type Physical = gl::UniformBufferBinding<B>;
+unsafe impl<B: Block<SlView, SlView = B>> Uniform<SlView> for B {
+    type SlView = Self;
+    type GlView = gl::UniformBufferBinding<B>;
 
-    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformDataVisitor<'a, Logical>) {
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformVisitor<'a, SlView>) {
         visitor.accept_block(path, self)
     }
 
     fn shader_input(path: &str) -> Self {
-        <B as Block<Logical>>::uniform_input(path)
+        <B as Block<SlView>>::uniform_input(path)
     }
 }
 
-impl<B: Block<Logical, Logical = B>> UniformDataNonUnit for B {}
+impl<B: Block<SlView, SlView = B>> UniformNonUnit for B {}
 
-unsafe impl UniformData<Logical> for sl::Sampler2d {
-    type Logical = Self;
-    type Physical = gl::Sampler2d;
+unsafe impl<S: Sample> Uniform<SlView> for sl::Sampler2d<S> {
+    type SlView = Self;
+    type GlView = gl::Sampler2d<S>;
 
-    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformDataVisitor<'a, Logical>) {
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformVisitor<'a, SlView>) {
         visitor.accept_sampler2d(path, self)
     }
 
@@ -192,17 +191,17 @@ unsafe impl UniformData<Logical> for sl::Sampler2d {
     }
 }
 
-impl UniformDataNonUnit for sl::Sampler2d {}
+impl<S: Sample> UniformNonUnit for sl::Sampler2d<S> {}
 
-unsafe impl<U, V> UniformData<Logical> for (U, V)
+unsafe impl<U, V> Uniform<SlView> for (U, V)
 where
-    U: UniformData<Logical>,
-    V: UniformData<Logical>,
+    U: Uniform<SlView>,
+    V: Uniform<SlView>,
 {
-    type Logical = Self;
-    type Physical = (U::Physical, V::Physical);
+    type SlView = Self;
+    type GlView = (U::GlView, V::GlView);
 
-    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformDataVisitor<'a, Logical>) {
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformVisitor<'a, SlView>) {
         self.0.visit(&join_ident_path(path, "a"), visitor);
         self.1.visit(&join_ident_path(path, "b"), visitor);
     }
@@ -215,25 +214,25 @@ where
     }
 }
 
-impl<U, V> UniformDataNonUnit for (U, V)
+impl<U, V> UniformNonUnit for (U, V)
 where
-    U: UniformData<Logical>,
-    V: UniformData<Logical>,
+    U: Uniform<SlView>,
+    V: Uniform<SlView>,
 {
 }
 
-// FragmentData
+// Fragment
 
 #[sealed]
-impl super::FragmentDataView for Logical {
+impl super::FragmentFields for SlView {
     type Attachment = sl::Vec4;
 }
 
-unsafe impl FragmentData<Logical> for sl::Vec4 {
-    type Logical = Self;
-    type Physical = gl::Texture2d<gl::RgbaFormat>;
+unsafe impl Fragment<SlView> for sl::Vec4 {
+    type SlView = Self;
+    type GlView = gl::Texture2d<sl::Vec4>;
 
-    fn visit(&self, path: &str, visitor: &mut impl FragmentDataVisitor<Logical>) {
+    fn visit(&self, path: &str, visitor: &mut impl FragmentVisitor<SlView>) {
         visitor.accept(path, self);
     }
 }

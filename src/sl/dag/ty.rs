@@ -3,6 +3,9 @@ use std::rc::Rc;
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum SamplerType {
     Sampler2d,
+    ISampler2d,
+    USampler2d,
+    Sampler2dShadow,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]

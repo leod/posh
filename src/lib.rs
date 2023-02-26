@@ -5,11 +5,11 @@ pub mod gl;
 pub mod sl;
 
 pub use interface::{
-    Block, BlockView, FragmentData, FragmentDataView, Logical, Physical, UniformData,
-    UniformDataNonUnit, UniformDataUnion, UniformDataView, VertexData, VertexDataView,
+    Block, BlockFields, Fragment, FragmentFields, GlView, SlView, Uniform, UniformFields,
+    UniformNonUnit, UniformUnion, Vertex, VertexFields,
 };
 
-pub use posh_derive::{Block, UniformData, VertexData};
+pub use posh_derive::{Block, Uniform, Vertex};
 
 pub use crevice;
 
@@ -22,7 +22,7 @@ pub use bytemuck;
 #[doc(hidden)]
 pub mod internal {
     pub use super::{
-        interface::{UniformDataVisitor, VertexDataField, VertexDataVisitor},
+        interface::{UniformVisitor, VertexField, VertexVisitor},
         sl::{
             dag::{Expr, StructType, Type},
             primitives::{field, simplify_struct_literal, value_arg},

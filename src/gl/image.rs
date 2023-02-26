@@ -1,114 +1,116 @@
-use sealed::sealed;
+use std::marker::PhantomData;
 
-use super::raw::{self, ImageInternalFormat, ImageType};
+use crate::sl::{self, Sample};
 
-#[sealed]
-pub trait Image {
-    #[doc(hidden)]
-    fn raw(&self) -> &raw::Image;
+use super::raw::{self, ImageComponentType, ImageInternalFormat};
+
+pub struct Image<'a, S> {
+    raw: raw::Image<'a>,
+    _phantom: PhantomData<S>,
 }
 
-#[sealed]
-pub trait ImageFormat {
-    const ALLOWED_INTERNAL_FORMATS: &'static [ImageInternalFormat];
-
-    type Image<'a>: Image;
-}
-
-pub struct RgbaImage<'a>(raw::Image<'a>);
-
-#[sealed]
-impl<'a> Image for RgbaImage<'a> {
-    fn raw(&self) -> &raw::Image {
-        &self.0
+impl<'a, S: Sample> Image<'a, S> {
+    pub fn raw(self) -> raw::Image<'a> {
+        self.raw
     }
 }
 
-impl<'a> RgbaImage<'a> {
-    pub fn slice_u8(dimensions: (u32, u32), data: &'a [u8]) -> Self {
-        RgbaImage(raw::Image {
-            dimensions,
-            ty: ImageType::U8,
-            internal_format: ImageInternalFormat::RgbaU8,
-            data: Some(data),
-        })
+impl<'a> Image<'a, sl::Vec4> {
+    pub fn slice_u8(size: glam::UVec2, data: &'a [u8]) -> Self {
+        Image {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::U8,
+                internal_format: ImageInternalFormat::RgbaU8,
+                data: Some(data),
+            },
+            _phantom: PhantomData,
+        }
     }
 
-    pub fn slice_u8_srgb(dimensions: (u32, u32), data: &'a [u8]) -> Self {
-        RgbaImage(raw::Image {
-            dimensions,
-            ty: ImageType::U8,
-            internal_format: ImageInternalFormat::SrgbU8AlphaU8,
-            data: Some(data),
-        })
+    pub fn slice_u8_srgb(size: glam::UVec2, data: &'a [u8]) -> Self {
+        Image {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::U8,
+                internal_format: ImageInternalFormat::SrgbU8AlphaU8,
+                data: Some(data),
+            },
+            _phantom: PhantomData,
+        }
     }
 
-    pub fn slice_i8_snorm(dimensions: (u32, u32), data: &'a [i8]) -> Self {
-        RgbaImage(raw::Image {
-            dimensions,
-            ty: ImageType::I8,
-            internal_format: ImageInternalFormat::RgbaI8Snorm,
-            data: Some(bytemuck::cast_slice(data)),
-        })
+    pub fn slice_i8_snorm(size: glam::UVec2, data: &'a [i8]) -> Self {
+        Image {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::I8,
+                internal_format: ImageInternalFormat::RgbaI8Snorm,
+                data: Some(bytemuck::cast_slice(data)),
+            },
+            _phantom: PhantomData,
+        }
     }
 
-    pub fn slice_f32(dimensions: (u32, u32), data: &'a [f32]) -> Self {
-        RgbaImage(raw::Image {
-            dimensions,
-            ty: ImageType::F32,
-            internal_format: ImageInternalFormat::RgbaF32,
-            data: Some(bytemuck::cast_slice(data)),
-        })
+    pub fn slice_f32(size: glam::UVec2, data: &'a [f32]) -> Self {
+        Image {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::F32,
+                internal_format: ImageInternalFormat::RgbaF32,
+                data: Some(bytemuck::cast_slice(data)),
+            },
+            _phantom: PhantomData,
+        }
     }
 
-    pub fn zeroed_u8(dimensions: (u32, u32)) -> Self {
-        RgbaImage(raw::Image {
-            dimensions,
-            ty: ImageType::U8,
-            internal_format: ImageInternalFormat::RgbaU8,
-            data: None,
-        })
+    pub fn zeroed_u8(size: glam::UVec2) -> Self {
+        Image {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::U8,
+                internal_format: ImageInternalFormat::RgbaU8,
+                data: None,
+            },
+            _phantom: PhantomData,
+        }
     }
 
-    pub fn zeroed_u8_srgb(dimensions: (u32, u32)) -> Self {
-        RgbaImage(raw::Image {
-            dimensions,
-            ty: ImageType::U8,
-            internal_format: ImageInternalFormat::SrgbU8AlphaU8,
-            data: None,
-        })
+    pub fn zeroed_u8_srgb(size: glam::UVec2) -> Self {
+        Image {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::U8,
+                internal_format: ImageInternalFormat::SrgbU8AlphaU8,
+                data: None,
+            },
+            _phantom: PhantomData,
+        }
     }
 
-    pub fn zeroed_i8_snorm(dimensions: (u32, u32)) -> Self {
-        RgbaImage(raw::Image {
-            dimensions,
-            ty: ImageType::I8,
-            internal_format: ImageInternalFormat::RgbaI8Snorm,
-            data: None,
-        })
+    pub fn zeroed_i8_snorm(size: glam::UVec2) -> Self {
+        Image {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::I8,
+                internal_format: ImageInternalFormat::RgbaI8Snorm,
+                data: None,
+            },
+            _phantom: PhantomData,
+        }
     }
 
-    pub fn zeroed_f32(dimensions: (u32, u32)) -> Self {
-        RgbaImage(raw::Image {
-            dimensions,
-            ty: ImageType::F32,
-            internal_format: ImageInternalFormat::RgbaF32,
-            data: None,
-        })
+    pub fn zeroed_f32(size: glam::UVec2) -> Self {
+        Image {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::F32,
+                internal_format: ImageInternalFormat::RgbaF32,
+                data: None,
+            },
+            _phantom: PhantomData,
+        }
     }
-}
-
-pub struct RgbaFormat;
-
-#[sealed]
-impl ImageFormat for RgbaFormat {
-    const ALLOWED_INTERNAL_FORMATS: &'static [ImageInternalFormat] = &[
-        ImageInternalFormat::RgbaU8,
-        ImageInternalFormat::SrgbU8AlphaU8,
-        ImageInternalFormat::RgbaI8Snorm,
-        ImageInternalFormat::RgbaF32,
-    ];
-    type Image<'a> = RgbaImage<'a>;
 }
 
 // TODO:

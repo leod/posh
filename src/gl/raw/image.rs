@@ -49,15 +49,15 @@ impl ImageFormat {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum ImageType {
+pub enum ImageComponentType {
     U8,
     I8,
     F32,
 }
 
-impl ImageType {
+impl ImageComponentType {
     pub const fn to_gl(self) -> u32 {
-        use ImageType::*;
+        use ImageComponentType::*;
 
         match self {
             U8 => glow::UNSIGNED_BYTE,
@@ -67,7 +67,7 @@ impl ImageType {
     }
 
     pub const fn size_of(self) -> usize {
-        use ImageType::*;
+        use ImageComponentType::*;
 
         match self {
             U8 => 1,
@@ -105,14 +105,14 @@ impl ImageInternalFormat {
         }
     }
 
-    pub fn matches_type(self, ty: ImageType) -> bool {
+    pub fn matches_type(self, ty: ImageComponentType) -> bool {
         use ImageInternalFormat::*;
 
         match self {
-            RgbaU8 => ty == ImageType::U8,
-            SrgbU8AlphaU8 => ty == ImageType::U8,
-            RgbaI8Snorm => ty == ImageType::I8,
-            RgbaF32 => ty == ImageType::F32,
+            RgbaU8 => ty == ImageComponentType::U8,
+            SrgbU8AlphaU8 => ty == ImageComponentType::U8,
+            RgbaI8Snorm => ty == ImageComponentType::I8,
+            RgbaF32 => ty == ImageComponentType::F32,
         }
     }
 }
@@ -120,16 +120,16 @@ impl ImageInternalFormat {
 #[doc(hidden)]
 #[derive(Clone)]
 pub struct Image<'a> {
-    pub dimensions: (u32, u32),
-    pub ty: ImageType,
+    pub size: glam::UVec2,
+    pub ty: ImageComponentType,
     pub internal_format: ImageInternalFormat,
     pub data: Option<&'a [u8]>,
 }
 
 impl<'a> Image<'a> {
     pub fn required_data_len(&self) -> usize {
-        let width = usize::try_from(self.dimensions.0).unwrap();
-        let height = usize::try_from(self.dimensions.0).unwrap();
+        let width = self.size.x as usize;
+        let height = self.size.y as usize;
         let bytes = self.ty.size_of();
         let num_components = self.internal_format.to_format().size();
 
