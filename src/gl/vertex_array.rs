@@ -2,7 +2,7 @@ use std::{marker::PhantomData, ops::Range, rc::Rc};
 
 use crate::{
     internal::VertexVisitor,
-    sl::program_def::{VertexDef, VertexInputRate},
+    sl::program_def::{VertexBlockDef, VertexInputRate},
     Block, GlView, SlView, Vertex,
 };
 
@@ -97,7 +97,7 @@ pub struct VertexArrayBinding<V> {
 
 #[derive(Default)]
 struct VertexBufferVisitor<'a> {
-    raw_vertex_buffers: Vec<(&'a raw::Buffer, VertexDef)>,
+    raw_vertex_buffers: Vec<(&'a raw::Buffer, VertexBlockDef)>,
 }
 
 impl<'a> VertexVisitor<'a, GlView> for VertexBufferVisitor<'a> {
@@ -109,7 +109,7 @@ impl<'a> VertexVisitor<'a, GlView> for VertexBufferVisitor<'a> {
     ) {
         let stride = vertex_size::<V>();
         let attributes = V::vertex_attribute_defs(path);
-        let vertex_def = VertexDef {
+        let vertex_def = VertexBlockDef {
             input_rate,
             stride,
             attributes,

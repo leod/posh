@@ -4,7 +4,7 @@ use bytemuck::Pod;
 
 use crate::{
     gl::{BufferError, BufferUsage, ElementType, ProgramError, VertexArrayError},
-    sl::program_def::{ProgramDef, VertexDef},
+    sl::program_def::{ProgramDef, VertexBlockDef},
 };
 
 use super::{Buffer, Caps, Image, Program, Texture2d, TextureError, VertexArray};
@@ -42,7 +42,7 @@ impl Context {
 
     pub fn create_vertex_array(
         &self,
-        vertex_buffers: &[(&Buffer, VertexDef)],
+        vertex_buffers: &[(&Buffer, VertexBlockDef)],
         element_buffer: Option<(&Buffer, ElementType)>,
     ) -> Result<VertexArray, VertexArrayError> {
         VertexArray::new(self.gl.clone(), vertex_buffers, element_buffer)

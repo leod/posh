@@ -7,7 +7,7 @@ use crate::{
         raw::vertex_layout::{VertexAttributeLayout, VertexAttributeType},
         VertexArrayError,
     },
-    sl::program_def::{VertexDef, VertexInputRate},
+    sl::program_def::{VertexBlockDef, VertexInputRate},
 };
 
 use super::{buffer::BufferShared, error::check_gl_error, Buffer};
@@ -52,7 +52,7 @@ pub enum PrimitiveType {
 struct VertexArrayShared {
     gl: Rc<glow::Context>,
     id: glow::VertexArray,
-    vertex_buffers: Vec<(Rc<BufferShared>, VertexDef)>,
+    vertex_buffers: Vec<(Rc<BufferShared>, VertexBlockDef)>,
     element_buffer: Option<(Rc<BufferShared>, ElementType)>,
 }
 
@@ -68,7 +68,7 @@ impl VertexArray {
     /// buffers have a mismatched size.
     pub(super) fn new(
         gl: Rc<glow::Context>,
-        vertex_buffers: &[(&Buffer, VertexDef)],
+        vertex_buffers: &[(&Buffer, VertexBlockDef)],
         element_buffer: Option<(&Buffer, ElementType)>,
     ) -> Result<Self, VertexArrayError> {
         // TODO: How do we want to handle `buffers.is_empty()`?
