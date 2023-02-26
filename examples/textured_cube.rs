@@ -4,11 +4,11 @@ use image::{io::Reader as ImageReader, EncodableLayout};
 
 use posh::{
     gl::{
-        BufferUsage, Context, DefaultFramebuffer, DrawParams, Error, PrimitiveType, Program,
-        RgbaFormat, RgbaImage, Sampler2dParams, Texture2d, UniformBuffer, VertexArray,
+        BufferUsage, Context, DefaultFramebuffer, DrawParams, Error, Image, PrimitiveType, Program,
+        Sampler2dParams, Texture2d, UniformBuffer, VertexArray,
     },
     sl::{self, VaryingOutput},
-    Block, BlockView, Logical, Physical, UniformData, UniformDataView,
+    Block, BlockFields, GlView, SlView, UniformFields,
 };
 
 const WIDTH: u32 = 1024;
@@ -17,12 +17,12 @@ const HEIGHT: u32 = 768;
 // Shader interface
 
 #[derive(Clone, Copy, Block)]
-struct Camera<V: BlockView = Logical> {
-    projection: V::Mat4,
-    view: V::Mat4,
+struct Camera<F: BlockFields = SlView> {
+    projection: F::Mat4,
+    view: F::Mat4,
 }
 
-impl Default for Camera<Physical> {
+impl Default for Camera<GlView> {
     fn default() -> Self {
         Self {
             projection: glam::Mat4::perspective_rh_gl(
@@ -37,15 +37,15 @@ impl Default for Camera<Physical> {
 }
 
 #[derive(Clone, Copy, Block)]
-struct Vertex<V: BlockView = Logical> {
-    pos: V::Vec3,
-    tex_coords: V::Vec2,
+struct Vertex<F: BlockFields = SlView> {
+    pos: F::Vec3,
+    tex_coords: F::Vec2,
 }
 
-#[derive(UniformData)]
-struct Uniforms<V: UniformDataView = Logical> {
-    camera: V::Block<Camera>,
-    time: V::Block<sl::F32>,
+#[derive(posh::Uniform)]
+struct Uniform<F: UniformFields = SlView> {
+    camera: F::Block<Camera>,
+    time: F::Block<sl::F32>,
 }
 
 // Shader code
@@ -61,7 +61,7 @@ fn zxy(v: sl::Vec3) -> sl::Vec3 {
     sl::vec3(v.z, v.x, v.y)
 }
 
-fn vertex_shader(uniforms: Uniforms, vertex: Vertex) -> VaryingOutput<sl::Vec2> {
+fn vertex_shader(uniforms: Uniform, vertex: Vertex) -> VaryingOutput<sl::Vec2> {
     let camera = uniforms.camera;
     let time = uniforms.time / 3.0;
     let vertex_pos = (rotate(time) * sl::vec2(vertex.pos.x, vertex.pos.y)).extend(vertex.pos.z);
@@ -77,11 +77,11 @@ fn vertex_shader(uniforms: Uniforms, vertex: Vertex) -> VaryingOutput<sl::Vec2> 
 
 struct Demo {
     context: Context,
-    program: Program<(Uniforms, sl::Sampler2d), Vertex>,
+    program: Program<(Uniform, sl::Sampler2d<sl::Vec4>), Vertex>,
     camera: UniformBuffer<Camera>,
     time: UniformBuffer<sl::F32>,
     vertex_array: VertexArray<Vertex, u16>,
-    texture: Texture2d<RgbaFormat>,
+    texture: Texture2d<sl::Vec4>,
     start_time: Instant,
 }
 
@@ -100,8 +100,8 @@ impl Demo {
             .decode()
             .unwrap()
             .to_rgba8();
-        let texture = context.create_texture_2d_with_mipmap(RgbaImage::slice_u8(
-            image.dimensions(),
+        let texture = context.create_texture_2d_with_mipmap(Image::slice_u8(
+            image.dimensions().into(),
             image.as_bytes(),
         ))?;
         let start_time = Instant::now();
@@ -124,7 +124,7 @@ impl Demo {
         self.context.clear_color([0.1, 0.2, 0.3, 1.0]);
         self.program.draw(
             (
-                Uniforms {
+                Uniform {
                     camera: self.camera.binding(),
                     time: self.time.binding(),
                 },
@@ -189,7 +189,7 @@ fn cube_indices() -> Vec<u16> {
     indices
 }
 
-fn cube_vertices() -> Vec<Vertex<Physical>> {
+fn cube_vertices() -> Vec<Vertex<GlView>> {
     let tex_coords = [
         [0.0, 0.0].into(),
         [0.0, 1.0].into(),

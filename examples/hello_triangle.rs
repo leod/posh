@@ -6,13 +6,13 @@ use posh::{
         UniformBuffer, VertexArray,
     },
     sl::{self, VaryingOutput},
-    Block, BlockView, Logical,
+    Block, BlockFields, SlView,
 };
 
 // Shader interface
 
 #[derive(Clone, Copy, Block)]
-struct MyUniform<V: BlockView = Logical> {
+struct MyUniform<V: BlockFields = SlView> {
     time: V::F32,
 }
 

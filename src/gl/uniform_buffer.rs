@@ -2,7 +2,7 @@ use std::{marker::PhantomData, rc::Rc};
 
 use crevice::std140::AsStd140;
 
-use crate::{Block, Logical};
+use crate::{Block, SlView};
 
 use super::{raw, BufferUsage};
 
@@ -23,11 +23,11 @@ pub struct UniformBufferBinding<B> {
     // TODO: Uniform buffer slicing.
 }
 
-impl<B: Block<Logical>> UniformBuffer<B> {
+impl<B: Block<SlView>> UniformBuffer<B> {
     /// # Panics
     ///
     /// Panics if the length of `raw` is not a multiple of the size of
-    /// `<U::Physical as AsStd140>::Output`.
+    /// `<U::GlView as AsStd140>::Output`.
     pub(super) fn from_raw(raw: raw::Buffer) -> Self {
         assert!(Self::uniform_size() > 0);
         assert_eq!(raw.len() % Self::uniform_size(), 0);
@@ -54,7 +54,7 @@ impl<B: Block<Logical>> UniformBuffer<B> {
         self.len() == 0
     }
 
-    pub fn set(&self, data: B::Physical) {
+    pub fn set(&self, data: B::GlView) {
         self.raw.set(&[data.as_std140()]);
     }
 
@@ -66,6 +66,6 @@ impl<B: Block<Logical>> UniformBuffer<B> {
     }
 
     fn uniform_size() -> usize {
-        std::mem::size_of::<<B::Physical as AsStd140>::Output>()
+        std::mem::size_of::<<B::GlView as AsStd140>::Output>()
     }
 }

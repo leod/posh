@@ -25,13 +25,12 @@ use std::{collections::BTreeMap, rc::Rc};
 
 use dag::{Expr, StructType, Type};
 
-pub(crate) use scalar::scalar_physical;
-pub(crate) use sig::Private;
+pub(crate) use {scalar::scalar_physical, sig::Private};
 
 pub use {
     array::Array,
     mat::{mat2, mat3, mat4, Mat2, Mat3, Mat4},
-    sampler::Sampler2d,
+    sampler::{Sample, Sampler2d},
     scalar::{Bool, F32, I32, U32},
     sig::{ConstParams, FragmentInput, FragmentOutput, VaryingOutput, VertexInput, VertexOutput},
     varying::Varying,
