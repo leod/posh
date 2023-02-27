@@ -4,8 +4,9 @@ use image::{io::Reader as ImageReader, EncodableLayout};
 
 use posh::{
     gl::{
-        BufferUsage, Context, DefaultFramebuffer, DrawParams, Error, Image, PrimitiveType, Program,
-        Sampler2dParams, Texture2d, UniformBuffer, VertexArray,
+        BufferUsage, Context, DefaultFramebuffer, DrawParams, ElementBuffer, Error, Image,
+        PrimitiveType, Program, Sampler2dParams, Texture2d, UniformBuffer, VertexBuffer,
+        VertexStream,
     },
     sl::{self, VaryingOutput},
     Block, BlockFields, GlView, SlView, UniformFields,
@@ -80,7 +81,8 @@ struct Demo {
     program: Program<(Uniform, sl::Sampler2d<sl::Vec4>), Vertex>,
     camera: UniformBuffer<Camera>,
     time: UniformBuffer<sl::F32>,
-    vertex_array: VertexArray<Vertex, u16>,
+    vertices: VertexBuffer<Vertex>,
+    elements: ElementBuffer,
     texture: Texture2d<sl::Vec4>,
     start_time: Instant,
 }
@@ -90,11 +92,8 @@ impl Demo {
         let program = context.create_program(vertex_shader, sl::Sampler2d::lookup)?;
         let camera = context.create_uniform_buffer(Camera::default(), BufferUsage::StaticDraw)?;
         let time = context.create_uniform_buffer(0.0, BufferUsage::StreamDraw)?;
-        let vertex_array = context.create_simple_vertex_array(
-            &cube_vertices(),
-            BufferUsage::StaticDraw,
-            context.create_element_buffer(&cube_indices(), BufferUsage::StaticDraw)?,
-        )?;
+        let vertices = context.create_vertex_buffer(&cube_vertices(), BufferUsage::StaticDraw)?;
+        let elements = context.create_element_buffer(&cube_indices(), BufferUsage::StaticDraw)?;
         let image = ImageReader::open("examples/resources/smile.png")
             .unwrap()
             .decode()
@@ -111,7 +110,8 @@ impl Demo {
             program,
             camera,
             time,
-            vertex_array,
+            vertices,
+            elements,
             texture,
             start_time,
         })
@@ -130,7 +130,11 @@ impl Demo {
                 },
                 self.texture.binding(Sampler2dParams::default()),
             ),
-            self.vertex_array.binding(PrimitiveType::Triangles),
+            VertexStream::Indexed {
+                vertices: self.vertices.binding(),
+                elements: self.elements.binding(),
+                primitive: PrimitiveType::Triangles,
+            },
             &DefaultFramebuffer,
             &DrawParams::default(),
         );
@@ -155,7 +159,8 @@ fn main() {
     let _gl_context = window.gl_create_context().unwrap();
     let context = Context::new(unsafe {
         glow::Context::from_loader_function(|s| video.gl_get_proc_address(s) as *const _)
-    });
+    })
+    .unwrap();
 
     let demo = Demo::new(context).unwrap();
 
@@ -175,9 +180,9 @@ fn main() {
     }
 }
 
-fn cube_indices() -> Vec<u16> {
+fn cube_indices() -> Vec<u32> {
     let mut indices = Vec::new();
-    for face in 0..6u16 {
+    for face in 0..6u32 {
         indices.push(4 * face + 0);
         indices.push(4 * face + 1);
         indices.push(4 * face + 2);

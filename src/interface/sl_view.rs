@@ -135,7 +135,7 @@ impl super::VertexFields for SlView {
 }
 
 unsafe impl<B: Block<SlView>> Vertex<SlView> for B {
-    type GlView = gl::VertexBuffer<B>;
+    type GlView = gl::VertexBufferBinding<B>;
     type SlView = B::SlView;
 
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl VertexVisitor<'a, SlView>) {
