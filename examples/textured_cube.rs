@@ -93,7 +93,7 @@ impl Demo {
         let camera = context.create_uniform_buffer(Camera::default(), BufferUsage::StaticDraw)?;
         let time = context.create_uniform_buffer(0.0, BufferUsage::StreamDraw)?;
         let vertices = context.create_vertex_buffer(&cube_vertices(), BufferUsage::StaticDraw)?;
-        let elements = context.create_element_buffer(&cube_indices(), BufferUsage::StaticDraw)?;
+        let elements = context.create_element_buffer(&cube_elements(), BufferUsage::StaticDraw)?;
         let image = ImageReader::open("examples/resources/smile.png")
             .unwrap()
             .decode()
@@ -141,6 +141,48 @@ impl Demo {
     }
 }
 
+fn cube_vertices() -> Vec<Vertex<GlView>> {
+    [
+        [0.5, -0.5, -0.5],
+        [0.5, -0.5, 0.5],
+        [0.5, 0.5, 0.5],
+        [0.5, 0.5, -0.5],
+        [-0.5, -0.5, -0.5],
+        [-0.5, 0.5, -0.5],
+        [-0.5, 0.5, 0.5],
+        [-0.5, -0.5, 0.5],
+        [-0.5, 0.5, -0.5],
+        [0.5, 0.5, -0.5],
+        [0.5, 0.5, 0.5],
+        [-0.5, 0.5, 0.5],
+        [-0.5, -0.5, -0.5],
+        [-0.5, -0.5, 0.5],
+        [0.5, -0.5, 0.5],
+        [0.5, -0.5, -0.5],
+        [-0.5, -0.5, 0.5],
+        [-0.5, 0.5, 0.5],
+        [0.5, 0.5, 0.5],
+        [0.5, -0.5, 0.5],
+        [-0.5, -0.5, -0.5],
+        [0.5, -0.5, -0.5],
+        [0.5, 0.5, -0.5],
+        [-0.5, 0.5, -0.5],
+    ]
+    .into_iter()
+    .enumerate()
+    .map(|(i, pos)| Vertex {
+        pos: pos.into(),
+        tex_coords: [[0.0, 0.0], [0.0, 1.0], [1.0, 1.0], [1.0, 0.0]][i % 4].into(),
+    })
+    .collect()
+}
+
+fn cube_elements() -> Vec<u32> {
+    (0..6u32)
+        .flat_map(|f| [0, 1, 2, 0, 2, 3].map(|j| f * 4 + j))
+        .collect()
+}
+
 fn main() {
     let sdl = sdl2::init().unwrap();
     let video = sdl.video().unwrap();
@@ -178,127 +220,4 @@ fn main() {
         demo.draw();
         window.gl_swap_window();
     }
-}
-
-fn cube_indices() -> Vec<u32> {
-    let mut indices = Vec::new();
-    for face in 0..6u32 {
-        indices.push(4 * face + 0);
-        indices.push(4 * face + 1);
-        indices.push(4 * face + 2);
-        indices.push(4 * face + 0);
-        indices.push(4 * face + 2);
-        indices.push(4 * face + 3);
-    }
-
-    indices
-}
-
-fn cube_vertices() -> Vec<Vertex<GlView>> {
-    let tex_coords = [
-        [0.0, 0.0].into(),
-        [0.0, 1.0].into(),
-        [1.0, 1.0].into(),
-        [1.0, 0.0].into(),
-    ];
-
-    [
-        Vertex {
-            pos: [0.5, -0.5, -0.5].into(),
-            tex_coords: tex_coords[0],
-        },
-        Vertex {
-            pos: [0.5, -0.5, 0.5].into(),
-            tex_coords: tex_coords[1],
-        },
-        Vertex {
-            pos: [0.5, 0.5, 0.5].into(),
-            tex_coords: tex_coords[2],
-        },
-        Vertex {
-            pos: [0.5, 0.5, -0.5].into(),
-            tex_coords: tex_coords[3],
-        },
-        Vertex {
-            pos: [-0.5, -0.5, -0.5].into(),
-            tex_coords: tex_coords[0],
-        },
-        Vertex {
-            pos: [-0.5, 0.5, -0.5].into(),
-            tex_coords: tex_coords[1],
-        },
-        Vertex {
-            pos: [-0.5, 0.5, 0.5].into(),
-            tex_coords: tex_coords[2],
-        },
-        Vertex {
-            pos: [-0.5, -0.5, 0.5].into(),
-            tex_coords: tex_coords[3],
-        },
-        Vertex {
-            pos: [-0.5, 0.5, -0.5].into(),
-            tex_coords: tex_coords[0],
-        },
-        Vertex {
-            pos: [0.5, 0.5, -0.5].into(),
-            tex_coords: tex_coords[1],
-        },
-        Vertex {
-            pos: [0.5, 0.5, 0.5].into(),
-            tex_coords: tex_coords[2],
-        },
-        Vertex {
-            pos: [-0.5, 0.5, 0.5].into(),
-            tex_coords: tex_coords[3],
-        },
-        Vertex {
-            pos: [-0.5, -0.5, -0.5].into(),
-            tex_coords: tex_coords[0],
-        },
-        Vertex {
-            pos: [-0.5, -0.5, 0.5].into(),
-            tex_coords: tex_coords[1],
-        },
-        Vertex {
-            pos: [0.5, -0.5, 0.5].into(),
-            tex_coords: tex_coords[2],
-        },
-        Vertex {
-            pos: [0.5, -0.5, -0.5].into(),
-            tex_coords: tex_coords[3],
-        },
-        Vertex {
-            pos: [-0.5, -0.5, 0.5].into(),
-            tex_coords: tex_coords[0],
-        },
-        Vertex {
-            pos: [-0.5, 0.5, 0.5].into(),
-            tex_coords: tex_coords[1],
-        },
-        Vertex {
-            pos: [0.5, 0.5, 0.5].into(),
-            tex_coords: tex_coords[2],
-        },
-        Vertex {
-            pos: [0.5, -0.5, 0.5].into(),
-            tex_coords: tex_coords[3],
-        },
-        Vertex {
-            pos: [-0.5, -0.5, -0.5].into(),
-            tex_coords: tex_coords[0],
-        },
-        Vertex {
-            pos: [0.5, -0.5, -0.5].into(),
-            tex_coords: tex_coords[1],
-        },
-        Vertex {
-            pos: [0.5, 0.5, -0.5].into(),
-            tex_coords: tex_coords[2],
-        },
-        Vertex {
-            pos: [-0.5, 0.5, -0.5].into(),
-            tex_coords: tex_coords[3],
-        },
-    ]
-    .to_vec()
 }
