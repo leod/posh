@@ -46,7 +46,7 @@ pub enum VertexInputRate {
 
 /// Vertex input definition.
 #[derive(Debug, Clone)]
-pub struct VertexDef {
+pub struct VertexBlockDef {
     pub input_rate: VertexInputRate,
     pub stride: usize,
     pub attributes: Vec<VertexAttributeDef>,
@@ -65,8 +65,8 @@ pub struct ProgramDef {
     /// Samplers that the program needs.
     pub uniform_sampler_defs: Vec<UniformSamplerDef>,
 
-    /// Vertices that the program needs.
-    pub vertex_defs: Vec<VertexDef>,
+    /// Vertex blocks that the program needs.
+    pub vertex_block_defs: Vec<VertexBlockDef>,
 
     /// Vertex shader source code.
     pub vertex_shader_source: String,

@@ -9,7 +9,7 @@ use crate::{
 
 use super::{
     error::check_gl_error, vertex_layout::VertexAttributeLayout, Buffer, ProgramValidationError,
-    Sampler, VertexArrayBinding,
+    Sampler, VertexStream,
 };
 
 struct ProgramShared {
@@ -52,8 +52,8 @@ impl Program {
         {
             let mut index = 0;
 
-            for vertex_info in &shared.def.vertex_defs {
-                for attribute in &vertex_info.attributes {
+            for block_def in &shared.def.vertex_block_defs {
+                for attribute in &block_def.attributes {
                     unsafe {
                         gl.bind_attrib_location(
                             shared.id,
@@ -155,14 +155,15 @@ impl Program {
         &self,
         uniform_buffers: &[&Buffer],
         samplers: &[Sampler],
-        vertices: VertexArrayBinding,
+        vertices: VertexStream,
     ) {
+        assert!(vertices.is_compatible(&self.shared.def.vertex_block_defs));
+
         let gl = &self.shared.gl;
         let def = &self.shared.def;
 
         assert_eq!(uniform_buffers.len(), def.uniform_block_defs.len());
         assert_eq!(samplers.len(), def.uniform_sampler_defs.len());
-        assert!(Rc::ptr_eq(vertices.gl(), gl));
 
         unsafe {
             gl.use_program(Some(self.shared.id));
@@ -190,11 +191,15 @@ impl Program {
             sampler.bind();
         }
 
-        vertices.draw();
+        vertices.draw(gl);
 
         // TODO: Remove overly conservative unbinding.
         for (sampler, sampler_def) in samplers.iter().zip(&def.uniform_sampler_defs) {
             let unit = texture_unit_gl(sampler_def);
+
+            unsafe {
+                gl.active_texture(unit);
+            }
 
             sampler.unbind();
         }

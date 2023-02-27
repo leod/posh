@@ -1,13 +1,14 @@
 use std::rc::Rc;
 
 use bytemuck::Pod;
+use glow::HasContext;
 
 use crate::{
-    gl::{BufferError, BufferUsage, ElementType, ProgramError, VertexArrayError},
-    sl::program_def::{ProgramDef, VertexDef},
+    gl::{BufferError, BufferUsage, ProgramError},
+    sl::program_def::ProgramDef,
 };
 
-use super::{Buffer, Caps, Image, Program, Texture2d, TextureError, VertexArray};
+use super::{Buffer, Caps, ContextError, Image, Program, Texture2d, TextureError};
 
 pub struct Context {
     gl: Rc<glow::Context>,
@@ -15,13 +16,22 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn new(gl: glow::Context) -> Self {
+    pub fn new(gl: glow::Context) -> Result<Self, ContextError> {
         let caps = Caps::new(&gl);
 
-        Self {
+        // All vertex bindings are made through a single vertex array object
+        // that is bound at the start. The vertex array object binding must not
+        // be changed during the lifetime of a context.
+        let vao = unsafe { gl.create_vertex_array() }.map_err(ContextError::ObjectCreation)?;
+
+        unsafe {
+            gl.bind_vertex_array(Some(vao));
+        }
+
+        Ok(Self {
             gl: Rc::new(gl),
             caps,
-        }
+        })
     }
 
     pub fn gl(&self) -> &Rc<glow::Context> {
@@ -38,14 +48,6 @@ impl Context {
         usage: BufferUsage,
     ) -> Result<Buffer, BufferError> {
         Buffer::new(self.gl.clone(), data, usage)
-    }
-
-    pub fn create_vertex_array(
-        &self,
-        vertex_buffers: &[(&Buffer, VertexDef)],
-        element_buffer: Option<(&Buffer, ElementType)>,
-    ) -> Result<VertexArray, VertexArrayError> {
-        VertexArray::new(self.gl.clone(), vertex_buffers, element_buffer)
     }
 
     pub fn create_program(&self, def: ProgramDef) -> Result<Program, ProgramError> {

@@ -3,7 +3,7 @@ use std::time::Instant;
 use posh::{
     gl::{
         BufferUsage, Context, DefaultFramebuffer, DrawParams, Error, PrimitiveType, Program,
-        UniformBuffer, VertexArray,
+        UniformBuffer, VertexBuffer, VertexStream,
     },
     sl::{self, VaryingOutput},
     Block, BlockFields, SlView,
@@ -39,7 +39,7 @@ struct Demo {
     context: Context,
     program: Program<MyUniform, sl::Vec2>,
     uniform_buffer: UniformBuffer<MyUniform>,
-    vertex_array: VertexArray<sl::Vec2>,
+    vertices: VertexBuffer<sl::Vec2>,
     start_time: Instant,
 }
 
@@ -48,10 +48,9 @@ impl Demo {
         let program = context.create_program(vertex_shader, fragment_shader)?;
         let uniform_buffer =
             context.create_uniform_buffer(MyUniform { time: 0.0 }, BufferUsage::StreamDraw)?;
-        let vertex_array = context.create_simple_vertex_array(
+        let vertices = context.create_vertex_buffer(
             &[[0.5f32, 1.0].into(), [0.0, 0.0].into(), [1.0, 0.0].into()],
             BufferUsage::StaticDraw,
-            (),
         )?;
         let start_time = Instant::now();
 
@@ -59,7 +58,7 @@ impl Demo {
             context,
             program,
             uniform_buffer,
-            vertex_array,
+            vertices,
             start_time,
         })
     }
@@ -71,8 +70,11 @@ impl Demo {
         self.context.clear_color([0.1, 0.2, 0.3, 1.0]);
         self.program.draw(
             self.uniform_buffer.binding(),
-            self.vertex_array
-                .range_binding(0..3, PrimitiveType::Triangles),
+            VertexStream::Unindexed {
+                vertices: self.vertices.binding(),
+                range: 0..3,
+                primitive: PrimitiveType::Triangles,
+            },
             &DefaultFramebuffer,
             &DrawParams::default(),
         );
@@ -97,7 +99,8 @@ fn main() {
     let _gl_context = window.gl_create_context().unwrap();
     let context = Context::new(unsafe {
         glow::Context::from_loader_function(|s| video.gl_get_proc_address(s) as *const _)
-    });
+    })
+    .unwrap();
 
     let demo = Demo::new(context).unwrap();
 

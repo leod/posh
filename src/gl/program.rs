@@ -6,7 +6,9 @@ use crate::{
     Block, Fragment, GlView, SlView, Uniform, Vertex,
 };
 
-use super::{raw, DrawParams, Sampler2d, Surface, UniformBufferBinding, VertexArrayBinding};
+use super::{
+    raw, vertex_stream::VertexStream, DrawParams, Sampler2d, Surface, UniformBufferBinding,
+};
 
 #[derive(Clone)]
 pub struct Program<U, V, F = sl::Vec4> {
@@ -30,7 +32,7 @@ where
     pub fn draw<S>(
         &self,
         uniforms: U::GlView,
-        vertices: VertexArrayBinding<V::GlView>,
+        vertices: VertexStream<V::GlView>,
         surface: &S,
         draw_params: &DrawParams,
     ) where
@@ -39,6 +41,7 @@ where
         // TODO: Surface stuff.
 
         // TODO: These allocations can be avoided once stable has allocators.
+        // TODO: Remove hardcoded path names.
         let mut uniform_visitor = CollectUniforms::default();
         uniforms.visit("", &mut uniform_visitor);
 
@@ -49,7 +52,7 @@ where
             self.raw.draw(
                 &uniform_visitor.raw_uniform_buffers,
                 &uniform_visitor.raw_samplers,
-                vertices.raw,
+                vertices.raw(),
             );
         }
     }

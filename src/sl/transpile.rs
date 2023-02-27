@@ -3,7 +3,7 @@
 //! This is exposed only in order to make the internally generated source code
 //! more transparent. It is typically not necessary to use this module.
 
-use std::{iter::once, rc::Rc};
+use std::{iter::once, mem::size_of, rc::Rc};
 
 use crevice::std140::AsStd140;
 
@@ -17,8 +17,7 @@ use super::{
     dag::{Expr, SamplerType, Type},
     primitives::value_arg,
     program_def::{
-        ProgramDef, UniformBlockDef, UniformSamplerDef, VertexAttributeDef, VertexDef,
-        VertexInputRate,
+        ProgramDef, UniformBlockDef, UniformSamplerDef, VertexBlockDef, VertexInputRate,
     },
     ConstParams, FragmentInput, FragmentOutput, Object, Private, Sample, Sampler2d, Varying,
     VaryingOutput, Vec4, VertexInput, VertexOutput,
@@ -208,16 +207,18 @@ where
     InW: FromFragmentInput<Varying = W>,
     OutF: IntoFragmentOutput<Fragment = F>,
 {
+    // TODO: Remove hardcoded path names.
     let uniforms = U::shader_input("uniforms");
 
-    let (block_defs, sampler_defs) = {
+    let (uniform_block_defs, uniform_sampler_defs) = {
+        // TODO: Remove hardcoded path names.
         let mut visitor = CollectUniforms::default();
         uniforms.visit("uniforms", &mut visitor);
 
         (visitor.block_defs, visitor.sampler_defs)
     };
 
-    let (vertex_defs, varying_outputs, vertex_shader_source) = {
+    let (vertex_block_defs, varying_outputs, vertex_shader_source) = {
         let input = || VertexInput {
             vertex: V::shader_input("vertex_input"),
             vertex_id: value_arg("gl_VertexID"),
@@ -227,19 +228,21 @@ where
         let output = vertex_shader(consts, uniforms, InV::from(input())).into();
 
         let varying_outputs = output.varying.shader_outputs("vertex_output");
-        let (vertex_attributes, vertex_defs) = {
-            let mut visitor = CollectAttributes::default();
+        let vertex_block_defs = {
+            // TODO: Remove hardcoded path names.
+            let mut visitor = CollectVertexBlocks::default();
             input().vertex.visit("vertex_input", &mut visitor);
 
-            (visitor.attribute_defs, visitor.vertex_defs)
+            visitor.block_defs
         };
 
-        let attributes = vertex_attributes
-            .into_iter()
+        let attributes = vertex_block_defs
+            .iter()
+            .flat_map(|block_def| block_def.attributes.iter())
             .map(|attribute_def| {
                 (
                     "in".to_string(),
-                    attribute_def.name,
+                    attribute_def.name.clone(),
                     Type::BuiltIn(attribute_def.ty),
                 )
             })
@@ -264,16 +267,17 @@ where
         let mut source = String::new();
         codegen::write_shader_stage(
             &mut source,
-            &block_defs,
-            &sampler_defs,
+            &uniform_block_defs,
+            &uniform_sampler_defs,
             attributes,
             &exprs.collect::<Vec<_>>(),
         )
         .unwrap();
 
-        (vertex_defs, varying_outputs, source)
+        (vertex_block_defs, varying_outputs, source)
     };
 
+    // TODO: Remove hardcoded path names.
     let uniforms = U::shader_input("uniforms");
 
     let fragment_shader_source = {
@@ -286,6 +290,7 @@ where
         };
         let output = fragment_shader(consts, uniforms, InW::from(input)).into();
 
+        // TODO: Remove hardcoded path names.
         let mut visitor = CollectOutputs::default();
         output.fragment.visit("fragment_output", &mut visitor);
 
@@ -316,8 +321,8 @@ where
         let mut source = String::new();
         codegen::write_shader_stage(
             &mut source,
-            &block_defs,
-            &sampler_defs,
+            &uniform_block_defs,
+            &uniform_sampler_defs,
             attributes,
             &exprs.collect::<Vec<_>>(),
         )
@@ -327,9 +332,9 @@ where
     };
 
     ProgramDef {
-        uniform_block_defs: block_defs,
-        uniform_sampler_defs: sampler_defs,
-        vertex_defs,
+        uniform_block_defs,
+        uniform_sampler_defs,
+        vertex_block_defs,
         vertex_shader_source,
         fragment_shader_source,
     }
@@ -344,38 +349,42 @@ struct CollectUniforms {
 impl<'a> UniformVisitor<'a, SlView> for CollectUniforms {
     fn accept_sampler2d<S: Sample>(&mut self, path: &str, _: &Sampler2d<S>) {
         // TODO: Allow user-specified sampler texture units.
-        self.sampler_defs.push(UniformSamplerDef {
+        let block_def = UniformSamplerDef {
             name: path.to_string(),
             ty: SamplerType::Sampler2d,
             texture_unit: self.sampler_defs.len(),
-        })
+        };
+
+        self.sampler_defs.push(block_def);
     }
 
     fn accept_block<U: Block<SlView>>(&mut self, path: &str, _: &U) {
         // TODO: Allow user-specified uniform block locations.
-        self.block_defs.push(UniformBlockDef {
+        let block_def = UniformBlockDef {
             block_name: path.to_string() + "_posh_block",
             arg_name: path.to_string(),
             ty: <U::SlView as Object>::ty(),
             location: self.block_defs.len(),
-        })
+        };
+
+        self.block_defs.push(block_def)
     }
 }
 
 #[derive(Default)]
-struct CollectAttributes {
-    attribute_defs: Vec<VertexAttributeDef>,
-    vertex_defs: Vec<VertexDef>,
+struct CollectVertexBlocks {
+    block_defs: Vec<VertexBlockDef>,
 }
 
-impl<'a> VertexVisitor<'a, SlView> for CollectAttributes {
-    fn accept<V: Block<SlView>>(&mut self, path: &str, input_rate: VertexInputRate, _: &V) {
-        self.attribute_defs.extend(V::vertex_attribute_defs(path));
-        self.vertex_defs.push(VertexDef {
+impl<'a> VertexVisitor<'a, SlView> for CollectVertexBlocks {
+    fn accept<B: Block<SlView>>(&mut self, path: &str, input_rate: VertexInputRate, _: &B) {
+        let block_def = VertexBlockDef {
             input_rate,
-            stride: std::mem::size_of::<<V::GlView as AsStd140>::Output>(),
-            attributes: V::vertex_attribute_defs(path),
-        })
+            stride: size_of::<<B::GlView as AsStd140>::Output>(),
+            attributes: B::vertex_attribute_defs(path),
+        };
+
+        self.block_defs.push(block_def);
     }
 }
 

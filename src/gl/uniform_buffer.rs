@@ -6,7 +6,7 @@ use crate::{Block, SlView};
 
 use super::{raw, BufferUsage};
 
-/// Stores uniform data in a buffer on the GPU.
+/// Stores a uniform block in a buffer on the GPU.
 ///
 /// Instances of `UniformBuffer` can be created with
 /// [`Context::create_uniform_buffer`](crate::gl::Context::create_uniform_buffer).
