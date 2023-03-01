@@ -1,7 +1,7 @@
 use sealed::sealed;
 
 use crate::{
-    gl::{Texture2d, Texture2dBinding, UniformBufferBinding, VertexBufferBinding},
+    gl::{FramebufferAttachment, Texture2dBinding, UniformBufferBinding, VertexBufferBinding},
     internal::join_ident_path,
     sl::{self, program_def::VertexInputRate, Sample},
 };
@@ -134,12 +134,12 @@ where
 
 #[sealed]
 impl super::FragmentFields for GlView {
-    type Attachment = Texture2d<sl::Vec4>;
+    type Attachment<S: Sample> = FramebufferAttachment<S>;
 }
 
-unsafe impl Fragment<GlView> for Texture2d<sl::Vec4> {
+unsafe impl<S: Sample> Fragment<GlView> for FramebufferAttachment<S> {
     type GlView = Self;
-    type SlView = sl::Vec4;
+    type SlView = S;
 
     fn visit(&self, path: &str, visitor: &mut impl FragmentVisitor<GlView>) {
         visitor.accept(path, self);

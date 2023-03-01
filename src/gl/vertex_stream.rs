@@ -1,4 +1,4 @@
-use std::{any::type_name, mem::size_of, ops::Range};
+use std::{mem::size_of, ops::Range};
 
 use crevice::std140::AsStd140;
 

@@ -394,7 +394,7 @@ struct CollectOutputs {
 }
 
 impl FragmentVisitor<SlView> for CollectOutputs {
-    fn accept(&mut self, path: &str, output: &Vec4) {
+    fn accept<S: Sample>(&mut self, path: &str, output: &S) {
         self.outputs.push((path.to_string(), output.expr()));
     }
 }
