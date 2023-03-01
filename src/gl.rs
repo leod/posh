@@ -2,6 +2,7 @@
 
 mod context;
 mod element_buffer;
+mod framebuffer;
 mod image;
 mod program;
 mod raw;
@@ -14,6 +15,7 @@ mod vertex_stream;
 pub use self::image::Image;
 pub use context::Context;
 pub use element_buffer::{Element, ElementBuffer, ElementBufferBinding};
+pub use framebuffer::{Framebuffer, FramebufferAttachment, FramebufferBinding};
 pub use program::Program;
 pub use raw::{
     BufferError, BufferUsage, Caps, ComparisonFunc, ContextError, DrawParams, ElementType, Error,
