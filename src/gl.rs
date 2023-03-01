@@ -21,7 +21,7 @@ pub use raw::{
     VertexArrayError,
 };
 pub use surface::{DefaultFramebuffer, Surface};
-pub use texture::{Sampler2d, Texture2d};
+pub use texture::{Texture2d, Texture2dBinding};
 pub use uniform_buffer::{UniformBuffer, UniformBufferBinding};
 pub use vertex_buffer::{VertexBuffer, VertexBufferBinding};
 pub use vertex_stream::VertexStream;

@@ -7,7 +7,7 @@ use crate::{
 };
 
 use super::{
-    raw, vertex_stream::VertexStream, DrawParams, Sampler2d, Surface, UniformBufferBinding,
+    raw, vertex_stream::VertexStream, DrawParams, Surface, Texture2dBinding, UniformBufferBinding,
 };
 
 #[derive(Clone)]
@@ -61,13 +61,13 @@ where
 #[derive(Default)]
 struct CollectUniforms<'a> {
     raw_uniform_buffers: Vec<&'a raw::Buffer>,
-    raw_samplers: Vec<raw::Sampler>,
+    raw_samplers: Vec<raw::TextureBinding>,
 }
 
 impl<'a> UniformVisitor<'a, GlView> for CollectUniforms<'a> {
-    fn accept_sampler2d<S: Sample>(&mut self, path: &str, sampler: &Sampler2d<S>) {
+    fn accept_sampler2d<S: Sample>(&mut self, path: &str, sampler: &Texture2dBinding<S>) {
         self.raw_samplers
-            .push(raw::Sampler::Sampler2d(sampler.raw.clone()))
+            .push(raw::TextureBinding::Texture2d(sampler.raw.clone()))
     }
 
     fn accept_block<B: Block<SlView, SlView = B>>(

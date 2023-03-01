@@ -21,5 +21,5 @@ pub use error::{
 };
 pub use program::Program;
 pub use sampler_params::{Sampler2dParams, SamplerMagFilter, SamplerMinFilter};
-pub use texture::{Sampler, Sampler2d, Texture2d};
+pub use texture::{Texture2d, Texture2dBinding, TextureBinding};
 pub use vertex_stream::{ElementType, PrimitiveType, VertexStream};

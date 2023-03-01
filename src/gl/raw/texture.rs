@@ -188,8 +188,8 @@ impl Texture2d {
         self.shared.internal_format
     }
 
-    pub fn sampler(&self, params: Sampler2dParams) -> Sampler2d {
-        Sampler2d {
+    pub fn binding(&self, params: Sampler2dParams) -> Texture2dBinding {
+        Texture2dBinding {
             shared: self.shared.clone(),
             params,
         }
@@ -205,7 +205,7 @@ impl Drop for Texture2dShared {
 }
 
 #[derive(Clone)]
-pub struct Sampler2d {
+pub struct Texture2dBinding {
     shared: Rc<Texture2dShared>,
     params: Sampler2dParams,
 }
@@ -233,32 +233,32 @@ fn validate_size(size: glam::UVec2, caps: &Caps) -> Result<(), TextureError> {
 }
 
 #[derive(Clone)]
-pub enum Sampler {
-    Sampler2d(Sampler2d),
+pub enum TextureBinding {
+    Texture2d(Texture2dBinding),
 }
 
-impl Sampler {
+impl TextureBinding {
     pub fn gl(&self) -> &Rc<glow::Context> {
-        use Sampler::*;
+        use TextureBinding::*;
 
         match self {
-            Sampler2d(sampler) => &sampler.shared.gl,
+            Texture2d(sampler) => &sampler.shared.gl,
         }
     }
 
-    pub fn bind(&self) {
-        use Sampler::*;
+    pub(super) fn bind(&self) {
+        use TextureBinding::*;
 
         match self {
-            Sampler2d(sampler) => sampler.shared.bind_with_sampler_params(sampler.params),
+            Texture2d(sampler) => sampler.shared.bind_with_sampler_params(sampler.params),
         }
     }
 
-    pub fn unbind(&self) {
-        use Sampler::*;
+    pub(super) fn unbind(&self) {
+        use TextureBinding::*;
 
         match self {
-            Sampler2d(sampler) => unsafe {
+            Texture2d(sampler) => unsafe {
                 sampler.shared.gl.bind_texture(glow::TEXTURE_2D, None);
             },
         }
