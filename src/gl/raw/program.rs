@@ -9,7 +9,7 @@ use crate::{
 
 use super::{
     error::check_gl_error, vertex_layout::VertexAttributeLayout, Buffer, ProgramValidationError,
-    Sampler, VertexStream,
+    TextureBinding, VertexStream,
 };
 
 struct ProgramShared {
@@ -154,7 +154,7 @@ impl Program {
     pub unsafe fn draw(
         &self,
         uniform_buffers: &[&Buffer],
-        samplers: &[Sampler],
+        samplers: &[TextureBinding],
         vertices: VertexStream,
     ) {
         assert!(vertices.is_compatible(&self.shared.def.vertex_block_defs));

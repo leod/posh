@@ -1,7 +1,7 @@
 use sealed::sealed;
 
 use crate::{
-    gl::{Sampler2d, Texture2d, UniformBufferBinding, VertexBufferBinding},
+    gl::{Texture2d, Texture2dBinding, UniformBufferBinding, VertexBufferBinding},
     internal::join_ident_path,
     sl::{self, program_def::VertexInputRate, Sample},
 };
@@ -94,7 +94,7 @@ impl<B: Block<SlView>> super::VertexField<GlView> for VertexBufferBinding<B> {}
 #[sealed]
 impl super::UniformFields for GlView {
     type Block<B: Block<SlView, SlView = B>> = UniformBufferBinding<B>;
-    type Sampler2d<S: Sample> = Sampler2d<S>;
+    type Sampler2d<S: Sample> = Texture2dBinding<S>;
     type Compose<R: Uniform<SlView>> = R::GlView;
 }
 
@@ -107,7 +107,7 @@ unsafe impl<U: Block<SlView, SlView = U>> Uniform<GlView> for UniformBufferBindi
     }
 }
 
-unsafe impl<S: Sample> Uniform<GlView> for Sampler2d<S> {
+unsafe impl<S: Sample> Uniform<GlView> for Texture2dBinding<S> {
     type GlView = Self;
     type SlView = sl::Sampler2d<S>;
 

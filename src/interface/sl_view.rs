@@ -180,7 +180,7 @@ impl<B: Block<SlView, SlView = B>> UniformNonUnit for B {}
 
 unsafe impl<S: Sample> Uniform<SlView> for sl::Sampler2d<S> {
     type SlView = Self;
-    type GlView = gl::Sampler2d<S>;
+    type GlView = gl::Texture2dBinding<S>;
 
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformVisitor<'a, SlView>) {
         visitor.accept_sampler2d(path, self)
