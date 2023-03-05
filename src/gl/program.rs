@@ -7,7 +7,8 @@ use crate::{
 };
 
 use super::{
-    raw, vertex_stream::VertexStream, DrawParams, Surface, Texture2dBinding, UniformBufferBinding,
+    raw, vertex_stream::VertexStream, DrawParams, FramebufferBinding, Texture2dBinding,
+    UniformBufferBinding,
 };
 
 #[derive(Clone)]
@@ -29,15 +30,13 @@ where
         }
     }
 
-    pub fn draw<S>(
+    pub fn draw(
         &self,
         uniforms: U::GlView,
         vertices: VertexStream<V::GlView>,
-        surface: &S,
-        draw_params: &DrawParams,
-    ) where
-        S: Surface<F>,
-    {
+        framebuffer: FramebufferBinding<F::GlView>,
+        draw_params: DrawParams,
+    ) {
         // TODO: Surface stuff.
 
         // TODO: These allocations can be avoided once stable has allocators.
