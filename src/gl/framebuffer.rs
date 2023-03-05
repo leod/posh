@@ -1,6 +1,9 @@
 use std::marker::PhantomData;
 
-use crate::{sl::Sample, Fragment, SlView};
+use crate::{
+    sl::{self, Sample},
+    Fragment, SlView,
+};
 
 pub struct Framebuffer<F> {
     _phantom: PhantomData<F>,
@@ -16,8 +19,10 @@ pub struct FramebufferBinding<F> {
     _phantom: PhantomData<F>,
 }
 
-impl Default for FramebufferBinding<glam::Vec4> {
+impl Default for FramebufferBinding<FramebufferAttachment<sl::Vec4>> {
     fn default() -> Self {
-        todo!()
+        Self {
+            _phantom: PhantomData,
+        }
     }
 }

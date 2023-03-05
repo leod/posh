@@ -2,7 +2,7 @@ use std::time::Instant;
 
 use posh::{
     gl::{
-        BufferUsage, Context, DefaultFramebuffer, DrawParams, Error, PrimitiveType, Program,
+        BufferUsage, Context, DrawParams, Error, FramebufferBinding, PrimitiveType, Program,
         UniformBuffer, VertexBuffer, VertexStream,
     },
     sl::{self, VaryingOutput},
@@ -75,8 +75,8 @@ impl Demo {
                 range: 0..3,
                 primitive: PrimitiveType::Triangles,
             },
-            &DefaultFramebuffer,
-            &DrawParams::default(),
+            FramebufferBinding::default(),
+            DrawParams::default(),
         );
     }
 }

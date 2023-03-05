@@ -22,6 +22,14 @@ impl<S: Sample> Texture2d<S> {
         }
     }
 
+    pub fn attachment(&self) -> Self {
+        todo!()
+    }
+
+    pub fn mipmap_layer_attachment(&self, layer: usize) -> Self {
+        todo!()
+    }
+
     pub fn binding(&self, params: Sampler2dParams) -> Texture2dBinding<S> {
         Texture2dBinding {
             raw: self.raw.binding(params),

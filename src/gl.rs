@@ -6,7 +6,6 @@ mod framebuffer;
 mod image;
 mod program;
 mod raw;
-mod surface;
 mod texture;
 mod uniform_buffer;
 mod vertex_buffer;
@@ -22,7 +21,6 @@ pub use raw::{
     PrimitiveType, ProgramError, ProgramValidationError, Sampler2dParams, TextureError,
     VertexArrayError,
 };
-pub use surface::{DefaultFramebuffer, Surface};
 pub use texture::{Texture2d, Texture2dBinding};
 pub use uniform_buffer::{UniformBuffer, UniformBufferBinding};
 pub use vertex_buffer::{VertexBuffer, VertexBufferBinding};
