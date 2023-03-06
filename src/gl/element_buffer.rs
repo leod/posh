@@ -32,10 +32,10 @@ pub struct ElementBuffer<E = u32> {
 
 #[derive(Clone)]
 pub struct ElementBufferBinding {
-    pub raw: Rc<raw::Buffer>,
-    pub ty: ElementType,
-    pub element_size: usize,
-    pub range: Range<usize>,
+    raw: Rc<raw::Buffer>,
+    ty: ElementType,
+    element_size: usize,
+    range: Range<usize>,
 }
 
 impl<E: Element> ElementBuffer<E> {
@@ -63,10 +63,10 @@ impl<E: Element> ElementBuffer<E> {
     }
 
     pub fn binding(&self) -> ElementBufferBinding {
-        self.range_binding(0..self.len())
+        self.binding_with_range(0..self.len())
     }
 
-    pub fn range_binding(&self, range: Range<usize>) -> ElementBufferBinding {
+    pub fn binding_with_range(&self, range: Range<usize>) -> ElementBufferBinding {
         assert!(range.start <= range.end);
 
         ElementBufferBinding {

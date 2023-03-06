@@ -3,6 +3,7 @@ mod caps;
 mod context;
 mod draw_params;
 mod error;
+mod framebuffer;
 mod image;
 mod program;
 mod sampler_params;
@@ -19,6 +20,7 @@ pub use error::{
     BufferError, ContextError, Error, ProgramError, ProgramValidationError, TextureError,
     VertexArrayError,
 };
+pub use framebuffer::{Framebuffer, FramebufferAttachment};
 pub use program::Program;
 pub use sampler_params::{Sampler2dParams, SamplerMagFilter, SamplerMinFilter};
 pub use texture::{Texture2d, Texture2dBinding, TextureBinding};
