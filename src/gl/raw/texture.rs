@@ -13,7 +13,7 @@ struct Texture2dShared {
     id: glow::Texture,
     ty: ImageComponentType,
     internal_format: ImageInternalFormat,
-    num_levels: usize,
+    levels: usize,
     sampler_params: Cell<Sampler2dParams>,
 }
 
@@ -83,18 +83,20 @@ pub struct Texture2d {
 }
 
 impl Texture2d {
-    fn new_with_num_levels(
+    fn new_with_levels(
         gl: Rc<glow::Context>,
         caps: &Caps,
         image: Image,
-        num_levels: usize,
+        levels: usize,
     ) -> Result<Self, TextureError> {
-        assert!(num_levels > 0);
-
-        validate_size(image.size, caps)?;
+        // OpenGL ES 3.0.6: 3.8.4 Immutable-Format Texture Images
+        // > If [...] `levels` is less than 1, the error `INVALID_VALUE` is
+        // > generated.
+        assert!(levels > 0);
 
         let id = unsafe { gl.create_texture() }.map_err(TextureError::ObjectCreation)?;
 
+        let levels = i32::try_from(levels).expect("levels is out of i32 range");
         let width = i32::try_from(image.size.x).expect("max_texture_size is out of i32 range");
         let height = i32::try_from(image.size.y).expect("max_texture_size is out of i32 range");
 
@@ -119,7 +121,7 @@ impl Texture2d {
             gl.bind_texture(glow::TEXTURE_2D, Some(id));
             gl.tex_storage_2d(
                 glow::TEXTURE_2D,
-                1,
+                levels,
                 image.internal_format.to_gl(),
                 width,
                 height,
@@ -145,7 +147,7 @@ impl Texture2d {
             id,
             ty: image.ty,
             internal_format: image.internal_format,
-            num_levels,
+            levels: levels as usize,
             sampler_params: Default::default(),
         });
 
@@ -157,7 +159,9 @@ impl Texture2d {
         caps: &Caps,
         image: Image,
     ) -> Result<Self, TextureError> {
-        Self::new_with_num_levels(gl, caps, image, 1)
+        validate_size(image.size, caps)?;
+
+        Self::new_with_levels(gl, caps, image, 1)
     }
 
     pub(super) fn new_with_mipmap(
@@ -165,9 +169,14 @@ impl Texture2d {
         caps: &Caps,
         image: Image,
     ) -> Result<Self, TextureError> {
-        let num_levels = (image.size.x.max(image.size.y) as f64).log2() as usize;
+        validate_size(image.size, caps)?;
 
-        let texture = Self::new_with_num_levels(gl.clone(), caps, image, num_levels)?;
+        // OpenGL ES 3.0.6: 3.8.4 Immutable-Format Texture Images
+        // > An INVALID_OPERATION error is generated if `levels` is greater than
+        // > `floor(log_2(max(width, height))) + 1`.
+        let levels = (image.size.x.max(image.size.y) as f64).log2() as usize + 1;
+
+        let texture = Self::new_with_levels(gl.clone(), caps, image, levels)?;
 
         unsafe {
             gl.bind_texture(glow::TEXTURE_2D, Some(texture.shared.id));
@@ -211,6 +220,9 @@ pub struct Texture2dBinding {
 }
 
 fn validate_size(size: glam::UVec2, caps: &Caps) -> Result<(), TextureError> {
+    // OpenGL ES 3.0.6: 3.8.4 Immutable-Format Texture Images
+    // > If [...] `levels` is less than 1, the error `INVALID_VALUE` is
+    // > generated.
     if size.x == 0 || size.y == 0 {
         return Err(TextureError::Empty);
     }
