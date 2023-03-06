@@ -115,6 +115,22 @@ impl ImageInternalFormat {
             RgbaF32 => ty == ImageComponentType::F32,
         }
     }
+
+    pub fn is_color_renderable(&self) -> bool {
+        use ImageInternalFormat::*;
+
+        match self {
+            RgbaU8 | SrgbU8AlphaU8 | RgbaI8Snorm | RgbaF32 => true,
+        }
+    }
+
+    pub fn is_depth_renderable(&self) -> bool {
+        use ImageInternalFormat::*;
+
+        match self {
+            RgbaU8 | SrgbU8AlphaU8 | RgbaI8Snorm | RgbaF32 => false,
+        }
+    }
 }
 
 #[doc(hidden)]

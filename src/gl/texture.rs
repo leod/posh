@@ -26,7 +26,7 @@ impl<S: Sample> Texture2d<S> {
         todo!()
     }
 
-    pub fn mipmap_layer_attachment(&self, layer: usize) -> Self {
+    pub fn attachment_with_layer(&self, layer: usize) -> Self {
         todo!()
     }
 

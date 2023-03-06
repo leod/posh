@@ -8,7 +8,7 @@ use super::{
     Caps, ComparisonFunc, Image, ImageComponentType, ImageInternalFormat, Sampler2dParams,
 };
 
-struct Texture2dShared {
+pub(super) struct Texture2dShared {
     gl: Rc<glow::Context>,
     id: glow::Texture,
     ty: ImageComponentType,
@@ -19,14 +19,14 @@ struct Texture2dShared {
 
 impl Texture2dShared {
     pub fn bind_with_sampler_params(&self, new: Sampler2dParams) {
-        let curr = self.sampler_params.get();
         let gl = &self.gl;
+        let current = self.sampler_params.get();
 
         unsafe {
             gl.bind_texture(glow::TEXTURE_2D, Some(self.id));
         }
 
-        if curr.comparison_func != new.comparison_func {
+        if current.comparison_func != new.comparison_func {
             let (mode, func) = new
                 .comparison_func
                 .map_or((glow::NONE as i32, ComparisonFunc::LessOrEqual), |func| {
@@ -40,7 +40,7 @@ impl Texture2dShared {
             }
         }
 
-        if curr.mag_filter != new.mag_filter {
+        if current.mag_filter != new.mag_filter {
             let mag_filter = new.mag_filter.to_gl() as i32;
 
             unsafe {
@@ -48,7 +48,7 @@ impl Texture2dShared {
             }
         }
 
-        if curr.min_filter != new.min_filter {
+        if current.min_filter != new.min_filter {
             let min_filter = new.min_filter.to_gl() as i32;
 
             unsafe {
@@ -56,7 +56,7 @@ impl Texture2dShared {
             }
         }
 
-        if curr.wrap_s != new.wrap_s {
+        if current.wrap_s != new.wrap_s {
             let wrap_s = new.wrap_s.to_gl() as i32;
 
             unsafe {
@@ -64,7 +64,7 @@ impl Texture2dShared {
             }
         }
 
-        if curr.wrap_t != new.wrap_t {
+        if current.wrap_t != new.wrap_t {
             let wrap_t = new.wrap_t.to_gl() as i32;
 
             unsafe {
@@ -202,6 +202,10 @@ impl Texture2d {
             shared: self.shared.clone(),
             params,
         }
+    }
+
+    pub(super) fn shared(&self) -> Rc<Texture2dShared> {
+        self.shared.clone()
     }
 }
 

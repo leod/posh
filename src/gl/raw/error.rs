@@ -53,7 +53,7 @@ pub enum TextureError {
     #[error("texture is empty")]
     Empty,
 
-    #[error("texture too large: requested {requested}, but max size is {max}")]
+    #[error("texture too large: requested {requested}, but the maximum size is {max}")]
     Oversized { requested: u32, max: u32 },
 
     #[error("invalid data size: expected {expected} bytes, but got {got}")]
@@ -74,6 +74,22 @@ pub enum VertexArrayError {
 
     #[error("unexpected error: {0}")]
     Unexpected(String),
+}
+
+/// An error that occurred while creating a framebuffer.
+#[derive(Debug, Clone, Error)]
+pub enum FramebufferError {
+    #[error("could not create framebuffer object: {0}")]
+    ObjectCreation(String),
+
+    #[error("too many color attachments: request {requested}, but the maximum number of color attachments is {max}")]
+    TooManyColorAttachments { requested: u32, max: u32 },
+
+    #[error("too many depth attachments: request {requested}, but the maximum number of depth attachments is 1")]
+    TooManyDepthAttachments { requested: u32 },
+
+    #[error("too many stencil attachments: request {requested}, but the maximum number of stencil attachments is 1")]
+    TooManyStencilAttachments { requested: u32 },
 }
 
 /// An error that was found while validating a program.
@@ -118,7 +134,7 @@ pub enum ProgramError {
     Unexpected(String),
 }
 
-/// An error that occured while creating a object.
+/// An error that occured while creating an object.
 #[derive(Debug, Clone, Error)]
 pub enum Error {
     #[error("{0}")]
