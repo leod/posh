@@ -82,6 +82,9 @@ pub enum FramebufferError {
     #[error("could not create framebuffer object: {0}")]
     ObjectCreation(String),
 
+    #[error("texture level is too large: requested {requested}, but the maximum level is {max}")]
+    LevelTooLarge { requested: u32, max: u32 },
+
     #[error("too many color attachments: request {requested}, but the maximum number of color attachments is {max}")]
     TooManyColorAttachments { requested: u32, max: u32 },
 
@@ -90,6 +93,9 @@ pub enum FramebufferError {
 
     #[error("too many stencil attachments: request {requested}, but the maximum number of stencil attachments is 1")]
     TooManyStencilAttachments { requested: u32 },
+
+    #[error("unexpected error: {0}")]
+    Unexpected(String),
 }
 
 /// An error that was found while validating a program.

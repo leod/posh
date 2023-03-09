@@ -131,6 +131,14 @@ impl ImageInternalFormat {
             RgbaU8 | SrgbU8AlphaU8 | RgbaI8Snorm | RgbaF32 => false,
         }
     }
+
+    pub fn is_stencil_renderable(&self) -> bool {
+        use ImageInternalFormat::*;
+
+        match self {
+            RgbaU8 | SrgbU8AlphaU8 | RgbaI8Snorm | RgbaF32 => false,
+        }
+    }
 }
 
 #[doc(hidden)]

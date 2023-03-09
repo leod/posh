@@ -18,6 +18,10 @@ pub(super) struct Texture2dShared {
 }
 
 impl Texture2dShared {
+    pub(super) fn id(&self) -> glow::Texture {
+        self.id
+    }
+
     pub fn bind_with_sampler_params(&self, new: Sampler2dParams) {
         let gl = &self.gl;
         let current = self.sampler_params.get();
@@ -85,7 +89,6 @@ pub struct Texture2d {
 impl Texture2d {
     fn new_with_levels(
         gl: Rc<glow::Context>,
-        caps: &Caps,
         image: Image,
         levels: usize,
     ) -> Result<Self, TextureError> {
@@ -94,11 +97,19 @@ impl Texture2d {
         // > generated.
         assert!(levels > 0);
 
-        let id = unsafe { gl.create_texture() }.map_err(TextureError::ObjectCreation)?;
+        let levels = levels.try_into().expect("levels is out of i32 range");
+        let width = image
+            .size
+            .x
+            .try_into()
+            .expect("max_texture_size is out of i32 range");
+        let height = image
+            .size
+            .y
+            .try_into()
+            .expect("max_texture_size is out of i32 range");
 
-        let levels = i32::try_from(levels).expect("levels is out of i32 range");
-        let width = i32::try_from(image.size.x).expect("max_texture_size is out of i32 range");
-        let height = i32::try_from(image.size.y).expect("max_texture_size is out of i32 range");
+        let id = unsafe { gl.create_texture() }.map_err(TextureError::ObjectCreation)?;
 
         let mut buffer = Vec::new();
         let data_len = image.required_data_len();
@@ -140,16 +151,18 @@ impl Texture2d {
             gl.bind_texture(glow::TEXTURE_2D, None);
         }
 
-        check_gl_error(&gl).map_err(TextureError::Unexpected)?;
-
         let shared = Rc::new(Texture2dShared {
-            gl,
+            gl: gl.clone(),
             id,
             ty: image.ty,
             internal_format: image.internal_format,
             levels: levels as usize,
             sampler_params: Default::default(),
         });
+
+        // Check for errors *after* passing ownership of the texture to
+        // `shared` so that it will be cleaned up if there is an error.
+        check_gl_error(&gl).map_err(TextureError::Unexpected)?;
 
         Ok(Texture2d { shared })
     }
@@ -161,7 +174,7 @@ impl Texture2d {
     ) -> Result<Self, TextureError> {
         validate_size(image.size, caps)?;
 
-        Self::new_with_levels(gl, caps, image, 1)
+        Self::new_with_levels(gl, image, 1)
     }
 
     pub(super) fn new_with_mipmap(
@@ -176,7 +189,7 @@ impl Texture2d {
         // > `floor(log_2(max(width, height))) + 1`.
         let levels = (image.size.x.max(image.size.y) as f64).log2() as usize + 1;
 
-        let texture = Self::new_with_levels(gl.clone(), caps, image, levels)?;
+        let texture = Self::new_with_levels(gl.clone(), image, levels)?;
 
         unsafe {
             gl.bind_texture(glow::TEXTURE_2D, Some(texture.shared.id));
@@ -225,8 +238,8 @@ pub struct Texture2dBinding {
 
 fn validate_size(size: glam::UVec2, caps: &Caps) -> Result<(), TextureError> {
     // OpenGL ES 3.0.6: 3.8.4 Immutable-Format Texture Images
-    // > If [...] `levels` is less than 1, the error `INVALID_VALUE` is
-    // > generated.
+    // > If [...] `width`, `height` [...] is less than 1, the error
+    // > `INVALID_VALUE` is generated.
     if size.x == 0 || size.y == 0 {
         return Err(TextureError::Empty);
     }
