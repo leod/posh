@@ -143,7 +143,7 @@ pub enum ProgramError {
     Unexpected(String),
 }
 
-/// An error that occured while creating an object.
+/// An error that occurred while creating an object.
 #[derive(Debug, Clone, Error)]
 pub enum Error {
     #[error("{0}")]
@@ -154,6 +154,9 @@ pub enum Error {
 
     #[error("{0}")]
     Texture(#[from] TextureError),
+
+    #[error("{0}")]
+    Framebuffer(#[from] FramebufferError),
 
     #[error("{0}")]
     VertexArray(#[from] VertexArrayError),

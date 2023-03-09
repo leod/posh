@@ -8,8 +8,8 @@ use crate::{
 };
 
 use super::{
-    error::check_gl_error, vertex_layout::VertexAttributeLayout, Buffer, ProgramValidationError,
-    TextureBinding, VertexStream,
+    error::check_gl_error, framebuffer::FramebufferBinding, vertex_layout::VertexAttributeLayout,
+    Buffer, ProgramValidationError, TextureBinding, VertexStream,
 };
 
 struct ProgramShared {
@@ -156,14 +156,16 @@ impl Program {
         uniform_buffers: &[&Buffer],
         samplers: &[TextureBinding],
         vertices: VertexStream,
+        framebuffer: FramebufferBinding,
     ) {
-        assert!(vertices.is_compatible(&self.shared.def.vertex_block_defs));
-
         let gl = &self.shared.gl;
         let def = &self.shared.def;
 
         assert_eq!(uniform_buffers.len(), def.uniform_block_defs.len());
         assert_eq!(samplers.len(), def.uniform_sampler_defs.len());
+        assert!(vertices.is_compatible(&self.shared.def.vertex_block_defs));
+
+        framebuffer.bind(&gl);
 
         unsafe {
             gl.use_program(Some(self.shared.id));
@@ -213,11 +215,16 @@ impl Program {
             }
         }
 
+        // TODO: Remove overly conservative unbinding.
         gl.bind_buffer(glow::UNIFORM_BUFFER, None);
 
+        // TODO: Remove overly conservative unbinding.
         unsafe {
             gl.use_program(None);
         }
+
+        // TODO: Remove overly conservative unbinding.
+        framebuffer.unbind(&gl);
 
         check_gl_error(gl).unwrap();
     }

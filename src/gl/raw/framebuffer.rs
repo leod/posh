@@ -25,6 +25,11 @@ pub struct Framebuffer {
     texture_2d_attachments: Vec<Rc<Texture2dShared>>,
 }
 
+pub enum FramebufferBinding<'a> {
+    Default,
+    Framebuffer(&'a Framebuffer),
+}
+
 impl Framebuffer {
     pub fn new(
         gl: Rc<glow::Context>,
@@ -37,6 +42,7 @@ impl Framebuffer {
             .iter()
             .map(|attachment| {
                 use FramebufferAttachment::*;
+
                 match attachment {
                     Texture2d { texture, level } => {
                         // OpenGL ES 3.0.6: 4.4.2.4 Attaching Texture Images to
@@ -178,5 +184,33 @@ impl Framebuffer {
             shared,
             texture_2d_attachments,
         })
+    }
+
+    pub fn binding(&self) -> FramebufferBinding {
+        FramebufferBinding::Framebuffer(self)
+    }
+}
+
+impl<'a> FramebufferBinding<'a> {
+    pub fn bind(&self, gl: &glow::Context) {
+        use FramebufferBinding::*;
+
+        match self {
+            Default => {}
+            Framebuffer(framebuffer) => unsafe {
+                gl.bind_framebuffer(glow::FRAMEBUFFER, Some(framebuffer.shared.id));
+            },
+        }
+    }
+
+    pub fn unbind(&self, gl: &glow::Context) {
+        use FramebufferBinding::*;
+
+        match self {
+            Default => {}
+            Framebuffer(framebuffer) => unsafe {
+                gl.bind_framebuffer(glow::FRAMEBUFFER, None);
+            },
+        }
     }
 }

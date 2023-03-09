@@ -17,6 +17,21 @@ pub(super) struct Texture2dShared {
     sampler_params: Cell<Sampler2dParams>,
 }
 
+#[derive(Clone)]
+pub enum TextureBinding {
+    Texture2d(Texture2dBinding),
+}
+
+#[derive(Clone)]
+pub struct Texture2dBinding {
+    shared: Rc<Texture2dShared>,
+    params: Sampler2dParams,
+}
+
+pub struct Texture2d {
+    shared: Rc<Texture2dShared>,
+}
+
 impl Texture2dShared {
     pub(super) fn id(&self) -> glow::Texture {
         self.id
@@ -32,10 +47,6 @@ impl Texture2dShared {
 
         check_gl_error(gl).unwrap();
     }
-}
-
-pub struct Texture2d {
-    shared: Rc<Texture2dShared>,
 }
 
 impl Texture2d {
@@ -182,12 +193,6 @@ impl Drop for Texture2dShared {
     }
 }
 
-#[derive(Clone)]
-pub struct Texture2dBinding {
-    shared: Rc<Texture2dShared>,
-    params: Sampler2dParams,
-}
-
 fn validate_size(size: glam::UVec2, caps: &Caps) -> Result<(), TextureError> {
     // OpenGL ES 3.0.6: 3.8.4 Immutable-Format Texture Images
     // > If [...] `width`, `height` [...] is less than 1, the error
@@ -211,11 +216,6 @@ fn validate_size(size: glam::UVec2, caps: &Caps) -> Result<(), TextureError> {
     }
 
     Ok(())
-}
-
-#[derive(Clone)]
-pub enum TextureBinding {
-    Texture2d(Texture2dBinding),
 }
 
 impl TextureBinding {

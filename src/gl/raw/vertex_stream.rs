@@ -142,8 +142,6 @@ impl<'a> VertexStream<'a> {
     }
 
     fn unbind(&self, gl: &glow::Context) {
-        // TODO: Remove overly conservative unbinding.
-
         let mut index = 0;
 
         for (_, vertex_def) in &self.vertices {
@@ -218,6 +216,7 @@ impl<'a> VertexStream<'a> {
             }
         }
 
+        // TODO: Remove overly conservative unbinding.
         self.unbind(gl);
 
         check_gl_error(gl).expect("OpenGL error in VertexStream::draw()");
