@@ -19,8 +19,8 @@ use super::{
     program_def::{
         ProgramDef, UniformBlockDef, UniformSamplerDef, VertexBlockDef, VertexInputRate,
     },
-    ConstParams, FragmentInput, FragmentOutput, Object, Private, Sample, Sampler2d, Varying,
-    VaryingOutput, Vec4, VertexInput, VertexOutput,
+    ConstParams, FragmentInput, FragmentOutput, Object, Sample, Sampler2d, Varying, VaryingOutput,
+    Vec4, VertexInput, VertexOutput,
 };
 
 /// Types that can be used as vertex input for a vertex shader.
@@ -223,7 +223,7 @@ where
             vertex: V::shader_input("vertex_input"),
             vertex_id: value_arg("gl_VertexID"),
             instance_id: value_arg("gl_InstanceID"),
-            _private: Private,
+            _private: (),
         };
         let output = vertex_shader(consts, uniforms, InV::from(input())).into();
 
@@ -286,7 +286,7 @@ where
             fragment_coord: value_arg("gl_FragCoord"),
             front_facing: value_arg("gl_FrontFacing"),
             point_coord: value_arg("gl_PointCoord"),
-            _private: Private,
+            _private: (),
         };
         let output = fragment_shader(consts, uniforms, InW::from(input)).into();
 
@@ -393,7 +393,7 @@ struct CollectOutputs {
     outputs: Vec<(String, Rc<Expr>)>,
 }
 
-impl FragmentVisitor<SlView> for CollectOutputs {
+impl<'a> FragmentVisitor<'a, SlView> for CollectOutputs {
     fn accept<S: Sample>(&mut self, path: &str, output: &S) {
         self.outputs.push((path.to_string(), output.expr()));
     }

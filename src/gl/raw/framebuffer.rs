@@ -13,7 +13,7 @@ pub enum FramebufferAttachment<'a> {
     Texture2d { texture: &'a Texture2d, level: u32 },
 }
 
-struct FramebufferShared {
+pub struct FramebufferShared {
     gl: Rc<glow::Context>,
     id: glow::Framebuffer,
 }
@@ -25,9 +25,9 @@ pub struct Framebuffer {
     texture_2d_attachments: Vec<Rc<Texture2dShared>>,
 }
 
-pub enum FramebufferBinding<'a> {
+pub enum FramebufferBinding {
     Default,
-    Framebuffer(&'a Framebuffer),
+    Framebuffer(Rc<FramebufferShared>),
 }
 
 impl Framebuffer {
@@ -184,18 +184,18 @@ impl Framebuffer {
     }
 
     pub fn binding(&self) -> FramebufferBinding {
-        FramebufferBinding::Framebuffer(self)
+        FramebufferBinding::Framebuffer(self.shared.clone())
     }
 }
 
-impl<'a> FramebufferBinding<'a> {
+impl FramebufferBinding {
     pub fn bind(&self, gl: &glow::Context) {
         use FramebufferBinding::*;
 
         match self {
             Default => {}
             Framebuffer(framebuffer) => unsafe {
-                gl.bind_framebuffer(glow::FRAMEBUFFER, Some(framebuffer.shared.id));
+                gl.bind_framebuffer(glow::FRAMEBUFFER, Some(framebuffer.id));
             },
         }
     }

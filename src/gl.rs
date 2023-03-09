@@ -14,7 +14,7 @@ mod vertex_stream;
 pub use self::image::Image;
 pub use context::Context;
 pub use element_buffer::{Element, ElementBuffer, ElementBufferBinding};
-pub use framebuffer::{Framebuffer, FramebufferAttachment, FramebufferBinding};
+pub use framebuffer::{Framebuffer, FramebufferAttachment2d, FramebufferBinding};
 pub use program::Program;
 pub use raw::{
     BufferError, BufferUsage, Caps, ComparisonFunc, ContextError, DrawParams, ElementType, Error,
