@@ -5,16 +5,13 @@ pub trait ConstParams: Copy {}
 
 impl ConstParams for () {}
 
-#[derive(Debug, Clone)]
-pub(crate) struct Private;
-
 /// Per-vertex input given to a vertex shader.
 #[derive(Debug, Clone)]
 pub struct VertexInput<Vert> {
     pub vertex: Vert,
     pub vertex_id: U32,
     pub instance_id: U32,
-    pub(crate) _private: Private,
+    pub(crate) _private: (),
 }
 
 /// Per-vertex output computed by a vertex shader.
@@ -39,7 +36,7 @@ pub struct FragmentInput<Vary> {
     pub fragment_coord: Vec4,
     pub front_facing: Bool,
     pub point_coord: Vec2,
-    pub(crate) _private: Private,
+    pub(crate) _private: (),
 }
 
 /// Per-fragment output computed by a fragment shader.

@@ -34,7 +34,7 @@ impl<B: Block<SlView>> VertexBuffer<B> {
         }
     }
 
-    pub fn gl(&self) -> &Rc<glow::Context> {
+    pub(crate) fn gl(&self) -> &Rc<glow::Context> {
         self.raw.gl()
     }
 

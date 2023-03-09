@@ -155,8 +155,8 @@ impl Program {
         &self,
         uniform_buffers: &[&Buffer],
         samplers: &[TextureBinding],
-        vertices: VertexStream,
-        framebuffer: FramebufferBinding,
+        vertices: &VertexStream,
+        framebuffer: &FramebufferBinding,
     ) {
         let gl = &self.shared.gl;
         let def = &self.shared.def;
