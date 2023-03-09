@@ -18,8 +18,8 @@ pub use framebuffer::{Framebuffer, FramebufferAttachment2d, FramebufferBinding};
 pub use program::Program;
 pub use raw::{
     BufferError, BufferUsage, Caps, ComparisonFunc, ContextError, DrawParams, ElementType, Error,
-    PrimitiveType, ProgramError, ProgramValidationError, Sampler2dParams, TextureError,
-    VertexArrayError,
+    FramebufferError, PrimitiveType, ProgramError, ProgramValidationError, Sampler2dParams,
+    TextureError, VertexArrayError,
 };
 pub use texture::{Texture2d, Texture2dBinding};
 pub use uniform_buffer::{UniformBuffer, UniformBufferBinding};
