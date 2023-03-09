@@ -111,25 +111,19 @@ impl<'a> VertexStream<'a> {
                         },
                     }
 
+                    let size = i32::try_from(attribute_info.components).unwrap();
+                    let data_type = attribute_info.ty.to_gl();
+                    let stride = i32::try_from(vertex_def.stride).unwrap();
+                    let offset = i32::try_from(offset).unwrap();
+
                     match attribute_info.ty {
                         VertexAttributeType::F32 => unsafe {
                             gl.vertex_attrib_pointer_f32(
-                                index,
-                                i32::try_from(attribute_info.components).unwrap(),
-                                attribute_info.ty.to_gl(),
-                                false,
-                                i32::try_from(vertex_def.stride).unwrap(),
-                                i32::try_from(offset).unwrap(),
+                                index, size, data_type, false, stride, offset,
                             )
                         },
                         VertexAttributeType::I32 | VertexAttributeType::U32 => unsafe {
-                            gl.vertex_attrib_pointer_i32(
-                                index,
-                                i32::try_from(attribute_info.components).unwrap(),
-                                attribute_info.ty.to_gl(),
-                                i32::try_from(vertex_def.stride).unwrap(),
-                                i32::try_from(offset).unwrap(),
-                            )
+                            gl.vertex_attrib_pointer_i32(index, size, data_type, stride, offset)
                         },
                     }
 
@@ -198,8 +192,8 @@ impl<'a> VertexStream<'a> {
                 assert!(offset.checked_add(size).unwrap() <= buffer.len());
             }
 
-            let count = i32::try_from(count).unwrap();
-            let offset = i32::try_from(offset).unwrap();
+            let count = count.try_into().expect("count is out of i32 range");
+            let offset = offset.try_into().expect("offset is out of i32 range");
 
             // Safety: this is only safe if the element buffer does not have any
             // elements which are out of bound for one of the vertex buffers.
@@ -216,16 +210,16 @@ impl<'a> VertexStream<'a> {
                 assert!(num_vertices >= end);
             }
 
-            let first = i32::try_from(first).unwrap();
-            let count = i32::try_from(count).unwrap();
+            let first = first.try_into().expect("first is out of i32 range");
+            let count = count.try_into().expect("count is out of i32 range");
 
             unsafe {
                 gl.draw_arrays(mode, first, count);
             }
         }
 
-        check_gl_error(gl).expect("OpenGL error in VertexStream::draw()");
-
         self.unbind(gl);
+
+        check_gl_error(gl).expect("OpenGL error in VertexStream::draw()");
     }
 }
