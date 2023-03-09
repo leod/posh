@@ -8,14 +8,14 @@ use super::{
     Caps, ImageInternalFormat, Texture2d,
 };
 
-struct FramebufferShared {
-    gl: Rc<glow::Context>,
-    id: glow::Framebuffer,
-}
-
 #[derive(Clone)]
 pub enum FramebufferAttachment<'a> {
     Texture2d { texture: &'a Texture2d, level: u32 },
+}
+
+struct FramebufferShared {
+    gl: Rc<glow::Context>,
+    id: glow::Framebuffer,
 }
 
 pub struct Framebuffer {
@@ -118,6 +118,7 @@ impl Framebuffer {
         }
 
         let id = unsafe { gl.create_framebuffer() }.map_err(FramebufferError::ObjectCreation)?;
+        let shared = Rc::new(FramebufferShared { gl: gl.clone(), id });
 
         unsafe {
             gl.bind_framebuffer(glow::FRAMEBUFFER, Some(id));
@@ -173,11 +174,7 @@ impl Framebuffer {
             gl.bind_framebuffer(glow::FRAMEBUFFER, None);
         }
 
-        let shared = Rc::new(FramebufferShared { gl: gl.clone(), id });
-
-        // Check for errors *after* unbinding and passing ownership of the
-        // framebuffer to `shared` so that it will be cleaned up if there is an
-        // error.
+        // Check for errors *after* unbinding the framebuffer.
         check_gl_error(&gl).map_err(FramebufferError::Unexpected)?;
 
         Ok(Framebuffer {
