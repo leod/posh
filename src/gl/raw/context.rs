@@ -8,7 +8,10 @@ use crate::{
     sl::program_def::ProgramDef,
 };
 
-use super::{Buffer, Caps, ContextError, Image, Program, Texture2d, TextureError};
+use super::{
+    Buffer, Caps, ContextError, Framebuffer, FramebufferAttachment, FramebufferError, Image,
+    Program, Texture2d, TextureError,
+};
 
 pub struct Context {
     gl: Rc<glow::Context>,
@@ -50,15 +53,22 @@ impl Context {
         Buffer::new(self.gl.clone(), data, usage)
     }
 
-    pub fn create_program(&self, def: ProgramDef) -> Result<Program, ProgramError> {
-        Program::new(self.gl.clone(), def)
-    }
-
     pub fn create_texture_2d(&self, image: Image) -> Result<Texture2d, TextureError> {
         Texture2d::new(self.gl.clone(), &self.caps, image)
     }
 
     pub fn create_texture_2d_with_mipmap(&self, image: Image) -> Result<Texture2d, TextureError> {
         Texture2d::new_with_mipmap(self.gl.clone(), &self.caps, image)
+    }
+
+    pub fn create_framebuffer(
+        &self,
+        attachments: &[FramebufferAttachment],
+    ) -> Result<Framebuffer, FramebufferError> {
+        Framebuffer::new(self.gl.clone(), &self.caps, attachments)
+    }
+
+    pub fn create_program(&self, def: ProgramDef) -> Result<Program, ProgramError> {
+        Program::new(self.gl.clone(), def)
     }
 }

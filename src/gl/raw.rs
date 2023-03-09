@@ -17,10 +17,10 @@ pub use caps::Caps;
 pub use context::Context;
 pub use draw_params::{ComparisonFunc, DrawParams};
 pub use error::{
-    BufferError, ContextError, Error, ProgramError, ProgramValidationError, TextureError,
-    VertexArrayError,
+    BufferError, ContextError, Error, FramebufferError, ProgramError, ProgramValidationError,
+    TextureError, VertexArrayError,
 };
-pub use framebuffer::{Framebuffer, FramebufferAttachment};
+pub use framebuffer::{Framebuffer, FramebufferAttachment, FramebufferBinding};
 pub use program::Program;
 pub use sampler_params::{Sampler2dParams, SamplerMagFilter, SamplerMinFilter};
 pub use texture::{Texture2d, Texture2dBinding, TextureBinding};
