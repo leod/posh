@@ -7,8 +7,8 @@ impl ConstParams for () {}
 
 /// Per-vertex input given to a vertex shader.
 #[derive(Debug, Clone)]
-pub struct VertexInput<Vert> {
-    pub vertex: Vert,
+pub struct VertexInput<V> {
+    pub vertex: V,
     pub vertex_id: U32,
     pub instance_id: U32,
     pub(crate) _private: (),
@@ -16,23 +16,23 @@ pub struct VertexInput<Vert> {
 
 /// Per-vertex output computed by a vertex shader.
 #[derive(Debug, Clone)]
-pub struct VertexOutput<Vary> {
-    pub varying: Vary,
+pub struct VertexOutput<W> {
+    pub varying: W,
     pub position: Vec4,
     pub point_size: Option<F32>,
 }
 
 /// Per-vertex position and varying output computed by a vertex shader.
 #[derive(Debug, Clone)]
-pub struct VaryingOutput<Vary> {
-    pub varying: Vary,
+pub struct VaryingOutput<W> {
+    pub varying: W,
     pub position: Vec4,
 }
 
 /// Per-fragment input given to a fragment shader.
 #[derive(Debug, Clone)]
-pub struct FragmentInput<Vary> {
-    pub varying: Vary,
+pub struct FragmentInput<W> {
+    pub varying: W,
     pub fragment_coord: Vec4,
     pub front_facing: Bool,
     pub point_coord: Vec2,
@@ -41,8 +41,8 @@ pub struct FragmentInput<Vary> {
 
 /// Per-fragment output computed by a fragment shader.
 #[derive(Debug, Clone)]
-pub struct FragmentOutput<Frag> {
-    pub fragment: Frag,
+pub struct FragmentOutput<F> {
+    pub fragment: F,
     pub fragment_depth: Option<F32>,
 }
 

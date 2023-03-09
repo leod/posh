@@ -37,7 +37,7 @@ impl_sample!(UVec4, USampler2d);
 
 /// An object which can be sampled.
 #[derive(Debug, Copy, Clone)]
-pub struct Sampler2d<S> {
+pub struct Sampler2d<S = Vec4> {
     trace: Trace,
     _phantom: PhantomData<S>,
 }
