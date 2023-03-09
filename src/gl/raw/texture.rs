@@ -22,59 +22,11 @@ impl Texture2dShared {
         self.id
     }
 
-    pub fn bind_with_sampler_params(&self, new: Sampler2dParams) {
+    pub fn set_sampler_params(&self, new: Sampler2dParams) {
         let gl = &self.gl;
         let current = self.sampler_params.get();
 
-        unsafe {
-            gl.bind_texture(glow::TEXTURE_2D, Some(self.id));
-        }
-
-        if current.comparison_func != new.comparison_func {
-            let (mode, func) = new
-                .comparison_func
-                .map_or((glow::NONE as i32, ComparisonFunc::LessOrEqual), |func| {
-                    (glow::COMPARE_REF_TO_TEXTURE as i32, func)
-                });
-            let func = func.to_gl() as i32;
-
-            unsafe {
-                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_COMPARE_MODE, mode);
-                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_COMPARE_FUNC, func);
-            }
-        }
-
-        if current.mag_filter != new.mag_filter {
-            let mag_filter = new.mag_filter.to_gl() as i32;
-
-            unsafe {
-                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MAG_FILTER, mag_filter);
-            }
-        }
-
-        if current.min_filter != new.min_filter {
-            let min_filter = new.min_filter.to_gl() as i32;
-
-            unsafe {
-                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MIN_FILTER, min_filter);
-            }
-        }
-
-        if current.wrap_s != new.wrap_s {
-            let wrap_s = new.wrap_s.to_gl() as i32;
-
-            unsafe {
-                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_S, wrap_s);
-            }
-        }
-
-        if current.wrap_t != new.wrap_t {
-            let wrap_t = new.wrap_t.to_gl() as i32;
-
-            unsafe {
-                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_T, wrap_t);
-            }
-        }
+        new.set_delta(gl, &current);
 
         self.sampler_params.set(new);
 
@@ -271,7 +223,7 @@ impl TextureBinding {
         use TextureBinding::*;
 
         match self {
-            Texture2d(sampler) => &sampler.shared.gl,
+            Texture2d(texture) => &texture.shared.gl,
         }
     }
 
@@ -279,7 +231,16 @@ impl TextureBinding {
         use TextureBinding::*;
 
         match self {
-            Texture2d(sampler) => sampler.shared.bind_with_sampler_params(sampler.params),
+            Texture2d(texture) => {
+                let gl = &texture.shared.gl;
+                let id = texture.shared.id;
+
+                unsafe {
+                    gl.bind_texture(glow::TEXTURE_2D, Some(id));
+                }
+
+                texture.shared.set_sampler_params(texture.params);
+            }
         }
     }
 
@@ -287,8 +248,8 @@ impl TextureBinding {
         use TextureBinding::*;
 
         match self {
-            Texture2d(sampler) => unsafe {
-                sampler.shared.gl.bind_texture(glow::TEXTURE_2D, None);
+            Texture2d(texture) => unsafe {
+                texture.shared.gl.bind_texture(glow::TEXTURE_2D, None);
             },
         }
     }

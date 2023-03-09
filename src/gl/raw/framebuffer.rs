@@ -81,6 +81,22 @@ impl Framebuffer {
             });
         }
 
+        // OpenGL ES 3.0.6: 4.2.1 Selecting Buffers for Writing
+        // > An `INVALID_VALUE` error is generated if `n` is negative, or
+        // > greater than the value of `MAX_DRAW_BUFFERS`.
+
+        // Note that we currently always activate all color attachments in our
+        // call to `draw_buffers`. That is why we need to check the count here.
+        // In the future, we will hopefully allow rendering to subsets of
+        // framebuffer attachments, but I don't know yet how this should look on
+        // the type level.
+        if count(ImageInternalFormat::is_color_renderable) > caps.max_draw_buffers {
+            return Err(FramebufferError::TooManyDrawBuffers {
+                requested: count(ImageInternalFormat::is_color_renderable),
+                max: caps.max_draw_buffers,
+            });
+        }
+
         // There is only one depth attachment location.
         if count(ImageInternalFormat::is_depth_renderable) > 1 {
             return Err(FramebufferError::TooManyDepthAttachments {
@@ -102,12 +118,13 @@ impl Framebuffer {
         }
 
         let mut texture_2d_attachments = Vec::new();
-        let mut num_color_attachments = 0;
+        let mut draw_buffers = Vec::new();
 
         for (attachment, format) in attachments.iter().zip(internal_formats) {
             let location = if format.is_color_renderable() {
-                num_color_attachments += 1;
-                glow::COLOR_ATTACHMENT0 + (num_color_attachments - 1)
+                let location = glow::COLOR_ATTACHMENT0 + draw_buffers.len() as u32;
+                draw_buffers.push(location);
+                location
             } else if format.is_depth_renderable() && format.is_stencil_renderable() {
                 glow::DEPTH_STENCIL_ATTACHMENT
             } else if format.is_depth_renderable() {
@@ -138,6 +155,12 @@ impl Framebuffer {
                     }
                 }
             };
+        }
+
+        // We currently always activate all color attachments. See the comment
+        // on `max_draw_buffers` above for more detail.
+        unsafe {
+            gl.draw_buffers(&draw_buffers);
         }
 
         unsafe {

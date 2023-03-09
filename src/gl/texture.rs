@@ -14,6 +14,7 @@ impl<S: Sample> Texture2d<S> {
     pub(super) fn from_raw(raw: raw::Texture2d) -> Self {
         use ImageInternalFormat::*;
 
+        // FIXME: This should validate against `S`.
         assert!([RgbaU8, SrgbU8AlphaU8, RgbaI8Snorm, RgbaF32].contains(&raw.internal_format()));
 
         Self {
@@ -26,7 +27,7 @@ impl<S: Sample> Texture2d<S> {
         todo!()
     }
 
-    pub fn attachment_with_layer(&self, layer: usize) -> Self {
+    pub fn attachment_with_level(&self, level: usize) -> Self {
         todo!()
     }
 

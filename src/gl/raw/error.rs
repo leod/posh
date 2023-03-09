@@ -85,13 +85,16 @@ pub enum FramebufferError {
     #[error("texture level is too large: requested {requested}, but the maximum level is {max}")]
     LevelTooLarge { requested: u32, max: u32 },
 
-    #[error("too many color attachments: request {requested}, but the maximum number of color attachments is {max}")]
+    #[error("too many color attachments: requested {requested}, but the maximum number of color attachments is {max}")]
     TooManyColorAttachments { requested: u32, max: u32 },
 
-    #[error("too many depth attachments: request {requested}, but the maximum number of depth attachments is 1")]
+    #[error("too many draw buffers: requested {requested}, but the maximum number of draw buffers is {max}")]
+    TooManyDrawBuffers { requested: u32, max: u32 },
+
+    #[error("too many depth attachments: requested {requested}, but the maximum number of depth attachments is 1")]
     TooManyDepthAttachments { requested: u32 },
 
-    #[error("too many stencil attachments: request {requested}, but the maximum number of stencil attachments is 1")]
+    #[error("too many stencil attachments: requested {requested}, but the maximum number of stencil attachments is 1")]
     TooManyStencilAttachments { requested: u32 },
 
     #[error("unexpected error: {0}")]
