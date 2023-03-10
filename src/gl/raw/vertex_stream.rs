@@ -19,7 +19,7 @@ pub enum ElementType {
 }
 
 impl ElementType {
-    pub const fn to_gl(self) -> u32 {
+    pub fn to_gl(self) -> u32 {
         use ElementType::*;
 
         match self {
@@ -28,7 +28,7 @@ impl ElementType {
         }
     }
 
-    pub const fn size(self) -> usize {
+    pub fn size(self) -> usize {
         use ElementType::*;
 
         match self {

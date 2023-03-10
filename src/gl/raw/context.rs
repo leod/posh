@@ -24,7 +24,7 @@ pub struct Context {
 
 impl ContextShared {
     pub fn ref_eq(&self, other: &ContextShared) -> bool {
-        self as *const ContextShared == other as *const ContextShared
+        std::ptr::eq(self as *const ContextShared, other as *const ContextShared)
     }
 
     pub fn gl(&self) -> &glow::Context {

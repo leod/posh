@@ -9,8 +9,7 @@ use crate::{
 
 use super::{
     context::ContextShared, error::check_gl_error, framebuffer::FramebufferBinding,
-    vertex_layout::VertexAttributeLayout, Buffer, ProgramValidationError, TextureBinding,
-    VertexStream,
+    vertex_layout::VertexAttributeLayout, Buffer, ProgramValidationError, Sampler, VertexStream,
 };
 
 struct ProgramShared {
@@ -138,7 +137,7 @@ impl Program {
             }
         }
 
-        check_gl_error(&gl).map_err(ProgramError::Unexpected)?;
+        check_gl_error(gl).map_err(ProgramError::Unexpected)?;
 
         Ok(Program { shared })
     }
@@ -157,7 +156,7 @@ impl Program {
     pub unsafe fn draw(
         &self,
         uniform_buffers: &[&Buffer],
-        samplers: &[TextureBinding],
+        samplers: &[Sampler],
         vertices: &VertexStream,
         framebuffer: &FramebufferBinding,
     ) {

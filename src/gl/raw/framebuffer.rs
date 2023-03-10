@@ -180,7 +180,7 @@ impl Framebuffer {
             gl.draw_buffers(&draw_buffers);
         }
 
-        let completeness = check_framebuffer_completeness(&gl);
+        let completeness = check_framebuffer_completeness(gl);
 
         unsafe {
             gl.bind_framebuffer(glow::FRAMEBUFFER, None);
@@ -188,7 +188,7 @@ impl Framebuffer {
 
         // Check for errors *after* unbinding the framebuffer.
         completeness.map_err(FramebufferError::Incomplete)?;
-        check_gl_error(&gl).map_err(FramebufferError::Unexpected)?;
+        check_gl_error(gl).map_err(FramebufferError::Unexpected)?;
 
         Ok(Framebuffer {
             shared,
