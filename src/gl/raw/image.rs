@@ -48,6 +48,7 @@ impl ImageFormat {
     }
 }
 
+// FIXME: When is `ImageComponentType` not implied by `ImageInternalFormat`?
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ImageComponentType {
     U8,
@@ -113,6 +114,30 @@ impl ImageInternalFormat {
             SrgbU8AlphaU8 => ty == ImageComponentType::U8,
             RgbaI8Snorm => ty == ImageComponentType::I8,
             RgbaF32 => ty == ImageComponentType::F32,
+        }
+    }
+
+    pub fn is_color_renderable(&self) -> bool {
+        use ImageInternalFormat::*;
+
+        match self {
+            RgbaU8 | SrgbU8AlphaU8 | RgbaI8Snorm | RgbaF32 => true,
+        }
+    }
+
+    pub fn is_depth_renderable(&self) -> bool {
+        use ImageInternalFormat::*;
+
+        match self {
+            RgbaU8 | SrgbU8AlphaU8 | RgbaI8Snorm | RgbaF32 => false,
+        }
+    }
+
+    pub fn is_stencil_renderable(&self) -> bool {
+        use ImageInternalFormat::*;
+
+        match self {
+            RgbaU8 | SrgbU8AlphaU8 | RgbaI8Snorm | RgbaF32 => false,
         }
     }
 }

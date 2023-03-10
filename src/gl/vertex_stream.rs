@@ -1,4 +1,4 @@
-use std::{any::type_name, mem::size_of, ops::Range};
+use std::{mem::size_of, ops::Range};
 
 use crevice::std140::AsStd140;
 
@@ -35,10 +35,10 @@ impl<V: Vertex<GlView>> VertexStream<V> {
                 elements,
                 primitive,
             } => raw::VertexStream {
-                vertices: vertex_buffers(vertices),
+                vertices: raw_vertices(vertices),
                 elements: Some((elements.raw(), elements.ty())),
                 primitive: *primitive,
-                range: elements.range.clone(),
+                range: elements.range(),
                 num_instances: 1,
             },
             Unindexed {
@@ -46,7 +46,7 @@ impl<V: Vertex<GlView>> VertexStream<V> {
                 range,
                 primitive,
             } => raw::VertexStream {
-                vertices: vertex_buffers(vertices),
+                vertices: raw_vertices(vertices),
                 elements: None,
                 primitive: *primitive,
                 range: range.clone(),
@@ -56,7 +56,7 @@ impl<V: Vertex<GlView>> VertexStream<V> {
     }
 }
 
-fn vertex_buffers<V: Vertex<GlView>>(vertices: &V) -> Vec<(&raw::Buffer, VertexBlockDef)> {
+fn raw_vertices<V: Vertex<GlView>>(vertices: &V) -> Vec<(&raw::Buffer, VertexBlockDef)> {
     // TODO: Reduce per-draw-call allocations.
     struct Visitor<'a>(Vec<(&'a raw::Buffer, VertexBlockDef)>);
 

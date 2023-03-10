@@ -2,7 +2,7 @@ use std::time::Instant;
 
 use posh::{
     gl::{
-        BufferUsage, Context, DefaultFramebuffer, DrawParams, Error, PrimitiveType, Program,
+        BufferUsage, Context, DrawParams, Error, FramebufferBinding, PrimitiveType, Program,
         UniformBuffer, VertexBuffer, VertexStream,
     },
     sl::{self, VaryingOutput},
@@ -12,8 +12,8 @@ use posh::{
 // Shader interface
 
 #[derive(Clone, Copy, Block)]
-struct MyUniform<V: BlockFields = SlView> {
-    time: V::F32,
+struct Globals<F: BlockFields = SlView> {
+    time: F::F32,
 }
 
 // Shader code
@@ -27,7 +27,7 @@ fn vertex_shader(_: (), vertex: sl::Vec2) -> VaryingOutput<sl::Vec2> {
     }
 }
 
-fn fragment_shader(uniform: MyUniform, varying: sl::Vec2) -> sl::Vec4 {
+fn fragment_shader(uniform: Globals, varying: sl::Vec2) -> sl::Vec4 {
     let rg = (varying + uniform.time).cos().pow(sl::vec2(2.0, 2.0));
 
     sl::vec4(rg.x, rg.y, 0.5, 1.0)
@@ -37,8 +37,8 @@ fn fragment_shader(uniform: MyUniform, varying: sl::Vec2) -> sl::Vec4 {
 
 struct Demo {
     context: Context,
-    program: Program<MyUniform, sl::Vec2>,
-    uniform_buffer: UniformBuffer<MyUniform>,
+    program: Program<Globals, sl::Vec2>,
+    globals: UniformBuffer<Globals>,
     vertices: VertexBuffer<sl::Vec2>,
     start_time: Instant,
 }
@@ -46,8 +46,8 @@ struct Demo {
 impl Demo {
     pub fn new(context: Context) -> Result<Self, Error> {
         let program = context.create_program(vertex_shader, fragment_shader)?;
-        let uniform_buffer =
-            context.create_uniform_buffer(MyUniform { time: 0.0 }, BufferUsage::StreamDraw)?;
+        let globals =
+            context.create_uniform_buffer(Globals { time: 0.0 }, BufferUsage::StreamDraw)?;
         let vertices = context.create_vertex_buffer(
             &[[0.5f32, 1.0].into(), [0.0, 0.0].into(), [1.0, 0.0].into()],
             BufferUsage::StaticDraw,
@@ -57,7 +57,7 @@ impl Demo {
         Ok(Self {
             context,
             program,
-            uniform_buffer,
+            globals,
             vertices,
             start_time,
         })
@@ -65,18 +65,18 @@ impl Demo {
 
     pub fn draw(&self) {
         let time = Instant::now().duration_since(self.start_time).as_secs_f32();
-        self.uniform_buffer.set(MyUniform { time });
+        self.globals.set(Globals { time });
 
         self.context.clear_color([0.1, 0.2, 0.3, 1.0]);
         self.program.draw(
-            self.uniform_buffer.binding(),
+            self.globals.binding(),
             VertexStream::Unindexed {
                 vertices: self.vertices.binding(),
                 range: 0..3,
                 primitive: PrimitiveType::Triangles,
             },
-            &DefaultFramebuffer,
-            &DrawParams::default(),
+            FramebufferBinding::default(),
+            DrawParams::default(),
         );
     }
 }

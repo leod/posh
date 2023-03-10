@@ -13,8 +13,9 @@ use crate::{
 };
 
 use super::{
-    raw, BufferError, BufferUsage, Caps, ContextError, Element, ElementBuffer, Image, Program,
-    ProgramError, Texture2d, TextureError, UniformBuffer, VertexBuffer,
+    raw::{self, FramebufferError},
+    BufferError, BufferUsage, Caps, ContextError, Element, ElementBuffer, Framebuffer, Image,
+    Program, ProgramError, Texture2d, TextureError, UniformBuffer, VertexBuffer,
 };
 
 /// The graphics context, which is used for creating GPU objects.
@@ -77,6 +78,33 @@ impl Context {
         let raw = self.raw.create_buffer(&[data.as_std140()], usage)?;
 
         Ok(UniformBuffer::from_raw(raw))
+    }
+
+    pub fn create_texture_2d<S: Sample>(
+        &self,
+        image: Image<'_, S>,
+    ) -> Result<Texture2d<S>, TextureError> {
+        let raw = self.raw.create_texture_2d(image.raw().clone())?;
+
+        Ok(Texture2d::from_raw(raw))
+    }
+
+    pub fn create_texture_2d_with_mipmap<S: Sample>(
+        &self,
+        image: Image<'_, S>,
+    ) -> Result<Texture2d<S>, TextureError> {
+        let raw = self
+            .raw
+            .create_texture_2d_with_mipmap(image.raw().clone())?;
+
+        Ok(Texture2d::from_raw(raw))
+    }
+
+    pub fn create_framebuffer<F: Fragment<SlView>>(
+        &self,
+        attachments: F::GlView,
+    ) -> Result<Framebuffer<F>, FramebufferError> {
+        Framebuffer::new(&self.raw, attachments)
     }
 
     pub fn create_program<U, U1, U2, V, F, W, InV, OutW, InW, OutF>(
@@ -153,26 +181,6 @@ impl Context {
             Ok(Program::unchecked_from_raw(raw))
         }
     */
-
-    pub fn create_texture_2d<S: Sample>(
-        &self,
-        image: Image<'_, S>,
-    ) -> Result<Texture2d<S>, TextureError> {
-        let raw = self.raw.create_texture_2d(image.raw().clone())?;
-
-        Ok(Texture2d::from_raw(raw))
-    }
-
-    pub fn create_texture_2d_with_mipmap<S: Sample>(
-        &self,
-        image: Image<'_, S>,
-    ) -> Result<Texture2d<S>, TextureError> {
-        let raw = self
-            .raw
-            .create_texture_2d_with_mipmap(image.raw().clone())?;
-
-        Ok(Texture2d::from_raw(raw))
-    }
 
     // TODO: Clearing should move to some framebuffer thing.
 

@@ -18,7 +18,7 @@ pub struct UniformBuffer<B> {
 
 #[derive(Clone)]
 pub struct UniformBufferBinding<B> {
-    pub(super) raw: Rc<raw::Buffer>,
+    raw: Rc<raw::Buffer>,
     _phantom: PhantomData<B>,
     // TODO: Uniform buffer slicing.
 }
@@ -36,10 +36,6 @@ impl<B: Block<SlView>> UniformBuffer<B> {
             raw: Rc::new(raw),
             _phantom: PhantomData,
         }
-    }
-
-    pub fn gl(&self) -> &Rc<glow::Context> {
-        self.raw.gl()
     }
 
     pub fn usage(&self) -> BufferUsage {
@@ -67,5 +63,11 @@ impl<B: Block<SlView>> UniformBuffer<B> {
 
     fn uniform_size() -> usize {
         std::mem::size_of::<<B::GlView as AsStd140>::Output>()
+    }
+}
+
+impl<B> UniformBufferBinding<B> {
+    pub(super) fn raw(&self) -> &raw::Buffer {
+        &self.raw
     }
 }

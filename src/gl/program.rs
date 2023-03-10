@@ -7,7 +7,8 @@ use crate::{
 };
 
 use super::{
-    raw, vertex_stream::VertexStream, DrawParams, Surface, Texture2dBinding, UniformBufferBinding,
+    raw, vertex_stream::VertexStream, DrawParams, FramebufferBinding, Texture2dBinding,
+    UniformBufferBinding,
 };
 
 #[derive(Clone)]
@@ -29,17 +30,13 @@ where
         }
     }
 
-    pub fn draw<S>(
+    pub fn draw(
         &self,
         uniforms: U::GlView,
         vertices: VertexStream<V::GlView>,
-        surface: &S,
-        draw_params: &DrawParams,
-    ) where
-        S: Surface<F>,
-    {
-        // TODO: Surface stuff.
-
+        framebuffer: FramebufferBinding<F::GlView>,
+        draw_params: DrawParams,
+    ) {
         // TODO: These allocations can be avoided once stable has allocators.
         // TODO: Remove hardcoded path names.
         let mut uniform_visitor = CollectUniforms::default();
@@ -52,7 +49,8 @@ where
             self.raw.draw(
                 &uniform_visitor.raw_uniform_buffers,
                 &uniform_visitor.raw_samplers,
-                vertices.raw(),
+                &vertices.raw(),
+                framebuffer.raw(),
             );
         }
     }
@@ -65,9 +63,9 @@ struct CollectUniforms<'a> {
 }
 
 impl<'a> UniformVisitor<'a, GlView> for CollectUniforms<'a> {
-    fn accept_sampler2d<S: Sample>(&mut self, path: &str, sampler: &Texture2dBinding<S>) {
+    fn accept_sampler2d<S: Sample>(&mut self, _: &str, sampler: &Texture2dBinding<S>) {
         self.raw_samplers
-            .push(raw::TextureBinding::Texture2d(sampler.raw.clone()))
+            .push(raw::TextureBinding::Texture2d(sampler.raw().clone()))
     }
 
     fn accept_block<B: Block<SlView, SlView = B>>(
@@ -75,6 +73,6 @@ impl<'a> UniformVisitor<'a, GlView> for CollectUniforms<'a> {
         _: &str,
         uniform: &'a UniformBufferBinding<B>,
     ) {
-        self.raw_uniform_buffers.push(&uniform.raw);
+        self.raw_uniform_buffers.push(uniform.raw());
     }
 }

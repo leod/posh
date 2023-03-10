@@ -25,7 +25,7 @@ use std::{collections::BTreeMap, rc::Rc};
 
 use dag::{Expr, StructType, Type};
 
-pub(crate) use {scalar::scalar_physical, sig::Private};
+pub(crate) use scalar::scalar_physical;
 
 pub use {
     array::Array,
