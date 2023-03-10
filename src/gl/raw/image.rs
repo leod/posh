@@ -48,6 +48,7 @@ impl ImageFormat {
     }
 }
 
+// FIXME: When is `ImageComponentType` not implied by `ImageInternalFormat`?
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ImageComponentType {
     U8,

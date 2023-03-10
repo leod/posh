@@ -90,7 +90,7 @@ impl<F: Fragment<GlView>> FramebufferBinding<F> {
 fn raw_attachments<F: Fragment<GlView>>(attachments: &F) -> Vec<raw::FramebufferAttachment> {
     struct Visitor<'a>(Vec<raw::FramebufferAttachment<'a>>);
     impl<'a> FragmentVisitor<'a, GlView> for Visitor<'a> {
-        fn accept<S: Sample>(&mut self, path: &str, attachment: &'a FramebufferAttachment2d<S>) {
+        fn accept<S: Sample>(&mut self, _: &str, attachment: &'a FramebufferAttachment2d<S>) {
             self.0.push(attachment.raw());
         }
     }

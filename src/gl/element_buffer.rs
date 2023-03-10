@@ -34,7 +34,6 @@ pub struct ElementBuffer<E = u32> {
 pub struct ElementBufferBinding {
     raw: Rc<raw::Buffer>,
     ty: ElementType,
-    element_size: usize,
     range: Range<usize>,
 }
 
@@ -72,7 +71,6 @@ impl<E: Element> ElementBuffer<E> {
         ElementBufferBinding {
             raw: self.raw.clone(),
             ty: E::TYPE,
-            element_size: size_of::<E>(),
             range,
         }
     }

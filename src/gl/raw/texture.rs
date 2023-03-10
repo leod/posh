@@ -4,14 +4,11 @@ use glow::HasContext;
 
 use crate::gl::{raw::error::check_gl_error, TextureError};
 
-use super::{
-    Caps, ComparisonFunc, Image, ImageComponentType, ImageInternalFormat, Sampler2dParams,
-};
+use super::{Caps, Image, ImageInternalFormat, Sampler2dParams};
 
 pub(super) struct Texture2dShared {
     gl: Rc<glow::Context>,
     id: glow::Texture,
-    ty: ImageComponentType,
     internal_format: ImageInternalFormat,
     levels: usize,
     sampler_params: Cell<Sampler2dParams>,
@@ -117,7 +114,6 @@ impl Texture2d {
         let shared = Rc::new(Texture2dShared {
             gl: gl.clone(),
             id,
-            ty: image.ty,
             internal_format: image.internal_format,
             levels: levels as usize,
             sampler_params: Default::default(),
@@ -163,10 +159,6 @@ impl Texture2d {
         check_gl_error(&gl).map_err(TextureError::Unexpected)?;
 
         Ok(texture)
-    }
-
-    pub fn ty(&self) -> ImageComponentType {
-        self.shared.ty
     }
 
     pub fn internal_format(&self) -> ImageInternalFormat {

@@ -149,7 +149,7 @@ impl<'a> VertexStream<'a> {
                 let attribute_info =
                     VertexAttributeLayout::new(attribute.ty).expect("invalid vertex attribute");
 
-                for i in 0..attribute_info.locations {
+                for _ in 0..attribute_info.locations {
                     unsafe {
                         gl.disable_vertex_attrib_array(index);
                     }

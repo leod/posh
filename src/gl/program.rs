@@ -63,7 +63,7 @@ struct CollectUniforms<'a> {
 }
 
 impl<'a> UniformVisitor<'a, GlView> for CollectUniforms<'a> {
-    fn accept_sampler2d<S: Sample>(&mut self, path: &str, sampler: &Texture2dBinding<S>) {
+    fn accept_sampler2d<S: Sample>(&mut self, _: &str, sampler: &Texture2dBinding<S>) {
         self.raw_samplers
             .push(raw::TextureBinding::Texture2d(sampler.raw().clone()))
     }
@@ -73,6 +73,6 @@ impl<'a> UniformVisitor<'a, GlView> for CollectUniforms<'a> {
         _: &str,
         uniform: &'a UniformBufferBinding<B>,
     ) {
-        self.raw_uniform_buffers.push(&uniform.raw());
+        self.raw_uniform_buffers.push(uniform.raw());
     }
 }
