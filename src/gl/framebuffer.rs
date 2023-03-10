@@ -8,12 +8,12 @@ use crate::{
 
 use super::{
     raw::{self, FramebufferError},
-    Texture2d,
+    Sampler2dParams, Texture2d, Texture2dBinding,
 };
 
 pub struct FramebufferAttachment2d<S> {
-    pub texture: Texture2d<S>,
-    pub level: u32,
+    pub(super) texture: Texture2d<S>,
+    pub(super) level: u32,
 }
 
 pub struct Framebuffer<F: Fragment<SlView>> {
@@ -34,6 +34,18 @@ impl<S: Sample> FramebufferAttachment2d<S> {
             texture: self.texture.raw(),
             level: self.level,
         }
+    }
+
+    pub fn texture(&self) -> &Texture2d<S> {
+        &self.texture
+    }
+
+    pub fn level(&self) -> u32 {
+        self.level
+    }
+
+    pub fn binding(&self, params: Sampler2dParams) -> Texture2dBinding<S> {
+        self.texture.binding(params)
     }
 }
 

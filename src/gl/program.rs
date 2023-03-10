@@ -37,8 +37,6 @@ where
         framebuffer: FramebufferBinding<F::GlView>,
         draw_params: DrawParams,
     ) {
-        // TODO: Surface stuff.
-
         // TODO: These allocations can be avoided once stable has allocators.
         // TODO: Remove hardcoded path names.
         let mut uniform_visitor = CollectUniforms::default();
