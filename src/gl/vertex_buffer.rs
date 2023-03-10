@@ -34,10 +34,6 @@ impl<B: Block<SlView>> VertexBuffer<B> {
         }
     }
 
-    pub(crate) fn gl(&self) -> &Rc<glow::Context> {
-        self.raw.gl()
-    }
-
     pub fn usage(&self) -> BufferUsage {
         self.raw.usage()
     }

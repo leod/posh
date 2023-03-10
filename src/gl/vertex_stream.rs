@@ -38,7 +38,7 @@ impl<V: Vertex<GlView>> VertexStream<V> {
                 vertices: raw_vertices(vertices),
                 elements: Some((elements.raw(), elements.ty())),
                 primitive: *primitive,
-                range: elements.range().clone(),
+                range: elements.range(),
                 num_instances: 1,
             },
             Unindexed {

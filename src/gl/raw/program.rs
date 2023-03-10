@@ -165,7 +165,7 @@ impl Program {
         assert_eq!(samplers.len(), def.uniform_sampler_defs.len());
         assert!(vertices.is_compatible(&self.shared.def.vertex_block_defs));
 
-        framebuffer.bind(&gl);
+        framebuffer.bind(gl);
 
         unsafe {
             gl.use_program(Some(self.shared.id));
@@ -224,7 +224,7 @@ impl Program {
         }
 
         // TODO: Remove overly conservative unbinding.
-        framebuffer.unbind(&gl);
+        framebuffer.unbind(gl);
 
         check_gl_error(gl).unwrap();
     }

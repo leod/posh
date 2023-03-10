@@ -14,7 +14,7 @@ pub enum FramebufferAttachment<'a> {
 }
 
 pub struct FramebufferShared {
-    gl: Rc<glow::Context>,
+    _gl: Rc<glow::Context>,
     id: glow::Framebuffer,
 }
 
@@ -22,7 +22,7 @@ pub struct Framebuffer {
     shared: Rc<FramebufferShared>,
 
     // We need to keep our attachments alive.
-    texture_2d_attachments: Vec<Rc<Texture2dShared>>,
+    _texture_2d_attachments: Vec<Rc<Texture2dShared>>,
 }
 
 pub enum FramebufferBinding {
@@ -118,7 +118,10 @@ impl Framebuffer {
         }
 
         let id = unsafe { gl.create_framebuffer() }.map_err(FramebufferError::ObjectCreation)?;
-        let shared = Rc::new(FramebufferShared { gl: gl.clone(), id });
+        let shared = Rc::new(FramebufferShared {
+            _gl: gl.clone(),
+            id,
+        });
 
         unsafe {
             gl.bind_framebuffer(glow::FRAMEBUFFER, Some(id));
@@ -182,7 +185,7 @@ impl Framebuffer {
 
         Ok(Framebuffer {
             shared,
-            texture_2d_attachments,
+            _texture_2d_attachments: texture_2d_attachments,
         })
     }
 
