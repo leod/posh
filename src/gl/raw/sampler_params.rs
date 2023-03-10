@@ -86,7 +86,7 @@ impl Default for Sampler2dParams {
 
 impl Sampler2dParams {
     pub(super) fn set_delta(&self, gl: &glow::Context, current: &Sampler2dParams) {
-        if current.comparison_func != self.comparison_func {
+        if self.comparison_func != current.comparison_func {
             let (mode, func) = self
                 .comparison_func
                 .map_or((glow::NONE as i32, ComparisonFunc::LessOrEqual), |func| {
@@ -100,7 +100,7 @@ impl Sampler2dParams {
             }
         }
 
-        if current.mag_filter != self.mag_filter {
+        if self.mag_filter != current.mag_filter {
             let mag_filter = self.mag_filter.to_gl() as i32;
 
             unsafe {
@@ -108,7 +108,7 @@ impl Sampler2dParams {
             }
         }
 
-        if current.min_filter != self.min_filter {
+        if self.min_filter != current.min_filter {
             let min_filter = self.min_filter.to_gl() as i32;
 
             unsafe {
@@ -116,7 +116,7 @@ impl Sampler2dParams {
             }
         }
 
-        if current.wrap_s != self.wrap_s {
+        if self.wrap_s != current.wrap_s {
             let wrap_s = self.wrap_s.to_gl() as i32;
 
             unsafe {
@@ -124,7 +124,7 @@ impl Sampler2dParams {
             }
         }
 
-        if current.wrap_t != self.wrap_t {
+        if self.wrap_t != current.wrap_t {
             let wrap_t = self.wrap_t.to_gl() as i32;
 
             unsafe {

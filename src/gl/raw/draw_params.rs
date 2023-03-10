@@ -1,3 +1,5 @@
+use glow::HasContext;
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum ComparisonFunc {
     Always,
@@ -27,6 +29,7 @@ impl ComparisonFunc {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct DrawParams {
     depth_test: Option<ComparisonFunc>,
 }
@@ -34,5 +37,24 @@ pub struct DrawParams {
 impl Default for DrawParams {
     fn default() -> Self {
         Self { depth_test: None }
+    }
+}
+
+impl DrawParams {
+    pub(super) fn set_delta(&self, gl: &glow::Context, current: &DrawParams) {
+        if self.depth_test != current.depth_test {
+            if let Some(func) = self.depth_test {
+                let func = func.to_gl();
+
+                unsafe {
+                    gl.enable(glow::DEPTH_TEST);
+                    gl.depth_func(func);
+                }
+            } else {
+                unsafe {
+                    gl.disable(glow::DEPTH_TEST);
+                }
+            }
+        }
     }
 }
