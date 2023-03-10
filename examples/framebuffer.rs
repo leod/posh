@@ -145,7 +145,7 @@ impl Demo {
                 scene: self
                     .framebuffer
                     .attachments()
-                    .binding(Sampler2dParams::default()),
+                    .sampler(Sampler2dParams::default()),
             },
             VertexStream::Indexed {
                 vertices: self.quad_vertices.binding(),

@@ -15,12 +15,12 @@ pub(super) struct Texture2dShared {
 }
 
 #[derive(Clone)]
-pub enum TextureBinding {
-    Texture2d(Texture2dBinding),
+pub enum Sampler {
+    Sampler2d(Sampler2d),
 }
 
 #[derive(Clone)]
-pub struct Texture2dBinding {
+pub struct Sampler2d {
     shared: Rc<Texture2dShared>,
     params: Sampler2dParams,
 }
@@ -121,7 +121,7 @@ impl Texture2d {
 
         // Check for errors *after* passing ownership of the texture to
         // `shared` so that it will be cleaned up if there is an error.
-        check_gl_error(&gl).map_err(TextureError::Unexpected)?;
+        check_gl_error(gl).map_err(TextureError::Unexpected)?;
 
         Ok(Texture2d { shared })
     }
@@ -152,7 +152,7 @@ impl Texture2d {
             gl.bind_texture(glow::TEXTURE_2D, None);
         }
 
-        check_gl_error(&gl).map_err(TextureError::Unexpected)?;
+        check_gl_error(gl).map_err(TextureError::Unexpected)?;
 
         Ok(texture)
     }
@@ -165,8 +165,8 @@ impl Texture2d {
         self.shared.internal_format
     }
 
-    pub fn binding(&self, params: Sampler2dParams) -> Texture2dBinding {
-        Texture2dBinding {
+    pub fn sampler(&self, params: Sampler2dParams) -> Sampler2d {
+        Sampler2d {
             shared: self.shared.clone(),
             params,
         }
@@ -208,20 +208,20 @@ fn validate_size(size: glam::UVec2, caps: &Caps) -> Result<(), TextureError> {
     Ok(())
 }
 
-impl TextureBinding {
+impl Sampler {
     pub(super) fn context(&self) -> &ContextShared {
-        use TextureBinding::*;
+        use Sampler::*;
 
         match self {
-            Texture2d(texture) => &texture.shared.ctx,
+            Sampler2d(texture) => &texture.shared.ctx,
         }
     }
 
     pub(super) fn bind(&self) {
-        use TextureBinding::*;
+        use Sampler::*;
 
         match self {
-            Texture2d(texture) => {
+            Sampler2d(texture) => {
                 let gl = texture.shared.ctx.gl();
                 let id = texture.shared.id;
 
@@ -235,10 +235,10 @@ impl TextureBinding {
     }
 
     pub(super) fn unbind(&self) {
-        use TextureBinding::*;
+        use Sampler::*;
 
         match self {
-            Texture2d(texture) => {
+            Sampler2d(texture) => {
                 let gl = texture.shared.ctx.gl();
 
                 unsafe {

@@ -41,21 +41,21 @@ impl<S: Sample> Texture2d<S> {
         }
     }
 
-    pub fn binding(&self, params: Sampler2dParams) -> Texture2dBinding<S> {
-        Texture2dBinding {
-            raw: self.raw.binding(params),
+    pub fn sampler(&self, params: Sampler2dParams) -> Sampler2d<S> {
+        Sampler2d {
+            raw: self.raw.sampler(params),
             _phantom: PhantomData,
         }
     }
 }
 
-pub struct Texture2dBinding<S> {
-    raw: raw::Texture2dBinding,
+pub struct Sampler2d<S> {
+    raw: raw::Sampler2d,
     _phantom: PhantomData<S>,
 }
 
-impl<S> Texture2dBinding<S> {
-    pub fn raw(&self) -> &raw::Texture2dBinding {
+impl<S> Sampler2d<S> {
+    pub fn raw(&self) -> &raw::Sampler2d {
         &self.raw
     }
 }

@@ -128,7 +128,7 @@ impl Demo {
                     camera: self.camera.binding(),
                     time: self.time.binding(),
                 },
-                self.texture.binding(Sampler2dParams::default()),
+                self.texture.sampler(Sampler2dParams::default()),
             ),
             VertexStream::Indexed {
                 vertices: self.vertices.binding(),

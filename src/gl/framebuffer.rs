@@ -8,7 +8,7 @@ use crate::{
 
 use super::{
     raw::{self, FramebufferError},
-    Sampler2dParams, Texture2d, Texture2dBinding,
+    Sampler2d, Sampler2dParams, Texture2d,
 };
 
 pub struct FramebufferAttachment2d<S> {
@@ -44,8 +44,8 @@ impl<S: Sample> FramebufferAttachment2d<S> {
         self.level
     }
 
-    pub fn binding(&self, params: Sampler2dParams) -> Texture2dBinding<S> {
-        self.texture.binding(params)
+    pub fn sampler(&self, params: Sampler2dParams) -> Sampler2d<S> {
+        self.texture.sampler(params)
     }
 }
 

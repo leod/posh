@@ -71,7 +71,7 @@ impl Buffer {
 
         buffer.set(data);
 
-        check_gl_error(&gl).map_err(BufferError::Unexpected)?;
+        check_gl_error(gl).map_err(BufferError::Unexpected)?;
 
         Ok(buffer)
     }
@@ -97,7 +97,7 @@ impl Buffer {
     }
 
     pub fn set<T: Pod>(&self, data: &[T]) {
-        let gl = &self.shared.ctx.gl();
+        let gl = self.shared.ctx.gl();
         let raw_data = bytemuck::cast_slice(data);
 
         // We can get away with always using `ARRAY_BUFFER` as the target here,
