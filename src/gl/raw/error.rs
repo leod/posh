@@ -76,6 +76,55 @@ pub enum VertexArrayError {
     Unexpected(String),
 }
 
+/// An error that was detected by framebuffer completeness checks.
+#[derive(Debug, Clone, Error)]
+pub enum FramebufferIncompleteError {
+    #[error("the default framebuffer does not exist")]
+    Undefined,
+
+    #[error("an attachment is incomplete")]
+    IncompleteAttachment,
+
+    #[error("there needs to be at least one attachment")]
+    IncompleteMissingAttachment,
+
+    #[error("unsupported (e.g. using different images for depth and stencil)")]
+    Unsupported,
+
+    #[error("incomplete multisample")]
+    IncompleteMultisample,
+
+    #[error("general OpenGL error")]
+    Error(String),
+
+    #[error("unknown error: {0}")]
+    Unknown(u32),
+}
+
+pub(super) fn check_framebuffer_completeness(
+    gl: &glow::Context,
+) -> Result<(), FramebufferIncompleteError> {
+    let status = unsafe { gl.check_framebuffer_status(glow::FRAMEBUFFER) };
+
+    use FramebufferIncompleteError::*;
+
+    match status {
+        glow::FRAMEBUFFER_COMPLETE => Ok(()),
+        glow::FRAMEBUFFER_UNDEFINED => Err(Undefined),
+        glow::FRAMEBUFFER_INCOMPLETE_ATTACHMENT => Err(IncompleteAttachment),
+        glow::FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT => Err(IncompleteMissingAttachment),
+        glow::FRAMEBUFFER_UNSUPPORTED => Err(Unsupported),
+        glow::FRAMEBUFFER_INCOMPLETE_MULTISAMPLE => Err(IncompleteMultisample),
+
+        // OpenGL ES 3.0.6: 4.4.4.2 Whole Framebuffer Completeness
+        // > If *CheckFramebufferStatus* generates an error, zero is returned.
+        0 => check_gl_error(gl).map_err(Error),
+
+        // This should not be reachable.
+        error => Err(Unknown(error)),
+    }
+}
+
 /// An error that occurred while creating a framebuffer.
 #[derive(Debug, Clone, Error)]
 pub enum FramebufferError {
@@ -96,6 +145,9 @@ pub enum FramebufferError {
 
     #[error("too many stencil attachments: requested {requested}, but the maximum number of stencil attachments is 1")]
     TooManyStencilAttachments { requested: u32 },
+
+    #[error("framebuffer is incomplete unexpectedly: {0}")]
+    Incomplete(FramebufferIncompleteError),
 
     #[error("unexpected error: {0}")]
     Unexpected(String),
