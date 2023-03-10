@@ -54,11 +54,8 @@ fn post_vertex(_: (), vertex: Vertex) -> VaryingOutput<sl::Vec2> {
 }
 
 fn post_fragment(uniform: PostUniforms, tex_coords: sl::Vec2) -> sl::Vec4 {
-    let coords = uniform
-        .globals
-        .flip
-        .eq(0u32)
-        .branch(tex_coords, tex_coords * -1.0);
+    let flip = uniform.globals.flip;
+    let coords = flip.eq(0u32).branch(tex_coords, tex_coords * -1.0);
 
     uniform.scene.lookup(coords)
 }
@@ -148,7 +145,6 @@ impl Demo {
                 scene: self
                     .framebuffer
                     .attachments()
-                    .texture
                     .binding(Sampler2dParams::default()),
             },
             VertexStream::Indexed {
