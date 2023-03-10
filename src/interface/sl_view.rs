@@ -225,14 +225,14 @@ where
 
 #[sealed]
 impl super::FragmentFields for SlView {
-    type Attachment = sl::Vec4;
+    type Attachment2d<S: Sample> = S;
 }
 
-unsafe impl Fragment<SlView> for sl::Vec4 {
+unsafe impl<S: Sample> Fragment<SlView> for S {
     type SlView = Self;
-    type GlView = gl::Texture2d<sl::Vec4>;
+    type GlView = gl::FramebufferAttachment2d<S>;
 
-    fn visit(&self, path: &str, visitor: &mut impl FragmentVisitor<SlView>) {
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl FragmentVisitor<'a, SlView>) {
         visitor.accept(path, self);
     }
 }

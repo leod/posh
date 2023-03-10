@@ -431,7 +431,7 @@ pub trait UniformVisitor<'a, F: UniformFields> {
 /// See [`Fragment`] for more details.
 #[sealed]
 pub trait FragmentFields: Copy {
-    type Attachment: Fragment<Self>;
+    type Attachment2d<S: Sample>: Fragment<Self>;
 }
 
 /// Fragment shader output data.
@@ -455,10 +455,10 @@ pub unsafe trait Fragment<F: FragmentFields> {
     type GlView: Fragment<GlView>;
 
     #[doc(hidden)]
-    fn visit(&self, path: &str, visitor: &mut impl FragmentVisitor<F>);
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl FragmentVisitor<'a, F>);
 }
 
 #[doc(hidden)]
-pub trait FragmentVisitor<F: FragmentFields> {
-    fn accept(&mut self, path: &str, attachment: &F::Attachment);
+pub trait FragmentVisitor<'a, F: FragmentFields> {
+    fn accept<S: Sample>(&mut self, path: &str, attachment: &'a F::Attachment2d<S>);
 }

@@ -1,3 +1,5 @@
+use glow::HasContext;
+
 use super::ComparisonFunc;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -78,6 +80,56 @@ impl Default for Sampler2dParams {
             min_filter: SamplerMinFilter::NearestMipmapLinear,
             wrap_s: SamplerWrap::Repeat,
             wrap_t: SamplerWrap::Repeat,
+        }
+    }
+}
+
+impl Sampler2dParams {
+    pub(super) fn set_delta(&self, gl: &glow::Context, current: &Sampler2dParams) {
+        if current.comparison_func != self.comparison_func {
+            let (mode, func) = self
+                .comparison_func
+                .map_or((glow::NONE as i32, ComparisonFunc::LessOrEqual), |func| {
+                    (glow::COMPARE_REF_TO_TEXTURE as i32, func)
+                });
+            let func = func.to_gl() as i32;
+
+            unsafe {
+                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_COMPARE_MODE, mode);
+                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_COMPARE_FUNC, func);
+            }
+        }
+
+        if current.mag_filter != self.mag_filter {
+            let mag_filter = self.mag_filter.to_gl() as i32;
+
+            unsafe {
+                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MAG_FILTER, mag_filter);
+            }
+        }
+
+        if current.min_filter != self.min_filter {
+            let min_filter = self.min_filter.to_gl() as i32;
+
+            unsafe {
+                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MIN_FILTER, min_filter);
+            }
+        }
+
+        if current.wrap_s != self.wrap_s {
+            let wrap_s = self.wrap_s.to_gl() as i32;
+
+            unsafe {
+                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_S, wrap_s);
+            }
+        }
+
+        if current.wrap_t != self.wrap_t {
+            let wrap_t = self.wrap_t.to_gl() as i32;
+
+            unsafe {
+                gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_T, wrap_t);
+            }
         }
     }
 }

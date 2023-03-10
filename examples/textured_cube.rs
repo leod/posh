@@ -4,7 +4,7 @@ use image::{io::Reader as ImageReader, EncodableLayout};
 
 use posh::{
     gl::{
-        BufferUsage, Context, DefaultFramebuffer, DrawParams, ElementBuffer, Error, Image,
+        BufferUsage, Context, DrawParams, ElementBuffer, Error, FramebufferBinding, Image,
         PrimitiveType, Program, Sampler2dParams, Texture2d, UniformBuffer, VertexBuffer,
         VertexStream,
     },
@@ -135,8 +135,8 @@ impl Demo {
                 elements: self.elements.binding(),
                 primitive: PrimitiveType::Triangles,
             },
-            &DefaultFramebuffer,
-            &DrawParams::default(),
+            FramebufferBinding::default(),
+            DrawParams::default(),
         );
     }
 }
