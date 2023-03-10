@@ -3,7 +3,7 @@ use std::rc::Rc;
 use glow::HasContext;
 
 use super::{
-    error::{check_gl_error, FramebufferError},
+    error::{check_framebuffer_completeness, check_gl_error, FramebufferError},
     texture::Texture2dShared,
     Caps, ImageInternalFormat, Texture2d,
 };
@@ -170,11 +170,14 @@ impl Framebuffer {
             gl.draw_buffers(&draw_buffers);
         }
 
+        let completeness = check_framebuffer_completeness(&gl);
+
         unsafe {
             gl.bind_framebuffer(glow::FRAMEBUFFER, None);
         }
 
         // Check for errors *after* unbinding the framebuffer.
+        completeness.map_err(FramebufferError::Incomplete)?;
         check_gl_error(&gl).map_err(FramebufferError::Unexpected)?;
 
         Ok(Framebuffer {
@@ -196,6 +199,9 @@ impl FramebufferBinding {
             Default => {}
             Framebuffer(framebuffer) => unsafe {
                 gl.bind_framebuffer(glow::FRAMEBUFFER, Some(framebuffer.id));
+
+                check_framebuffer_completeness(gl)
+                    .expect("framebuffer turned incomplete after creation");
             },
         }
     }
@@ -205,7 +211,7 @@ impl FramebufferBinding {
 
         match self {
             Default => {}
-            Framebuffer(framebuffer) => unsafe {
+            Framebuffer(_) => unsafe {
                 gl.bind_framebuffer(glow::FRAMEBUFFER, None);
             },
         }
