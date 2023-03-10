@@ -8,12 +8,13 @@ use crate::{
 };
 
 use super::{
-    error::check_gl_error, framebuffer::FramebufferBinding, vertex_layout::VertexAttributeLayout,
-    Buffer, ProgramValidationError, TextureBinding, VertexStream,
+    context::ContextShared, error::check_gl_error, framebuffer::FramebufferBinding,
+    vertex_layout::VertexAttributeLayout, Buffer, ProgramValidationError, TextureBinding,
+    VertexStream,
 };
 
 struct ProgramShared {
-    gl: Rc<glow::Context>,
+    ctx: Rc<ContextShared>,
     def: ProgramDef,
     id: glow::Program,
 }
@@ -23,25 +24,27 @@ pub struct Program {
 }
 
 impl Program {
-    pub(super) fn new(gl: Rc<glow::Context>, def: ProgramDef) -> Result<Self, ProgramError> {
+    pub(super) fn new(ctx: Rc<ContextShared>, def: ProgramDef) -> Result<Self, ProgramError> {
         validate_program_def(&def)?;
 
+        let gl = ctx.gl();
+        let id = unsafe { gl.create_program() }.map_err(ProgramError::ProgramCreation)?;
         let shared = Rc::new(ProgramShared {
-            gl: gl.clone(),
+            ctx: ctx.clone(),
             def,
-            id: unsafe { gl.create_program() }.map_err(ProgramError::ProgramCreation)?,
+            id,
         });
 
         // Compile and attach shaders.
         let vertex_shader = Shader::new(
-            gl.clone(),
+            ctx.clone(),
             glow::VERTEX_SHADER,
             &shared.def.vertex_shader_source,
         )?
         .attach(shared.id);
 
         let fragment_shader = Shader::new(
-            gl.clone(),
+            ctx.clone(),
             glow::FRAGMENT_SHADER,
             &shared.def.fragment_shader_source,
         )?
@@ -142,11 +145,11 @@ impl Program {
 
     /// # Panics
     ///
-    /// Panics if any of the supplied objects do not belong to the same
-    /// `glow::Context`, or if the wrong number of uniform buffers is supplied,
-    /// or if the wrong number of samplers is specified.
-    ///
-    /// TOOD: Check vertex array compatibility?
+    /// Panics under any of the following conditions:
+    /// 1. The supplied objects do not belong to the same `glow::Context`.
+    /// 2. The wrong number of uniform buffers is supplied.
+    /// 3. The wrong number of samplers is supplied.
+    /// 4. The vertex stream is not compatible with the program.
     ///
     /// # Safety
     ///
@@ -158,42 +161,40 @@ impl Program {
         vertices: &VertexStream,
         framebuffer: &FramebufferBinding,
     ) {
-        let gl = &self.shared.gl;
+        let ctx = &self.shared.ctx;
+        let gl = ctx.gl();
         let def = &self.shared.def;
 
         assert_eq!(uniform_buffers.len(), def.uniform_block_defs.len());
         assert_eq!(samplers.len(), def.uniform_sampler_defs.len());
         assert!(vertices.is_compatible(&self.shared.def.vertex_block_defs));
 
-        framebuffer.bind(gl);
+        framebuffer.bind(&self.shared.ctx);
 
         unsafe {
             gl.use_program(Some(self.shared.id));
         }
 
         for (buffer, block_def) in uniform_buffers.iter().zip(&def.uniform_block_defs) {
-            assert!(Rc::ptr_eq(buffer.gl(), gl));
+            assert!(buffer.context().ref_eq(ctx));
 
             let location = u32::try_from(block_def.location).unwrap();
-
             unsafe {
                 gl.bind_buffer_base(glow::UNIFORM_BUFFER, location, Some(buffer.id()));
             }
         }
 
         for (sampler, sampler_def) in samplers.iter().zip(&def.uniform_sampler_defs) {
-            assert!(Rc::ptr_eq(sampler.gl(), gl));
+            assert!(sampler.context().ref_eq(ctx));
 
             let unit = texture_unit_gl(sampler_def);
-
             unsafe {
                 gl.active_texture(unit);
             }
-
             sampler.bind();
         }
 
-        vertices.draw(gl);
+        vertices.draw(ctx);
 
         // TODO: Remove overly conservative unbinding.
         for (sampler, sampler_def) in samplers.iter().zip(&def.uniform_sampler_defs) {
@@ -232,19 +233,22 @@ impl Program {
 
 impl Drop for ProgramShared {
     fn drop(&mut self) {
+        let gl = self.ctx.gl();
+
         unsafe {
-            self.gl.delete_program(self.id);
+            gl.delete_program(self.id);
         }
     }
 }
 
 struct Shader {
-    gl: Rc<glow::Context>,
+    ctx: Rc<ContextShared>,
     id: glow::Shader,
 }
 
 impl Shader {
-    fn new(gl: Rc<glow::Context>, ty: u32, source: &str) -> Result<Self, ProgramError> {
+    fn new(ctx: Rc<ContextShared>, ty: u32, source: &str) -> Result<Self, ProgramError> {
+        let gl = ctx.gl();
         let id = unsafe { gl.create_shader(ty) }.map_err(ProgramError::ShaderCreation)?;
 
         unsafe {
@@ -252,12 +256,14 @@ impl Shader {
             gl.compile_shader(id);
         }
 
-        Ok(Self { gl, id })
+        Ok(Self { ctx, id })
     }
 
     fn attach(self, program_id: glow::Program) -> AttachedShader {
+        let gl = self.ctx.gl();
+
         unsafe {
-            self.gl.attach_shader(program_id, self.id);
+            gl.attach_shader(program_id, self.id);
         }
 
         AttachedShader {
@@ -269,8 +275,10 @@ impl Shader {
 
 impl Drop for Shader {
     fn drop(&mut self) {
+        let gl = self.ctx.gl();
+
         unsafe {
-            self.gl.delete_shader(self.id);
+            gl.delete_shader(self.id);
         }
     }
 }
@@ -282,10 +290,10 @@ struct AttachedShader {
 
 impl Drop for AttachedShader {
     fn drop(&mut self) {
+        let gl = self.shader.ctx.gl();
+
         unsafe {
-            self.shader
-                .gl
-                .detach_shader(self.program_id, self.shader.id);
+            gl.detach_shader(self.program_id, self.shader.id);
         }
     }
 }

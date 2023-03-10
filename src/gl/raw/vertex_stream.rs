@@ -10,7 +10,7 @@ use crate::{
     sl::program_def::{VertexBlockDef, VertexInputRate},
 };
 
-use super::Buffer;
+use super::{context::ContextShared, Buffer};
 
 #[derive(Debug, Copy, Clone)]
 pub enum ElementType {
@@ -79,13 +79,15 @@ impl<'a> VertexStream<'a> {
         true
     }
 
-    fn bind(&self, gl: &Rc<glow::Context>) {
+    fn bind(&self, ctx: &ContextShared) {
         let mut index = 0;
+
+        let gl = ctx.gl();
 
         for (buffer, vertex_def) in &self.vertices {
             assert!(vertex_def.stride > 0);
             assert_eq!(buffer.len() % vertex_def.stride, 0);
-            assert!(Rc::ptr_eq(buffer.gl(), gl));
+            assert!(buffer.context().ref_eq(ctx));
 
             unsafe {
                 gl.bind_buffer(glow::ARRAY_BUFFER, Some(buffer.id()));
@@ -133,6 +135,8 @@ impl<'a> VertexStream<'a> {
         }
 
         if let Some((buffer, _)) = self.elements.as_ref() {
+            assert!(buffer.context().ref_eq(ctx));
+
             unsafe {
                 gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(buffer.id()));
             }
@@ -141,7 +145,9 @@ impl<'a> VertexStream<'a> {
         check_gl_error(gl).expect("OpenGL error after VertexStream::bind()");
     }
 
-    fn unbind(&self, gl: &glow::Context) {
+    fn unbind(&self, ctx: &ContextShared) {
+        let gl = ctx.gl();
+
         let mut index = 0;
 
         for (_, vertex_def) in &self.vertices {
@@ -168,10 +174,12 @@ impl<'a> VertexStream<'a> {
         check_gl_error(gl).expect("OpenGL error after VertexStream::unbind()");
     }
 
-    pub(super) fn draw(&self, gl: &Rc<glow::Context>) {
+    pub(super) fn draw(&self, ctx: &ContextShared) {
         assert!(self.range.start <= self.range.end);
 
-        self.bind(gl);
+        let gl = ctx.gl();
+
+        self.bind(ctx);
 
         let mode = self.primitive.to_gl();
         let first = self.range.start;
@@ -217,7 +225,7 @@ impl<'a> VertexStream<'a> {
         }
 
         // TODO: Remove overly conservative unbinding.
-        self.unbind(gl);
+        self.unbind(ctx);
 
         check_gl_error(gl).expect("OpenGL error in VertexStream::draw()");
     }

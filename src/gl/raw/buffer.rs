@@ -3,9 +3,7 @@ use std::{cell::Cell, rc::Rc};
 use bytemuck::Pod;
 use glow::HasContext;
 
-use crate::gl::BufferError;
-
-use super::error::check_gl_error;
+use super::{context::ContextShared, error::check_gl_error, BufferError};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum BufferUsage {
@@ -33,7 +31,7 @@ impl BufferUsage {
 }
 
 pub(super) struct BufferShared {
-    gl: Rc<glow::Context>,
+    ctx: Rc<ContextShared>,
     id: glow::Buffer,
     usage: BufferUsage,
     len: Cell<usize>,
@@ -55,14 +53,15 @@ pub struct Buffer {
 
 impl Buffer {
     pub(super) fn new<T: Pod>(
-        gl: Rc<glow::Context>,
+        ctx: Rc<ContextShared>,
         data: &[T],
         usage: BufferUsage,
     ) -> Result<Self, BufferError> {
+        let gl = ctx.gl();
         let id = unsafe { gl.create_buffer() }.map_err(BufferError::ObjectCreation)?;
 
         let shared = Rc::new(BufferShared {
-            gl: gl.clone(),
+            ctx: ctx.clone(),
             id,
             usage,
             len: Cell::new(0),
@@ -77,8 +76,8 @@ impl Buffer {
         Ok(buffer)
     }
 
-    pub fn gl(&self) -> &Rc<glow::Context> {
-        &self.shared.gl
+    pub(super) fn context(&self) -> &ContextShared {
+        &self.shared.ctx
     }
 
     pub fn id(&self) -> glow::Buffer {
@@ -98,7 +97,7 @@ impl Buffer {
     }
 
     pub fn set<T: Pod>(&self, data: &[T]) {
-        let gl = &self.shared.gl;
+        let gl = &self.shared.ctx.gl();
         let raw_data = bytemuck::cast_slice(data);
 
         // We can get away with always using `ARRAY_BUFFER` as the target here,
@@ -120,8 +119,10 @@ impl Buffer {
 
 impl Drop for BufferShared {
     fn drop(&mut self) {
+        let gl = self.ctx.gl();
+
         unsafe {
-            self.gl.delete_buffer(self.id);
+            gl.delete_buffer(self.id);
         }
     }
 }

@@ -4,10 +4,10 @@ use glow::HasContext;
 
 use crate::gl::{raw::error::check_gl_error, TextureError};
 
-use super::{Caps, Image, ImageInternalFormat, Sampler2dParams};
+use super::{context::ContextShared, Caps, Image, ImageInternalFormat, Sampler2dParams};
 
 pub(super) struct Texture2dShared {
-    gl: Rc<glow::Context>,
+    ctx: Rc<ContextShared>,
     id: glow::Texture,
     internal_format: ImageInternalFormat,
     levels: usize,
@@ -34,12 +34,11 @@ impl Texture2dShared {
         self.id
     }
 
-    pub fn set_sampler_params(&self, new: Sampler2dParams) {
-        let gl = &self.gl;
+    pub(super) fn set_sampler_params(&self, new: Sampler2dParams) {
+        let gl = &self.ctx.gl();
+
         let current = self.sampler_params.get();
-
         new.set_delta(gl, &current);
-
         self.sampler_params.set(new);
 
         check_gl_error(gl).unwrap();
@@ -48,7 +47,7 @@ impl Texture2dShared {
 
 impl Texture2d {
     fn new_with_levels(
-        gl: Rc<glow::Context>,
+        ctx: Rc<ContextShared>,
         image: Image,
         levels: usize,
     ) -> Result<Self, TextureError> {
@@ -69,8 +68,6 @@ impl Texture2d {
             .try_into()
             .expect("max_texture_size is out of i32 range");
 
-        let id = unsafe { gl.create_texture() }.map_err(TextureError::ObjectCreation)?;
-
         let mut buffer = Vec::new();
         let data_len = image.required_data_len();
         let slice = if let Some(slice) = image.data {
@@ -87,6 +84,9 @@ impl Texture2d {
             buffer.resize(data_len, 0);
             buffer.as_slice()
         };
+
+        let gl = ctx.gl();
+        let id = unsafe { gl.create_texture() }.map_err(TextureError::ObjectCreation)?;
 
         unsafe {
             gl.bind_texture(glow::TEXTURE_2D, Some(id));
@@ -112,7 +112,7 @@ impl Texture2d {
         }
 
         let shared = Rc::new(Texture2dShared {
-            gl: gl.clone(),
+            ctx: ctx.clone(),
             id,
             internal_format: image.internal_format,
             levels: levels as usize,
@@ -126,29 +126,25 @@ impl Texture2d {
         Ok(Texture2d { shared })
     }
 
-    pub(super) fn new(
-        gl: Rc<glow::Context>,
-        caps: &Caps,
-        image: Image,
-    ) -> Result<Self, TextureError> {
-        validate_size(image.size, caps)?;
+    pub(super) fn new(ctx: Rc<ContextShared>, image: Image) -> Result<Self, TextureError> {
+        validate_size(image.size, ctx.caps())?;
 
-        Self::new_with_levels(gl, image, 1)
+        Self::new_with_levels(ctx, image, 1)
     }
 
     pub(super) fn new_with_mipmap(
-        gl: Rc<glow::Context>,
-        caps: &Caps,
+        ctx: Rc<ContextShared>,
         image: Image,
     ) -> Result<Self, TextureError> {
-        validate_size(image.size, caps)?;
+        validate_size(image.size, ctx.caps())?;
 
         // OpenGL ES 3.0.6: 3.8.4 Immutable-Format Texture Images
         // > An INVALID_OPERATION error is generated if `levels` is greater than
         // > `floor(log_2(max(width, height))) + 1`.
         let levels = (image.size.x.max(image.size.y) as f64).log2() as usize + 1;
 
-        let texture = Self::new_with_levels(gl.clone(), image, levels)?;
+        let texture = Self::new_with_levels(ctx.clone(), image, levels)?;
+        let gl = ctx.gl();
 
         unsafe {
             gl.bind_texture(glow::TEXTURE_2D, Some(texture.shared.id));
@@ -161,6 +157,10 @@ impl Texture2d {
         Ok(texture)
     }
 
+    pub(super) fn shared(&self) -> Rc<Texture2dShared> {
+        self.shared.clone()
+    }
+
     pub fn internal_format(&self) -> ImageInternalFormat {
         self.shared.internal_format
     }
@@ -171,16 +171,14 @@ impl Texture2d {
             params,
         }
     }
-
-    pub(super) fn shared(&self) -> Rc<Texture2dShared> {
-        self.shared.clone()
-    }
 }
 
 impl Drop for Texture2dShared {
     fn drop(&mut self) {
+        let gl = self.ctx.gl();
+
         unsafe {
-            self.gl.delete_texture(self.id);
+            gl.delete_texture(self.id);
         }
     }
 }
@@ -211,11 +209,11 @@ fn validate_size(size: glam::UVec2, caps: &Caps) -> Result<(), TextureError> {
 }
 
 impl TextureBinding {
-    pub fn gl(&self) -> &Rc<glow::Context> {
+    pub(super) fn context(&self) -> &ContextShared {
         use TextureBinding::*;
 
         match self {
-            Texture2d(texture) => &texture.shared.gl,
+            Texture2d(texture) => &texture.shared.ctx,
         }
     }
 
@@ -224,7 +222,7 @@ impl TextureBinding {
 
         match self {
             Texture2d(texture) => {
-                let gl = &texture.shared.gl;
+                let gl = texture.shared.ctx.gl();
                 let id = texture.shared.id;
 
                 unsafe {
@@ -240,9 +238,13 @@ impl TextureBinding {
         use TextureBinding::*;
 
         match self {
-            Texture2d(texture) => unsafe {
-                texture.shared.gl.bind_texture(glow::TEXTURE_2D, None);
-            },
+            Texture2d(texture) => {
+                let gl = texture.shared.ctx.gl();
+
+                unsafe {
+                    gl.bind_texture(glow::TEXTURE_2D, None);
+                }
+            }
         }
     }
 }

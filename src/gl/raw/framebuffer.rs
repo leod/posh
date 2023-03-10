@@ -3,6 +3,7 @@ use std::rc::Rc;
 use glow::HasContext;
 
 use super::{
+    context::ContextShared,
     error::{check_framebuffer_completeness, check_gl_error, FramebufferError},
     texture::Texture2dShared,
     Caps, ImageInternalFormat, Texture2d,
@@ -14,7 +15,7 @@ pub enum FramebufferAttachment<'a> {
 }
 
 pub struct FramebufferShared {
-    _gl: Rc<glow::Context>,
+    ctx: Rc<ContextShared>,
     id: glow::Framebuffer,
 }
 
@@ -30,10 +31,15 @@ pub enum FramebufferBinding {
     Framebuffer(Rc<FramebufferShared>),
 }
 
+impl FramebufferShared {
+    pub(super) fn context(&self) -> &ContextShared {
+        &self.ctx
+    }
+}
+
 impl Framebuffer {
-    pub fn new(
-        gl: Rc<glow::Context>,
-        caps: &Caps,
+    pub(super) fn new(
+        ctx: Rc<ContextShared>,
         attachments: &[FramebufferAttachment],
     ) -> Result<Self, FramebufferError> {
         // Validate the `attachments` *before* creating or binding the new
@@ -51,7 +57,7 @@ impl Framebuffer {
                         // > greater than or equal to zero and no larger than
                         // > `log_2` of the value of `MAX_TEXTURE_SIZE`.
 
-                        let max_level = (caps.max_texture_size as f64).log2() as u32;
+                        let max_level = (ctx.caps().max_texture_size as f64).log2() as u32;
 
                         if *level > max_level {
                             return Err(FramebufferError::LevelTooLarge {
@@ -80,10 +86,10 @@ impl Framebuffer {
         // > An `INVALID_OPERATION` is generated if `attachment` is
         // > `COLOR_ATTACHMENTm` where `m` is greater than or equal to the value
         // > of `MAX_COLOR_ATTACHMENTS`.
-        if count(ImageInternalFormat::is_color_renderable) > caps.max_color_attachments {
+        if count(ImageInternalFormat::is_color_renderable) > ctx.caps().max_color_attachments {
             return Err(FramebufferError::TooManyColorAttachments {
                 requested: count(ImageInternalFormat::is_color_renderable),
-                max: caps.max_color_attachments,
+                max: ctx.caps().max_color_attachments,
             });
         }
 
@@ -96,10 +102,10 @@ impl Framebuffer {
         // In the future, we will hopefully allow rendering to subsets of
         // framebuffer attachments, but I don't know yet how this should look on
         // the type level.
-        if count(ImageInternalFormat::is_color_renderable) > caps.max_draw_buffers {
+        if count(ImageInternalFormat::is_color_renderable) > ctx.caps().max_draw_buffers {
             return Err(FramebufferError::TooManyDrawBuffers {
                 requested: count(ImageInternalFormat::is_color_renderable),
-                max: caps.max_draw_buffers,
+                max: ctx.caps().max_draw_buffers,
             });
         }
 
@@ -117,9 +123,10 @@ impl Framebuffer {
             });
         }
 
+        let gl = ctx.gl();
         let id = unsafe { gl.create_framebuffer() }.map_err(FramebufferError::ObjectCreation)?;
         let shared = Rc::new(FramebufferShared {
-            _gl: gl.clone(),
+            ctx: ctx.clone(),
             id,
         });
 
@@ -195,12 +202,15 @@ impl Framebuffer {
 }
 
 impl FramebufferBinding {
-    pub fn bind(&self, gl: &glow::Context) {
+    pub(super) fn bind(&self, ctx: &ContextShared) {
         use FramebufferBinding::*;
 
         match self {
             Default => {}
             Framebuffer(framebuffer) => unsafe {
+                assert!(framebuffer.context().ref_eq(ctx));
+
+                let gl = ctx.gl();
                 gl.bind_framebuffer(glow::FRAMEBUFFER, Some(framebuffer.id));
 
                 check_framebuffer_completeness(gl)
@@ -209,7 +219,7 @@ impl FramebufferBinding {
         }
     }
 
-    pub fn unbind(&self, gl: &glow::Context) {
+    pub(super) fn unbind(&self, gl: &glow::Context) {
         use FramebufferBinding::*;
 
         match self {

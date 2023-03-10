@@ -128,7 +128,7 @@ impl Demo {
         let time = Instant::now().duration_since(self.start_time).as_secs_f32();
         self.globals.set(Globals { time, flip });
 
-        self.context.clear_color([0.1, 0.2, 0.3, 1.0]);
+        self.context.clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0));
         self.scene_program.draw(
             self.globals.binding(),
             VertexStream::Unindexed {
