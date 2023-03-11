@@ -7,11 +7,10 @@ use crate::{
 };
 
 use super::{
-    raw, vertex_stream::VertexStream, DrawParams, FramebufferBinding, Texture2dBinding,
+    raw, vertex_stream::VertexStream, DrawParams, FramebufferBinding, Sampler2d,
     UniformBufferBinding,
 };
 
-#[derive(Clone)]
 pub struct Program<U, V, F = sl::Vec4> {
     raw: Rc<raw::Program>,
     _phantom: PhantomData<(U, V, F)>,
@@ -59,13 +58,13 @@ where
 #[derive(Default)]
 struct CollectUniforms<'a> {
     raw_uniform_buffers: Vec<&'a raw::Buffer>,
-    raw_samplers: Vec<raw::TextureBinding>,
+    raw_samplers: Vec<raw::Sampler>,
 }
 
 impl<'a> UniformVisitor<'a, GlView> for CollectUniforms<'a> {
-    fn accept_sampler2d<S: Sample>(&mut self, _: &str, sampler: &Texture2dBinding<S>) {
+    fn accept_sampler2d<S: Sample>(&mut self, _: &str, sampler: &Sampler2d<S>) {
         self.raw_samplers
-            .push(raw::TextureBinding::Texture2d(sampler.raw().clone()))
+            .push(raw::Sampler::Sampler2d(sampler.raw().clone()))
     }
 
     fn accept_block<B: Block<SlView, SlView = B>>(

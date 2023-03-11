@@ -10,7 +10,7 @@ use crate::{
     sl::program_def::{VertexBlockDef, VertexInputRate},
 };
 
-use super::Buffer;
+use super::{context::ContextShared, Buffer};
 
 #[derive(Debug, Copy, Clone)]
 pub enum ElementType {
@@ -19,7 +19,7 @@ pub enum ElementType {
 }
 
 impl ElementType {
-    pub const fn to_gl(self) -> u32 {
+    pub fn to_gl(self) -> u32 {
         use ElementType::*;
 
         match self {
@@ -28,7 +28,7 @@ impl ElementType {
         }
     }
 
-    pub const fn size(self) -> usize {
+    pub fn size(self) -> usize {
         use ElementType::*;
 
         match self {
@@ -65,27 +65,30 @@ impl PrimitiveType {
     }
 }
 
-pub struct VertexStream<'a> {
-    pub vertices: Vec<(&'a Buffer, VertexBlockDef)>,
-    pub elements: Option<(&'a Buffer, ElementType)>,
+#[derive(Clone)]
+pub struct VertexStream {
+    pub vertices: Vec<(Rc<Buffer>, VertexBlockDef)>,
+    pub elements: Option<(Rc<Buffer>, ElementType)>,
     pub primitive: PrimitiveType,
     pub range: Range<usize>,
     pub num_instances: usize,
 }
 
-impl<'a> VertexStream<'a> {
+impl VertexStream {
     pub fn is_compatible(&self, vertex_block_defs: &[VertexBlockDef]) -> bool {
         // TODO: Check vertex stream compatibility.
         true
     }
 
-    fn bind(&self, gl: &Rc<glow::Context>) {
+    fn bind(&self, ctx: &ContextShared) {
         let mut index = 0;
+
+        let gl = ctx.gl();
 
         for (buffer, vertex_def) in &self.vertices {
             assert!(vertex_def.stride > 0);
             assert_eq!(buffer.len() % vertex_def.stride, 0);
-            assert!(Rc::ptr_eq(buffer.gl(), gl));
+            assert!(buffer.context().ref_eq(ctx));
 
             unsafe {
                 gl.bind_buffer(glow::ARRAY_BUFFER, Some(buffer.id()));
@@ -133,6 +136,8 @@ impl<'a> VertexStream<'a> {
         }
 
         if let Some((buffer, _)) = self.elements.as_ref() {
+            assert!(buffer.context().ref_eq(ctx));
+
             unsafe {
                 gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(buffer.id()));
             }
@@ -141,7 +146,9 @@ impl<'a> VertexStream<'a> {
         check_gl_error(gl).expect("OpenGL error after VertexStream::bind()");
     }
 
-    fn unbind(&self, gl: &glow::Context) {
+    fn unbind(&self, ctx: &ContextShared) {
+        let gl = ctx.gl();
+
         let mut index = 0;
 
         for (_, vertex_def) in &self.vertices {
@@ -168,10 +175,12 @@ impl<'a> VertexStream<'a> {
         check_gl_error(gl).expect("OpenGL error after VertexStream::unbind()");
     }
 
-    pub(super) fn draw(&self, gl: &Rc<glow::Context>) {
+    pub(super) fn draw(&self, ctx: &ContextShared) {
         assert!(self.range.start <= self.range.end);
 
-        self.bind(gl);
+        let gl = ctx.gl();
+
+        self.bind(ctx);
 
         let mode = self.primitive.to_gl();
         let first = self.range.start;
@@ -217,7 +226,7 @@ impl<'a> VertexStream<'a> {
         }
 
         // TODO: Remove overly conservative unbinding.
-        self.unbind(gl);
+        self.unbind(ctx);
 
         check_gl_error(gl).expect("OpenGL error in VertexStream::draw()");
     }

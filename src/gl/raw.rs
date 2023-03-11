@@ -20,8 +20,10 @@ pub use error::{
     BufferError, ContextError, Error, FramebufferError, ProgramError, ProgramValidationError,
     TextureError, VertexArrayError,
 };
-pub use framebuffer::{Framebuffer, FramebufferAttachment, FramebufferBinding};
+pub use framebuffer::{
+    Framebuffer, FramebufferAttachment, FramebufferAttachment2d, FramebufferBinding,
+};
 pub use program::Program;
 pub use sampler_params::{Sampler2dParams, SamplerMagFilter, SamplerMinFilter};
-pub use texture::{Texture2d, Texture2dBinding, TextureBinding};
+pub use texture::{Sampler, Sampler2d, Texture2d};
 pub use vertex_stream::{ElementType, PrimitiveType, VertexStream};

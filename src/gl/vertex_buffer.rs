@@ -10,7 +10,6 @@ use super::{raw, BufferUsage};
 ///
 /// Instances of `VertexBuffer` can be created with
 /// [`Context::create_vertex_buffer`](crate::gl::Context::create_vertex_buffer).
-#[derive(Clone)]
 pub struct VertexBuffer<B> {
     raw: Rc<raw::Buffer>,
     _phantom: PhantomData<B>,
@@ -61,7 +60,7 @@ impl<B: Block<SlView>> VertexBuffer<B> {
 }
 
 impl<B: Block<SlView>> VertexBufferBinding<B> {
-    pub(crate) fn raw(&self) -> &raw::Buffer {
+    pub(crate) fn raw(&self) -> &Rc<raw::Buffer> {
         &self.raw
     }
 
@@ -76,6 +75,6 @@ impl<B: Block<SlView>> VertexBufferBinding<B> {
     }
 }
 
-pub(super) const fn vertex_size<V: Block<SlView>>() -> usize {
+fn vertex_size<V: Block<SlView>>() -> usize {
     std::mem::size_of::<<V::GlView as AsStd140>::Output>()
 }

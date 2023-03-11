@@ -3,37 +3,39 @@ use std::rc::Rc;
 use glow::HasContext;
 
 use super::{
+    context::ContextShared,
     error::{check_framebuffer_completeness, check_gl_error, FramebufferError},
-    texture::Texture2dShared,
-    Caps, ImageInternalFormat, Texture2d,
+    ImageInternalFormat, Texture2d,
 };
 
 #[derive(Clone)]
-pub enum FramebufferAttachment<'a> {
-    Texture2d { texture: &'a Texture2d, level: u32 },
+pub struct FramebufferAttachment2d {
+    pub texture: Rc<Texture2d>,
+    pub level: u32,
 }
 
-pub struct FramebufferShared {
-    _gl: Rc<glow::Context>,
-    id: glow::Framebuffer,
+#[derive(Clone)]
+pub enum FramebufferAttachment {
+    Texture2d(FramebufferAttachment2d),
 }
 
 pub struct Framebuffer {
-    shared: Rc<FramebufferShared>,
+    ctx: Rc<ContextShared>,
+    id: glow::Framebuffer,
 
     // We need to keep our attachments alive.
-    _texture_2d_attachments: Vec<Rc<Texture2dShared>>,
+    _attachments: Vec<FramebufferAttachment>,
 }
 
+#[derive(Clone)]
 pub enum FramebufferBinding {
     Default,
-    Framebuffer(Rc<FramebufferShared>),
+    Framebuffer(Rc<Framebuffer>),
 }
 
 impl Framebuffer {
-    pub fn new(
-        gl: Rc<glow::Context>,
-        caps: &Caps,
+    pub(super) fn new(
+        ctx: Rc<ContextShared>,
         attachments: &[FramebufferAttachment],
     ) -> Result<Self, FramebufferError> {
         // Validate the `attachments` *before* creating or binding the new
@@ -44,14 +46,14 @@ impl Framebuffer {
                 use FramebufferAttachment::*;
 
                 match attachment {
-                    Texture2d { texture, level } => {
+                    Texture2d(FramebufferAttachment2d { texture, level }) => {
                         // OpenGL ES 3.0.6: 4.4.2.4 Attaching Texture Images to
                         // a Framebuffer
                         // > If `textarget` is `TEXTURE_2D`, `level` must be
                         // > greater than or equal to zero and no larger than
                         // > `log_2` of the value of `MAX_TEXTURE_SIZE`.
 
-                        let max_level = (caps.max_texture_size as f64).log2() as u32;
+                        let max_level = (ctx.caps().max_texture_size as f64).log2() as u32;
 
                         if *level > max_level {
                             return Err(FramebufferError::LevelTooLarge {
@@ -80,10 +82,10 @@ impl Framebuffer {
         // > An `INVALID_OPERATION` is generated if `attachment` is
         // > `COLOR_ATTACHMENTm` where `m` is greater than or equal to the value
         // > of `MAX_COLOR_ATTACHMENTS`.
-        if count(ImageInternalFormat::is_color_renderable) > caps.max_color_attachments {
+        if count(ImageInternalFormat::is_color_renderable) > ctx.caps().max_color_attachments {
             return Err(FramebufferError::TooManyColorAttachments {
                 requested: count(ImageInternalFormat::is_color_renderable),
-                max: caps.max_color_attachments,
+                max: ctx.caps().max_color_attachments,
             });
         }
 
@@ -96,10 +98,10 @@ impl Framebuffer {
         // In the future, we will hopefully allow rendering to subsets of
         // framebuffer attachments, but I don't know yet how this should look on
         // the type level.
-        if count(ImageInternalFormat::is_color_renderable) > caps.max_draw_buffers {
+        if count(ImageInternalFormat::is_color_renderable) > ctx.caps().max_draw_buffers {
             return Err(FramebufferError::TooManyDrawBuffers {
                 requested: count(ImageInternalFormat::is_color_renderable),
-                max: caps.max_draw_buffers,
+                max: ctx.caps().max_draw_buffers,
             });
         }
 
@@ -117,17 +119,12 @@ impl Framebuffer {
             });
         }
 
+        let gl = ctx.gl();
         let id = unsafe { gl.create_framebuffer() }.map_err(FramebufferError::ObjectCreation)?;
-        let shared = Rc::new(FramebufferShared {
-            _gl: gl.clone(),
-            id,
-        });
-
         unsafe {
             gl.bind_framebuffer(glow::FRAMEBUFFER, Some(id));
         }
 
-        let mut texture_2d_attachments = Vec::new();
         let mut draw_buffers = Vec::new();
 
         for (attachment, format) in attachments.iter().zip(internal_formats) {
@@ -149,9 +146,7 @@ impl Framebuffer {
             };
 
             match attachment {
-                FramebufferAttachment::Texture2d { texture, level } => {
-                    texture_2d_attachments.push(texture.shared());
-
+                FramebufferAttachment::Texture2d(FramebufferAttachment2d { texture, level }) => {
                     let level = (*level).try_into().expect("level is out of i32 range");
 
                     unsafe {
@@ -159,7 +154,7 @@ impl Framebuffer {
                             glow::FRAMEBUFFER,
                             location,
                             glow::TEXTURE_2D,
-                            Some(texture.shared().id()),
+                            Some(texture.id()),
                             level,
                         );
                     }
@@ -173,34 +168,41 @@ impl Framebuffer {
             gl.draw_buffers(&draw_buffers);
         }
 
-        let completeness = check_framebuffer_completeness(&gl);
+        let completeness = check_framebuffer_completeness(gl);
 
         unsafe {
             gl.bind_framebuffer(glow::FRAMEBUFFER, None);
         }
 
-        // Check for errors *after* unbinding the framebuffer.
-        completeness.map_err(FramebufferError::Incomplete)?;
-        check_gl_error(&gl).map_err(FramebufferError::Unexpected)?;
+        let framebuffer = Framebuffer {
+            ctx: ctx.clone(),
+            id,
+            _attachments: attachments.to_vec(),
+        };
 
-        Ok(Framebuffer {
-            shared,
-            _texture_2d_attachments: texture_2d_attachments,
-        })
+        // Check for errors *after* unbinding the framebuffer and passing
+        // ownership, so that we leave in a clean state.
+        completeness.map_err(FramebufferError::Incomplete)?;
+        check_gl_error(gl).map_err(FramebufferError::Unexpected)?;
+
+        Ok(framebuffer)
     }
 
-    pub fn binding(&self) -> FramebufferBinding {
-        FramebufferBinding::Framebuffer(self.shared.clone())
+    pub(super) fn context(&self) -> &ContextShared {
+        &self.ctx
     }
 }
 
 impl FramebufferBinding {
-    pub fn bind(&self, gl: &glow::Context) {
+    pub(super) fn bind(&self, ctx: &ContextShared) {
         use FramebufferBinding::*;
 
         match self {
             Default => {}
             Framebuffer(framebuffer) => unsafe {
+                assert!(framebuffer.context().ref_eq(ctx));
+
+                let gl = ctx.gl();
                 gl.bind_framebuffer(glow::FRAMEBUFFER, Some(framebuffer.id));
 
                 check_framebuffer_completeness(gl)
@@ -209,7 +211,7 @@ impl FramebufferBinding {
         }
     }
 
-    pub fn unbind(&self, gl: &glow::Context) {
+    pub(super) fn unbind(&self, gl: &glow::Context) {
         use FramebufferBinding::*;
 
         match self {

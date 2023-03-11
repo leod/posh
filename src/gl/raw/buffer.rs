@@ -3,9 +3,7 @@ use std::{cell::Cell, rc::Rc};
 use bytemuck::Pod;
 use glow::HasContext;
 
-use crate::gl::BufferError;
-
-use super::error::check_gl_error;
+use super::{context::ContextShared, error::check_gl_error, BufferError};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum BufferUsage {
@@ -32,73 +30,58 @@ impl BufferUsage {
     }
 }
 
-pub(super) struct BufferShared {
-    gl: Rc<glow::Context>,
+pub struct Buffer {
+    ctx: Rc<ContextShared>,
     id: glow::Buffer,
     usage: BufferUsage,
     len: Cell<usize>,
 }
 
-impl BufferShared {
+impl Buffer {
+    pub(super) fn new<T: Pod>(
+        ctx: Rc<ContextShared>,
+        data: &[T],
+        usage: BufferUsage,
+    ) -> Result<Self, BufferError> {
+        let gl = ctx.gl();
+        let id = unsafe { gl.create_buffer() }.map_err(BufferError::ObjectCreation)?;
+
+        let buffer = Buffer {
+            ctx: ctx.clone(),
+            id,
+            usage,
+            len: Cell::new(0),
+        };
+
+        buffer.set(data);
+
+        check_gl_error(gl).map_err(BufferError::Unexpected)?;
+
+        Ok(buffer)
+    }
+
+    pub(super) fn context(&self) -> &ContextShared {
+        &self.ctx
+    }
+
+    pub fn id(&self) -> glow::Buffer {
+        self.id
+    }
+
+    pub fn usage(&self) -> BufferUsage {
+        self.usage
+    }
+
     pub fn len(&self) -> usize {
         self.len.get()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
-}
-
-pub struct Buffer {
-    pub(super) shared: Rc<BufferShared>,
-}
-
-impl Buffer {
-    pub(super) fn new<T: Pod>(
-        gl: Rc<glow::Context>,
-        data: &[T],
-        usage: BufferUsage,
-    ) -> Result<Self, BufferError> {
-        let id = unsafe { gl.create_buffer() }.map_err(BufferError::ObjectCreation)?;
-
-        let shared = Rc::new(BufferShared {
-            gl: gl.clone(),
-            id,
-            usage,
-            len: Cell::new(0),
-        });
-
-        let buffer = Buffer { shared };
-
-        buffer.set(data);
-
-        check_gl_error(&gl).map_err(BufferError::Unexpected)?;
-
-        Ok(buffer)
-    }
-
-    pub fn gl(&self) -> &Rc<glow::Context> {
-        &self.shared.gl
-    }
-
-    pub fn id(&self) -> glow::Buffer {
-        self.shared.id
-    }
-
-    pub fn usage(&self) -> BufferUsage {
-        self.shared.usage
-    }
-
-    pub fn len(&self) -> usize {
-        self.shared.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.shared.is_empty()
+        self.len() != 0
     }
 
     pub fn set<T: Pod>(&self, data: &[T]) {
-        let gl = &self.shared.gl;
+        let gl = self.ctx.gl();
         let raw_data = bytemuck::cast_slice(data);
 
         // We can get away with always using `ARRAY_BUFFER` as the target here,
@@ -107,21 +90,23 @@ impl Buffer {
         let target = glow::ARRAY_BUFFER;
 
         unsafe {
-            gl.bind_buffer(target, Some(self.shared.id));
-            gl.buffer_data_u8_slice(target, raw_data, self.shared.usage.to_gl());
+            gl.bind_buffer(target, Some(self.id));
+            gl.buffer_data_u8_slice(target, raw_data, self.usage.to_gl());
 
             // TODO: Could avoid unbinding here by using `ContextShared`.
             gl.bind_buffer(target, None);
         }
 
-        self.shared.len.set(raw_data.len());
+        self.len.set(raw_data.len());
     }
 }
 
-impl Drop for BufferShared {
+impl Drop for Buffer {
     fn drop(&mut self) {
+        let gl = self.ctx.gl();
+
         unsafe {
-            self.gl.delete_buffer(self.id);
+            gl.delete_buffer(self.id);
         }
     }
 }
