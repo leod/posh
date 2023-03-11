@@ -131,11 +131,11 @@ impl Demo {
         self.context.clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0));
         self.scene_program.draw(
             self.globals.binding(),
-            VertexStream::Unindexed {
-                vertices: self.triangle_vertices.binding(),
-                range: 0..3,
-                primitive: PrimitiveType::Triangles,
-            },
+            VertexStream::Unindexed(
+                self.triangle_vertices.binding(),
+                0..3,
+                PrimitiveType::Triangles,
+            ),
             self.framebuffer.binding(),
             DrawParams::default(),
         );
@@ -144,11 +144,11 @@ impl Demo {
                 globals: self.globals.binding(),
                 scene: self.framebuffer.view().sampler(Sampler2dParams::default()),
             },
-            VertexStream::Indexed {
-                vertices: self.quad_vertices.binding(),
-                elements: self.quad_elements.binding(),
-                primitive: PrimitiveType::Triangles,
-            },
+            VertexStream::Indexed(
+                self.quad_vertices.binding(),
+                self.quad_elements.binding(),
+                PrimitiveType::Triangles,
+            ),
             FramebufferBinding::default(),
             DrawParams::default(),
         );

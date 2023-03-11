@@ -13,16 +13,8 @@ use super::{raw, ElementBufferBinding, PrimitiveType};
 
 #[derive(Clone)]
 pub enum VertexStream<V> {
-    Indexed {
-        vertices: V,
-        elements: ElementBufferBinding,
-        primitive: PrimitiveType,
-    },
-    Unindexed {
-        vertices: V,
-        range: Range<usize>,
-        primitive: PrimitiveType,
-    },
+    Indexed(V, ElementBufferBinding, PrimitiveType),
+    Unindexed(V, Range<usize>, PrimitiveType),
 }
 
 impl<V: Vertex<GlView>> VertexStream<V> {
@@ -30,22 +22,14 @@ impl<V: Vertex<GlView>> VertexStream<V> {
         use VertexStream::*;
 
         match self {
-            Indexed {
-                vertices,
-                elements,
-                primitive,
-            } => raw::VertexStream {
+            Indexed(vertices, elements, primitive) => raw::VertexStream {
                 vertices: raw_vertices(vertices),
                 elements: Some((elements.raw().clone(), elements.ty())),
                 primitive: *primitive,
                 range: elements.range(),
                 num_instances: 1,
             },
-            Unindexed {
-                vertices,
-                range,
-                primitive,
-            } => raw::VertexStream {
+            Unindexed(vertices, range, primitive) => raw::VertexStream {
                 vertices: raw_vertices(vertices),
                 elements: None,
                 primitive: *primitive,

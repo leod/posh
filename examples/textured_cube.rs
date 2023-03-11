@@ -130,11 +130,11 @@ impl Demo {
                 },
                 self.texture.sampler(Sampler2dParams::default()),
             ),
-            VertexStream::Indexed {
-                vertices: self.vertices.binding(),
-                elements: self.elements.binding(),
-                primitive: PrimitiveType::Triangles,
-            },
+            VertexStream::Indexed(
+                self.vertices.binding(),
+                self.elements.binding(),
+                PrimitiveType::Triangles,
+            ),
             FramebufferBinding::default(),
             DrawParams::default(),
         );

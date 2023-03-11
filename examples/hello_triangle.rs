@@ -70,11 +70,7 @@ impl Demo {
         self.context.clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0));
         self.program.draw(
             self.globals.binding(),
-            VertexStream::Unindexed {
-                vertices: self.vertices.binding(),
-                range: 0..3,
-                primitive: PrimitiveType::Triangles,
-            },
+            VertexStream::Unindexed(self.vertices.binding(), 0..3, PrimitiveType::Triangles),
             FramebufferBinding::default(),
             DrawParams::default(),
         );
