@@ -11,7 +11,6 @@ use super::{
     UniformBufferBinding,
 };
 
-#[derive(Clone)]
 pub struct Program<U, V, F = sl::Vec4> {
     raw: Rc<raw::Program>,
     _phantom: PhantomData<(U, V, F)>,

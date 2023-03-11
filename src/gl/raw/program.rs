@@ -10,14 +10,10 @@ use super::{
     VertexStream,
 };
 
-struct ProgramShared {
+pub struct Program {
     ctx: Rc<ContextShared>,
     def: ProgramDef,
     id: glow::Program,
-}
-
-pub struct Program {
-    shared: Rc<ProgramShared>,
 }
 
 impl Program {
@@ -26,38 +22,38 @@ impl Program {
 
         let gl = ctx.gl();
         let id = unsafe { gl.create_program() }.map_err(ProgramError::ProgramCreation)?;
-        let shared = Rc::new(ProgramShared {
+        let program = Program {
             ctx: ctx.clone(),
             def,
             id,
-        });
+        };
 
         // Compile and attach shaders.
         let vertex_shader = Shader::new(
             ctx.clone(),
             glow::VERTEX_SHADER,
-            &shared.def.vertex_shader_source,
+            &program.def.vertex_shader_source,
         )?
-        .attach(shared.id);
+        .attach(program.id);
 
         let fragment_shader = Shader::new(
             ctx.clone(),
             glow::FRAGMENT_SHADER,
-            &shared.def.fragment_shader_source,
+            &program.def.fragment_shader_source,
         )?
-        .attach(shared.id);
+        .attach(program.id);
 
         // Bind vertex attributes. This needs to be done before linking the
         // program.
         {
             let mut index = 0;
 
-            for block_def in &shared.def.vertex_block_defs {
+            for block_def in &program.def.vertex_block_defs {
                 for attribute in &block_def.attributes {
                     unsafe {
                         gl.bind_attrib_location(
-                            shared.id,
-                            u32::try_from(index).unwrap(),
+                            program.id,
+                            index.try_into().unwrap(),
                             &attribute.name,
                         );
                     }
@@ -75,18 +71,18 @@ impl Program {
 
         // Link the program.
         let link_status = unsafe {
-            gl.link_program(shared.id);
+            gl.link_program(program.id);
 
             // Note that we do not check shader compile status before checking
             // the program link status, since this would break pipelining and
             // thereby potentially slow down compilation.
-            gl.get_program_link_status(shared.id)
+            gl.get_program_link_status(program.id)
         };
 
         if !link_status {
             let vertex_shader_info = unsafe { gl.get_shader_info_log(vertex_shader.shader.id) };
             let fragment_shader_info = unsafe { gl.get_shader_info_log(fragment_shader.shader.id) };
-            let program_info = unsafe { gl.get_program_info_log(shared.id) };
+            let program_info = unsafe { gl.get_program_info_log(program.id) };
 
             return Err(ProgramError::Compiler {
                 vertex_shader_info,
@@ -97,11 +93,11 @@ impl Program {
 
         // Set texture units.
         unsafe {
-            gl.use_program(Some(shared.id));
+            gl.use_program(Some(program.id));
         }
 
-        for sampler_def in &shared.def.uniform_sampler_defs {
-            let location = unsafe { gl.get_uniform_location(shared.id, &sampler_def.name) };
+        for sampler_def in &program.def.uniform_sampler_defs {
+            let location = unsafe { gl.get_uniform_location(program.id, &sampler_def.name) };
 
             // We silently ignore location lookup failures here, since program
             // linking is allowed to remove uniforms that are not used by the
@@ -119,15 +115,15 @@ impl Program {
         }
 
         // Set uniform block locations.
-        for uniform_def in &shared.def.uniform_block_defs {
-            let index = unsafe { gl.get_uniform_block_index(shared.id, &uniform_def.block_name) };
+        for uniform_def in &program.def.uniform_block_defs {
+            let index = unsafe { gl.get_uniform_block_index(program.id, &uniform_def.block_name) };
 
             // As with texture units, we silently ignore uniform block index
             // lookup failures here.
             if let Some(index) = index {
                 unsafe {
                     gl.uniform_block_binding(
-                        shared.id,
+                        program.id,
                         index,
                         u32::try_from(uniform_def.location).unwrap(),
                     );
@@ -137,7 +133,7 @@ impl Program {
 
         check_gl_error(gl).map_err(ProgramError::Unexpected)?;
 
-        Ok(Program { shared })
+        Ok(program)
     }
 
     /// # Panics
@@ -158,18 +154,18 @@ impl Program {
         vertices: &VertexStream,
         framebuffer: &FramebufferBinding,
     ) {
-        let ctx = &self.shared.ctx;
+        let ctx = &self.ctx;
         let gl = ctx.gl();
-        let def = &self.shared.def;
+        let def = &self.def;
 
         assert_eq!(uniform_buffers.len(), def.uniform_block_defs.len());
         assert_eq!(samplers.len(), def.uniform_sampler_defs.len());
-        assert!(vertices.is_compatible(&self.shared.def.vertex_block_defs));
+        assert!(vertices.is_compatible(&self.def.vertex_block_defs));
 
-        framebuffer.bind(&self.shared.ctx);
+        framebuffer.bind(&self.ctx);
 
         unsafe {
-            gl.use_program(Some(self.shared.id));
+            gl.use_program(Some(self.id));
         }
 
         for (buffer, block_def) in uniform_buffers.iter().zip(&def.uniform_block_defs) {
@@ -228,7 +224,7 @@ impl Program {
     }
 }
 
-impl Drop for ProgramShared {
+impl Drop for Program {
     fn drop(&mut self) {
         let gl = self.ctx.gl();
 

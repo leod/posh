@@ -176,18 +176,16 @@ impl Sampler {
     }
 
     pub(super) fn bind(&self) {
-        use Sampler::*;
-
         match self {
-            Sampler2d(texture) => {
-                let gl = texture.texture.ctx.gl();
-                let id = texture.texture.id;
+            Sampler::Sampler2d(Sampler2d { texture, params }) => {
+                let gl = texture.ctx.gl();
+                let id = texture.id;
 
                 unsafe {
                     gl.bind_texture(glow::TEXTURE_2D, Some(id));
                 }
 
-                texture.texture.set_sampler_params(texture.params);
+                texture.set_sampler_params(*params);
             }
         }
     }
@@ -196,8 +194,8 @@ impl Sampler {
         use Sampler::*;
 
         match self {
-            Sampler2d(texture) => {
-                let gl = texture.texture.ctx.gl();
+            Sampler2d(sampler) => {
+                let gl = sampler.texture.ctx.gl();
 
                 unsafe {
                     gl.bind_texture(glow::TEXTURE_2D, None);
