@@ -63,7 +63,7 @@ impl<F: Fragment<SlView>> Framebuffer<F> {
         })
     }
 
-    pub fn attachments(&self) -> &F::GlView {
+    pub fn view(&self) -> &F::GlView {
         &self.attachments
     }
 
