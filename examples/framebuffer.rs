@@ -142,10 +142,7 @@ impl Demo {
         self.post_program.draw(
             PostUniforms {
                 globals: self.globals.binding(),
-                scene: self
-                    .framebuffer
-                    .attachments()
-                    .sampler(Sampler2dParams::default()),
+                scene: self.framebuffer.view().sampler(Sampler2dParams::default()),
             },
             VertexStream::Indexed {
                 vertices: self.quad_vertices.binding(),
