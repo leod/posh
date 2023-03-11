@@ -30,25 +30,11 @@ impl BufferUsage {
     }
 }
 
-pub(super) struct BufferShared {
+pub struct Buffer {
     ctx: Rc<ContextShared>,
     id: glow::Buffer,
     usage: BufferUsage,
     len: Cell<usize>,
-}
-
-impl BufferShared {
-    pub fn len(&self) -> usize {
-        self.len.get()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
-}
-
-pub struct Buffer {
-    pub(super) shared: Rc<BufferShared>,
 }
 
 impl Buffer {
@@ -60,14 +46,12 @@ impl Buffer {
         let gl = ctx.gl();
         let id = unsafe { gl.create_buffer() }.map_err(BufferError::ObjectCreation)?;
 
-        let shared = Rc::new(BufferShared {
+        let buffer = Buffer {
             ctx: ctx.clone(),
             id,
             usage,
             len: Cell::new(0),
-        });
-
-        let buffer = Buffer { shared };
+        };
 
         buffer.set(data);
 
@@ -77,27 +61,27 @@ impl Buffer {
     }
 
     pub(super) fn context(&self) -> &ContextShared {
-        &self.shared.ctx
+        &self.ctx
     }
 
     pub fn id(&self) -> glow::Buffer {
-        self.shared.id
+        self.id
     }
 
     pub fn usage(&self) -> BufferUsage {
-        self.shared.usage
+        self.usage
     }
 
     pub fn len(&self) -> usize {
-        self.shared.len()
+        self.len.get()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.shared.is_empty()
+        self.len() != 0
     }
 
     pub fn set<T: Pod>(&self, data: &[T]) {
-        let gl = self.shared.ctx.gl();
+        let gl = self.ctx.gl();
         let raw_data = bytemuck::cast_slice(data);
 
         // We can get away with always using `ARRAY_BUFFER` as the target here,
@@ -106,18 +90,18 @@ impl Buffer {
         let target = glow::ARRAY_BUFFER;
 
         unsafe {
-            gl.bind_buffer(target, Some(self.shared.id));
-            gl.buffer_data_u8_slice(target, raw_data, self.shared.usage.to_gl());
+            gl.bind_buffer(target, Some(self.id));
+            gl.buffer_data_u8_slice(target, raw_data, self.usage.to_gl());
 
             // TODO: Could avoid unbinding here by using `ContextShared`.
             gl.bind_buffer(target, None);
         }
 
-        self.shared.len.set(raw_data.len());
+        self.len.set(raw_data.len());
     }
 }
 
-impl Drop for BufferShared {
+impl Drop for Buffer {
     fn drop(&mut self) {
         let gl = self.ctx.gl();
 

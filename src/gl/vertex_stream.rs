@@ -1,4 +1,4 @@
-use std::{mem::size_of, ops::Range};
+use std::{mem::size_of, ops::Range, rc::Rc};
 
 use crevice::std140::AsStd140;
 
@@ -36,7 +36,7 @@ impl<V: Vertex<GlView>> VertexStream<V> {
                 primitive,
             } => raw::VertexStream {
                 vertices: raw_vertices(vertices),
-                elements: Some((elements.raw(), elements.ty())),
+                elements: Some((elements.raw().clone(), elements.ty())),
                 primitive: *primitive,
                 range: elements.range(),
                 num_instances: 1,
@@ -56,11 +56,11 @@ impl<V: Vertex<GlView>> VertexStream<V> {
     }
 }
 
-fn raw_vertices<V: Vertex<GlView>>(vertices: &V) -> Vec<(&raw::Buffer, VertexBlockDef)> {
+fn raw_vertices<V: Vertex<GlView>>(vertices: &V) -> Vec<(Rc<raw::Buffer>, VertexBlockDef)> {
     // TODO: Reduce per-draw-call allocations.
-    struct Visitor<'a>(Vec<(&'a raw::Buffer, VertexBlockDef)>);
+    struct Visitor(Vec<(Rc<raw::Buffer>, VertexBlockDef)>);
 
-    impl<'a> VertexVisitor<'a, GlView> for Visitor<'a> {
+    impl<'a> VertexVisitor<'a, GlView> for Visitor {
         fn accept<B: Block<SlView>>(
             &mut self,
             path: &str,
@@ -73,7 +73,7 @@ fn raw_vertices<V: Vertex<GlView>>(vertices: &V) -> Vec<(&raw::Buffer, VertexBlo
                 attributes: B::vertex_attribute_defs(path),
             };
 
-            self.0.push((buffer.raw(), block_def));
+            self.0.push((buffer.raw().clone(), block_def));
         }
     }
 
