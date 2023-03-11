@@ -65,15 +65,15 @@ impl PrimitiveType {
     }
 }
 
-pub struct VertexStream<'a> {
-    pub vertices: Vec<(&'a Buffer, VertexBlockDef)>,
-    pub elements: Option<(&'a Buffer, ElementType)>,
+pub struct VertexStream {
+    pub vertices: Vec<(Rc<Buffer>, VertexBlockDef)>,
+    pub elements: Option<(Rc<Buffer>, ElementType)>,
     pub primitive: PrimitiveType,
     pub range: Range<usize>,
     pub num_instances: usize,
 }
 
-impl<'a> VertexStream<'a> {
+impl VertexStream {
     pub fn is_compatible(&self, vertex_block_defs: &[VertexBlockDef]) -> bool {
         // TODO: Check vertex stream compatibility.
         true

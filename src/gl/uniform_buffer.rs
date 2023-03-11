@@ -10,7 +10,6 @@ use super::{raw, BufferUsage};
 ///
 /// Instances of `UniformBuffer` can be created with
 /// [`Context::create_uniform_buffer`](crate::gl::Context::create_uniform_buffer).
-#[derive(Clone)]
 pub struct UniformBuffer<B> {
     pub(super) raw: Rc<raw::Buffer>,
     _phantom: PhantomData<B>,

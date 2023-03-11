@@ -77,7 +77,7 @@ impl<E: Element> ElementBuffer<E> {
 }
 
 impl ElementBufferBinding {
-    pub(crate) fn raw(&self) -> &raw::Buffer {
+    pub(crate) fn raw(&self) -> &Rc<raw::Buffer> {
         &self.raw
     }
 

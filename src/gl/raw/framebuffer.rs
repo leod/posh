@@ -6,7 +6,7 @@ use super::{
     context::ContextShared,
     error::{check_framebuffer_completeness, check_gl_error, FramebufferError},
     texture::Texture2dShared,
-    Caps, ImageInternalFormat, Texture2d,
+    ImageInternalFormat, Texture2d,
 };
 
 #[derive(Clone)]

@@ -1,7 +1,4 @@
-use std::rc::Rc;
-
 use crevice::std140::AsStd140;
-use glow::HasContext;
 
 use crate::{
     sl::{
