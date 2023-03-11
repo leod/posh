@@ -13,9 +13,27 @@ use super::{
     Program, Texture2d, TextureError,
 };
 
-pub struct Context {
-    gl: Rc<glow::Context>,
+pub(super) struct ContextShared {
+    gl: glow::Context,
     caps: Caps,
+}
+
+pub struct Context {
+    shared: Rc<ContextShared>,
+}
+
+impl ContextShared {
+    pub fn ref_eq(&self, other: &ContextShared) -> bool {
+        std::ptr::eq(self as *const ContextShared, other as *const ContextShared)
+    }
+
+    pub fn gl(&self) -> &glow::Context {
+        &self.gl
+    }
+
+    pub fn caps(&self) -> &Caps {
+        &self.caps
+    }
 }
 
 impl Context {
@@ -31,18 +49,13 @@ impl Context {
             gl.bind_vertex_array(Some(vao));
         }
 
-        Ok(Self {
-            gl: Rc::new(gl),
-            caps,
-        })
-    }
+        let shared = Rc::new(ContextShared { gl, caps });
 
-    pub fn gl(&self) -> &Rc<glow::Context> {
-        &self.gl
+        Ok(Self { shared })
     }
 
     pub fn caps(&self) -> &Caps {
-        &self.caps
+        &self.shared.caps
     }
 
     pub fn create_buffer<T: Pod>(
@@ -50,25 +63,34 @@ impl Context {
         data: &[T],
         usage: BufferUsage,
     ) -> Result<Buffer, BufferError> {
-        Buffer::new(self.gl.clone(), data, usage)
+        Buffer::new(self.shared.clone(), data, usage)
     }
 
     pub fn create_texture_2d(&self, image: Image) -> Result<Texture2d, TextureError> {
-        Texture2d::new(self.gl.clone(), &self.caps, image)
+        Texture2d::new(self.shared.clone(), image)
     }
 
     pub fn create_texture_2d_with_mipmap(&self, image: Image) -> Result<Texture2d, TextureError> {
-        Texture2d::new_with_mipmap(self.gl.clone(), &self.caps, image)
+        Texture2d::new_with_mipmap(self.shared.clone(), image)
     }
 
     pub fn create_framebuffer(
         &self,
         attachments: &[FramebufferAttachment],
     ) -> Result<Framebuffer, FramebufferError> {
-        Framebuffer::new(self.gl.clone(), &self.caps, attachments)
+        Framebuffer::new(self.shared.clone(), attachments)
     }
 
     pub fn create_program(&self, def: ProgramDef) -> Result<Program, ProgramError> {
-        Program::new(self.gl.clone(), def)
+        Program::new(self.shared.clone(), def)
+    }
+
+    pub fn clear_color(&self, color: glam::Vec4) {
+        let gl = self.shared.gl();
+
+        unsafe {
+            gl.clear_color(color.x, color.y, color.z, color.w);
+            gl.clear(glow::COLOR_BUFFER_BIT);
+        }
     }
 }

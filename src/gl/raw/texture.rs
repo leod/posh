@@ -4,10 +4,10 @@ use glow::HasContext;
 
 use crate::gl::{raw::error::check_gl_error, TextureError};
 
-use super::{Caps, Image, ImageInternalFormat, Sampler2dParams};
+use super::{context::ContextShared, Caps, Image, ImageInternalFormat, Sampler2dParams};
 
-pub(super) struct Texture2dShared {
-    gl: Rc<glow::Context>,
+pub struct Texture2d {
+    ctx: Rc<ContextShared>,
     id: glow::Texture,
     internal_format: ImageInternalFormat,
     levels: usize,
@@ -15,40 +15,19 @@ pub(super) struct Texture2dShared {
 }
 
 #[derive(Clone)]
-pub enum TextureBinding {
-    Texture2d(Texture2dBinding),
+pub enum Sampler {
+    Sampler2d(Sampler2d),
 }
 
 #[derive(Clone)]
-pub struct Texture2dBinding {
-    shared: Rc<Texture2dShared>,
-    params: Sampler2dParams,
-}
-
-pub struct Texture2d {
-    shared: Rc<Texture2dShared>,
-}
-
-impl Texture2dShared {
-    pub(super) fn id(&self) -> glow::Texture {
-        self.id
-    }
-
-    pub fn set_sampler_params(&self, new: Sampler2dParams) {
-        let gl = &self.gl;
-        let current = self.sampler_params.get();
-
-        new.set_delta(gl, &current);
-
-        self.sampler_params.set(new);
-
-        check_gl_error(gl).unwrap();
-    }
+pub struct Sampler2d {
+    pub texture: Rc<Texture2d>,
+    pub params: Sampler2dParams,
 }
 
 impl Texture2d {
     fn new_with_levels(
-        gl: Rc<glow::Context>,
+        ctx: Rc<ContextShared>,
         image: Image,
         levels: usize,
     ) -> Result<Self, TextureError> {
@@ -69,8 +48,6 @@ impl Texture2d {
             .try_into()
             .expect("max_texture_size is out of i32 range");
 
-        let id = unsafe { gl.create_texture() }.map_err(TextureError::ObjectCreation)?;
-
         let mut buffer = Vec::new();
         let data_len = image.required_data_len();
         let slice = if let Some(slice) = image.data {
@@ -87,6 +64,9 @@ impl Texture2d {
             buffer.resize(data_len, 0);
             buffer.as_slice()
         };
+
+        let gl = ctx.gl();
+        let id = unsafe { gl.create_texture() }.map_err(TextureError::ObjectCreation)?;
 
         unsafe {
             gl.bind_texture(glow::TEXTURE_2D, Some(id));
@@ -111,76 +91,116 @@ impl Texture2d {
             gl.bind_texture(glow::TEXTURE_2D, None);
         }
 
-        let shared = Rc::new(Texture2dShared {
-            gl: gl.clone(),
+        let texture = Texture2d {
+            ctx: ctx.clone(),
             id,
             internal_format: image.internal_format,
             levels: levels as usize,
             sampler_params: Default::default(),
-        });
+        };
 
         // Check for errors *after* passing ownership of the texture to
         // `shared` so that it will be cleaned up if there is an error.
-        check_gl_error(&gl).map_err(TextureError::Unexpected)?;
+        check_gl_error(gl).map_err(TextureError::Unexpected)?;
 
-        Ok(Texture2d { shared })
+        Ok(texture)
     }
 
-    pub(super) fn new(
-        gl: Rc<glow::Context>,
-        caps: &Caps,
-        image: Image,
-    ) -> Result<Self, TextureError> {
-        validate_size(image.size, caps)?;
+    pub(super) fn new(ctx: Rc<ContextShared>, image: Image) -> Result<Self, TextureError> {
+        validate_size(image.size, ctx.caps())?;
 
-        Self::new_with_levels(gl, image, 1)
+        Self::new_with_levels(ctx, image, 1)
     }
 
     pub(super) fn new_with_mipmap(
-        gl: Rc<glow::Context>,
-        caps: &Caps,
+        ctx: Rc<ContextShared>,
         image: Image,
     ) -> Result<Self, TextureError> {
-        validate_size(image.size, caps)?;
+        validate_size(image.size, ctx.caps())?;
 
         // OpenGL ES 3.0.6: 3.8.4 Immutable-Format Texture Images
         // > An INVALID_OPERATION error is generated if `levels` is greater than
         // > `floor(log_2(max(width, height))) + 1`.
         let levels = (image.size.x.max(image.size.y) as f64).log2() as usize + 1;
 
-        let texture = Self::new_with_levels(gl.clone(), image, levels)?;
+        let texture = Self::new_with_levels(ctx.clone(), image, levels)?;
+        let gl = ctx.gl();
 
         unsafe {
-            gl.bind_texture(glow::TEXTURE_2D, Some(texture.shared.id));
+            gl.bind_texture(glow::TEXTURE_2D, Some(texture.id));
             gl.generate_mipmap(glow::TEXTURE_2D);
             gl.bind_texture(glow::TEXTURE_2D, None);
         }
 
-        check_gl_error(&gl).map_err(TextureError::Unexpected)?;
+        check_gl_error(gl).map_err(TextureError::Unexpected)?;
 
         Ok(texture)
     }
 
+    pub(super) fn id(&self) -> glow::Texture {
+        self.id
+    }
+
+    pub(super) fn set_sampler_params(&self, new: Sampler2dParams) {
+        let gl = &self.ctx.gl();
+
+        let current = self.sampler_params.get();
+        new.set_delta(gl, &current);
+        self.sampler_params.set(new);
+
+        check_gl_error(gl).unwrap();
+    }
+
     pub fn internal_format(&self) -> ImageInternalFormat {
-        self.shared.internal_format
-    }
-
-    pub fn binding(&self, params: Sampler2dParams) -> Texture2dBinding {
-        Texture2dBinding {
-            shared: self.shared.clone(),
-            params,
-        }
-    }
-
-    pub(super) fn shared(&self) -> Rc<Texture2dShared> {
-        self.shared.clone()
+        self.internal_format
     }
 }
 
-impl Drop for Texture2dShared {
+impl Drop for Texture2d {
     fn drop(&mut self) {
+        let gl = self.ctx.gl();
+
         unsafe {
-            self.gl.delete_texture(self.id);
+            gl.delete_texture(self.id);
+        }
+    }
+}
+
+impl Sampler {
+    pub(super) fn context(&self) -> &ContextShared {
+        use Sampler::*;
+
+        match self {
+            Sampler2d(texture) => &texture.texture.ctx,
+        }
+    }
+
+    pub(super) fn bind(&self) {
+        match self {
+            Sampler::Sampler2d(Sampler2d { texture, params }) => {
+                let gl = texture.ctx.gl();
+                let id = texture.id;
+
+                unsafe {
+                    gl.bind_texture(glow::TEXTURE_2D, Some(id));
+                }
+
+                texture.set_sampler_params(*params);
+            }
+        }
+    }
+
+    pub(super) fn unbind(&self) {
+        use Sampler::*;
+
+        match self {
+            Sampler2d(sampler) => {
+                let gl = sampler.texture.ctx.gl();
+
+                unsafe {
+                    gl.bind_texture(glow::TEXTURE_2D, None);
+                }
+            }
         }
     }
 }
@@ -208,41 +228,4 @@ fn validate_size(size: glam::UVec2, caps: &Caps) -> Result<(), TextureError> {
     }
 
     Ok(())
-}
-
-impl TextureBinding {
-    pub fn gl(&self) -> &Rc<glow::Context> {
-        use TextureBinding::*;
-
-        match self {
-            Texture2d(texture) => &texture.shared.gl,
-        }
-    }
-
-    pub(super) fn bind(&self) {
-        use TextureBinding::*;
-
-        match self {
-            Texture2d(texture) => {
-                let gl = &texture.shared.gl;
-                let id = texture.shared.id;
-
-                unsafe {
-                    gl.bind_texture(glow::TEXTURE_2D, Some(id));
-                }
-
-                texture.shared.set_sampler_params(texture.params);
-            }
-        }
-    }
-
-    pub(super) fn unbind(&self) {
-        use TextureBinding::*;
-
-        match self {
-            Texture2d(texture) => unsafe {
-                texture.shared.gl.bind_texture(glow::TEXTURE_2D, None);
-            },
-        }
-    }
 }

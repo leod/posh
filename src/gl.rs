@@ -21,7 +21,7 @@ pub use raw::{
     FramebufferError, PrimitiveType, ProgramError, ProgramValidationError, Sampler2dParams,
     TextureError, VertexArrayError,
 };
-pub use texture::{Texture2d, Texture2dBinding};
+pub use texture::{Sampler2d, Texture2d};
 pub use uniform_buffer::{UniformBuffer, UniformBufferBinding};
 pub use vertex_buffer::{VertexBuffer, VertexBufferBinding};
 pub use vertex_stream::VertexStream;

@@ -1,7 +1,4 @@
-use std::rc::Rc;
-
 use crevice::std140::AsStd140;
-use glow::HasContext;
 
 use crate::{
     sl::{
@@ -28,10 +25,6 @@ impl Context {
         let raw = raw::Context::new(gl)?;
 
         Ok(Self { raw })
-    }
-
-    pub fn gl(&self) -> &Rc<glow::Context> {
-        self.raw.gl()
     }
 
     pub fn caps(&self) -> &Caps {
@@ -184,12 +177,7 @@ impl Context {
 
     // TODO: Clearing should move to some framebuffer thing.
 
-    pub fn clear_color(&self, color: [f32; 4]) {
-        let gl = self.raw.gl();
-
-        unsafe {
-            gl.clear_color(color[0], color[1], color[2], color[3]);
-            gl.clear(glow::COLOR_BUFFER_BIT);
-        }
+    pub fn clear_color(&self, color: glam::Vec4) {
+        self.raw.clear_color(color);
     }
 }
