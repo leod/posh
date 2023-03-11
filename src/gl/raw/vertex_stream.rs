@@ -65,6 +65,7 @@ impl PrimitiveType {
     }
 }
 
+#[derive(Clone)]
 pub struct VertexStream {
     pub vertices: Vec<(Rc<Buffer>, VertexBlockDef)>,
     pub elements: Option<(Rc<Buffer>, ElementType)>,

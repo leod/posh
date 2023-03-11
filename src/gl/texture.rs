@@ -7,9 +7,13 @@ use super::{
     FramebufferAttachment2d,
 };
 
-#[derive(Clone)]
 pub struct Texture2d<S> {
     raw: Rc<raw::Texture2d>,
+    _phantom: PhantomData<S>,
+}
+
+pub struct Sampler2d<S> {
+    raw: raw::Sampler2d,
     _phantom: PhantomData<S>,
 }
 
@@ -26,35 +30,33 @@ impl<S: Sample> Texture2d<S> {
         }
     }
 
-    pub(super) fn raw(&self) -> &raw::Texture2d {
-        &self.raw
-    }
-
     pub fn attachment(&self) -> FramebufferAttachment2d<S> {
         self.attachment_with_level(0)
     }
 
     pub fn attachment_with_level(&self, level: u32) -> FramebufferAttachment2d<S> {
-        FramebufferAttachment2d {
-            texture: self.clone(),
+        FramebufferAttachment2d::from_raw(raw::FramebufferAttachment2d {
+            texture: self.raw.clone(),
             level,
-        }
+        })
     }
 
     pub fn sampler(&self, params: Sampler2dParams) -> Sampler2d<S> {
-        Sampler2d {
-            raw: self.raw.sampler(params),
-            _phantom: PhantomData,
-        }
+        Sampler2d::from_raw(raw::Sampler2d {
+            texture: self.raw.clone(),
+            params,
+        })
     }
 }
 
-pub struct Sampler2d<S> {
-    raw: raw::Sampler2d,
-    _phantom: PhantomData<S>,
-}
-
 impl<S> Sampler2d<S> {
+    pub(super) fn from_raw(raw: raw::Sampler2d) -> Self {
+        Self {
+            raw,
+            _phantom: PhantomData,
+        }
+    }
+
     pub fn raw(&self) -> &raw::Sampler2d {
         &self.raw
     }

@@ -2,14 +2,12 @@ use std::{collections::BTreeSet, rc::Rc};
 
 use glow::HasContext;
 
-use crate::{
-    gl::ProgramError,
-    sl::program_def::{ProgramDef, UniformSamplerDef},
-};
+use crate::sl::program_def::{ProgramDef, UniformSamplerDef};
 
 use super::{
     context::ContextShared, error::check_gl_error, framebuffer::FramebufferBinding,
-    vertex_layout::VertexAttributeLayout, Buffer, ProgramValidationError, Sampler, VertexStream,
+    vertex_layout::VertexAttributeLayout, Buffer, ProgramError, ProgramValidationError, Sampler,
+    VertexStream,
 };
 
 struct ProgramShared {

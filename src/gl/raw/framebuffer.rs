@@ -5,36 +5,32 @@ use glow::HasContext;
 use super::{
     context::ContextShared,
     error::{check_framebuffer_completeness, check_gl_error, FramebufferError},
-    texture::Texture2dShared,
     ImageInternalFormat, Texture2d,
 };
 
 #[derive(Clone)]
-pub enum FramebufferAttachment<'a> {
-    Texture2d { texture: &'a Texture2d, level: u32 },
+pub struct FramebufferAttachment2d {
+    pub texture: Rc<Texture2d>,
+    pub level: u32,
 }
 
-pub struct FramebufferShared {
-    ctx: Rc<ContextShared>,
-    id: glow::Framebuffer,
+#[derive(Clone)]
+pub enum FramebufferAttachment {
+    Texture2d(FramebufferAttachment2d),
 }
 
 pub struct Framebuffer {
-    shared: Rc<FramebufferShared>,
+    ctx: Rc<ContextShared>,
+    id: glow::Framebuffer,
 
     // We need to keep our attachments alive.
-    _texture_2d_attachments: Vec<Rc<Texture2dShared>>,
+    _attachments: Vec<FramebufferAttachment>,
 }
 
+#[derive(Clone)]
 pub enum FramebufferBinding {
     Default,
-    Framebuffer(Rc<FramebufferShared>),
-}
-
-impl FramebufferShared {
-    pub(super) fn context(&self) -> &ContextShared {
-        &self.ctx
-    }
+    Framebuffer(Rc<Framebuffer>),
 }
 
 impl Framebuffer {
@@ -50,7 +46,7 @@ impl Framebuffer {
                 use FramebufferAttachment::*;
 
                 match attachment {
-                    Texture2d { texture, level } => {
+                    Texture2d(FramebufferAttachment2d { texture, level }) => {
                         // OpenGL ES 3.0.6: 4.4.2.4 Attaching Texture Images to
                         // a Framebuffer
                         // > If `textarget` is `TEXTURE_2D`, `level` must be
@@ -125,16 +121,10 @@ impl Framebuffer {
 
         let gl = ctx.gl();
         let id = unsafe { gl.create_framebuffer() }.map_err(FramebufferError::ObjectCreation)?;
-        let shared = Rc::new(FramebufferShared {
-            ctx: ctx.clone(),
-            id,
-        });
-
         unsafe {
             gl.bind_framebuffer(glow::FRAMEBUFFER, Some(id));
         }
 
-        let mut texture_2d_attachments = Vec::new();
         let mut draw_buffers = Vec::new();
 
         for (attachment, format) in attachments.iter().zip(internal_formats) {
@@ -156,9 +146,7 @@ impl Framebuffer {
             };
 
             match attachment {
-                FramebufferAttachment::Texture2d { texture, level } => {
-                    texture_2d_attachments.push(texture.shared());
-
+                FramebufferAttachment::Texture2d(FramebufferAttachment2d { texture, level }) => {
                     let level = (*level).try_into().expect("level is out of i32 range");
 
                     unsafe {
@@ -166,7 +154,7 @@ impl Framebuffer {
                             glow::FRAMEBUFFER,
                             location,
                             glow::TEXTURE_2D,
-                            Some(texture.shared().id()),
+                            Some(texture.id()),
                             level,
                         );
                     }
@@ -186,18 +174,22 @@ impl Framebuffer {
             gl.bind_framebuffer(glow::FRAMEBUFFER, None);
         }
 
-        // Check for errors *after* unbinding the framebuffer.
+        let framebuffer = Framebuffer {
+            ctx: ctx.clone(),
+            id,
+            _attachments: attachments.to_vec(),
+        };
+
+        // Check for errors *after* unbinding the framebuffer and passing
+        // ownership, so that we leave in a clean state.
         completeness.map_err(FramebufferError::Incomplete)?;
         check_gl_error(gl).map_err(FramebufferError::Unexpected)?;
 
-        Ok(Framebuffer {
-            shared,
-            _texture_2d_attachments: texture_2d_attachments,
-        })
+        Ok(framebuffer)
     }
 
-    pub fn binding(&self) -> FramebufferBinding {
-        FramebufferBinding::Framebuffer(self.shared.clone())
+    pub(super) fn context(&self) -> &ContextShared {
+        &self.ctx
     }
 }
 
