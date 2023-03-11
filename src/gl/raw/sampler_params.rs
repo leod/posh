@@ -65,7 +65,9 @@ impl SamplerWrap {
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Sampler2dParams {
+    // TODO: I think this should be specific to shadow samplers.
     pub comparison_func: Option<ComparisonFunc>,
+
     pub mag_filter: SamplerMagFilter,
     pub min_filter: SamplerMinFilter,
     pub wrap_s: SamplerWrap,

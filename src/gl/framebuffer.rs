@@ -11,6 +11,7 @@ use super::{
     Sampler2d, Sampler2dParams,
 };
 
+#[derive(Clone)]
 pub struct FramebufferAttachment2d<S> {
     raw: raw::FramebufferAttachment2d,
     _phantom: PhantomData<S>,

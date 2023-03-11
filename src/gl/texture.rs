@@ -12,6 +12,7 @@ pub struct Texture2d<S> {
     _phantom: PhantomData<S>,
 }
 
+#[derive(Clone)]
 pub struct Sampler2d<S> {
     raw: raw::Sampler2d,
     _phantom: PhantomData<S>,
