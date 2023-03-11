@@ -75,6 +75,6 @@ impl<B: Block<SlView>> VertexBufferBinding<B> {
     }
 }
 
-pub(super) const fn vertex_size<V: Block<SlView>>() -> usize {
+fn vertex_size<V: Block<SlView>>() -> usize {
     std::mem::size_of::<<V::GlView as AsStd140>::Output>()
 }

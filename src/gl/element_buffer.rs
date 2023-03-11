@@ -24,7 +24,6 @@ impl Element for u32 {
 ///
 /// Instances of `ElementBuffer` can be created with
 /// [`Context::create_element_buffer`](crate::gl::Context::create_element_buffer).
-#[derive(Clone)]
 pub struct ElementBuffer<E = u32> {
     raw: Rc<raw::Buffer>,
     _phantom: PhantomData<E>,
