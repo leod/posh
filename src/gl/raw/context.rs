@@ -93,4 +93,13 @@ impl Context {
             gl.clear(glow::COLOR_BUFFER_BIT);
         }
     }
+
+    pub fn clear_color_and_depth(&self, color: glam::Vec4, depth: f32) {
+        let gl = self.shared.gl();
+
+        unsafe {
+            gl.clear_color(color.x, color.y, color.z, color.w);
+            gl.clear(glow::COLOR_BUFFER_BIT);
+        }
+    }
 }

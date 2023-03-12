@@ -50,6 +50,7 @@ where
                 &uniform_visitor.raw_samplers,
                 &vertices.raw(),
                 framebuffer.raw(),
+                &draw_params,
             );
         }
     }

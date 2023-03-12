@@ -1,7 +1,7 @@
 use glow::HasContext;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum ComparisonFunc {
+pub enum CompareFunction {
     Always,
     Equal,
     Greater,
@@ -12,9 +12,9 @@ pub enum ComparisonFunc {
     NotEqual,
 }
 
-impl ComparisonFunc {
+impl CompareFunction {
     pub const fn to_gl(self) -> u32 {
-        use ComparisonFunc::*;
+        use CompareFunction::*;
 
         match self {
             Always => glow::ALWAYS,
@@ -31,19 +31,21 @@ impl ComparisonFunc {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DrawParams {
-    depth_test: Option<ComparisonFunc>,
+    pub depth_compare: Option<CompareFunction>,
 }
 
 impl Default for DrawParams {
     fn default() -> Self {
-        Self { depth_test: None }
+        Self {
+            depth_compare: None,
+        }
     }
 }
 
 impl DrawParams {
     pub(super) fn set_delta(&self, gl: &glow::Context, current: &DrawParams) {
-        if self.depth_test != current.depth_test {
-            if let Some(func) = self.depth_test {
+        if self.depth_compare != current.depth_compare {
+            if let Some(func) = self.depth_compare {
                 let func = func.to_gl();
 
                 unsafe {
@@ -56,5 +58,10 @@ impl DrawParams {
                 }
             }
         }
+    }
+
+    pub fn with_depth_compare(mut self, func: CompareFunction) -> Self {
+        self.depth_compare = Some(func);
+        self
     }
 }
