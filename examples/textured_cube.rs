@@ -4,9 +4,9 @@ use image::{io::Reader as ImageReader, EncodableLayout};
 
 use posh::{
     gl::{
-        BufferUsage, Context, DrawParams, ElementBuffer, Error, FramebufferBinding, Image,
-        PrimitiveType, Program, Sampler2dParams, Texture2d, UniformBuffer, VertexBuffer,
-        VertexStream,
+        BufferUsage, CompareFunction, Context, DrawParams, ElementBuffer, Error,
+        FramebufferBinding, Image, PrimitiveType, Program, Sampler2dParams, Texture2d,
+        UniformBuffer, VertexBuffer, VertexStream,
     },
     sl::{self, VaryingOutput},
     Block, BlockFields, GlView, SlView, UniformFields,
@@ -121,7 +121,8 @@ impl Demo {
         let time = Instant::now().duration_since(self.start_time).as_secs_f32();
         self.time.set(time);
 
-        self.context.clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0));
+        self.context
+            .clear_color_and_depth(glam::vec4(0.1, 0.2, 0.3, 1.0), 1.0);
         self.program.draw(
             (
                 Uniform {
@@ -136,7 +137,7 @@ impl Demo {
                 PrimitiveType::Triangles,
             ),
             FramebufferBinding::default(),
-            DrawParams::default(),
+            DrawParams::default().with_depth_compare(CompareFunction::Less),
         );
     }
 }

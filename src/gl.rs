@@ -17,7 +17,7 @@ pub use element_buffer::{Element, ElementBuffer, ElementBufferBinding};
 pub use framebuffer::{Framebuffer, FramebufferAttachment2d, FramebufferBinding};
 pub use program::Program;
 pub use raw::{
-    BufferError, BufferUsage, Caps, ComparisonFunc, ContextError, DrawParams, ElementType, Error,
+    BufferError, BufferUsage, Caps, CompareFunction, ContextError, DrawParams, ElementType, Error,
     FramebufferError, PrimitiveType, ProgramError, ProgramValidationError, Sampler2dParams,
     TextureError, VertexArrayError,
 };
