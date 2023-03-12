@@ -3,7 +3,7 @@ use std::{marker::PhantomData, rc::Rc};
 use crate::{
     interface::FragmentVisitor,
     sl::{self, Sample},
-    Fragment, GlView, SlView,
+    Fragment, FragmentNonUnit, GlView, SlView,
 };
 
 use super::{
@@ -17,12 +17,15 @@ pub struct FramebufferAttachment2d<S> {
     _phantom: PhantomData<S>,
 }
 
-pub struct Framebuffer<F: Fragment<SlView>> {
+pub struct Framebuffer<F: FragmentNonUnit> {
     raw: Rc<raw::Framebuffer>,
     attachments: F::GlView,
 }
 
-impl<F: Fragment<SlView>> Framebuffer<F> {}
+pub struct FramebufferWithDepth<F: Fragment<SlView>> {
+    raw: Rc<raw::Framebuffer>,
+    attachments: F::GlView,
+}
 
 #[derive(Clone)]
 pub struct FramebufferBinding<F> {
@@ -30,7 +33,7 @@ pub struct FramebufferBinding<F> {
     _phantom: PhantomData<F>,
 }
 
-impl<S: Sample> FramebufferAttachment2d<S> {
+impl<S> FramebufferAttachment2d<S> {
     pub(super) fn from_raw(raw: raw::FramebufferAttachment2d) -> Self {
         Self {
             raw,
@@ -50,17 +53,44 @@ impl<S: Sample> FramebufferAttachment2d<S> {
     }
 }
 
-impl<F: Fragment<SlView>> Framebuffer<F> {
+impl<F: FragmentNonUnit> Framebuffer<F> {
     pub(super) fn new(
         context: &raw::Context,
-        attachments: F::GlView,
+        color_attachments: F::GlView,
     ) -> Result<Self, FramebufferError> {
-        let raw_attachments = raw_attachments(&attachments);
+        let raw_attachments = raw_attachments(&color_attachments);
         let raw = context.create_framebuffer(&raw_attachments)?;
 
         Ok(Self {
             raw: Rc::new(raw),
-            attachments,
+            attachments: color_attachments,
+        })
+    }
+
+    pub fn view(&self) -> &F::GlView {
+        &self.attachments
+    }
+
+    pub fn binding(&self) -> FramebufferBinding<F::GlView> {
+        FramebufferBinding {
+            raw: raw::FramebufferBinding::Framebuffer(self.raw.clone()),
+            _phantom: PhantomData,
+        }
+    }
+}
+
+impl<F: FragmentNonUnit> FramebufferWithDepth<F> {
+    pub(super) fn new(
+        context: &raw::Context,
+        color_attachments: F::GlView,
+        depth_attachment: FramebufferAttachment2d<f32>,
+    ) -> Result<Self, FramebufferError> {
+        let raw_attachments = raw_attachments(&color_attachments);
+        let raw = context.create_framebuffer(&raw_attachments)?;
+
+        Ok(Self {
+            raw: Rc::new(raw),
+            attachments: color_attachments,
         })
     }
 
