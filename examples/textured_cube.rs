@@ -4,9 +4,9 @@ use image::{io::Reader as ImageReader, EncodableLayout};
 
 use posh::{
     gl::{
-        BufferUsage, Context, DrawParams, ElementBuffer, Error, FramebufferBinding, Image,
-        PrimitiveType, Program, Sampler2dParams, Texture2d, UniformBuffer, VertexBuffer,
-        VertexStream,
+        BufferUsage, CompareFunction, Context, DrawParams, ElementBuffer, Error,
+        FramebufferBinding, Image, PrimitiveType, Program, Sampler2dParams, Texture2d,
+        UniformBuffer, VertexBuffer, VertexStream,
     },
     sl::{self, VaryingOutput},
     Block, BlockFields, GlView, SlView, UniformFields,
@@ -136,7 +136,7 @@ impl Demo {
                 PrimitiveType::Triangles,
             ),
             FramebufferBinding::default(),
-            DrawParams::default(),
+            DrawParams::default().with_depth_compare(CompareFunction::Less),
         );
     }
 }

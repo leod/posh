@@ -1,6 +1,6 @@
 use glow::HasContext;
 
-use super::ComparisonFunc;
+use super::CompareFunction;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum SamplerMagFilter {
@@ -66,7 +66,7 @@ impl SamplerWrap {
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Sampler2dParams {
     // TODO: I think this should be specific to shadow samplers.
-    pub comparison_func: Option<ComparisonFunc>,
+    pub comparison_func: Option<CompareFunction>,
 
     pub mag_filter: SamplerMagFilter,
     pub min_filter: SamplerMinFilter,
@@ -91,7 +91,7 @@ impl Sampler2dParams {
         if self.comparison_func != current.comparison_func {
             let (mode, func) = self
                 .comparison_func
-                .map_or((glow::NONE as i32, ComparisonFunc::LessOrEqual), |func| {
+                .map_or((glow::NONE as i32, CompareFunction::LessOrEqual), |func| {
                     (glow::COMPARE_REF_TO_TEXTURE as i32, func)
                 });
             let func = func.to_gl() as i32;
