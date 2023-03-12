@@ -458,6 +458,9 @@ pub unsafe trait Fragment<F: FragmentFields> {
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl FragmentVisitor<'a, F>);
 }
 
+/// Non-empty fragment shader output data.
+pub trait FragmentNonUnit: Fragment<SlView> {}
+
 #[doc(hidden)]
 pub trait FragmentVisitor<'a, F: FragmentFields> {
     fn accept<S: Sample>(&mut self, path: &str, attachment: &'a F::Attachment2d<S>);

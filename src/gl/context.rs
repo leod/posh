@@ -6,7 +6,7 @@ use crate::{
         transpile::{FromFragmentInput, FromVertexInput, IntoFragmentOutput, IntoVertexOutput},
         Sample, Varying,
     },
-    Block, Fragment, SlView, Uniform, UniformUnion, Vertex,
+    Block, Fragment, FragmentNonUnit, SlView, Uniform, UniformUnion, Vertex,
 };
 
 use super::{
@@ -93,11 +93,11 @@ impl Context {
         Ok(Texture2d::from_raw(raw))
     }
 
-    pub fn create_framebuffer<F: Fragment<SlView>>(
+    pub fn create_framebuffer<F: FragmentNonUnit>(
         &self,
-        attachments: F::GlView,
+        color_attachments: F::GlView,
     ) -> Result<Framebuffer<F>, FramebufferError> {
-        Framebuffer::new(&self.raw, attachments)
+        Framebuffer::new(&self.raw, color_attachments)
     }
 
     pub fn create_program<U, U1, U2, V, F, W, InV, OutW, InW, OutF>(

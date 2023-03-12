@@ -5,8 +5,8 @@ pub mod gl;
 pub mod sl;
 
 pub use interface::{
-    Block, BlockFields, Fragment, FragmentFields, GlView, SlView, Uniform, UniformFields,
-    UniformNonUnit, UniformUnion, Vertex, VertexFields,
+    Block, BlockFields, Fragment, FragmentFields, FragmentNonUnit, GlView, SlView, Uniform,
+    UniformFields, UniformNonUnit, UniformUnion, Vertex, VertexFields,
 };
 
 pub use posh_derive::{Block, Uniform, Vertex};

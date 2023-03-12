@@ -35,6 +35,8 @@ impl_sample!(Vec4, Sampler2d);
 impl_sample!(IVec4, ISampler2d);
 impl_sample!(UVec4, USampler2d);
 
+pub struct Depth;
+
 /// An object which can be sampled.
 #[derive(Debug, Copy, Clone)]
 pub struct Sampler2d<S = Vec4> {

@@ -12,7 +12,8 @@ use crate::{
 };
 
 use super::{
-    Block, Fragment, FragmentVisitor, SlView, Uniform, UniformNonUnit, Vertex, VertexVisitor,
+    Block, Fragment, FragmentNonUnit, FragmentVisitor, SlView, Uniform, UniformNonUnit, Vertex,
+    VertexVisitor,
 };
 
 // Block
@@ -236,3 +237,5 @@ unsafe impl<S: Sample> Fragment<SlView> for S {
         visitor.accept(path, self);
     }
 }
+
+impl<S: Sample> FragmentNonUnit for S {}
