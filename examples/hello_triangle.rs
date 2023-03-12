@@ -2,7 +2,7 @@ use std::time::Instant;
 
 use posh::{
     gl::{
-        BufferUsage, Context, DrawParams, Error, FramebufferBinding, PrimitiveType, Program,
+        BufferUsage, Context, CreateError, DefaultFramebuffer, DrawParams, PrimitiveType, Program,
         UniformBuffer, VertexBuffer, VertexStream,
     },
     sl::{self, VaryingOutput},
@@ -44,7 +44,7 @@ struct Demo {
 }
 
 impl Demo {
-    pub fn new(context: Context) -> Result<Self, Error> {
+    pub fn new(context: Context) -> Result<Self, CreateError> {
         let program = context.create_program(vertex_shader, fragment_shader)?;
         let globals =
             context.create_uniform_buffer(Globals { time: 0.0 }, BufferUsage::StreamDraw)?;
@@ -68,12 +68,14 @@ impl Demo {
         self.globals.set(Globals { time });
 
         self.context.clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0));
-        self.program.draw(
-            self.globals.binding(),
-            VertexStream::Unindexed(self.vertices.binding(), 0..3, PrimitiveType::Triangles),
-            FramebufferBinding::default(),
-            DrawParams::default(),
-        );
+        self.program
+            .draw(
+                self.globals.binding(),
+                VertexStream::Unindexed(self.vertices.binding(), 0..3, PrimitiveType::Triangles),
+                DefaultFramebuffer::default(),
+                DrawParams::default(),
+            )
+            .unwrap();
     }
 }
 

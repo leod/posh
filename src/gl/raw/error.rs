@@ -197,19 +197,29 @@ pub enum ProgramError {
 
 /// An error that occurred while creating an object.
 #[derive(Debug, Clone, Error)]
-pub enum Error {
-    #[error("{0}")]
+pub enum CreateError {
+    #[error("buffer error: {0}")]
     Buffer(#[from] BufferError),
 
-    #[error("{0}")]
+    #[error("program error: {0}")]
     Program(#[from] ProgramError),
 
-    #[error("{0}")]
+    #[error("texture error: {0}")]
     Texture(#[from] TextureError),
 
-    #[error("{0}")]
+    #[error("framebuffer error: {0}")]
     Framebuffer(#[from] FramebufferError),
 
-    #[error("{0}")]
+    #[error("vertex array error: {0}")]
     VertexArray(#[from] VertexArrayError),
+}
+
+/// An error that occurred while drawing.
+#[derive(Debug, Clone, Error)]
+pub enum DrawError {
+    #[error("#{0}")]
+    Framebuffer(#[from] FramebufferError),
+
+    #[error("general OpenGL error")]
+    Error(String),
 }
