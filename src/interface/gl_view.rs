@@ -1,9 +1,9 @@
 use sealed::sealed;
 
 use crate::{
-    gl::{FramebufferAttachment2d, Sampler2d, UniformBufferBinding, VertexBufferBinding},
+    gl::{Attachment, Sampler2d, UniformBufferBinding, VertexBufferBinding},
     internal::join_ident_path,
-    sl::{self, program_def::VertexInputRate, Sample},
+    sl::{self, program_def::VertexInputRate, ColorSample},
 };
 
 use super::{Block, Fragment, FragmentVisitor, GlView, SlView, Uniform, Vertex, VertexVisitor};
@@ -94,7 +94,7 @@ impl<B: Block<SlView>> super::VertexField<GlView> for VertexBufferBinding<B> {}
 #[sealed]
 impl super::UniformFields for GlView {
     type Block<B: Block<SlView, SlView = B>> = UniformBufferBinding<B>;
-    type Sampler2d<S: Sample> = Sampler2d<S>;
+    type Sampler2d<S: ColorSample> = Sampler2d<S>;
     type Compose<R: Uniform<SlView>> = R::GlView;
 }
 
@@ -107,7 +107,7 @@ unsafe impl<U: Block<SlView, SlView = U>> Uniform<GlView> for UniformBufferBindi
     }
 }
 
-unsafe impl<S: Sample> Uniform<GlView> for Sampler2d<S> {
+unsafe impl<S: ColorSample> Uniform<GlView> for Sampler2d<S> {
     type GlView = Self;
     type SlView = sl::Sampler2d<S>;
 
@@ -134,10 +134,10 @@ where
 
 #[sealed]
 impl super::FragmentFields for GlView {
-    type Attachment2d<S: Sample> = FramebufferAttachment2d<S>;
+    type Attachment2d<S: ColorSample> = Attachment<S>;
 }
 
-unsafe impl<S: Sample> Fragment<GlView> for FramebufferAttachment2d<S> {
+unsafe impl<S: ColorSample> Fragment<GlView> for Attachment<S> {
     type GlView = Self;
     type SlView = S;
 

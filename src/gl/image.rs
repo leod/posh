@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::sl::{self, Sample};
+use crate::sl::{self, ColorSample};
 
 use super::raw::{self, ImageComponentType, ImageInternalFormat};
 
@@ -9,7 +9,7 @@ pub struct Image<'a, S> {
     _phantom: PhantomData<S>,
 }
 
-impl<'a, S: Sample> Image<'a, S> {
+impl<'a, S: ColorSample> Image<'a, S> {
     pub fn raw(self) -> raw::Image<'a> {
         self.raw
     }

@@ -7,7 +7,7 @@ use crate::{
         self,
         dag::BuiltInType,
         program_def::{VertexAttributeDef, VertexInputRate},
-        Object, Sample,
+        ColorSample, Object,
     },
 };
 
@@ -160,7 +160,7 @@ impl<B: Block<SlView>> super::VertexField<SlView> for B {
 #[sealed]
 impl super::UniformFields for SlView {
     type Block<B: Block<SlView, SlView = B>> = B;
-    type Sampler2d<S: Sample> = sl::Sampler2d<S>;
+    type Sampler2d<S: ColorSample> = sl::Sampler2d<S>;
     type Compose<R: Uniform<SlView>> = R;
 }
 
@@ -179,7 +179,7 @@ unsafe impl<B: Block<SlView, SlView = B>> Uniform<SlView> for B {
 
 impl<B: Block<SlView, SlView = B>> UniformNonUnit for B {}
 
-unsafe impl<S: Sample> Uniform<SlView> for sl::Sampler2d<S> {
+unsafe impl<S: ColorSample> Uniform<SlView> for sl::Sampler2d<S> {
     type SlView = Self;
     type GlView = gl::Sampler2d<S>;
 
@@ -192,7 +192,7 @@ unsafe impl<S: Sample> Uniform<SlView> for sl::Sampler2d<S> {
     }
 }
 
-impl<S: Sample> UniformNonUnit for sl::Sampler2d<S> {}
+impl<S: ColorSample> UniformNonUnit for sl::Sampler2d<S> {}
 
 unsafe impl<U, V> Uniform<SlView> for (U, V)
 where
@@ -226,16 +226,16 @@ where
 
 #[sealed]
 impl super::FragmentFields for SlView {
-    type Attachment2d<S: Sample> = S;
+    type Attachment2d<S: ColorSample> = S;
 }
 
-unsafe impl<S: Sample> Fragment<SlView> for S {
+unsafe impl<S: ColorSample> Fragment<SlView> for S {
     type SlView = Self;
-    type GlView = gl::FramebufferAttachment2d<S>;
+    type GlView = gl::Attachment<S>;
 
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl FragmentVisitor<'a, SlView>) {
         visitor.accept(path, self);
     }
 }
 
-impl<S: Sample> FragmentNonUnit for S {}
+impl<S: ColorSample> FragmentNonUnit for S {}

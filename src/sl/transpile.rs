@@ -19,8 +19,8 @@ use super::{
     program_def::{
         ProgramDef, UniformBlockDef, UniformSamplerDef, VertexBlockDef, VertexInputRate,
     },
-    ConstParams, FragmentInput, FragmentOutput, Object, Sample, Sampler2d, Varying, VaryingOutput,
-    Vec4, VertexInput, VertexOutput,
+    ColorSample, ConstParams, FragmentInput, FragmentOutput, Object, Sampler2d, Varying,
+    VaryingOutput, Vec4, VertexInput, VertexOutput,
 };
 
 /// Types that can be used as vertex input for a vertex shader.
@@ -347,7 +347,7 @@ struct CollectUniforms {
 }
 
 impl<'a> UniformVisitor<'a, SlView> for CollectUniforms {
-    fn accept_sampler2d<S: Sample>(&mut self, path: &str, _: &Sampler2d<S>) {
+    fn accept_sampler2d<S: ColorSample>(&mut self, path: &str, _: &Sampler2d<S>) {
         // TODO: Allow user-specified sampler texture units.
         let block_def = UniformSamplerDef {
             name: path.to_string(),
@@ -394,7 +394,7 @@ struct CollectOutputs {
 }
 
 impl<'a> FragmentVisitor<'a, SlView> for CollectOutputs {
-    fn accept<S: Sample>(&mut self, path: &str, output: &S) {
+    fn accept<S: ColorSample>(&mut self, path: &str, output: &S) {
         self.outputs.push((path.to_string(), output.expr()));
     }
 }

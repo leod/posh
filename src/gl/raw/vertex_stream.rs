@@ -65,6 +65,11 @@ impl PrimitiveType {
     }
 }
 
+// TODO: VertexBlockDef should eventually be split into program definition and
+// vertex stream definition.
+
+// TODO: Instancing.
+
 #[derive(Clone)]
 pub struct VertexStream {
     pub vertices: Vec<(Rc<Buffer>, VertexBlockDef)>,
@@ -76,7 +81,9 @@ pub struct VertexStream {
 
 impl VertexStream {
     pub fn is_compatible(&self, vertex_block_defs: &[VertexBlockDef]) -> bool {
-        // TODO: Check vertex stream compatibility.
+        // TODO: Check vertex stream compatibility. This is already ensured by
+        // the typed interface on top of `raw`, but `raw` should be correct by
+        // iself.
         true
     }
 

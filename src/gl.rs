@@ -14,12 +14,12 @@ mod vertex_stream;
 pub use self::image::Image;
 pub use context::Context;
 pub use element_buffer::{Element, ElementBuffer, ElementBufferBinding};
-pub use framebuffer::{Framebuffer, FramebufferAttachment2d, FramebufferBinding};
+pub use framebuffer::{Attachment, DefaultFramebuffer, Framebuffer};
 pub use program::Program;
 pub use raw::{
-    BufferError, BufferUsage, Caps, CompareFunction, ContextError, DrawParams, ElementType, Error,
-    FramebufferError, PrimitiveType, ProgramError, ProgramValidationError, Sampler2dParams,
-    TextureError, VertexArrayError,
+    BufferError, BufferUsage, Caps, CompareFunction, ContextError, CreateError, DrawError,
+    DrawParams, ElementType, FramebufferError, PrimitiveType, ProgramError, ProgramValidationError,
+    Sampler2dParams, TextureError, VertexArrayError,
 };
 pub use texture::{Sampler2d, Texture2d};
 pub use uniform_buffer::{UniformBuffer, UniformBufferBinding};

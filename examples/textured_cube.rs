@@ -4,9 +4,9 @@ use image::{io::Reader as ImageReader, EncodableLayout};
 
 use posh::{
     gl::{
-        BufferUsage, CompareFunction, Context, DrawParams, ElementBuffer, Error,
-        FramebufferBinding, Image, PrimitiveType, Program, Sampler2dParams, Texture2d,
-        UniformBuffer, VertexBuffer, VertexStream,
+        BufferUsage, CompareFunction, Context, CreateError, DefaultFramebuffer, DrawParams,
+        ElementBuffer, Image, PrimitiveType, Program, Sampler2dParams, Texture2d, UniformBuffer,
+        VertexBuffer, VertexStream,
     },
     sl::{self, VaryingOutput},
     Block, BlockFields, GlView, SlView, UniformFields,
@@ -88,7 +88,7 @@ struct Demo {
 }
 
 impl Demo {
-    pub fn new(context: Context) -> Result<Self, Error> {
+    pub fn new(context: Context) -> Result<Self, CreateError> {
         let program = context.create_program(vertex_shader, sl::Sampler2d::lookup)?;
         let camera = context.create_uniform_buffer(Camera::default(), BufferUsage::StaticDraw)?;
         let time = context.create_uniform_buffer(0.0, BufferUsage::StreamDraw)?;
@@ -123,22 +123,24 @@ impl Demo {
 
         self.context
             .clear_color_and_depth(glam::vec4(0.1, 0.2, 0.3, 1.0), 1.0);
-        self.program.draw(
-            (
-                Uniform {
-                    camera: self.camera.binding(),
-                    time: self.time.binding(),
-                },
-                self.texture.sampler(Sampler2dParams::default()),
-            ),
-            VertexStream::Indexed(
-                self.vertices.binding(),
-                self.elements.binding(),
-                PrimitiveType::Triangles,
-            ),
-            FramebufferBinding::default(),
-            DrawParams::default().with_depth_compare(CompareFunction::Less),
-        );
+        self.program
+            .draw(
+                (
+                    Uniform {
+                        camera: self.camera.binding(),
+                        time: self.time.binding(),
+                    },
+                    self.texture.sampler(Sampler2dParams::default()),
+                ),
+                VertexStream::Indexed(
+                    self.vertices.binding(),
+                    self.elements.binding(),
+                    PrimitiveType::Triangles,
+                ),
+                DefaultFramebuffer::default(),
+                DrawParams::default().with_depth_compare(CompareFunction::Less),
+            )
+            .unwrap();
     }
 }
 
