@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{cell::Cell, rc::Rc};
 
 use bytemuck::Pod;
 use glow::HasContext;
@@ -9,13 +9,14 @@ use crate::{
 };
 
 use super::{
-    Buffer, Caps, ContextError, Framebuffer, FramebufferAttachment, FramebufferError, Image,
-    Program, Texture2d, TextureError,
+    error::check_gl_error, Buffer, Caps, ContextError, DrawParams, Framebuffer,
+    FramebufferAttachment, FramebufferError, Image, Program, Texture2d, TextureError,
 };
 
 pub(super) struct ContextShared {
     gl: glow::Context,
     caps: Caps,
+    draw_params: Cell<DrawParams>,
 }
 
 pub struct Context {
@@ -34,6 +35,16 @@ impl ContextShared {
     pub fn caps(&self) -> &Caps {
         &self.caps
     }
+
+    pub(super) fn set_draw_params(&self, new: &DrawParams) {
+        let gl = &self.gl;
+
+        let current = self.draw_params.get();
+        new.set_delta(gl, &current);
+        self.draw_params.set(*new);
+
+        check_gl_error(gl).unwrap();
+    }
 }
 
 impl Context {
@@ -49,7 +60,11 @@ impl Context {
             gl.bind_vertex_array(Some(vao));
         }
 
-        let shared = Rc::new(ContextShared { gl, caps });
+        let shared = Rc::new(ContextShared {
+            gl,
+            caps,
+            draw_params: Cell::new(DrawParams::default()),
+        });
 
         Ok(Self { shared })
     }
@@ -99,7 +114,8 @@ impl Context {
 
         unsafe {
             gl.clear_color(color.x, color.y, color.z, color.w);
-            gl.clear(glow::COLOR_BUFFER_BIT);
+            gl.clear_depth_f32(depth);
+            gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
         }
     }
 }

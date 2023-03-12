@@ -29,7 +29,7 @@ impl CompareFunction {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct DrawParams {
     pub depth_compare: Option<CompareFunction>,
 }

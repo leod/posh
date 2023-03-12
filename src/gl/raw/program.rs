@@ -163,6 +163,8 @@ impl Program {
         assert_eq!(samplers.len(), def.uniform_sampler_defs.len());
         assert!(vertices.is_compatible(&self.def.vertex_block_defs));
 
+        ctx.set_draw_params(draw_params);
+
         framebuffer.bind(&self.ctx);
 
         unsafe {
