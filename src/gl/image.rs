@@ -64,7 +64,7 @@ impl<'a> Image<'a, sl::Vec4> {
         }
     }
 
-    pub fn zeroed_u8(size: glam::UVec2) -> Self {
+    pub fn zero_u8(size: glam::UVec2) -> Self {
         Image {
             raw: raw::Image {
                 size,
@@ -76,7 +76,7 @@ impl<'a> Image<'a, sl::Vec4> {
         }
     }
 
-    pub fn zeroed_u8_srgb(size: glam::UVec2) -> Self {
+    pub fn zero_u8_srgb(size: glam::UVec2) -> Self {
         Image {
             raw: raw::Image {
                 size,
@@ -88,7 +88,7 @@ impl<'a> Image<'a, sl::Vec4> {
         }
     }
 
-    pub fn zeroed_i8_snorm(size: glam::UVec2) -> Self {
+    pub fn zero_i8_snorm(size: glam::UVec2) -> Self {
         Image {
             raw: raw::Image {
                 size,
@@ -100,7 +100,7 @@ impl<'a> Image<'a, sl::Vec4> {
         }
     }
 
-    pub fn zeroed_f32(size: glam::UVec2) -> Self {
+    pub fn zero_f32(size: glam::UVec2) -> Self {
         Image {
             raw: raw::Image {
                 size,
