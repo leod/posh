@@ -59,6 +59,24 @@ macro_rules! scalar_name {
     };
 }
 
+// Formatting scalar literals.
+macro_rules! scalar_format {
+    (F32) => {
+        // Need to use `{:?}` since `{}` formats e.g. 1.0 as just 1, but GLSL ES
+        // 3.0 always wants a decimal point for floats.
+        "{:?}"
+    };
+    (U32) => {
+        "{}"
+    };
+    (I32) => {
+        "{}"
+    };
+    (Bool) => {
+        "{:?}"
+    };
+}
+
 // Implements `$scalar <op> $scalar` and `$scalar <op> $physical` and `$physical
 // <op> $scalar`.
 macro_rules! impl_binary_op {
@@ -162,7 +180,7 @@ macro_rules! impl_scalar {
             pub fn new(x: $physical) -> Self {
                 Self::from_expr(Expr::ScalarLiteral {
                     ty: scalar_built_in_type!($scalar),
-                    value: x.to_string(),
+                    value: format!(scalar_format!($scalar), x),
                 })
             }
 

@@ -1,8 +1,7 @@
 # posh
 
-`posh` is a library for fully type-safe graphics programming.
-
-TODO
+The aim of `posh` is to bring joy back to graphics programming (for myself, and
+maybe others).
 
 ## Example
 
@@ -12,26 +11,27 @@ TODO
 
 In order to simplify things, we intentionally limit the scope of `posh`:
 
-1. `posh` targets OpenGL rather than a more modern API like WebGPU.
-2. `posh` targets
-   [GLSL 3.30](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.3.30.pdf).
-3. `posh` supports only a subset of OpenGL and GLSL features.
+1. `posh` targets a subset of [OpenGL ES
+   3.0](https://registry.khronos.org/OpenGL/specs/es/3.0/es_spec_3.0.pdf).
+2. `posh` targets a subset of [GLSL ES
+   3.00](https://registry.khronos.org/OpenGL/specs/es/3.0/GLSL_ES_Specification_3.00.pdf).
 
-If the fundamental principle works out, we should be able to lift these
-restrictions over time.
+If the basic principle works explored by `posh` works out, we will be able to
+lift these restrictions over time. A second iteration of `posh` could target
+e.g. a subset of `wgpu` rather than OpenGL.
 
 ## Related Work
 
-Check out the following awesome (and much more mature) crates which are closely
-related to the aims of `posh`.
+Check out the following awesome crates which are closely related to the aims of
+`posh`.
 
 [`rust-gpu`](https://github.com/EmbarkStudios/rust-gpu) implements a new
 compiler backend for `rustc` that generates SPIR-V, empowering users to write
 shaders in normal Rust code and to reuse code between the host and shaders.
 Typically, `rust-gpu` shaders are defined in separate crates. In contrast to
-this, `posh` is an EDSL that enables you to define shaders _alongside_ host
-code, and its primary goal is to statically check the _interface_ between host
-code and shader code.
+this, `posh` provides an EDSL that enables the definition of shaders _alongside_
+host code, and its primary goal is to statically check the _interface_ between
+host code and shader code.
 
 [Shades](https://github.com/phaazon/shades), like `posh`, is an EDSL for
 defining statically-typed shaders. Since there is a bit of syntactic overhead to
