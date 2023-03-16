@@ -1,28 +1,28 @@
 use posh::{
     sl::{self, ToValue, VaryingOutput},
-    Block, BlockFields, SlView,
+    Block, BlockDom, Sl,
 };
 
 #[derive(Clone, Copy, Block)]
-struct Foo<F: BlockFields = SlView> {
-    bar: F::I32,
+struct Foo<D: BlockDom = Sl> {
+    bar: D::I32,
 }
 
 #[derive(Clone, Copy, Block)]
-struct Globals<F: BlockFields = SlView> {
-    time: F::F32,
-    offset: F::Vec2,
-    invert: F::Bool,
-    foo: Foo<F>,
-    camera: F::Mat4,
-    projection: F::Mat4,
+struct Globals<D: BlockDom = Sl> {
+    time: D::F32,
+    offset: D::Vec2,
+    invert: D::Bool,
+    foo: Foo<D>,
+    camera: D::Mat4,
+    projection: D::Mat4,
 }
 
 #[derive(Clone, Copy, Block)]
-struct ColorVertex<F: BlockFields = SlView> {
-    position: F::Vec2,
-    color: F::Vec2,
-    flag: F::Bool,
+struct ColorVertex<D: BlockDom = Sl> {
+    position: D::Vec2,
+    color: D::Vec2,
+    flag: D::Bool,
 }
 
 fn vertex_shader(globals: Globals, vertex: ColorVertex) -> VaryingOutput<sl::Vec4> {

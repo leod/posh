@@ -6,7 +6,7 @@ use crate::{
     gl::VertexBufferBinding,
     interface::VertexVisitor,
     sl::program_def::{VertexBlockDef, VertexInputRate},
-    Block, GlView, SlView, Vertex,
+    Block, Gl, Sl, Vertex,
 };
 
 use super::{raw, ElementBufferBinding, PrimitiveType};
@@ -17,7 +17,7 @@ pub enum VertexStream<V> {
     Unindexed(V, Range<usize>, PrimitiveType),
 }
 
-impl<V: Vertex<GlView>> VertexStream<V> {
+impl<V: Vertex<Gl>> VertexStream<V> {
     pub(super) fn raw(&self) -> raw::VertexStream {
         use VertexStream::*;
 
@@ -40,12 +40,12 @@ impl<V: Vertex<GlView>> VertexStream<V> {
     }
 }
 
-fn raw_vertices<V: Vertex<GlView>>(vertices: &V) -> Vec<(Rc<raw::Buffer>, VertexBlockDef)> {
+fn raw_vertices<V: Vertex<Gl>>(vertices: &V) -> Vec<(Rc<raw::Buffer>, VertexBlockDef)> {
     // TODO: Reduce per-draw-call allocations.
     struct Visitor(Vec<(Rc<raw::Buffer>, VertexBlockDef)>);
 
-    impl<'a> VertexVisitor<'a, GlView> for Visitor {
-        fn accept<B: Block<SlView>>(
+    impl<'a> VertexVisitor<'a, Gl> for Visitor {
+        fn accept<B: Block<Sl>>(
             &mut self,
             path: &str,
             input_rate: VertexInputRate,
@@ -53,7 +53,7 @@ fn raw_vertices<V: Vertex<GlView>>(vertices: &V) -> Vec<(Rc<raw::Buffer>, Vertex
         ) {
             let block_def = VertexBlockDef {
                 input_rate,
-                stride: size_of::<<B::GlView as AsStd140>::Output>(),
+                stride: size_of::<<B::Gl as AsStd140>::Output>(),
                 attributes: B::vertex_attribute_defs(path),
             };
 

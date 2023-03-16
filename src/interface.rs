@@ -12,11 +12,11 @@ use crate::sl::{
 
 /// The graphics library's view of shader input and output data.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct GlView;
+pub struct Gl;
 
 /// The shading language's view of shader input and output data.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct SlView;
+pub struct Sl;
 
 // Block
 
@@ -24,7 +24,7 @@ pub struct SlView;
 ///
 /// See [`Block`] for more details.
 #[sealed]
-pub trait BlockFields: Copy {
+pub trait BlockDom: Copy {
     /// A floating-point value.
     ///
     /// Has [`f32`] as its physical view and [`sl::F32`] as its logical view.
@@ -86,20 +86,20 @@ pub trait BlockFields: Copy {
 /// Plain-old vertex or uniform block data.
 ///
 /// Types that implement [`Block`] can be used as fields in types that implement
-/// [`Vertex`] or [`Uniform`]. This allows them to be passed to shaders
-/// in draw calls.
+/// [`Vertex`] or [`Uniform`]. This allows them to be passed to shaders in draw
+/// calls.
 ///
-/// `Block` declarations are generic in [`BlockFields`] and can be instantiated as
-/// their [`SlView`] view or their [`GlView`] view. The views have the
-/// following purpose respectively:
+/// `Block` declarations are generic in [`BlockDom`] and can be instantiated as
+/// their [`Sl`] view or their [`Gl`] view. The views have the following purpose
+/// respectively:
 ///
-/// 1. `Block<SlView>` is a view of block data as seen in shader definitions.
+/// 1. `Block<Sl>` is a view of block data as seen in shader definitions.
 ///
-/// 2. `Block<GlView>` is a view of block data as passed to host-side draw
-///    calls in the form of buffer bindings.
+/// 2. `Block<Gl>` is a view of block data as passed to host-side draw calls in
+///    the form of buffer bindings.
 ///
 /// By convention, the generic view parameter of `Block` declarations is named
-/// `F`, with [`SlView`] as the default view.
+/// `D`, with [`Sl`] as the default view.
 ///
 /// User-defined types should implement this trait with the [derive
 /// macro](`posh_derive::Block`).
@@ -107,18 +107,18 @@ pub trait BlockFields: Copy {
 /// # Example
 ///
 /// ```
-/// use posh::{sl, Block, BlockFields, SlView};
+/// use posh::{sl, Block, BlockDom, Sl};
 ///
 /// #[derive(Clone, Copy, Block)]
-/// struct SomeColor<F: BlockFields = SlView> {
-///     rainbow: F::U32,
-///     thing: F::Vec2,
+/// struct SomeColor<D: BlockDom = Sl> {
+///     rainbow: D::U32,
+///     thing: D::Vec2,
 /// }
 ///
 /// #[derive(Clone, Copy, Block)]
-/// struct MyVertex<F: BlockFields = SlView> {
-///     position: F::Vec3,
-///     normal: F::Vec3,
+/// struct MyVertex<D: BlockDom = Sl> {
+///     position: D::Vec3,
+///     normal: D::Vec3,
 ///     color: SomeColor<F>,
 /// }
 ///
@@ -131,17 +131,17 @@ pub trait BlockFields: Copy {
 /// # Safety
 ///
 /// TODO
-pub unsafe trait Block<F: BlockFields>: sl::ToValue {
+pub unsafe trait Block<D: BlockDom>: sl::ToValue {
     /// The logical view of `Self`.
     ///
     /// This is the type through which shaders access block data.
-    type SlView: Block<SlView> + sl::Value + sl::ToValue<Output = Self::SlView>;
+    type Sl: Block<Sl> + sl::Value + sl::ToValue<Output = Self::Sl>;
 
     /// The physical view of `Self`.
     ///
     /// This is the type through which the host provides block data in draw
     /// calls.
-    type GlView: Block<GlView> + AsStd140 + sl::ToValue<Output = Self::SlView>;
+    type Gl: Block<Gl> + AsStd140 + sl::ToValue<Output = Self::Sl>;
 
     #[doc(hidden)]
     fn uniform_input(_path: &str) -> Self {
@@ -155,7 +155,7 @@ pub unsafe trait Block<F: BlockFields>: sl::ToValue {
 
     #[doc(hidden)]
     fn vertex_attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
-        <Self::SlView as Block<SlView>>::vertex_attribute_defs(path)
+        <Self::Sl as Block<Sl>>::vertex_attribute_defs(path)
     }
 }
 
@@ -165,15 +165,15 @@ pub unsafe trait Block<F: BlockFields>: sl::ToValue {
 ///
 /// See [`Vertex`] for more details.
 #[sealed]
-pub trait VertexFields: Copy {
+pub trait VertexDom: Copy {
     /// A vertex block field.
-    type Block<B: Block<SlView>>: VertexField<Self>;
+    type Block<B: Block<Sl>>: VertexField<Self>;
 }
 
 /// Types that are allowed to occur in types that implement [`Vertex`].
 #[sealed]
 #[doc(hidden)]
-pub trait VertexField<F: VertexFields>: Sized {
+pub trait VertexField<D: VertexDom>: Sized {
     fn shader_input(_path: &str) -> Self {
         unimplemented!()
     }
@@ -183,55 +183,51 @@ pub trait VertexField<F: VertexFields>: Sized {
 ///
 /// Defines vertex data that can be passed to vertex shaders in draw calls.
 ///
-/// `Vertex` declarations are generic in [`VertexFields`] and can be
-/// instantiated as their [`SlView`] view or their [`GlView`] view. The views
-/// have the following purpose respectively:
+/// `Vertex` declarations are generic in [`VertexDom`] and can be instantiated
+/// as their [`Sl`] view or their [`Gl`] view. The views have the following
+/// purpose respectively:
 ///
-/// 1. `Vertex<SlView>` is a view of vertex data as seen in shader
-///    definitions. Each field corresponds to a part of the current vertex
-///    value.
+/// 1. `Vertex<Sl>` is a view of vertex data as seen in shader definitions. Each
+///    field corresponds to a part of the current vertex value.
 ///
-/// 2. `Vertex<GlView>` is a view of vertex data in the graphics library.
-///    Each field is a vertex buffer binding.
+/// 2. `Vertex<Gl>` is a view of vertex data in the graphics library. Each field
+///    is a vertex buffer binding.
 ///
-/// By convention, the generic view parameter is named `F`, with [`SlView`] as
-/// the default view.
+/// By convention, the generic view parameter is named `D`, with [`Sl`] as the
+/// default view.
 ///
 /// User-defined types should implement this trait with a [derive
-/// macro](`posh_derive::Vertex`). Types that implement `Block<SlView>`
-/// automatically implement `Vertex<SlView>` as well, so block data can be
-/// passed to shaders without having to declare a custom [`Vertex`] type.
+/// macro](`posh_derive::Vertex`). Types that implement `Block<Sl>`
+/// automatically implement `Vertex<Sl>` as well, so block data can be passed to
+/// shaders without having to declare a custom [`Vertex`] type.
 ///
 /// # Example
 ///
-/// This example declares a custom [`Vertex`] type that provides `position`
-/// in one vertex buffer, while `normal` and `color` are specified in a second
+/// This example declares a custom [`Vertex`] type that provides `position` in
+/// one vertex buffer, while `normal` and `color` are specified in a second
 /// vertex buffer.
 ///
 /// ```
-/// use posh::{
-///     sl::{self, VaryingOutput},
-///     Block, BlockFields, SlView, Vertex, VertexFields,
-/// };
+/// use posh::{gl, sl, Block, BlockDom, Sl, Vertex, VertexDom};
 ///
 /// #[derive(Clone, Copy, Block)]
-/// struct Material<F: BlockFields = SlView> {
-///     normal: F::Vec3,
-///     color: F::Vec4,
+/// struct Material<D: BlockDom = Sl> {
+///     normal: D::Vec3,
+///     color: D::Vec4,
 /// }
 ///
 /// #[derive(Vertex)]
-/// struct MyVertex<F: VertexFields = SlView> {
-///     position: F::Block<sl::Vec3>,
-///     material: F::Block<Material>,
+/// struct MyVertex<D: VertexDom = Sl> {
+///     position: D::Block<sl::Vec3>,
+///     material: D::Block<Material>,
 /// }
 ///
 /// // A vertex shader that receives `MyVertex` as vertex input.
 /// fn my_vertex_shader(
 ///     uniforms: (),
 ///     vertex: MyVertex,
-/// ) -> VaryingOutput<sl::Vec4> {
-///     VaryingOutput {
+/// ) -> sl::VaryingOutput<sl::Vec4> {
+///     sl::VaryingOutput {
 ///         position: (vertex.position + vertex.material.normal * 1.3).extend(1.0),
 ///         varying: vertex.material.color,
 ///     }
@@ -241,20 +237,20 @@ pub trait VertexField<F: VertexFields>: Sized {
 /// # Safety
 ///
 /// TODO
-pub unsafe trait Vertex<F: VertexFields>: Sized {
+pub unsafe trait Vertex<D: VertexDom>: Sized {
     /// The logical view of `Self`.
     ///
     /// This is the type through which shaders access vertex data.
-    type SlView: Vertex<SlView>;
+    type Sl: Vertex<Sl>;
 
     /// The physical view of `Self`.
     ///
     /// This is the type through which the host provides vertex buffer bindings
     /// for creating [`crate::gl::VertexArray`](vertex arrays).
-    type GlView: Vertex<GlView>;
+    type Gl: Vertex<Gl>;
 
     #[doc(hidden)]
-    fn visit<'a>(&'a self, path: &str, visitor: &mut impl VertexVisitor<'a, F>);
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl VertexVisitor<'a, D>);
 
     #[doc(hidden)]
     fn shader_input(_path: &str) -> Self {
@@ -262,12 +258,12 @@ pub unsafe trait Vertex<F: VertexFields>: Sized {
     }
 }
 
-pub trait VertexVisitor<'a, F: VertexFields> {
-    fn accept<B: Block<SlView>>(
+pub trait VertexVisitor<'a, D: VertexDom> {
+    fn accept<B: Block<Sl>>(
         &mut self,
         path: &str,
         input_rate: VertexInputRate,
-        vertex: &'a F::Block<B>,
+        vertex: &'a D::Block<B>,
     );
 }
 
@@ -277,37 +273,36 @@ pub trait VertexVisitor<'a, F: VertexFields> {
 ///
 /// See [`Uniform`] for more details.
 #[sealed]
-pub trait UniformFields: Copy {
+pub trait UniformDom: Copy {
     /// A uniform block field.
-    type Block<B: Block<SlView, SlView = B>>: Uniform<Self>;
+    type Block<B: Block<Sl, Sl = B>>: Uniform<Self>;
 
     /// A two-dimensional uniform sampler field.
     type Sampler2d<S: ColorSample>: Uniform<Self>;
 
     /// A nested uniform interface field.
-    type Compose<U: Uniform<SlView>>: Uniform<Self>;
+    type Compose<U: Uniform<Sl>>: Uniform<Self>;
 }
 
 /// Uniform data.
 ///
 /// Defines uniform data that can be passed to shaders in draw calls.
 ///
-/// `Uniform` declarations are generic in [`UniformFields`] and can be
-/// instantiated as their [`SlView`] view or their [`GlView`] view. The views
-/// have the following purpose respectively:
+/// `Uniform` declarations are generic in [`UniformDom`] and can be instantiated
+/// as their [`Sl`] view or their [`Gl`] view. The views have the following
+/// purpose respectively:
 ///
-/// 1. `Uniform<SlView>` is a view of uniform data as seen in shader
-///    definitions.
+/// 1. `Uniform<Sl>` is a view of uniform data as seen in shader definitions.
 ///
-/// 2. `Uniform<GlView>` is a view of uniform data in the graphics library
+/// 2. `Uniform<Gl>` is a view of uniform data in the graphics library
 ///    containing buffer and sampler bindings.
 ///
 /// In order to use a vertex shader with a fragment shader, they must use the
 /// same uniform data in their signature. See
 /// [`create_program`](crate::gl::Context::create_program) for details.
 ///
-/// By convention, the generic view parameter is named `F`, with [`SlView`] as
-/// the default view.
+/// By convention, the generic view parameter is named `D`, with [`Sl`] as the
+/// default view.
 ///
 /// User-defined types should implement this trait with a [derive
 /// macro](`posh_derive::Uniform`).
@@ -315,21 +310,21 @@ pub trait UniformFields: Copy {
 /// # Safety
 ///
 /// TODO
-pub unsafe trait Uniform<F: UniformFields>: Sized {
+pub unsafe trait Uniform<D: UniformDom>: Sized {
     /// The logical view of `Self`.
     ///
     /// This is the type through which shaders access uniform data.
-    type SlView: Uniform<SlView>;
+    type Sl: Uniform<Sl>;
 
     /// The physical view of `Self`.
     ///
     /// This is the type through which the host provides uniform bindings such
     /// as [uniform buffer bindings](crate::gl::UniformBuffer) or
     /// [samplers](crate::gl::Sampler2d) in [draw calls](crate::gl::Program::draw).
-    type GlView: Uniform<GlView>;
+    type Gl: Uniform<Gl>;
 
     #[doc(hidden)]
-    fn visit<'a>(&'a self, path: &str, visitor: &mut impl UniformVisitor<'a, F>);
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl UniformVisitor<'a, D>);
 
     #[doc(hidden)]
     fn shader_input(_path: &str) -> Self {
@@ -337,11 +332,11 @@ pub unsafe trait Uniform<F: UniformFields>: Sized {
     }
 }
 
-unsafe impl<F: UniformFields> Uniform<F> for () {
-    type SlView = ();
-    type GlView = ();
+unsafe impl<D: UniformDom> Uniform<D> for () {
+    type Sl = ();
+    type Gl = ();
 
-    fn visit<'a>(&self, _: &str, _: &mut impl UniformVisitor<'a, F>) {}
+    fn visit<'a>(&self, _: &str, _: &mut impl UniformVisitor<'a, D>) {}
 
     fn shader_input(_: &str) -> Self {}
 }
@@ -351,17 +346,17 @@ unsafe impl<F: UniformFields> Uniform<F> for () {
 /// # Safety
 ///
 /// TODO
-pub unsafe trait UniformUnion<U1, U2>: Uniform<SlView>
+pub unsafe trait UniformUnion<U1, U2>: Uniform<Sl>
 where
-    U1: Uniform<SlView>,
-    U2: Uniform<SlView>,
+    U1: Uniform<Sl>,
+    U2: Uniform<Sl>,
 {
     fn lhs(self) -> U1;
     fn rhs(self) -> U2;
 }
 
 /// Non-empty uniform data.
-pub trait UniformNonUnit: Uniform<SlView> {}
+pub trait UniformNonUnit: Uniform<Sl> {}
 
 unsafe impl<U> UniformUnion<U, ()> for U
 where
@@ -406,8 +401,8 @@ where
 
 unsafe impl<U1, U2> UniformUnion<U1, U2> for (U1, U2)
 where
-    U1: Uniform<SlView>,
-    U2: Uniform<SlView>,
+    U1: Uniform<Sl>,
+    U2: Uniform<Sl>,
 {
     fn lhs(self) -> U1 {
         self.0
@@ -419,9 +414,9 @@ where
 }
 
 #[doc(hidden)]
-pub trait UniformVisitor<'a, F: UniformFields> {
-    fn accept_block<B: Block<SlView, SlView = B>>(&mut self, path: &str, block: &'a F::Block<B>);
-    fn accept_sampler2d<S: ColorSample>(&mut self, path: &str, sampler: &'a F::Sampler2d<S>);
+pub trait UniformVisitor<'a, D: UniformDom> {
+    fn accept_block<B: Block<Sl, Sl = B>>(&mut self, path: &str, block: &'a D::Block<B>);
+    fn accept_sampler2d<S: ColorSample>(&mut self, path: &str, sampler: &'a D::Sampler2d<S>);
 }
 
 // Fragment
@@ -430,7 +425,7 @@ pub trait UniformVisitor<'a, F: UniformFields> {
 ///
 /// See [`Fragment`] for more details.
 #[sealed]
-pub trait FragmentFields: Copy {
+pub trait FragmentDom: Copy {
     type Attachment2d<S: ColorSample>: Fragment<Self>;
 }
 
@@ -442,26 +437,26 @@ pub trait FragmentFields: Copy {
 /// # Safety
 ///
 /// TODO
-pub unsafe trait Fragment<F: FragmentFields> {
+pub unsafe trait Fragment<D: FragmentDom> {
     /// The logical view of `Self`.
     ///
     /// This is the type through which fragment shaders output fragment data.
-    type SlView: Fragment<SlView>;
+    type Sl: Fragment<Sl>;
 
     /// The physical view of `Self`.
     ///
     /// This is the type through which framebuffer attachments are provided on
     /// the host.
-    type GlView: Fragment<GlView>;
+    type Gl: Fragment<Gl>;
 
     #[doc(hidden)]
-    fn visit<'a>(&'a self, path: &str, visitor: &mut impl FragmentVisitor<'a, F>);
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl FragmentVisitor<'a, D>);
 }
 
 /// Non-empty fragment shader output data.
-pub trait FragmentNonUnit: Fragment<SlView> {}
+pub trait FragmentNonUnit: Fragment<Sl> {}
 
 #[doc(hidden)]
-pub trait FragmentVisitor<'a, F: FragmentFields> {
-    fn accept<S: ColorSample>(&mut self, path: &str, attachment: &'a F::Attachment2d<S>);
+pub trait FragmentVisitor<'a, D: FragmentDom> {
+    fn accept<S: ColorSample>(&mut self, path: &str, attachment: &'a D::Attachment2d<S>);
 }

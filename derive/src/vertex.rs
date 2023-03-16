@@ -12,9 +12,9 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
     let ty_generics_sl =
-        SpecializedTypeGenerics::new(parse_quote!(::posh::SlView), ident, &input.generics)?;
+        SpecializedTypeGenerics::new(parse_quote!(::posh::Sl), ident, &input.generics)?;
     let ty_generics_gl =
-        SpecializedTypeGenerics::new(parse_quote!(::posh::GlView), ident, &input.generics)?;
+        SpecializedTypeGenerics::new(parse_quote!(::posh::Gl), ident, &input.generics)?;
 
     let fields = StructFields::new(&input.ident, &input.data)?;
     let field_idents = fields.idents();
@@ -22,13 +22,13 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let field_strings = fields.strings();
 
     Ok(quote! {
-        // Implement `Vertex<F>` for the struct.
+        // Implement `Vertex<D>` for the struct.
         unsafe impl #impl_generics ::posh::Vertex<#generics_view_type>
         for #ident #ty_generics
         #where_clause
         {
-            type SlView = #ident #ty_generics_sl;
-            type GlView = #ident #ty_generics_gl;
+            type Sl = #ident #ty_generics_sl;
+            type Gl = #ident #ty_generics_gl;
 
             fn visit<'a>(
                 &'a self,
@@ -62,10 +62,10 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
         // Check that all field types implement `VertexField<F>`.
         const _: fn() = || {
-            fn check_field<F, T>()
+            fn check_field<D, T>()
             where
-                F: ::posh::VertexFields,
-                T: ::posh::internal::VertexField<F>,
+                D: ::posh::VertexDom,
+                T: ::posh::internal::VertexField<D>,
             {}
 
             fn check_struct #impl_generics(value: &#ident #ty_generics) #where_clause {

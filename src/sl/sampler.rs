@@ -2,7 +2,7 @@ use std::{marker::PhantomData, rc::Rc};
 
 use sealed::sealed;
 
-use crate::{Block, SlView};
+use crate::{Block, Sl};
 
 use super::{
     dag::{BuiltInType, Expr, SamplerType, Trace, Type},
@@ -16,7 +16,7 @@ use super::{
 pub trait Sample {
     const SAMPLER_TYPE: SamplerType;
 
-    type GlView;
+    type Gl;
 }
 
 #[sealed]
@@ -28,7 +28,7 @@ macro_rules! impl_color_sample {
         impl Sample for $sample {
             const SAMPLER_TYPE: SamplerType = SamplerType::$ty;
 
-            type GlView = <$sample as Block<SlView>>::GlView;
+            type Gl = <$sample as Block<Sl>>::Gl;
         }
 
         #[sealed]
@@ -55,7 +55,7 @@ pub struct Depth;
 impl Sample for Depth {
     const SAMPLER_TYPE: SamplerType = SamplerType::Sampler2dComparison;
 
-    type GlView = f32;
+    type Gl = f32;
 }
 
 /// An object which can be sampled.

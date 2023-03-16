@@ -3,7 +3,7 @@ use std::{marker::PhantomData, rc::Rc};
 use crate::{
     interface::UniformVisitor,
     sl::{self, ColorSample},
-    Block, Fragment, GlView, SlView, Uniform, Vertex,
+    Block, Fragment, Gl, Sl, Uniform, Vertex,
 };
 
 use super::{
@@ -18,9 +18,9 @@ pub struct Program<U, V, F = sl::Vec4> {
 
 impl<U, V, F> Program<U, V, F>
 where
-    U: Uniform<SlView>,
-    V: Vertex<SlView>,
-    F: Fragment<SlView>,
+    U: Uniform<Sl>,
+    V: Vertex<Sl>,
+    F: Fragment<Sl>,
 {
     pub(super) fn unchecked_from_raw(raw: raw::Program) -> Self {
         Program {
@@ -31,9 +31,9 @@ where
 
     pub fn draw(
         &self,
-        uniforms: U::GlView,
-        vertices: VertexStream<V::GlView>,
-        framebuffer: impl Framebuffer<F::GlView>,
+        uniforms: U::Gl,
+        vertices: VertexStream<V::Gl>,
+        framebuffer: impl Framebuffer<F::Gl>,
         draw_params: DrawParams,
     ) -> Result<(), DrawError> {
         // TODO: These allocations can be avoided once stable has allocators.
@@ -64,13 +64,13 @@ struct CollectUniforms<'a> {
     raw_samplers: Vec<raw::Sampler>,
 }
 
-impl<'a> UniformVisitor<'a, GlView> for CollectUniforms<'a> {
+impl<'a> UniformVisitor<'a, Gl> for CollectUniforms<'a> {
     fn accept_sampler2d<S: ColorSample>(&mut self, _: &str, sampler: &Sampler2d<S>) {
         self.raw_samplers
             .push(raw::Sampler::Sampler2d(sampler.raw().clone()))
     }
 
-    fn accept_block<B: Block<SlView, SlView = B>>(
+    fn accept_block<B: Block<Sl, Sl = B>>(
         &mut self,
         _: &str,
         uniform: &'a UniformBufferBinding<B>,

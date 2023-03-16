@@ -2,7 +2,7 @@ use std::{marker::PhantomData, rc::Rc};
 
 use crevice::std140::AsStd140;
 
-use crate::{Block, SlView};
+use crate::{Block, Sl};
 
 use super::{raw, BufferUsage};
 
@@ -22,7 +22,7 @@ pub struct VertexBufferBinding<B> {
     // TODO: Uniform buffer slicing.
 }
 
-impl<B: Block<SlView>> VertexBuffer<B> {
+impl<B: Block<Sl>> VertexBuffer<B> {
     pub(super) fn from_raw(raw: raw::Buffer) -> Self {
         assert!(vertex_size::<B>() > 0);
         assert_eq!(raw.len() % vertex_size::<B>(), 0);
@@ -59,7 +59,7 @@ impl<B: Block<SlView>> VertexBuffer<B> {
     }
 }
 
-impl<B: Block<SlView>> VertexBufferBinding<B> {
+impl<B: Block<Sl>> VertexBufferBinding<B> {
     pub(crate) fn raw(&self) -> &Rc<raw::Buffer> {
         &self.raw
     }
@@ -75,6 +75,6 @@ impl<B: Block<SlView>> VertexBufferBinding<B> {
     }
 }
 
-fn vertex_size<V: Block<SlView>>() -> usize {
-    std::mem::size_of::<<V::GlView as AsStd140>::Output>()
+fn vertex_size<V: Block<Sl>>() -> usize {
+    std::mem::size_of::<<V::Gl as AsStd140>::Output>()
 }

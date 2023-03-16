@@ -6,7 +6,7 @@ use crate::{
         transpile::{FromFragmentInput, FromVertexInput, IntoFragmentOutput, IntoVertexOutput},
         ColorSample, Varying,
     },
-    Block, Fragment, SlView, Uniform, UniformUnion, Vertex,
+    Block, Fragment, Sl, Uniform, UniformUnion, Vertex,
 };
 
 use super::{
@@ -32,11 +32,11 @@ impl Context {
 
     pub fn create_vertex_buffer<B>(
         &self,
-        data: &[B::GlView],
+        data: &[B::Gl],
         usage: BufferUsage,
     ) -> Result<VertexBuffer<B>, BufferError>
     where
-        B: Block<SlView>,
+        B: Block<Sl>,
     {
         // TODO
         let data: Vec<_> = data.iter().map(|vertex| vertex.as_std140()).collect();
@@ -61,11 +61,11 @@ impl Context {
 
     pub fn create_uniform_buffer<B>(
         &self,
-        data: B::GlView,
+        data: B::Gl,
         usage: BufferUsage,
     ) -> Result<UniformBuffer<B>, BufferError>
     where
-        B: Block<SlView>,
+        B: Block<Sl>,
     {
         let raw = self.raw.create_buffer(&[data.as_std140()], usage)?;
 
@@ -99,10 +99,10 @@ impl Context {
     ) -> Result<Program<U, V, F>, ProgramError>
     where
         U: UniformUnion<U1, U2>,
-        U1: Uniform<SlView>,
-        U2: Uniform<SlView>,
-        V: Vertex<SlView>,
-        F: Fragment<SlView>,
+        U1: Uniform<Sl>,
+        U2: Uniform<Sl>,
+        V: Vertex<Sl>,
+        F: Fragment<Sl>,
         W: Varying,
         InV: FromVertexInput<Vertex = V>,
         OutW: IntoVertexOutput<Varying = W>,
@@ -144,9 +144,9 @@ impl Context {
         ) -> Result<Program<UData, VData, FData>, ProgramError>
         where
             Consts: ConstParams,
-            UData: Uniform<SlView, SlView = UData>,
-            VData: Vertex<SlView, SlView = VData>,
-            FData: Fragment<SlView, SlView = FData>,
+            UData: Uniform<Sl, Sl = UData>,
+            VData: Vertex<Sl, Sl = VData>,
+            FData: Fragment<Sl, Sl = FData>,
             Vary: Varying,
             VertIn: FromVertexInput<Vert = VData>,
             VertOut: IntoVertexOutput<Vary = Vary>,

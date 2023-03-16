@@ -14,9 +14,9 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let (impl_generics_init, _, where_clause_init) = generics_tail.split_for_impl();
 
     let ty_generics_sl =
-        SpecializedTypeGenerics::new(parse_quote!(::posh::SlView), ident, &input.generics)?;
+        SpecializedTypeGenerics::new(parse_quote!(::posh::Sl), ident, &input.generics)?;
     let ty_generics_gl =
-        SpecializedTypeGenerics::new(parse_quote!(::posh::GlView), ident, &input.generics)?;
+        SpecializedTypeGenerics::new(parse_quote!(::posh::Gl), ident, &input.generics)?;
 
     let fields = StructFields::new(&input.ident, &input.data)?;
     let field_idents = fields.idents();
@@ -24,13 +24,13 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let field_strings = fields.strings();
 
     Ok(quote! {
-        // Implement `Uniform<F>` for the struct.
+        // Implement `Uniform<D>` for the struct.
         unsafe impl #impl_generics ::posh::Uniform<#generics_view_type>
         for #ident #ty_generics
         #where_clause
         {
-            type SlView = #ident #ty_generics_sl;
-            type GlView = #ident #ty_generics_gl;
+            type Sl = #ident #ty_generics_sl;
+            type Gl = #ident #ty_generics_gl;
 
             fn visit<'a>(
                 &'a self,
@@ -63,12 +63,12 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         #where_clause_init
         {}
 
-        // Check that all field types implement `Uniform<F>`.
+        // Check that all field types implement `Uniform<D>`.
         const _: fn() = || {
-            fn check_field<F, U>()
+            fn check_field<D, U>()
             where
-                F: ::posh::UniformFields,
-                U: ::posh::Uniform<F>,
+                D: ::posh::UniformDom,
+                U: ::posh::Uniform<D>,
             {}
 
             fn check_struct #impl_generics(value: &#ident #ty_generics) #where_clause {

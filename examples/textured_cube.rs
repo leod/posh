@@ -2,7 +2,7 @@ use std::time::Instant;
 
 use image::{io::Reader as ImageReader, EncodableLayout};
 
-use posh::{gl, sl, Block, BlockFields, GlView, SlView, UniformFields};
+use posh::{gl, sl, Block, BlockDom, Gl, Sl, UniformDom};
 
 const WIDTH: u32 = 1024;
 const HEIGHT: u32 = 768;
@@ -10,12 +10,12 @@ const HEIGHT: u32 = 768;
 // Shader interface
 
 #[derive(Clone, Copy, Block)]
-struct Camera<F: BlockFields = SlView> {
-    projection: F::Mat4,
-    view: F::Mat4,
+struct Camera<D: BlockDom = Sl> {
+    projection: D::Mat4,
+    view: D::Mat4,
 }
 
-impl Default for Camera<GlView> {
+impl Default for Camera<Gl> {
     fn default() -> Self {
         Self {
             projection: glam::Mat4::perspective_rh_gl(
@@ -30,15 +30,15 @@ impl Default for Camera<GlView> {
 }
 
 #[derive(Clone, Copy, Block)]
-struct Vertex<F: BlockFields = SlView> {
-    pos: F::Vec3,
-    tex_coords: F::Vec2,
+struct Vertex<D: BlockDom = Sl> {
+    pos: D::Vec3,
+    tex_coords: D::Vec2,
 }
 
 #[derive(posh::Uniform)]
-struct Uniform<F: UniformFields = SlView> {
-    camera: F::Block<Camera>,
-    time: F::Block<sl::F32>,
+struct Uniform<D: UniformDom = Sl> {
+    camera: D::Block<Camera>,
+    time: D::Block<sl::F32>,
 }
 
 // Shader code
@@ -140,7 +140,7 @@ impl Demo {
 
 // Mesh data
 
-fn cube_vertices() -> Vec<Vertex<GlView>> {
+fn cube_vertices() -> Vec<Vertex<Gl>> {
     [
         [0.5, -0.5, -0.5],
         [0.5, -0.5, 0.5],
