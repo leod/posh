@@ -99,7 +99,7 @@ impl Demo {
         )?;
         let quad_elements =
             context.create_element_buffer(&[0, 1, 2, 0, 2, 3], gl::BufferUsage::StaticDraw)?;
-        let texture = context.create_texture_2d(gl::Image::zeroed_u8(glam::uvec2(1024, 768)))?;
+        let texture = context.create_texture_2d(gl::Image::zero_u8(glam::uvec2(1024, 768)))?;
         let start_time = Instant::now();
 
         Ok(Self {

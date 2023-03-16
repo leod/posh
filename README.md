@@ -1,7 +1,6 @@
 # posh
 
-The aim of `posh` is to bring joy back to graphics programming (for myself, and
-maybe others).
+`posh` wants to bring some joy to graphics programming.
 
 ## Example
 
@@ -16,9 +15,8 @@ In order to simplify things, we intentionally limit the scope of `posh`:
 2. `posh` targets a subset of [GLSL ES
    3.00](https://registry.khronos.org/OpenGL/specs/es/3.0/GLSL_ES_Specification_3.00.pdf).
 
-If the basic principle works explored by `posh` works out, we will be able to
-lift these restrictions over time. A second iteration of `posh` could target
-e.g. a subset of `wgpu` rather than OpenGL.
+We will be able to lift these restrictions over time. A second iteration of
+`posh` could target e.g. a subset of `wgpu` rather than OpenGL.
 
 ## Related Work
 
