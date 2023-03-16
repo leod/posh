@@ -165,6 +165,8 @@ impl Program {
 
         framebuffer.bind(&self.ctx)?;
 
+        // `set_draw_params` also clears the screen, so it must come after
+        // binding the framebuffer.
         ctx.set_draw_params(draw_params);
 
         unsafe {
