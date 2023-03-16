@@ -2,15 +2,7 @@ use std::time::Instant;
 
 use image::{io::Reader as ImageReader, EncodableLayout};
 
-use posh::{
-    gl::{
-        BufferUsage, CompareFunction, Context, CreateError, DefaultFramebuffer, DrawParams,
-        ElementBuffer, Image, PrimitiveType, Program, Sampler2dParams, Texture2d, UniformBuffer,
-        VertexBuffer, VertexStream,
-    },
-    sl::{self, VaryingOutput},
-    Block, BlockFields, GlView, SlView, UniformFields,
-};
+use posh::{gl, sl, Block, BlockFields, GlView, SlView, UniformFields};
 
 const WIDTH: u32 = 1024;
 const HEIGHT: u32 = 768;
@@ -62,13 +54,13 @@ fn zxy(v: sl::Vec3) -> sl::Vec3 {
     sl::vec3(v.z, v.x, v.y)
 }
 
-fn vertex_shader(uniforms: Uniform, vertex: Vertex) -> VaryingOutput<sl::Vec2> {
+fn vertex_shader(uniforms: Uniform, vertex: Vertex) -> sl::VaryingOutput<sl::Vec2> {
     let camera = uniforms.camera;
     let time = uniforms.time / 3.0;
     let vertex_pos = (rotate(time) * sl::vec2(vertex.pos.x, vertex.pos.y)).extend(vertex.pos.z);
     let position = camera.projection * camera.view * zxy(vertex_pos).extend(1.0);
 
-    VaryingOutput {
+    sl::VaryingOutput {
         varying: vertex.tex_coords,
         position,
     }
@@ -77,36 +69,37 @@ fn vertex_shader(uniforms: Uniform, vertex: Vertex) -> VaryingOutput<sl::Vec2> {
 // Host code
 
 struct Demo {
-    context: Context,
-    program: Program<(Uniform, sl::Sampler2d<sl::Vec4>), Vertex>,
-    camera: UniformBuffer<Camera>,
-    time: UniformBuffer<sl::F32>,
-    vertices: VertexBuffer<Vertex>,
-    elements: ElementBuffer,
-    texture: Texture2d<sl::Vec4>,
+    program: gl::Program<(Uniform, sl::Sampler2d<sl::Vec4>), Vertex>,
+    camera: gl::UniformBuffer<Camera>,
+    time: gl::UniformBuffer<sl::F32>,
+    vertices: gl::VertexBuffer<Vertex>,
+    elements: gl::ElementBuffer,
+    texture: gl::Texture2d<sl::Vec4>,
     start_time: Instant,
 }
 
 impl Demo {
-    pub fn new(context: Context) -> Result<Self, CreateError> {
+    pub fn new(context: gl::Context) -> Result<Self, gl::CreateError> {
         let program = context.create_program(vertex_shader, sl::Sampler2d::lookup)?;
-        let camera = context.create_uniform_buffer(Camera::default(), BufferUsage::StaticDraw)?;
-        let time = context.create_uniform_buffer(0.0, BufferUsage::StreamDraw)?;
-        let vertices = context.create_vertex_buffer(&cube_vertices(), BufferUsage::StaticDraw)?;
-        let elements = context.create_element_buffer(&cube_elements(), BufferUsage::StaticDraw)?;
+        let camera =
+            context.create_uniform_buffer(Camera::default(), gl::BufferUsage::StaticDraw)?;
+        let time = context.create_uniform_buffer(0.0, gl::BufferUsage::StreamDraw)?;
+        let vertices =
+            context.create_vertex_buffer(&cube_vertices(), gl::BufferUsage::StaticDraw)?;
+        let elements =
+            context.create_element_buffer(&cube_elements(), gl::BufferUsage::StaticDraw)?;
         let image = ImageReader::open("examples/resources/smile.png")
             .unwrap()
             .decode()
             .unwrap()
             .to_rgba8();
-        let texture = context.create_texture_2d_with_mipmap(Image::slice_u8(
+        let texture = context.create_texture_2d_with_mipmap(gl::Image::slice_u8(
             image.dimensions().into(),
             image.as_bytes(),
         ))?;
         let start_time = Instant::now();
 
         Ok(Self {
-            context,
             program,
             camera,
             time,
@@ -121,29 +114,31 @@ impl Demo {
         let time = Instant::now().duration_since(self.start_time).as_secs_f32();
         self.time.set(time);
 
+        let uniform = Uniform {
+            camera: self.camera.binding(),
+            time: self.time.binding(),
+        };
+        let sampler = self.texture.sampler(gl::Sampler2dParams::default());
+
         self.program
             .draw(
-                (
-                    Uniform {
-                        camera: self.camera.binding(),
-                        time: self.time.binding(),
-                    },
-                    self.texture.sampler(Sampler2dParams::default()),
-                ),
-                VertexStream::Indexed(
+                (uniform, sampler),
+                gl::VertexStream::Indexed(
                     self.vertices.binding(),
                     self.elements.binding(),
-                    PrimitiveType::Triangles,
+                    gl::PrimitiveType::Triangles,
                 ),
-                DefaultFramebuffer::default(),
-                DrawParams::default()
+                gl::DefaultFramebuffer::default(),
+                gl::DrawParams::default()
                     .with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0))
                     .with_clear_depth(1.0)
-                    .with_depth_compare(CompareFunction::Less),
+                    .with_depth_compare(gl::CompareFunction::Less),
             )
             .unwrap();
     }
 }
+
+// Mesh data
 
 fn cube_vertices() -> Vec<Vertex<GlView>> {
     [
@@ -187,27 +182,27 @@ fn cube_elements() -> Vec<u32> {
         .collect()
 }
 
+// Main loop
+
 fn main() {
     let sdl = sdl2::init().unwrap();
     let video = sdl.video().unwrap();
 
     let gl_attr = video.gl_attr();
-    gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
+    gl_attr.set_context_profile(sdl2::video::GLProfile::GLES);
     gl_attr.set_context_version(3, 0);
 
     let window = video
         .window("Hello textured cube!", WIDTH, HEIGHT)
         .opengl()
-        .resizable()
         .build()
         .unwrap();
 
     let _gl_context = window.gl_create_context().unwrap();
-    let context = Context::new(unsafe {
+    let context = unsafe {
         glow::Context::from_loader_function(|s| video.gl_get_proc_address(s) as *const _)
-    })
-    .unwrap();
-
+    };
+    let context = gl::Context::new(context).unwrap();
     let demo = Demo::new(context).unwrap();
 
     let mut event_loop = sdl.event_pump().unwrap();
@@ -215,9 +210,10 @@ fn main() {
 
     while running {
         for event in event_loop.poll_iter() {
-            match event {
-                sdl2::event::Event::Quit { .. } => running = false,
-                _ => {}
+            use sdl2::event::Event::*;
+
+            if matches!(event, Quit { .. }) {
+                running = false;
             }
         }
 

@@ -1,13 +1,6 @@
 use std::time::Instant;
 
-use posh::{
-    gl::{
-        BufferUsage, Context, CreateError, DefaultFramebuffer, DrawParams, PrimitiveType, Program,
-        UniformBuffer, VertexBuffer, VertexStream,
-    },
-    sl::{self, VaryingOutput},
-    Block, BlockFields, SlView,
-};
+use posh::{gl, sl, Block, BlockFields, SlView};
 
 // Shader interface
 
@@ -18,10 +11,10 @@ struct Globals<F: BlockFields = SlView> {
 
 // Shader code
 
-fn vertex_shader(_: (), vertex: sl::Vec2) -> VaryingOutput<sl::Vec2> {
+fn vertex_shader(_: (), vertex: sl::Vec2) -> sl::VaryingOutput<sl::Vec2> {
     let vertex = vertex - sl::vec2(0.5, 0.5);
 
-    VaryingOutput {
+    sl::VaryingOutput {
         varying: vertex,
         position: sl::vec4(vertex.x, vertex.y, 0.0, 1.0),
     }
@@ -36,26 +29,24 @@ fn fragment_shader(uniform: Globals, varying: sl::Vec2) -> sl::Vec4 {
 // Host code
 
 struct Demo {
-    context: Context,
-    program: Program<Globals, sl::Vec2>,
-    globals: UniformBuffer<Globals>,
-    vertices: VertexBuffer<sl::Vec2>,
+    program: gl::Program<Globals, sl::Vec2>,
+    globals: gl::UniformBuffer<Globals>,
+    vertices: gl::VertexBuffer<sl::Vec2>,
     start_time: Instant,
 }
 
 impl Demo {
-    pub fn new(context: Context) -> Result<Self, CreateError> {
+    pub fn new(context: gl::Context) -> Result<Self, gl::CreateError> {
         let program = context.create_program(vertex_shader, fragment_shader)?;
         let globals =
-            context.create_uniform_buffer(Globals { time: 0.0 }, BufferUsage::StreamDraw)?;
+            context.create_uniform_buffer(Globals { time: 0.0 }, gl::BufferUsage::StreamDraw)?;
         let vertices = context.create_vertex_buffer(
             &[[0.5f32, 1.0].into(), [0.0, 0.0].into(), [1.0, 0.0].into()],
-            BufferUsage::StaticDraw,
+            gl::BufferUsage::StaticDraw,
         )?;
         let start_time = Instant::now();
 
         Ok(Self {
-            context,
             program,
             globals,
             vertices,
@@ -70,35 +61,39 @@ impl Demo {
         self.program
             .draw(
                 self.globals.binding(),
-                VertexStream::Unindexed(self.vertices.binding(), 0..3, PrimitiveType::Triangles),
-                DefaultFramebuffer::default(),
-                DrawParams::default().with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0)),
+                gl::VertexStream::Unindexed(
+                    self.vertices.binding(),
+                    0..3,
+                    gl::PrimitiveType::Triangles,
+                ),
+                gl::DefaultFramebuffer::default(),
+                gl::DrawParams::default().with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0)),
             )
             .unwrap();
     }
 }
+
+// Main loop
 
 fn main() {
     let sdl = sdl2::init().unwrap();
     let video = sdl.video().unwrap();
 
     let gl_attr = video.gl_attr();
-    gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
+    gl_attr.set_context_profile(sdl2::video::GLProfile::GLES);
     gl_attr.set_context_version(3, 0);
 
     let window = video
         .window("Hello triangle!", 1024, 768)
         .opengl()
-        .resizable()
         .build()
         .unwrap();
 
     let _gl_context = window.gl_create_context().unwrap();
-    let context = Context::new(unsafe {
+    let context = unsafe {
         glow::Context::from_loader_function(|s| video.gl_get_proc_address(s) as *const _)
-    })
-    .unwrap();
-
+    };
+    let context = gl::Context::new(context).unwrap();
     let demo = Demo::new(context).unwrap();
 
     let mut event_loop = sdl.event_pump().unwrap();
@@ -106,9 +101,10 @@ fn main() {
 
     while running {
         for event in event_loop.poll_iter() {
-            match event {
-                sdl2::event::Event::Quit { .. } => running = false,
-                _ => {}
+            use sdl2::event::Event::*;
+
+            if matches!(event, Quit { .. }) {
+                running = false;
             }
         }
 

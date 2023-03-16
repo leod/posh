@@ -70,8 +70,11 @@ pub fn write_shader_stage(
         depth: 1,
     };
 
-    writeln!(f, "#version 330")?;
+    writeln!(f, "#version 300 es")?;
     writeln!(f)?;
+
+    writeln!(f, "precision highp float;")?;
+    writeln!(f, "precision highp int;")?;
 
     write_struct_defs(f, &struct_registry)?;
 
