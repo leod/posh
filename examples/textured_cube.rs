@@ -57,6 +57,7 @@ fn zxy(v: sl::Vec3) -> sl::Vec3 {
 fn vertex_shader(uniforms: Uniform, vertex: Vertex) -> sl::VaryingOutput<sl::Vec2> {
     let camera = uniforms.camera;
     let time = uniforms.time / 3.0;
+
     let vertex_pos = (rotate(time) * sl::vec2(vertex.pos.x, vertex.pos.y)).extend(vertex.pos.z);
     let position = camera.projection * camera.view * zxy(vertex_pos).extend(1.0);
 
@@ -70,17 +71,20 @@ fn vertex_shader(uniforms: Uniform, vertex: Vertex) -> sl::VaryingOutput<sl::Vec
 
 struct Demo {
     program: gl::Program<(Uniform, sl::Sampler2d<sl::Vec4>), Vertex>,
+
     camera: gl::UniformBuffer<Camera>,
     time: gl::UniformBuffer<sl::F32>,
     vertices: gl::VertexBuffer<Vertex>,
     elements: gl::ElementBuffer,
     texture: gl::Texture2d<sl::Vec4>,
+
     start_time: Instant,
 }
 
 impl Demo {
     pub fn new(context: gl::Context) -> Result<Self, gl::CreateError> {
         let program = context.create_program(vertex_shader, sl::Sampler2d::lookup)?;
+
         let camera =
             context.create_uniform_buffer(Camera::default(), gl::BufferUsage::StaticDraw)?;
         let time = context.create_uniform_buffer(0.0, gl::BufferUsage::StreamDraw)?;
@@ -97,6 +101,7 @@ impl Demo {
             image.dimensions().into(),
             image.as_bytes(),
         ))?;
+
         let start_time = Instant::now();
 
         Ok(Self {
