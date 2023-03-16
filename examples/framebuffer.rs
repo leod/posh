@@ -1,25 +1,25 @@
 use std::time::Instant;
 
-use posh::{gl, sl, Block, BlockFields, SlView, Uniform, UniformFields};
+use posh::{gl, sl, Block, BlockDom, Sl, Uniform, UniformDom};
 
 // Shader interface
 
 #[derive(Clone, Copy, Block)]
-struct Globals<F: BlockFields = SlView> {
-    time: F::F32,
-    flip: F::U32,
+struct Globals<D: BlockDom = Sl> {
+    time: D::F32,
+    flip: D::U32,
 }
 
 #[derive(Clone, Copy, Block)]
-struct Vertex<F: BlockFields = SlView> {
-    pos: F::Vec2,
-    tex_coords: F::Vec2,
+struct Vertex<D: BlockDom = Sl> {
+    pos: D::Vec2,
+    tex_coords: D::Vec2,
 }
 
 #[derive(Uniform)]
-struct PresentUniforms<F: UniformFields = SlView> {
-    globals: F::Block<Globals>,
-    scene: F::Sampler2d<sl::Vec4>,
+struct PresentUniforms<D: UniformDom = Sl> {
+    globals: D::Block<Globals>,
+    scene: D::Sampler2d<sl::Vec4>,
 }
 
 // Shader code
@@ -162,7 +162,7 @@ fn main() {
     gl_attr.set_context_version(3, 0);
 
     let window = video
-        .window("Press F to flip the triangle (wow!)", 1024, 768)
+        .window("Press F to flip the triangle (amaze!)", 1024, 768)
         .opengl()
         .build()
         .unwrap();
@@ -180,8 +180,7 @@ fn main() {
 
     while running {
         for event in event_loop.poll_iter() {
-            use sdl2::event::Event::*;
-            use sdl2::keyboard::Keycode;
+            use sdl2::{event::Event::*, keyboard::Keycode};
 
             match event {
                 Quit { .. } => running = false,

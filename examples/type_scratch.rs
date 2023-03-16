@@ -1,6 +1,6 @@
 use posh::{
     sl::{self, Value},
-    Block, BlockFields, SlView, Uniform, UniformFields, Vertex, VertexFields,
+    Block, BlockDom, Sl, Uniform, UniformDom, Vertex, VertexDom,
 };
 
 #[derive(Clone, Copy, Value)]
@@ -9,55 +9,55 @@ struct Foo {
 }
 
 #[derive(Clone, Copy, Block)]
-struct MyUniform1<F: BlockFields = SlView> {
-    x: F::Vec2,
-    y: F::Bool,
+struct MyUniform1<D: BlockDom = Sl> {
+    x: D::Vec2,
+    y: D::Bool,
 }
 
 #[derive(Clone, Copy, Block)]
-struct MyUniform2<F: BlockFields = SlView> {
-    x: F::Vec2,
-    y: MyUniform1<F>,
+struct MyUniform2<D: BlockDom = Sl> {
+    x: D::Vec2,
+    y: MyUniform1<D>,
 }
 
 #[derive(Clone, Copy, Block)]
-struct MyVertex<F: BlockFields = SlView> {
-    x: F::F32,
-    y: F::Vec2,
+struct MyVertex<D: BlockDom = Sl> {
+    x: D::F32,
+    y: D::Vec2,
 }
 
 #[derive(Clone, Copy, Block)]
-struct MyNestedVertex<F: BlockFields = SlView> {
-    x: F::F32,
-    zzz: MyUniform1<F>,
-    y: F::Vec2,
+struct MyNestedVertex<D: BlockDom = Sl> {
+    x: D::F32,
+    zzz: MyUniform1<D>,
+    y: D::Vec2,
 }
 
 #[derive(Vertex)]
-struct MyVertexIface<F: VertexFields = SlView> {
-    vertex: F::Block<MyVertex>,
-    instance: F::Block<MyNestedVertex>,
+struct MyVertexIface<D: VertexDom = Sl> {
+    vertex: D::Block<MyVertex>,
+    instance: D::Block<MyNestedVertex>,
 }
 
 #[derive(Uniform)]
-struct MyUniformIface<F: UniformFields = SlView> {
-    uniform: F::Block<MyUniform1>,
+struct MyUniformIface<D: UniformDom = Sl> {
+    uniform: D::Block<MyUniform1>,
 }
 
 #[derive(Uniform)]
-struct MyUniformIface2<F: UniformFields = SlView> {
-    uniformxy: F::Block<MyUniform1>,
-    bla: MyUniformIface<F>,
-    zzz: F::Block<MyUniform1>,
+struct MyUniformIface2<D: UniformDom = Sl> {
+    uniformxy: D::Block<MyUniform1>,
+    bla: MyUniformIface<D>,
+    zzz: D::Block<MyUniform1>,
 }
 
 #[derive(Uniform)]
-struct GenericUniformIface<U, F: UniformFields = SlView>
+struct GenericUniformIface<U, D: UniformDom = Sl>
 where
-    U: Uniform<SlView>,
+    U: Uniform<Sl>,
 {
-    uniformxy: F::Block<MyUniform1>,
-    x: F::Compose<U>,
+    uniformxy: D::Block<MyUniform1>,
+    x: D::Compose<U>,
 }
 
 fn main() {}

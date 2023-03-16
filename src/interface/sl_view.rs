@@ -12,14 +12,14 @@ use crate::{
 };
 
 use super::{
-    Block, Fragment, FragmentNonUnit, FragmentVisitor, SlView, Uniform, UniformNonUnit, Vertex,
+    Block, Fragment, FragmentNonUnit, FragmentVisitor, Sl, Uniform, UniformNonUnit, Vertex,
     VertexVisitor,
 };
 
 // Block
 
 #[sealed]
-impl super::BlockFields for SlView {
+impl super::BlockDom for Sl {
     type F32 = sl::F32;
     type I32 = sl::I32;
     type U32 = sl::U32;
@@ -34,9 +34,9 @@ impl super::BlockFields for SlView {
 
 macro_rules! impl_block_for_scalar {
     ($scalar:ident) => {
-        unsafe impl Block<SlView> for sl::$scalar {
-            type GlView = sl::scalar_physical!($scalar);
-            type SlView = Self;
+        unsafe impl Block<Sl> for sl::$scalar {
+            type Gl = sl::scalar_physical!($scalar);
+            type Sl = Self;
 
             fn uniform_input(path: &str) -> Self {
                 <Self as Object>::from_arg(path)
@@ -60,9 +60,9 @@ macro_rules! impl_block_for_scalar {
 
 macro_rules! impl_block_for_vec {
     ($vec:ident) => {
-        unsafe impl Block<SlView> for sl::$vec {
-            type SlView = Self;
-            type GlView = glam::$vec;
+        unsafe impl Block<Sl> for sl::$vec {
+            type Sl = Self;
+            type Gl = glam::$vec;
 
             fn uniform_input(path: &str) -> Self {
                 <Self as Object>::from_arg(path)
@@ -86,9 +86,9 @@ macro_rules! impl_block_for_vec {
 
 macro_rules! impl_block_for_mat {
     ($mat:ident) => {
-        unsafe impl Block<SlView> for sl::$mat {
-            type SlView = Self;
-            type GlView = glam::$mat;
+        unsafe impl Block<Sl> for sl::$mat {
+            type Sl = Self;
+            type Gl = glam::$mat;
 
             fn uniform_input(path: &str) -> Self {
                 <Self as Object>::from_arg(path)
@@ -131,15 +131,15 @@ impl_block_for_mat!(Mat4);
 // Vertex
 
 #[sealed]
-impl super::VertexFields for SlView {
-    type Block<B: Block<SlView>> = B;
+impl super::VertexDom for Sl {
+    type Block<B: Block<Sl>> = B;
 }
 
-unsafe impl<B: Block<SlView>> Vertex<SlView> for B {
-    type GlView = gl::VertexBufferBinding<B>;
-    type SlView = B::SlView;
+unsafe impl<B: Block<Sl>> Vertex<Sl> for B {
+    type Gl = gl::VertexBufferBinding<B>;
+    type Sl = B::Sl;
 
-    fn visit<'a>(&'a self, path: &str, visitor: &mut impl VertexVisitor<'a, SlView>) {
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl VertexVisitor<'a, Sl>) {
         visitor.accept(path, VertexInputRate::Vertex, self);
     }
 
@@ -149,7 +149,7 @@ unsafe impl<B: Block<SlView>> Vertex<SlView> for B {
 }
 
 #[sealed]
-impl<B: Block<SlView>> super::VertexField<SlView> for B {
+impl<B: Block<Sl>> super::VertexField<Sl> for B {
     fn shader_input(path: &str) -> Self {
         B::vertex_input(path)
     }
@@ -158,32 +158,32 @@ impl<B: Block<SlView>> super::VertexField<SlView> for B {
 // Uniform
 
 #[sealed]
-impl super::UniformFields for SlView {
-    type Block<B: Block<SlView, SlView = B>> = B;
+impl super::UniformDom for Sl {
+    type Block<B: Block<Sl, Sl = B>> = B;
     type Sampler2d<S: ColorSample> = sl::Sampler2d<S>;
-    type Compose<R: Uniform<SlView>> = R;
+    type Compose<R: Uniform<Sl>> = R;
 }
 
-unsafe impl<B: Block<SlView, SlView = B>> Uniform<SlView> for B {
-    type SlView = Self;
-    type GlView = gl::UniformBufferBinding<B>;
+unsafe impl<B: Block<Sl, Sl = B>> Uniform<Sl> for B {
+    type Sl = Self;
+    type Gl = gl::UniformBufferBinding<B>;
 
-    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformVisitor<'a, SlView>) {
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformVisitor<'a, Sl>) {
         visitor.accept_block(path, self)
     }
 
     fn shader_input(path: &str) -> Self {
-        <B as Block<SlView>>::uniform_input(path)
+        <B as Block<Sl>>::uniform_input(path)
     }
 }
 
-impl<B: Block<SlView, SlView = B>> UniformNonUnit for B {}
+impl<B: Block<Sl, Sl = B>> UniformNonUnit for B {}
 
-unsafe impl<S: ColorSample> Uniform<SlView> for sl::Sampler2d<S> {
-    type SlView = Self;
-    type GlView = gl::Sampler2d<S>;
+unsafe impl<S: ColorSample> Uniform<Sl> for sl::Sampler2d<S> {
+    type Sl = Self;
+    type Gl = gl::Sampler2d<S>;
 
-    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformVisitor<'a, SlView>) {
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformVisitor<'a, Sl>) {
         visitor.accept_sampler2d(path, self)
     }
 
@@ -194,15 +194,15 @@ unsafe impl<S: ColorSample> Uniform<SlView> for sl::Sampler2d<S> {
 
 impl<S: ColorSample> UniformNonUnit for sl::Sampler2d<S> {}
 
-unsafe impl<U, V> Uniform<SlView> for (U, V)
+unsafe impl<U, V> Uniform<Sl> for (U, V)
 where
-    U: Uniform<SlView>,
-    V: Uniform<SlView>,
+    U: Uniform<Sl>,
+    V: Uniform<Sl>,
 {
-    type SlView = Self;
-    type GlView = (U::GlView, V::GlView);
+    type Sl = Self;
+    type Gl = (U::Gl, V::Gl);
 
-    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformVisitor<'a, SlView>) {
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformVisitor<'a, Sl>) {
         self.0.visit(&join_ident_path(path, "a"), visitor);
         self.1.visit(&join_ident_path(path, "b"), visitor);
     }
@@ -217,23 +217,23 @@ where
 
 impl<U, V> UniformNonUnit for (U, V)
 where
-    U: Uniform<SlView>,
-    V: Uniform<SlView>,
+    U: Uniform<Sl>,
+    V: Uniform<Sl>,
 {
 }
 
 // Fragment
 
 #[sealed]
-impl super::FragmentFields for SlView {
+impl super::FragmentDom for Sl {
     type Attachment2d<S: ColorSample> = S;
 }
 
-unsafe impl<S: ColorSample> Fragment<SlView> for S {
-    type SlView = Self;
-    type GlView = gl::Attachment<S>;
+unsafe impl<S: ColorSample> Fragment<Sl> for S {
+    type Sl = Self;
+    type Gl = gl::Attachment<S>;
 
-    fn visit<'a>(&'a self, path: &str, visitor: &mut impl FragmentVisitor<'a, SlView>) {
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl FragmentVisitor<'a, Sl>) {
         visitor.accept(path, self);
     }
 }

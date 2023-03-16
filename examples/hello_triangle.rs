@@ -1,12 +1,12 @@
 use std::time::Instant;
 
-use posh::{gl, sl, Block, BlockFields, SlView};
+use posh::{gl, sl, Block, BlockDom, Sl};
 
 // Shader interface
 
 #[derive(Clone, Copy, Block)]
-struct Globals<F: BlockFields = SlView> {
-    time: F::F32,
+struct Globals<D: BlockDom = Sl> {
+    time: D::F32,
 }
 
 // Shader code

@@ -163,7 +163,7 @@ fn validate_attachments(caps: &Caps, attachments: &[Attachment]) -> Result<(), F
         use Attachment::*;
 
         match attachment {
-            Texture2d { texture, level } => {
+            Texture2d { level, .. } => {
                 // OpenGL ES 3.0.6: 4.4.2.4 Attaching Texture Images to a
                 // Framebuffer
                 // > If `textarget` is `TEXTURE_2D`, `level` must be greater

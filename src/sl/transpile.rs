@@ -9,7 +9,7 @@ use crevice::std140::AsStd140;
 
 use crate::{
     interface::{FragmentVisitor, UniformUnion, UniformVisitor, VertexVisitor},
-    Block, Fragment, SlView, Uniform, Vertex,
+    Block, Fragment, Sl, Uniform, Vertex,
 };
 
 use super::{
@@ -25,12 +25,12 @@ use super::{
 
 /// Types that can be used as vertex input for a vertex shader.
 pub trait FromVertexInput {
-    type Vertex: Vertex<SlView>;
+    type Vertex: Vertex<Sl>;
 
     fn from(input: VertexInput<Self::Vertex>) -> Self;
 }
 
-impl<V: Vertex<SlView>> FromVertexInput for VertexInput<V> {
+impl<V: Vertex<Sl>> FromVertexInput for VertexInput<V> {
     type Vertex = V;
 
     fn from(input: Self) -> Self {
@@ -38,7 +38,7 @@ impl<V: Vertex<SlView>> FromVertexInput for VertexInput<V> {
     }
 }
 
-impl<V: Vertex<SlView>> FromVertexInput for V {
+impl<V: Vertex<Sl>> FromVertexInput for V {
     type Vertex = Self;
 
     fn from(input: VertexInput<Self>) -> Self {
@@ -110,12 +110,12 @@ impl<W: Varying> FromFragmentInput for W {
 
 /// Types that can be used as fragment output for a fragment shader.
 pub trait IntoFragmentOutput {
-    type Fragment: Fragment<SlView>;
+    type Fragment: Fragment<Sl>;
 
     fn into(self) -> FragmentOutput<Self::Fragment>;
 }
 
-impl<F: Fragment<SlView>> IntoFragmentOutput for FragmentOutput<F> {
+impl<F: Fragment<Sl>> IntoFragmentOutput for FragmentOutput<F> {
     type Fragment = F;
 
     fn into(self) -> Self {
@@ -123,7 +123,7 @@ impl<F: Fragment<SlView>> IntoFragmentOutput for FragmentOutput<F> {
     }
 }
 
-impl<F: Fragment<SlView>> IntoFragmentOutput for F {
+impl<F: Fragment<Sl>> IntoFragmentOutput for F {
     type Fragment = Self;
 
     fn into(self) -> FragmentOutput<Self> {
@@ -144,11 +144,11 @@ pub fn transpile_to_program_def<U, U1, U2, V, F, W, InV, OutW, InW, OutF>(
     fragment_shader: fn(U2, InW) -> OutF,
 ) -> ProgramDef
 where
-    U1: Uniform<SlView>,
-    U2: Uniform<SlView>,
+    U1: Uniform<Sl>,
+    U2: Uniform<Sl>,
     U: UniformUnion<U1, U2>,
-    V: Vertex<SlView>,
-    F: Fragment<SlView>,
+    V: Vertex<Sl>,
+    F: Fragment<Sl>,
     W: Varying,
     InV: FromVertexInput<Vertex = V>,
     OutW: IntoVertexOutput<Varying = W>,
@@ -173,11 +173,11 @@ pub fn transpile_to_program_def_with_consts<C, U, U1, U2, V, F, W, InV, OutW, In
 ) -> ProgramDef
 where
     C: ConstParams,
-    U1: Uniform<SlView>,
-    U2: Uniform<SlView>,
+    U1: Uniform<Sl>,
+    U2: Uniform<Sl>,
     U: UniformUnion<U1, U2>,
-    V: Vertex<SlView>,
-    F: Fragment<SlView>,
+    V: Vertex<Sl>,
+    F: Fragment<Sl>,
     W: Varying,
     InV: FromVertexInput<Vertex = V>,
     OutW: IntoVertexOutput<Varying = W>,
@@ -198,9 +198,9 @@ fn transpile_to_program_def_with_consts_impl<C, U, V, F, W, InV, OutW, InW, OutF
 ) -> ProgramDef
 where
     C: ConstParams,
-    U: Uniform<SlView>,
-    V: Vertex<SlView>,
-    F: Fragment<SlView>,
+    U: Uniform<Sl>,
+    V: Vertex<Sl>,
+    F: Fragment<Sl>,
     W: Varying,
     InV: FromVertexInput<Vertex = V>,
     OutW: IntoVertexOutput<Varying = W>,
@@ -346,7 +346,7 @@ struct CollectUniforms {
     block_defs: Vec<UniformBlockDef>,
 }
 
-impl<'a> UniformVisitor<'a, SlView> for CollectUniforms {
+impl<'a> UniformVisitor<'a, Sl> for CollectUniforms {
     fn accept_sampler2d<S: ColorSample>(&mut self, path: &str, _: &Sampler2d<S>) {
         // TODO: Allow user-specified sampler texture units.
         let block_def = UniformSamplerDef {
@@ -358,12 +358,12 @@ impl<'a> UniformVisitor<'a, SlView> for CollectUniforms {
         self.sampler_defs.push(block_def);
     }
 
-    fn accept_block<U: Block<SlView>>(&mut self, path: &str, _: &U) {
+    fn accept_block<U: Block<Sl>>(&mut self, path: &str, _: &U) {
         // TODO: Allow user-specified uniform block locations.
         let block_def = UniformBlockDef {
             block_name: path.to_string() + "_posh_block",
             arg_name: path.to_string(),
-            ty: <U::SlView as Object>::ty(),
+            ty: <U::Sl as Object>::ty(),
             location: self.block_defs.len(),
         };
 
@@ -376,11 +376,11 @@ struct CollectVertexBlocks {
     block_defs: Vec<VertexBlockDef>,
 }
 
-impl<'a> VertexVisitor<'a, SlView> for CollectVertexBlocks {
-    fn accept<B: Block<SlView>>(&mut self, path: &str, input_rate: VertexInputRate, _: &B) {
+impl<'a> VertexVisitor<'a, Sl> for CollectVertexBlocks {
+    fn accept<B: Block<Sl>>(&mut self, path: &str, input_rate: VertexInputRate, _: &B) {
         let block_def = VertexBlockDef {
             input_rate,
-            stride: size_of::<<B::GlView as AsStd140>::Output>(),
+            stride: size_of::<<B::Gl as AsStd140>::Output>(),
             attributes: B::vertex_attribute_defs(path),
         };
 
@@ -393,7 +393,7 @@ struct CollectOutputs {
     outputs: Vec<(String, Rc<Expr>)>,
 }
 
-impl<'a> FragmentVisitor<'a, SlView> for CollectOutputs {
+impl<'a> FragmentVisitor<'a, Sl> for CollectOutputs {
     fn accept<S: ColorSample>(&mut self, path: &str, output: &S) {
         self.outputs.push((path.to_string(), output.expr()));
     }

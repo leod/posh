@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use crate::{
     interface::FragmentVisitor,
     sl::{self, ColorSample},
-    Fragment, GlView,
+    Fragment, Gl,
 };
 
 use super::{
@@ -11,7 +11,7 @@ use super::{
     Sampler2d, Sampler2dParams,
 };
 
-pub trait Framebuffer<F: Fragment<GlView>> {
+pub trait Framebuffer<D: Fragment<Gl>> {
     fn raw(&self) -> raw::Framebuffer;
 }
 
@@ -24,7 +24,7 @@ impl Framebuffer<Attachment<sl::Vec4>> for DefaultFramebuffer {
     }
 }
 
-impl<F: Fragment<GlView>> Framebuffer<F> for F {
+impl<F: Fragment<Gl>> Framebuffer<F> for F {
     fn raw(&self) -> raw::Framebuffer {
         raw::Framebuffer::Attachments {
             attachments: raw_attachments(self),
@@ -51,9 +51,9 @@ impl<S> Attachment<S> {
     }
 }
 
-fn raw_attachments<F: Fragment<GlView>>(attachments: &F) -> Vec<raw::Attachment> {
+fn raw_attachments<F: Fragment<Gl>>(attachments: &F) -> Vec<raw::Attachment> {
     struct Visitor(Vec<raw::Attachment>);
-    impl<'a> FragmentVisitor<'a, GlView> for Visitor {
+    impl<'a> FragmentVisitor<'a, Gl> for Visitor {
         fn accept<S: ColorSample>(&mut self, _: &str, attachment: &Attachment<S>) {
             self.0.push(attachment.raw.clone());
         }
