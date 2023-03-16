@@ -30,7 +30,7 @@ pub(crate) use scalar::scalar_physical;
 pub use {
     array::Array,
     mat::{mat2, mat3, mat4, Mat2, Mat3, Mat4},
-    sampler::{Sample, Sampler2d},
+    sampler::{ColorSample, Depth, Sample, Sampler2d},
     scalar::{Bool, F32, I32, U32},
     sig::{ConstParams, FragmentInput, FragmentOutput, VaryingOutput, VertexInput, VertexOutput},
     varying::Varying,
@@ -65,7 +65,7 @@ pub trait Object: 'static {
 /// Only types that implement [`Value`] can be used in `struct` definitions.
 ///
 /// Most types in the shading language implement [`Value`]. A notable exception
-/// is [`Sampler2d`].
+/// is [`Sampler2d`]. See also [`Object`].
 ///
 /// The interface of this trait is a private implementation detail.
 pub trait Value: Object + Copy {

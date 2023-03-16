@@ -8,15 +8,13 @@ use crate::{
     sl::program_def::ProgramDef,
 };
 
-use super::{
-    error::check_gl_error, Buffer, Caps, ContextError, DrawParams, Framebuffer,
-    FramebufferAttachment, FramebufferError, Image, Program, Texture2d, TextureError,
-};
+use super::{Buffer, Caps, ContextError, DrawParams, Image, Program, Texture2d, TextureError};
 
 pub(super) struct ContextShared {
     gl: glow::Context,
     caps: Caps,
     draw_params: Cell<DrawParams>,
+    draw_fbo: glow::Framebuffer,
 }
 
 pub struct Context {
@@ -42,8 +40,10 @@ impl ContextShared {
         let current = self.draw_params.get();
         new.set_delta(gl, &current);
         self.draw_params.set(*new);
+    }
 
-        check_gl_error(gl).unwrap();
+    pub(super) fn draw_fbo(&self) -> glow::Framebuffer {
+        self.draw_fbo
     }
 }
 
@@ -56,14 +56,17 @@ impl Context {
         // be changed during the lifetime of a context.
         let vao = unsafe { gl.create_vertex_array() }.map_err(ContextError::ObjectCreation)?;
 
-        unsafe {
-            gl.bind_vertex_array(Some(vao));
-        }
+        unsafe { gl.bind_vertex_array(Some(vao)) };
+
+        // All framebuffer attachments are made with a single framebuffer object
+        // that is created at the start.
+        let draw_fbo = unsafe { gl.create_framebuffer() }.map_err(ContextError::ObjectCreation)?;
 
         let shared = Rc::new(ContextShared {
             gl,
             caps,
             draw_params: Cell::new(DrawParams::default()),
+            draw_fbo,
         });
 
         Ok(Self { shared })
@@ -89,13 +92,6 @@ impl Context {
         Texture2d::new_with_mipmap(self.shared.clone(), image)
     }
 
-    pub fn create_framebuffer(
-        &self,
-        attachments: &[FramebufferAttachment],
-    ) -> Result<Framebuffer, FramebufferError> {
-        Framebuffer::new(self.shared.clone(), attachments)
-    }
-
     pub fn create_program(&self, def: ProgramDef) -> Result<Program, ProgramError> {
         Program::new(self.shared.clone(), def)
     }
@@ -103,19 +99,15 @@ impl Context {
     pub fn clear_color(&self, color: glam::Vec4) {
         let gl = self.shared.gl();
 
-        unsafe {
-            gl.clear_color(color.x, color.y, color.z, color.w);
-            gl.clear(glow::COLOR_BUFFER_BIT);
-        }
+        unsafe { gl.clear_color(color.x, color.y, color.z, color.w) };
+        unsafe { gl.clear(glow::COLOR_BUFFER_BIT) };
     }
 
     pub fn clear_color_and_depth(&self, color: glam::Vec4, depth: f32) {
         let gl = self.shared.gl();
 
-        unsafe {
-            gl.clear_color(color.x, color.y, color.z, color.w);
-            gl.clear_depth_f32(depth);
-            gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
-        }
+        unsafe { gl.clear_color(color.x, color.y, color.z, color.w) };
+        unsafe { gl.clear_depth_f32(depth) };
+        unsafe { gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT) };
     }
 }

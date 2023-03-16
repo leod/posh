@@ -5,7 +5,7 @@ pub enum SamplerType {
     Sampler2d,
     ISampler2d,
     USampler2d,
-    Sampler2dShadow,
+    Sampler2dComparison,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]

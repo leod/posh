@@ -2,8 +2,9 @@ use std::time::Instant;
 
 use posh::{
     gl::{
-        BufferUsage, Context, DrawParams, ElementBuffer, Error, Framebuffer, FramebufferBinding,
-        Image, PrimitiveType, Program, Sampler2dParams, UniformBuffer, VertexBuffer, VertexStream,
+        BufferUsage, Context, CreateError, DefaultFramebuffer, DrawParams, ElementBuffer, Image,
+        PrimitiveType, Program, Sampler2dParams, Texture2d, UniformBuffer, VertexBuffer,
+        VertexStream,
     },
     sl::{self, VaryingOutput},
     Block, BlockFields, SlView, Uniform, UniformFields,
@@ -70,12 +71,12 @@ struct Demo {
     triangle_vertices: VertexBuffer<sl::Vec2>,
     quad_vertices: VertexBuffer<Vertex>,
     quad_elements: ElementBuffer,
-    framebuffer: Framebuffer<sl::Vec4>,
+    texture: Texture2d<sl::Vec4>,
     start_time: Instant,
 }
 
 impl Demo {
-    pub fn new(context: Context) -> Result<Self, Error> {
+    pub fn new(context: Context) -> Result<Self, CreateError> {
         let scene_program = context.create_program(scene_vertex, scene_fragment)?;
         let post_program = context.create_program(post_vertex, post_fragment)?;
         let globals = context
@@ -108,7 +109,6 @@ impl Demo {
         let quad_elements =
             context.create_element_buffer(&[0, 1, 2, 0, 2, 3], BufferUsage::StaticDraw)?;
         let texture = context.create_texture_2d(Image::zeroed_u8(glam::uvec2(1024, 768)))?;
-        let framebuffer = context.create_framebuffer(texture.attachment())?;
         let start_time = Instant::now();
 
         Ok(Self {
@@ -119,39 +119,45 @@ impl Demo {
             triangle_vertices,
             quad_vertices,
             quad_elements,
-            framebuffer,
+            texture,
             start_time,
         })
     }
 
     pub fn draw(&self, flip: u32) {
-        let time = Instant::now().duration_since(self.start_time).as_secs_f32();
-        self.globals.set(Globals { time, flip });
+        self.globals.set(Globals {
+            time: Instant::now().duration_since(self.start_time).as_secs_f32(),
+            flip,
+        });
 
-        self.context.clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0));
-        self.scene_program.draw(
-            self.globals.binding(),
-            VertexStream::Unindexed(
-                self.triangle_vertices.binding(),
-                0..3,
-                PrimitiveType::Triangles,
-            ),
-            self.framebuffer.binding(),
-            DrawParams::default(),
-        );
-        self.post_program.draw(
-            PostUniforms {
-                globals: self.globals.binding(),
-                scene: self.framebuffer.view().sampler(Sampler2dParams::default()),
-            },
-            VertexStream::Indexed(
-                self.quad_vertices.binding(),
-                self.quad_elements.binding(),
-                PrimitiveType::Triangles,
-            ),
-            FramebufferBinding::default(),
-            DrawParams::default(),
-        );
+        self.scene_program
+            .draw(
+                self.globals.binding(),
+                VertexStream::Unindexed(
+                    self.triangle_vertices.binding(),
+                    0..3,
+                    PrimitiveType::Triangles,
+                ),
+                self.texture.attachment(),
+                DrawParams::default(),
+            )
+            .unwrap();
+
+        self.post_program
+            .draw(
+                PostUniforms {
+                    globals: self.globals.binding(),
+                    scene: self.texture.sampler(Sampler2dParams::default()),
+                },
+                VertexStream::Indexed(
+                    self.quad_vertices.binding(),
+                    self.quad_elements.binding(),
+                    PrimitiveType::Triangles,
+                ),
+                DefaultFramebuffer::default(),
+                DrawParams::default(),
+            )
+            .unwrap();
     }
 }
 

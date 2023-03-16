@@ -7,7 +7,7 @@ use sealed::sealed;
 use crate::sl::{
     self,
     program_def::{VertexAttributeDef, VertexInputRate},
-    Sample,
+    ColorSample,
 };
 
 /// The graphics library's view of shader input and output data.
@@ -282,7 +282,7 @@ pub trait UniformFields: Copy {
     type Block<B: Block<SlView, SlView = B>>: Uniform<Self>;
 
     /// A two-dimensional uniform sampler field.
-    type Sampler2d<S: Sample>: Uniform<Self>;
+    type Sampler2d<S: ColorSample>: Uniform<Self>;
 
     /// A nested uniform interface field.
     type Compose<U: Uniform<SlView>>: Uniform<Self>;
@@ -421,7 +421,7 @@ where
 #[doc(hidden)]
 pub trait UniformVisitor<'a, F: UniformFields> {
     fn accept_block<B: Block<SlView, SlView = B>>(&mut self, path: &str, block: &'a F::Block<B>);
-    fn accept_sampler2d<S: Sample>(&mut self, path: &str, sampler: &'a F::Sampler2d<S>);
+    fn accept_sampler2d<S: ColorSample>(&mut self, path: &str, sampler: &'a F::Sampler2d<S>);
 }
 
 // Fragment
@@ -431,7 +431,7 @@ pub trait UniformVisitor<'a, F: UniformFields> {
 /// See [`Fragment`] for more details.
 #[sealed]
 pub trait FragmentFields: Copy {
-    type Attachment2d<S: Sample>: Fragment<Self>;
+    type Attachment2d<S: ColorSample>: Fragment<Self>;
 }
 
 /// Fragment shader output data.
@@ -458,7 +458,10 @@ pub unsafe trait Fragment<F: FragmentFields> {
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl FragmentVisitor<'a, F>);
 }
 
+/// Non-empty fragment shader output data.
+pub trait FragmentNonUnit: Fragment<SlView> {}
+
 #[doc(hidden)]
 pub trait FragmentVisitor<'a, F: FragmentFields> {
-    fn accept<S: Sample>(&mut self, path: &str, attachment: &'a F::Attachment2d<S>);
+    fn accept<S: ColorSample>(&mut self, path: &str, attachment: &'a F::Attachment2d<S>);
 }
