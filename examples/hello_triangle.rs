@@ -30,20 +30,24 @@ fn fragment_shader(uniform: Globals, varying: sl::Vec2) -> sl::Vec4 {
 
 struct Demo {
     program: gl::Program<Globals, sl::Vec2>,
+
     globals: gl::UniformBuffer<Globals>,
     vertices: gl::VertexBuffer<sl::Vec2>,
+
     start_time: Instant,
 }
 
 impl Demo {
     pub fn new(context: gl::Context) -> Result<Self, gl::CreateError> {
         let program = context.create_program(vertex_shader, fragment_shader)?;
+
         let globals =
             context.create_uniform_buffer(Globals { time: 0.0 }, gl::BufferUsage::StreamDraw)?;
         let vertices = context.create_vertex_buffer(
             &[[0.5f32, 1.0].into(), [0.0, 0.0].into(), [1.0, 0.0].into()],
             gl::BufferUsage::StaticDraw,
         )?;
+
         let start_time = Instant::now();
 
         Ok(Self {

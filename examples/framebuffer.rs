@@ -58,11 +58,13 @@ fn present_fragment(uniform: PresentUniforms, tex_coords: sl::Vec2) -> sl::Vec4 
 struct Demo {
     scene_program: gl::Program<Globals, sl::Vec2>,
     present_program: gl::Program<PresentUniforms, Vertex>,
+
     globals: gl::UniformBuffer<Globals>,
     triangle_vertices: gl::VertexBuffer<sl::Vec2>,
     quad_vertices: gl::VertexBuffer<Vertex>,
     quad_elements: gl::ElementBuffer,
     texture: gl::Texture2d<sl::Vec4>,
+
     start_time: Instant,
 }
 
@@ -70,6 +72,7 @@ impl Demo {
     pub fn new(context: gl::Context) -> Result<Self, gl::CreateError> {
         let scene_program = context.create_program(scene_vertex, scene_fragment)?;
         let present_program = context.create_program(present_vertex, present_fragment)?;
+
         let globals = context
             .create_uniform_buffer(Globals { time: 0.0, flip: 0 }, gl::BufferUsage::StreamDraw)?;
         let triangle_vertices = context.create_vertex_buffer(
@@ -100,6 +103,7 @@ impl Demo {
         let quad_elements =
             context.create_element_buffer(&[0, 1, 2, 0, 2, 3], gl::BufferUsage::StaticDraw)?;
         let texture = context.create_texture_2d(gl::Image::zero_u8(glam::uvec2(1024, 768)))?;
+
         let start_time = Instant::now();
 
         Ok(Self {
