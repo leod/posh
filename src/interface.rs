@@ -119,7 +119,7 @@ pub trait BlockDom: Copy {
 /// struct MyVertex<D: BlockDom = Sl> {
 ///     position: D::Vec3,
 ///     normal: D::Vec3,
-///     color: SomeColor<F>,
+///     color: SomeColor<D>,
 /// }
 ///
 /// // A function in the shading language that does something with `MyVertex`.
