@@ -1,10 +1,10 @@
 use std::{marker::PhantomData, rc::Rc};
 
-use crate::{gl::raw::ImageInternalFormat, sl::Sample};
+use crate::{gl::raw::ImageInternalFormat, sl::ColorSample};
 
 use super::{
     raw::{self, Sampler2dParams},
-    FramebufferAttachment2d,
+    Attachment,
 };
 
 pub struct Texture2d<S> {
@@ -18,7 +18,7 @@ pub struct Sampler2d<S> {
     _phantom: PhantomData<S>,
 }
 
-impl<S: Sample> Texture2d<S> {
+impl<S: ColorSample> Texture2d<S> {
     pub(super) fn from_raw(raw: raw::Texture2d) -> Self {
         use ImageInternalFormat::*;
 
@@ -31,12 +31,12 @@ impl<S: Sample> Texture2d<S> {
         }
     }
 
-    pub fn attachment(&self) -> FramebufferAttachment2d<S> {
+    pub fn attachment(&self) -> Attachment<S> {
         self.attachment_with_level(0)
     }
 
-    pub fn attachment_with_level(&self, level: u32) -> FramebufferAttachment2d<S> {
-        FramebufferAttachment2d::from_raw(raw::FramebufferAttachment2d {
+    pub fn attachment_with_level(&self, level: u32) -> Attachment<S> {
+        Attachment::from_raw(raw::Attachment::Texture2d {
             texture: self.raw.clone(),
             level,
         })

@@ -2,12 +2,12 @@ use std::{marker::PhantomData, rc::Rc};
 
 use crate::{
     interface::UniformVisitor,
-    sl::{self, Sample},
+    sl::{self, ColorSample},
     Block, Fragment, GlView, SlView, Uniform, Vertex,
 };
 
 use super::{
-    raw, vertex_stream::VertexStream, DrawParams, FramebufferBinding, Sampler2d,
+    raw, vertex_stream::VertexStream, DrawError, DrawParams, Framebuffer, Sampler2d,
     UniformBufferBinding,
 };
 
@@ -33,9 +33,9 @@ where
         &self,
         uniforms: U::GlView,
         vertices: VertexStream<V::GlView>,
-        framebuffer: FramebufferBinding<F::GlView>,
+        framebuffer: impl Framebuffer<F::GlView>,
         draw_params: DrawParams,
-    ) {
+    ) -> Result<(), DrawError> {
         // TODO: These allocations can be avoided once stable has allocators.
         // TODO: Remove hardcoded path names.
         let mut uniform_visitor = CollectUniforms::default();
@@ -49,10 +49,12 @@ where
                 &uniform_visitor.raw_uniform_buffers,
                 &uniform_visitor.raw_samplers,
                 &vertices.raw(),
-                framebuffer.raw(),
+                &framebuffer.raw(),
                 &draw_params,
-            );
-        }
+            )
+        }?;
+
+        Ok(())
     }
 }
 
@@ -63,7 +65,7 @@ struct CollectUniforms<'a> {
 }
 
 impl<'a> UniformVisitor<'a, GlView> for CollectUniforms<'a> {
-    fn accept_sampler2d<S: Sample>(&mut self, _: &str, sampler: &Sampler2d<S>) {
+    fn accept_sampler2d<S: ColorSample>(&mut self, _: &str, sampler: &Sampler2d<S>) {
         self.raw_samplers
             .push(raw::Sampler::Sampler2d(sampler.raw().clone()))
     }

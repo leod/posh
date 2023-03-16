@@ -5,9 +5,9 @@ use glow::HasContext;
 use crate::sl::program_def::{ProgramDef, UniformSamplerDef};
 
 use super::{
-    context::ContextShared, error::check_gl_error, framebuffer::FramebufferBinding,
-    vertex_layout::VertexAttributeLayout, Buffer, DrawParams, ProgramError, ProgramValidationError,
-    Sampler, VertexStream,
+    context::ContextShared, error::check_gl_error, vertex_layout::VertexAttributeLayout, Buffer,
+    DrawError, DrawParams, Framebuffer, ProgramError, ProgramValidationError, Sampler,
+    VertexStream,
 };
 
 pub struct Program {
@@ -152,9 +152,9 @@ impl Program {
         uniform_buffers: &[&Buffer],
         samplers: &[Sampler],
         vertices: &VertexStream,
-        framebuffer: &FramebufferBinding,
+        framebuffer: &Framebuffer,
         draw_params: &DrawParams,
-    ) {
+    ) -> Result<(), DrawError> {
         let ctx = &self.ctx;
         let gl = ctx.gl();
         let def = &self.def;
@@ -163,9 +163,9 @@ impl Program {
         assert_eq!(samplers.len(), def.uniform_sampler_defs.len());
         assert!(vertices.is_compatible(&self.def.vertex_block_defs));
 
-        ctx.set_draw_params(draw_params);
+        framebuffer.bind(&self.ctx)?;
 
-        framebuffer.bind(&self.ctx);
+        ctx.set_draw_params(draw_params);
 
         unsafe {
             gl.use_program(Some(self.id));
@@ -221,9 +221,11 @@ impl Program {
         }
 
         // TODO: Remove overly conservative unbinding.
-        framebuffer.unbind(gl);
+        framebuffer.unbind(&self.ctx);
 
-        check_gl_error(gl).unwrap();
+        check_gl_error(gl).map_err(DrawError::Error)?;
+
+        Ok(())
     }
 }
 

@@ -1,37 +1,45 @@
-use std::{marker::PhantomData, rc::Rc};
+use std::marker::PhantomData;
 
 use crate::{
     interface::FragmentVisitor,
-    sl::{self, Sample},
-    Fragment, GlView, SlView,
+    sl::{self, ColorSample},
+    Fragment, GlView,
 };
 
 use super::{
-    raw::{self, FramebufferError},
+    raw::{self},
     Sampler2d, Sampler2dParams,
 };
 
+pub trait Framebuffer<F: Fragment<GlView>> {
+    fn raw(&self) -> raw::Framebuffer;
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct DefaultFramebuffer {}
+
+impl Framebuffer<Attachment<sl::Vec4>> for DefaultFramebuffer {
+    fn raw(&self) -> raw::Framebuffer {
+        raw::Framebuffer::Default
+    }
+}
+
+impl<F: Fragment<GlView>> Framebuffer<F> for F {
+    fn raw(&self) -> raw::Framebuffer {
+        raw::Framebuffer::Attachments {
+            attachments: raw_attachments(self),
+        }
+    }
+}
+
 #[derive(Clone)]
-pub struct FramebufferAttachment2d<S> {
-    raw: raw::FramebufferAttachment2d,
+pub struct Attachment<S> {
+    raw: raw::Attachment,
     _phantom: PhantomData<S>,
 }
 
-pub struct Framebuffer<F: Fragment<SlView>> {
-    raw: Rc<raw::Framebuffer>,
-    attachments: F::GlView,
-}
-
-impl<F: Fragment<SlView>> Framebuffer<F> {}
-
-#[derive(Clone)]
-pub struct FramebufferBinding<F> {
-    raw: raw::FramebufferBinding,
-    _phantom: PhantomData<F>,
-}
-
-impl<S: Sample> FramebufferAttachment2d<S> {
-    pub(super) fn from_raw(raw: raw::FramebufferAttachment2d) -> Self {
+impl<S> Attachment<S> {
+    pub(super) fn from_raw(raw: raw::Attachment) -> Self {
         Self {
             raw,
             _phantom: PhantomData,
@@ -39,65 +47,15 @@ impl<S: Sample> FramebufferAttachment2d<S> {
     }
 
     pub fn sampler(&self, params: Sampler2dParams) -> Sampler2d<S> {
-        Sampler2d::from_raw(raw::Sampler2d {
-            texture: self.raw.texture.clone(),
-            params,
-        })
-    }
-
-    pub fn level(&self) -> u32 {
-        self.raw.level
+        Sampler2d::from_raw(self.raw.sampler(params))
     }
 }
 
-impl<F: Fragment<SlView>> Framebuffer<F> {
-    pub(super) fn new(
-        context: &raw::Context,
-        attachments: F::GlView,
-    ) -> Result<Self, FramebufferError> {
-        let raw_attachments = raw_attachments(&attachments);
-        let raw = context.create_framebuffer(&raw_attachments)?;
-
-        Ok(Self {
-            raw: Rc::new(raw),
-            attachments,
-        })
-    }
-
-    pub fn view(&self) -> &F::GlView {
-        &self.attachments
-    }
-
-    pub fn binding(&self) -> FramebufferBinding<F::GlView> {
-        FramebufferBinding {
-            raw: raw::FramebufferBinding::Framebuffer(self.raw.clone()),
-            _phantom: PhantomData,
-        }
-    }
-}
-
-impl Default for FramebufferBinding<FramebufferAttachment2d<sl::Vec4>> {
-    fn default() -> Self {
-        Self {
-            raw: raw::FramebufferBinding::Default,
-            _phantom: PhantomData,
-        }
-    }
-}
-
-impl<F: Fragment<GlView>> FramebufferBinding<F> {
-    pub(super) fn raw(&self) -> &raw::FramebufferBinding {
-        &self.raw
-    }
-}
-
-fn raw_attachments<F: Fragment<GlView>>(attachments: &F) -> Vec<raw::FramebufferAttachment> {
-    struct Visitor(Vec<raw::FramebufferAttachment>);
+fn raw_attachments<F: Fragment<GlView>>(attachments: &F) -> Vec<raw::Attachment> {
+    struct Visitor(Vec<raw::Attachment>);
     impl<'a> FragmentVisitor<'a, GlView> for Visitor {
-        fn accept<S: Sample>(&mut self, _: &str, attachment: &FramebufferAttachment2d<S>) {
-            self.0.push(raw::FramebufferAttachment::Texture2d(
-                attachment.raw.clone(),
-            ));
+        fn accept<S: ColorSample>(&mut self, _: &str, attachment: &Attachment<S>) {
+            self.0.push(attachment.raw.clone());
         }
     }
 
