@@ -166,14 +166,4 @@ impl Context {
             Ok(Program::unchecked_from_raw(raw))
         }
     */
-
-    // TODO: Should clearing move to some framebuffer thing?
-
-    pub fn clear_color(&self, color: glam::Vec4) {
-        self.raw.clear_color(color);
-    }
-
-    pub fn clear_color_and_depth(&self, color: glam::Vec4, depth: f32) {
-        self.raw.clear_color_and_depth(color, depth);
-    }
 }

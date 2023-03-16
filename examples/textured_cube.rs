@@ -121,8 +121,6 @@ impl Demo {
         let time = Instant::now().duration_since(self.start_time).as_secs_f32();
         self.time.set(time);
 
-        self.context
-            .clear_color_and_depth(glam::vec4(0.1, 0.2, 0.3, 1.0), 1.0);
         self.program
             .draw(
                 (
@@ -138,7 +136,10 @@ impl Demo {
                     PrimitiveType::Triangles,
                 ),
                 DefaultFramebuffer::default(),
-                DrawParams::default().with_depth_compare(CompareFunction::Less),
+                DrawParams::default()
+                    .with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0))
+                    .with_clear_depth(1.0)
+                    .with_depth_compare(CompareFunction::Less),
             )
             .unwrap();
     }
