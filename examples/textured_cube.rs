@@ -115,7 +115,7 @@ impl Demo {
         })
     }
 
-    pub fn draw(&self) {
+    pub fn draw(&self) -> Result<(), gl::DrawError> {
         let time = Instant::now().duration_since(self.start_time).as_secs_f32();
         self.time.set(time);
 
@@ -125,21 +125,19 @@ impl Demo {
         };
         let sampler = self.texture.sampler(gl::Sampler2dParams::default());
 
-        self.program
-            .draw(
-                (uniform, sampler),
-                gl::VertexStream {
-                    vertices: self.vertices.binding(),
-                    elements: self.elements.binding(),
-                    primitive: gl::PrimitiveType::Triangles,
-                },
-                gl::DefaultFramebuffer::default(),
-                gl::DrawParams::default()
-                    .with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0))
-                    .with_clear_depth(1.0)
-                    .with_depth_compare(gl::CompareFunction::Less),
-            )
-            .unwrap();
+        self.program.draw(
+            (uniform, sampler),
+            gl::VertexStream {
+                vertices: self.vertices.binding(),
+                elements: self.elements.binding(),
+                primitive: gl::PrimitiveType::Triangles,
+            },
+            gl::DefaultFramebuffer::default(),
+            gl::DrawParams::default()
+                .with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0))
+                .with_clear_depth(1.0)
+                .with_depth_compare(gl::CompareFunction::Less),
+        )
     }
 }
 
@@ -187,7 +185,7 @@ fn cube_elements() -> Vec<u32> {
         .collect()
 }
 
-// Main loop
+// SDL glue
 
 fn main() {
     let sdl = sdl2::init().unwrap();

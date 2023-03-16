@@ -10,11 +10,11 @@ use crate::sl::{
     ColorSample,
 };
 
-/// The graphics library's view of shader input and output data.
+/// The graphics library's view of shader inputs and outputs.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Gl;
 
-/// The shading language's view of shader input and output data.
+/// The shading language's view of shader inputs and outputs.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Sl;
 
@@ -246,7 +246,7 @@ pub unsafe trait Vertex<D: VertexDom>: Sized {
     /// The physical view of `Self`.
     ///
     /// This is the type through which the host provides vertex buffer bindings
-    /// for creating [`crate::gl::VertexArray`](vertex arrays).
+    /// in draw calls.
     type Gl: Vertex<Gl>;
 
     #[doc(hidden)]
@@ -452,9 +452,6 @@ pub unsafe trait Fragment<D: FragmentDom> {
     #[doc(hidden)]
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl FragmentVisitor<'a, D>);
 }
-
-/// Non-empty fragment shader output data.
-pub trait FragmentNonUnit: Fragment<Sl> {}
 
 #[doc(hidden)]
 pub trait FragmentVisitor<'a, D: FragmentDom> {
