@@ -11,10 +11,7 @@ use crate::{
     },
 };
 
-use super::{
-    Block, Fragment, FragmentNonUnit, FragmentVisitor, Sl, Uniform, UniformNonUnit, Vertex,
-    VertexVisitor,
-};
+use super::{Block, Fragment, FragmentVisitor, Sl, Uniform, UniformNonUnit, Vertex, VertexVisitor};
 
 // Block
 
@@ -237,5 +234,3 @@ unsafe impl<S: ColorSample> Fragment<Sl> for S {
         visitor.accept(path, self);
     }
 }
-
-impl<S: ColorSample> FragmentNonUnit for S {}

@@ -118,44 +118,42 @@ impl Demo {
         })
     }
 
-    pub fn draw(&self, flip: u32) {
+    pub fn draw(&self, flip: u32) -> Result<(), gl::DrawError> {
         self.globals.set(Globals {
             time: Instant::now().duration_since(self.start_time).as_secs_f32(),
             flip,
         });
 
-        self.scene_program
-            .draw(
-                self.globals.binding(),
-                gl::VertexStream {
-                    vertices: self.triangle_vertices.binding(),
-                    elements: gl::Elements::Range(0..3),
-                    primitive: gl::PrimitiveType::Triangles,
-                },
-                self.texture.attachment(),
-                gl::DrawParams::default(),
-            )
-            .unwrap();
+        self.scene_program.draw(
+            self.globals.binding(),
+            gl::VertexStream {
+                vertices: self.triangle_vertices.binding(),
+                elements: gl::Elements::Range(0..3),
+                primitive: gl::PrimitiveType::Triangles,
+            },
+            self.texture.attachment(),
+            gl::DrawParams::default(),
+        )?;
 
-        self.present_program
-            .draw(
-                PresentUniforms {
-                    globals: self.globals.binding(),
-                    scene: self.texture.sampler(gl::Sampler2dParams::default()),
-                },
-                gl::VertexStream {
-                    vertices: self.quad_vertices.binding(),
-                    elements: self.quad_elements.binding(),
-                    primitive: gl::PrimitiveType::Triangles,
-                },
-                gl::DefaultFramebuffer::default(),
-                gl::DrawParams::default(),
-            )
-            .unwrap();
+        self.present_program.draw(
+            PresentUniforms {
+                globals: self.globals.binding(),
+                scene: self.texture.sampler(gl::Sampler2dParams::default()),
+            },
+            gl::VertexStream {
+                vertices: self.quad_vertices.binding(),
+                elements: self.quad_elements.binding(),
+                primitive: gl::PrimitiveType::Triangles,
+            },
+            gl::DefaultFramebuffer::default(),
+            gl::DrawParams::default(),
+        )?;
+
+        Ok(())
     }
 }
 
-// Main loop
+// SDL glue
 
 fn main() {
     let sdl = sdl2::init().unwrap();

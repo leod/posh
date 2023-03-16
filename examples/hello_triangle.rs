@@ -58,27 +58,25 @@ impl Demo {
         })
     }
 
-    pub fn draw(&self) {
+    pub fn draw(&self) -> Result<(), gl::DrawError> {
         self.globals.set(Globals {
             time: Instant::now().duration_since(self.start_time).as_secs_f32(),
         });
 
-        self.program
-            .draw(
-                self.globals.binding(),
-                gl::VertexStream {
-                    vertices: self.vertices.binding(),
-                    elements: gl::Elements::Range(0..3),
-                    primitive: gl::PrimitiveType::Triangles,
-                },
-                gl::DefaultFramebuffer::default(),
-                gl::DrawParams::default().with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0)),
-            )
-            .unwrap();
+        self.program.draw(
+            self.globals.binding(),
+            gl::VertexStream {
+                vertices: self.vertices.binding(),
+                elements: gl::Elements::Range(0..3),
+                primitive: gl::PrimitiveType::Triangles,
+            },
+            gl::DefaultFramebuffer::default(),
+            gl::DrawParams::default().with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0)),
+        )
     }
 }
 
-// Main loop
+// SDL glue
 
 fn main() {
     let sdl = sdl2::init().unwrap();

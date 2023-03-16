@@ -11,7 +11,7 @@ use super::{
     Sampler2d, Sampler2dParams,
 };
 
-pub trait Framebuffer<D: Fragment<Gl>> {
+pub trait Framebuffer<F: Fragment<Gl>> {
     fn raw(&self) -> raw::Framebuffer;
 }
 

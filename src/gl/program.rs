@@ -22,13 +22,6 @@ where
     V: Vertex<Sl>,
     F: Fragment<Sl>,
 {
-    pub(super) fn unchecked_from_raw(raw: raw::Program) -> Self {
-        Program {
-            raw: Rc::new(raw),
-            _phantom: PhantomData,
-        }
-    }
-
     pub fn draw(
         &self,
         uniforms: U::Gl,
@@ -52,9 +45,14 @@ where
                 &framebuffer.raw(),
                 &draw_params,
             )
-        }?;
+        }
+    }
 
-        Ok(())
+    pub(super) fn unchecked_from_raw(raw: raw::Program) -> Self {
+        Program {
+            raw: Rc::new(raw),
+            _phantom: PhantomData,
+        }
     }
 }
 
