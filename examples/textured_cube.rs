@@ -123,11 +123,11 @@ impl Demo {
         self.program
             .draw(
                 (uniform, sampler),
-                gl::VertexStream::Indexed(
-                    self.vertices.binding(),
-                    self.elements.binding(),
-                    gl::PrimitiveType::Triangles,
-                ),
+                gl::VertexStream {
+                    vertices: self.vertices.binding(),
+                    elements: self.elements.binding(),
+                    primitive: gl::PrimitiveType::Triangles,
+                },
                 gl::DefaultFramebuffer::default(),
                 gl::DrawParams::default()
                     .with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0))

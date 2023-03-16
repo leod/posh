@@ -55,17 +55,18 @@ impl Demo {
     }
 
     pub fn draw(&self) {
-        let time = Instant::now().duration_since(self.start_time).as_secs_f32();
-        self.globals.set(Globals { time });
+        self.globals.set(Globals {
+            time: Instant::now().duration_since(self.start_time).as_secs_f32(),
+        });
 
         self.program
             .draw(
                 self.globals.binding(),
-                gl::VertexStream::Unindexed(
-                    self.vertices.binding(),
-                    0..3,
-                    gl::PrimitiveType::Triangles,
-                ),
+                gl::VertexStream {
+                    vertices: self.vertices.binding(),
+                    elements: gl::Elements::Range(0..3),
+                    primitive: gl::PrimitiveType::Triangles,
+                },
                 gl::DefaultFramebuffer::default(),
                 gl::DrawParams::default().with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0)),
             )

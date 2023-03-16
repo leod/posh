@@ -13,7 +13,7 @@ mod vertex_stream;
 
 pub use self::image::Image;
 pub use context::Context;
-pub use element_buffer::{Element, ElementBuffer, ElementBufferBinding};
+pub use element_buffer::{Element, ElementBuffer, ElementBufferBinding, Elements};
 pub use framebuffer::{Attachment, DefaultFramebuffer, Framebuffer};
 pub use program::Program;
 pub use raw::{

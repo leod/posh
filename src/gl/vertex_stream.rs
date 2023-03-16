@@ -1,4 +1,4 @@
-use std::{mem::size_of, ops::Range, rc::Rc};
+use std::{mem::size_of, rc::Rc};
 
 use crevice::std140::AsStd140;
 
@@ -9,30 +9,31 @@ use crate::{
     Block, Gl, Sl, Vertex,
 };
 
-use super::{raw, ElementBufferBinding, PrimitiveType};
+use super::{raw, Elements, PrimitiveType};
 
 #[derive(Clone)]
-pub enum VertexStream<V> {
-    Indexed(V, ElementBufferBinding, PrimitiveType),
-    Unindexed(V, Range<usize>, PrimitiveType),
+pub struct VertexStream<V> {
+    pub vertices: V,
+    pub elements: Elements,
+    pub primitive: PrimitiveType,
 }
 
 impl<V: Vertex<Gl>> VertexStream<V> {
     pub(super) fn raw(&self) -> raw::VertexStream {
-        use VertexStream::*;
+        use Elements::*;
 
-        match self {
-            Indexed(vertices, elements, primitive) => raw::VertexStream {
-                vertices: raw_vertices(vertices),
+        match &self.elements {
+            BufferBinding(elements) => raw::VertexStream {
+                vertices: raw_vertices(&self.vertices),
                 elements: Some((elements.raw().clone(), elements.ty())),
-                primitive: *primitive,
+                primitive: self.primitive,
                 range: elements.range(),
                 num_instances: 1,
             },
-            Unindexed(vertices, range, primitive) => raw::VertexStream {
-                vertices: raw_vertices(vertices),
+            Range(range) => raw::VertexStream {
+                vertices: raw_vertices(&self.vertices),
                 elements: None,
-                primitive: *primitive,
+                primitive: self.primitive,
                 range: range.clone(),
                 num_instances: 1,
             },

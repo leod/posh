@@ -123,11 +123,11 @@ impl Demo {
         self.scene_program
             .draw(
                 self.globals.binding(),
-                gl::VertexStream::Unindexed(
-                    self.triangle_vertices.binding(),
-                    0..3,
-                    gl::PrimitiveType::Triangles,
-                ),
+                gl::VertexStream {
+                    vertices: self.triangle_vertices.binding(),
+                    elements: gl::Elements::Range(0..3),
+                    primitive: gl::PrimitiveType::Triangles,
+                },
                 self.texture.attachment(),
                 gl::DrawParams::default(),
             )
@@ -139,11 +139,11 @@ impl Demo {
                     globals: self.globals.binding(),
                     scene: self.texture.sampler(gl::Sampler2dParams::default()),
                 },
-                gl::VertexStream::Indexed(
-                    self.quad_vertices.binding(),
-                    self.quad_elements.binding(),
-                    gl::PrimitiveType::Triangles,
-                ),
+                gl::VertexStream {
+                    vertices: self.quad_vertices.binding(),
+                    elements: self.quad_elements.binding(),
+                    primitive: gl::PrimitiveType::Triangles,
+                },
                 gl::DefaultFramebuffer::default(),
                 gl::DrawParams::default(),
             )
