@@ -20,6 +20,12 @@ impl Element for u32 {
     const TYPE: ElementType = ElementType::U32;
 }
 
+#[derive(Clone)]
+pub enum Elements {
+    BufferBinding(ElementBufferBinding),
+    Range(Range<usize>),
+}
+
 /// Stores element data in a buffer on the GPU.
 ///
 /// Instances of `ElementBuffer` can be created with
@@ -60,18 +66,18 @@ impl<E: Element> ElementBuffer<E> {
         self.raw.set(data);
     }
 
-    pub fn binding(&self) -> ElementBufferBinding {
+    pub fn binding(&self) -> Elements {
         self.binding_with_range(0..self.len())
     }
 
-    pub fn binding_with_range(&self, range: Range<usize>) -> ElementBufferBinding {
+    pub fn binding_with_range(&self, range: Range<usize>) -> Elements {
         assert!(range.start <= range.end);
 
-        ElementBufferBinding {
+        Elements::BufferBinding(ElementBufferBinding {
             raw: self.raw.clone(),
             ty: E::TYPE,
             range,
-        }
+        })
     }
 }
 
