@@ -8,6 +8,34 @@ pub enum SamplerMagFilter {
     Linear,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum SamplerMinFilter {
+    Nearest,
+    Linear,
+    NearestMipmapNearest,
+    NearestMipmapLinear,
+    LinearMipmapNearest,
+    LinearMipmapLinear,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum SamplerWrap {
+    ClampToEdge,
+    Repeat,
+    MirroredRepeat,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct Sampler2dParams {
+    // TODO: I think this should be specific to shadow samplers.
+    pub comparison_func: Option<CompareFunction>,
+
+    pub mag_filter: SamplerMagFilter,
+    pub min_filter: SamplerMinFilter,
+    pub wrap_s: SamplerWrap,
+    pub wrap_t: SamplerWrap,
+}
+
 impl SamplerMagFilter {
     pub const fn to_gl(self) -> u32 {
         use SamplerMagFilter::*;
@@ -17,16 +45,6 @@ impl SamplerMagFilter {
             Linear => glow::LINEAR,
         }
     }
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum SamplerMinFilter {
-    Nearest,
-    Linear,
-    NearestMipmapNearest,
-    NearestMipmapLinear,
-    LinearMipmapNearest,
-    LinearMipmapLinear,
 }
 
 impl SamplerMinFilter {
@@ -44,13 +62,6 @@ impl SamplerMinFilter {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum SamplerWrap {
-    ClampToEdge,
-    Repeat,
-    MirroredRepeat,
-}
-
 impl SamplerWrap {
     pub const fn to_gl(self) -> u32 {
         use SamplerWrap::*;
@@ -61,17 +72,6 @@ impl SamplerWrap {
             MirroredRepeat => glow::MIRRORED_REPEAT,
         }
     }
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct Sampler2dParams {
-    // TODO: I think this should be specific to shadow samplers.
-    pub comparison_func: Option<CompareFunction>,
-
-    pub mag_filter: SamplerMagFilter,
-    pub min_filter: SamplerMinFilter,
-    pub wrap_s: SamplerWrap,
-    pub wrap_t: SamplerWrap,
 }
 
 impl Default for Sampler2dParams {
