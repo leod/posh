@@ -158,7 +158,7 @@ impl<B: Block<Sl>> super::VertexField<Sl> for B {
 impl super::UniformDom for Sl {
     type Block<B: Block<Sl, Sl = B>> = B;
     type Sampler2d<S: ColorSample> = sl::Sampler2d<S>;
-    type Compose<R: Uniform<Sl>> = R;
+    type Uniform<R: Uniform<Sl>> = R;
 }
 
 unsafe impl<B: Block<Sl, Sl = B>> Uniform<Sl> for B {

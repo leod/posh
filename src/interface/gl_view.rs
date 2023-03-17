@@ -95,7 +95,7 @@ impl<B: Block<Sl>> super::VertexField<Gl> for VertexBufferBinding<B> {}
 impl super::UniformDom for Gl {
     type Block<B: Block<Sl, Sl = B>> = UniformBufferBinding<B>;
     type Sampler2d<S: ColorSample> = Sampler2d<S>;
-    type Compose<R: Uniform<Sl>> = R::Gl;
+    type Uniform<R: Uniform<Sl>> = R::Gl;
 }
 
 unsafe impl<U: Block<Sl, Sl = U>> Uniform<Gl> for UniformBufferBinding<U> {
