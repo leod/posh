@@ -281,7 +281,7 @@ pub trait UniformDom: Copy {
     type Sampler2d<S: ColorSample>: Uniform<Self>;
 
     /// A nested uniform interface field.
-    type Compose<U: Uniform<Sl>>: Uniform<Self>;
+    type Uniform<U: Uniform<Sl>>: Uniform<Self>;
 }
 
 /// Uniform data.

@@ -57,7 +57,7 @@ where
     U: Uniform<Sl>,
 {
     uniformxy: D::Block<MyUniform1>,
-    x: D::Compose<U>,
+    x: D::Uniform<U>,
 }
 
 fn main() {}
