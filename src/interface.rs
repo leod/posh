@@ -426,7 +426,7 @@ pub trait UniformVisitor<'a, D: UniformDom> {
 /// See [`Fragment`] for more details.
 #[sealed]
 pub trait FragmentDom: Copy {
-    type Attachment2d<S: ColorSample>: Fragment<Self>;
+    type Output<S: ColorSample>: Fragment<Self>;
 }
 
 /// Fragment shader output data.
@@ -455,5 +455,5 @@ pub unsafe trait Fragment<D: FragmentDom> {
 
 #[doc(hidden)]
 pub trait FragmentVisitor<'a, D: FragmentDom> {
-    fn accept<S: ColorSample>(&mut self, path: &str, attachment: &'a D::Attachment2d<S>);
+    fn accept<S: ColorSample>(&mut self, path: &str, attachment: &'a D::Output<S>);
 }

@@ -134,7 +134,7 @@ where
 
 #[sealed]
 impl super::FragmentDom for Gl {
-    type Attachment2d<S: ColorSample> = Attachment<S>;
+    type Output<S: ColorSample> = Attachment<S>;
 }
 
 unsafe impl<S: ColorSample> Fragment<Gl> for Attachment<S> {
