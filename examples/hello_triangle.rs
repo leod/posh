@@ -111,7 +111,7 @@ fn main() {
             }
         }
 
-        demo.draw();
+        demo.draw().unwrap();
         window.gl_swap_window();
     }
 }

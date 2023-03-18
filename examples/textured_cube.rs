@@ -198,7 +198,7 @@ fn main() {
     gl_attr.set_context_version(3, 0);
 
     let window = video
-        .window("Hello textured cube!", WIDTH, HEIGHT)
+        .window("Hello triangle!", 1024, 768)
         .opengl()
         .build()
         .unwrap();
@@ -222,7 +222,7 @@ fn main() {
             }
         }
 
-        demo.draw();
+        demo.draw().unwrap();
         window.gl_swap_window();
     }
 }
