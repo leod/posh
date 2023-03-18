@@ -1,7 +1,10 @@
 use sealed::sealed;
 
 use crate::{
-    gl::{ColorAttachment, ColorSampler2d, UniformBufferBinding, VertexBufferBinding},
+    gl::{
+        ColorAttachment, ColorSampler2d, ComparisonSampler2d, UniformBufferBinding,
+        VertexBufferBinding,
+    },
     internal::join_ident_path,
     sl::{self, program_def::VertexInputRate, ColorSample},
 };
@@ -94,7 +97,8 @@ impl<B: Block<Sl>> super::VertexField<Gl> for VertexBufferBinding<B> {}
 #[sealed]
 impl super::UniformDom for Gl {
     type Block<B: Block<Sl, Sl = B>> = UniformBufferBinding<B>;
-    type Sampler2d<S: ColorSample> = ColorSampler2d<S>;
+    type ColorSampler2d<S: ColorSample> = ColorSampler2d<S>;
+    type ComparisonSampler2d = ComparisonSampler2d;
     type Uniform<R: Uniform<Sl>> = R::Gl;
 }
 
@@ -109,10 +113,19 @@ unsafe impl<U: Block<Sl, Sl = U>> Uniform<Gl> for UniformBufferBinding<U> {
 
 unsafe impl<S: ColorSample> Uniform<Gl> for ColorSampler2d<S> {
     type Gl = Self;
-    type Sl = sl::Sampler2d<S>;
+    type Sl = sl::ColorSampler2d<S>;
 
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformVisitor<'a, Gl>) {
-        visitor.accept_sampler2d(path, self);
+        visitor.accept_color_sampler_2d(path, self);
+    }
+}
+
+unsafe impl Uniform<Gl> for ComparisonSampler2d {
+    type Gl = Self;
+    type Sl = sl::ComparisonSampler2d;
+
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformVisitor<'a, Gl>) {
+        visitor.accept_comparison_sampler_2d(path, self);
     }
 }
 

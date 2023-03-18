@@ -64,9 +64,9 @@ impl Demo {
         });
 
         self.program.draw(
-            self.globals.binding(),
+            self.globals.as_binding(),
             gl::VertexStream {
-                vertices: self.vertices.binding(),
+                vertices: self.vertices.as_binding(),
                 elements: gl::Elements::Range(0..3),
                 primitive: gl::PrimitiveType::Triangles,
             },

@@ -21,7 +21,7 @@ pub use raw::{
     DrawParams, ElementType, FramebufferError, ImageFormat, ImageInternalFormat, PrimitiveType,
     ProgramError, ProgramValidationError, Sampler2dParams, TextureError, VertexArrayError,
 };
-pub use texture::{ColorSampler2d, ColorTexture2d};
+pub use texture::{ColorSampler2d, ColorTexture2d, ComparisonSampler2d};
 pub use uniform_buffer::{UniformBuffer, UniformBufferBinding};
 pub use vertex_buffer::{VertexBuffer, VertexBufferBinding};
 pub use vertex_stream::VertexStream;

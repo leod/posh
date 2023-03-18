@@ -157,7 +157,8 @@ impl<B: Block<Sl>> super::VertexField<Sl> for B {
 #[sealed]
 impl super::UniformDom for Sl {
     type Block<B: Block<Sl, Sl = B>> = B;
-    type Sampler2d<S: ColorSample> = sl::Sampler2d<S>;
+    type ColorSampler2d<S: ColorSample> = sl::ColorSampler2d<S>;
+    type ComparisonSampler2d = sl::ComparisonSampler2d;
     type Uniform<R: Uniform<Sl>> = R;
 }
 
@@ -176,12 +177,12 @@ unsafe impl<B: Block<Sl, Sl = B>> Uniform<Sl> for B {
 
 impl<B: Block<Sl, Sl = B>> UniformNonUnit for B {}
 
-unsafe impl<S: ColorSample> Uniform<Sl> for sl::Sampler2d<S> {
+unsafe impl<S: ColorSample> Uniform<Sl> for sl::ColorSampler2d<S> {
     type Sl = Self;
     type Gl = gl::ColorSampler2d<S>;
 
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformVisitor<'a, Sl>) {
-        visitor.accept_sampler2d(path, self)
+        visitor.accept_color_sampler_2d(path, self)
     }
 
     fn shader_input(path: &str) -> Self {
@@ -189,7 +190,22 @@ unsafe impl<S: ColorSample> Uniform<Sl> for sl::Sampler2d<S> {
     }
 }
 
-impl<S: ColorSample> UniformNonUnit for sl::Sampler2d<S> {}
+impl<S: ColorSample> UniformNonUnit for sl::ColorSampler2d<S> {}
+
+unsafe impl Uniform<Sl> for sl::ComparisonSampler2d {
+    type Sl = Self;
+    type Gl = gl::ComparisonSampler2d;
+
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformVisitor<'a, Sl>) {
+        visitor.accept_comparison_sampler_2d(path, self)
+    }
+
+    fn shader_input(path: &str) -> Self {
+        <Self as Object>::from_arg(path)
+    }
+}
+
+impl UniformNonUnit for sl::ComparisonSampler2d {}
 
 unsafe impl<U, V> Uniform<Sl> for (U, V)
 where

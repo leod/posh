@@ -51,7 +51,7 @@ impl<B: Block<Sl>> VertexBuffer<B> {
         todo!()
     }
 
-    pub fn binding(&self) -> VertexBufferBinding<B> {
+    pub fn as_binding(&self) -> VertexBufferBinding<B> {
         VertexBufferBinding {
             raw: self.raw.clone(),
             _phantom: PhantomData,
