@@ -2,8 +2,9 @@ use nanorand::{Rng, WyRand};
 
 use posh::{gl, Block, BlockDom, Gl, Sl};
 
-const WIDTH: u32 = 1024;
-const HEIGHT: u32 = 768;
+const SCREEN_WIDTH: u32 = 1024;
+const SCREEN_HEIGHT: u32 = 768;
+const DEPTH_MAP_SIZE: u32 = 1024;
 const NUM_CUBES: u32 = 1000;
 
 // Shader interface
@@ -14,53 +15,19 @@ pub struct Camera<D: BlockDom = Sl> {
     pub view: D::Mat4,
 }
 
-impl Default for Camera<Gl> {
-    fn default() -> Self {
-        Self {
-            projection: glam::Mat4::perspective_rh_gl(
-                std::f32::consts::PI / 2.0,
-                WIDTH as f32 / HEIGHT as f32,
-                1.0,
-                100.0,
-            ),
-            view: glam::Mat4::look_at_rh(
-                glam::vec3(5.0, 20.0, -20.0),
-                glam::Vec3::ZERO,
-                glam::vec3(0.0, 1.0, 0.0),
-            ),
-        }
-    }
-}
-
 #[derive(Clone, Copy, Block)]
 pub struct Light<D: BlockDom = Sl> {
     pub camera: Camera<D>,
     pub pos: D::Vec3,
-    pub color: D::Vec4,
-}
-
-impl Light<Gl> {
-    pub fn new(pos: glam::Vec3) -> Self {
-        Self {
-            camera: Camera {
-                projection: glam::Mat4::orthographic_rh_gl(-10.0, 10.0, -10.0, 0.0, 1.0, 7.5),
-                view: glam::Mat4::look_at_rh(
-                    glam::vec3(-2.0, 4.0, -1.0),
-                    pos,
-                    glam::vec3(0.0, 1.0, 0.0),
-                ),
-            },
-            pos,
-            color: glam::vec4(1.0, 1.0, 0.7, 1.0),
-        }
-    }
+    pub color: D::Vec3,
+    pub ambient: D::Vec3,
 }
 
 #[derive(Clone, Copy, Block)]
 pub struct Vertex<D: BlockDom = Sl> {
     pub pos: D::Vec3,
     pub normal: D::Vec3,
-    pub color: D::Vec4,
+    pub color: D::Vec3,
 }
 
 // Shaders
@@ -75,8 +42,9 @@ mod scene {
 
     #[derive(Clone, Copy, Value, Varying)]
     pub struct Varyings {
-        normal: sl::Vec4,
-        color: sl::Vec4,
+        pos: sl::Vec3,
+        normal: sl::Vec3,
+        color: sl::Vec3,
     }
 
     #[derive(Uniform)]
@@ -88,7 +56,8 @@ mod scene {
 
     pub fn vertex(uniform: Uniforms, input: Vertex) -> sl::VaryingOutput<Varyings> {
         let output = Varyings {
-            normal: uniform.player.view * input.normal.extend(1.0), // TODO
+            pos: input.pos,
+            normal: input.normal,
             color: input.color,
         };
         let position = uniform.player.projection * uniform.player.view * input.pos.extend(1.0);
@@ -97,7 +66,13 @@ mod scene {
     }
 
     pub fn fragment(uniform: Uniforms, input: Varyings) -> sl::Vec4 {
-        input.color
+        let light = uniform.light;
+
+        let normal = input.normal.normalize();
+        let light_dir = (light.pos - input.pos).normalize();
+        let diffuse = light.color * normal.dot(light_dir).max(0.0);
+
+        ((light.ambient + diffuse) * input.color).extend(1.0)
     }
 }
 
@@ -120,25 +95,18 @@ impl Demo {
 
         let player =
             context.create_uniform_buffer(Camera::default(), gl::BufferUsage::StaticDraw)?;
-        let light = context
-            .create_uniform_buffer(Light::new(glam::Vec3::ZERO), gl::BufferUsage::StaticDraw)?;
-        let light_depth_map = context
-            .create_depth_texture_2d(gl::DepthImage::zero_f32(glam::uvec2(WIDTH, HEIGHT)))?;
+        let light = context.create_uniform_buffer(
+            Light::new(glam::vec3(0.0, 70.0, 0.0)),
+            gl::BufferUsage::StreamDraw,
+        )?;
+        let light_depth_map = context.create_depth_texture_2d(gl::DepthImage::zero_f32(
+            glam::uvec2(DEPTH_MAP_SIZE, DEPTH_MAP_SIZE),
+        ))?;
 
-        let mut rng = WyRand::new();
-        let vertices: Vec<_> = (0..NUM_CUBES)
-            .flat_map(|_| {
-                let center =
-                    (glam::vec3(rng.generate(), rng.generate(), rng.generate()) - 0.5) * 50.0;
-                let color = glam::vec4(rng.generate(), rng.generate(), rng.generate(), 1.0);
-
-                cube_vertices(center, color)
-            })
-            .collect();
-        let vertices = context.create_vertex_buffer(&vertices, gl::BufferUsage::StaticDraw)?;
-
-        let elements: Vec<_> = (0..NUM_CUBES).flat_map(cube_elements).collect();
-        let elements = context.create_element_buffer(&elements, gl::BufferUsage::StaticDraw)?;
+        let vertices =
+            context.create_vertex_buffer(&cube_vertices(), gl::BufferUsage::StaticDraw)?;
+        let elements =
+            context.create_element_buffer(&cube_elements(), gl::BufferUsage::StaticDraw)?;
 
         Ok(Demo {
             scene_program,
@@ -174,50 +142,105 @@ impl Demo {
     }
 }
 
-// Mesh data
+// Scene data
 
-fn cube_vertices(center: glam::Vec3, color: glam::Vec4) -> Vec<Vertex<Gl>> {
-    [
-        [0.5, -0.5, -0.5],
-        [0.5, -0.5, 0.5],
-        [0.5, 0.5, 0.5],
-        [0.5, 0.5, -0.5],
-        [-0.5, -0.5, -0.5],
-        [-0.5, 0.5, -0.5],
-        [-0.5, 0.5, 0.5],
-        [-0.5, -0.5, 0.5],
-        [-0.5, 0.5, -0.5],
-        [0.5, 0.5, -0.5],
-        [0.5, 0.5, 0.5],
-        [-0.5, 0.5, 0.5],
-        [-0.5, -0.5, -0.5],
-        [-0.5, -0.5, 0.5],
-        [0.5, -0.5, 0.5],
-        [0.5, -0.5, -0.5],
-        [-0.5, -0.5, 0.5],
-        [-0.5, 0.5, 0.5],
-        [0.5, 0.5, 0.5],
-        [0.5, -0.5, 0.5],
-        [-0.5, -0.5, -0.5],
-        [0.5, -0.5, -0.5],
-        [0.5, 0.5, -0.5],
-        [-0.5, 0.5, -0.5],
-    ]
-    .into_iter()
-    .enumerate()
-    .map(|(i, pos)| Vertex {
-        pos: center + glam::Vec3::from(pos),
-        normal: [0.0, 0.0, 1.0].into(), // TODO
-        color,
-    })
-    .collect()
+impl Default for Camera<Gl> {
+    fn default() -> Self {
+        Self {
+            projection: glam::Mat4::perspective_rh_gl(
+                std::f32::consts::PI / 2.0,
+                SCREEN_WIDTH as f32 / SCREEN_HEIGHT as f32,
+                1.0,
+                100.0,
+            ),
+            view: glam::Mat4::look_at_rh(
+                glam::vec3(5.0, 20.0, -20.0),
+                glam::Vec3::ZERO,
+                glam::vec3(0.0, 1.0, 0.0),
+            ),
+        }
+    }
 }
 
-fn cube_elements(n: u32) -> Vec<u32> {
-    let start = 24 * n;
+impl Light<Gl> {
+    pub fn new(pos: glam::Vec3) -> Self {
+        Self {
+            camera: Camera {
+                projection: glam::Mat4::orthographic_rh_gl(-10.0, 10.0, -10.0, 0.0, 1.0, 7.5),
+                view: glam::Mat4::look_at_rh(
+                    glam::vec3(-2.0, 4.0, -1.0),
+                    pos,
+                    glam::vec3(0.0, 1.0, 0.0),
+                ),
+            },
+            pos,
+            color: glam::vec3(1.0, 1.0, 0.7),
+            ambient: glam::vec3(0.1, 0.1, 0.1),
+        }
+    }
+}
 
-    (0..6u32)
-        .flat_map(|face| [0, 1, 2, 0, 2, 3].map(|i| start + face * 4 + i))
+fn cube_vertices() -> Vec<Vertex<Gl>> {
+    let mut rng = WyRand::new();
+
+    (0..NUM_CUBES)
+        .flat_map(|_| {
+            let center = (glam::vec3(rng.generate(), rng.generate(), rng.generate()) - 0.5) * 30.0;
+            let color = glam::vec3(rng.generate(), rng.generate(), rng.generate());
+            let size = 1.0;
+
+            [
+                [0.5, -0.5, -0.5],
+                [0.5, -0.5, 0.5],
+                [0.5, 0.5, 0.5],
+                [0.5, 0.5, -0.5],
+                [-0.5, -0.5, -0.5],
+                [-0.5, 0.5, -0.5],
+                [-0.5, 0.5, 0.5],
+                [-0.5, -0.5, 0.5],
+                [-0.5, 0.5, -0.5],
+                [0.5, 0.5, -0.5],
+                [0.5, 0.5, 0.5],
+                [-0.5, 0.5, 0.5],
+                [-0.5, -0.5, -0.5],
+                [-0.5, -0.5, 0.5],
+                [0.5, -0.5, 0.5],
+                [0.5, -0.5, -0.5],
+                [-0.5, -0.5, 0.5],
+                [-0.5, 0.5, 0.5],
+                [0.5, 0.5, 0.5],
+                [0.5, -0.5, 0.5],
+                [-0.5, -0.5, -0.5],
+                [0.5, -0.5, -0.5],
+                [0.5, 0.5, -0.5],
+                [-0.5, 0.5, -0.5],
+            ]
+            .into_iter()
+            .enumerate()
+            .map(move |(i, pos)| Vertex {
+                pos: center + glam::Vec3::from(pos) * size,
+                normal: [
+                    [1.0, 0.0, 0.0],
+                    [-1.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0],
+                    [0.0, -1.0, 0.0],
+                    [0.0, 0.0, 1.0],
+                    [0.0, 0.0, -1.0],
+                ][i / 4]
+                    .into(),
+                color,
+            })
+        })
+        .collect()
+}
+
+fn cube_elements() -> Vec<u32> {
+    (0..NUM_CUBES)
+        .flat_map(|n| {
+            let start = 24 * n;
+
+            (0..6u32).flat_map(move |face| [0, 1, 2, 0, 2, 3].map(|i| start + face * 4 + i))
+        })
         .collect()
 }
 

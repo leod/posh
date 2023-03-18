@@ -30,7 +30,7 @@ pub struct DepthAttachment {
 }
 
 #[derive(Clone)]
-pub struct FramebufferWithDepth<F: Fragment<Gl>> {
+pub struct ColorDepthFramebuffer<F: Fragment<Gl>> {
     pub color: F,
     pub depth: DepthAttachment,
 }
@@ -68,7 +68,7 @@ impl<F: Fragment<Gl>> Framebuffer<F> for F {
     }
 }
 
-impl<F: Fragment<Gl>> Framebuffer<F> for FramebufferWithDepth<F> {
+impl<F: Fragment<Gl>> Framebuffer<F> for ColorDepthFramebuffer<F> {
     fn raw(&self) -> raw::Framebuffer {
         let mut attachments = raw_color_attachments(&self.color);
         attachments.push(self.depth.raw.clone());
