@@ -5,17 +5,17 @@ use posh::{gl, sl, Block, BlockDom, Sl};
 // Shader interface
 
 #[derive(Clone, Copy, Block)]
-pub struct Globals<D: BlockDom = Sl> {
+pub struct State<D: BlockDom = Sl> {
     time: D::F32,
     flip: D::U32,
 }
 
 // Shaders
 
-mod scene {
+mod scene_pass {
     use posh::sl;
 
-    use super::Globals;
+    use super::State;
 
     pub fn vertex(_: (), input: sl::Vec2) -> sl::VaryingOutput<sl::Vec2> {
         let vertex = input - sl::vec2(0.5, 0.5);
@@ -26,17 +26,17 @@ mod scene {
         }
     }
 
-    pub fn fragment(uniform: Globals, input: sl::Vec2) -> sl::Vec4 {
-        let rg = (input + uniform.time).cos().pow(sl::vec2(2.0, 2.0));
+    pub fn fragment(state: State, input: sl::Vec2) -> sl::Vec4 {
+        let rg = (input + state.time).cos().pow(sl::vec2(2.0, 2.0));
 
         sl::vec4(rg.x, rg.y, 0.5, 1.0)
     }
 }
 
-mod present {
-    use posh::{sl, Block, BlockDom, Sl, Uniform, UniformDom};
+mod present_pass {
+    use posh::{sl, Block, BlockDom, Sl, UniformDom};
 
-    use super::Globals;
+    use super::State;
 
     #[derive(Clone, Copy, Block)]
     pub struct Vertex<D: BlockDom = Sl> {
@@ -44,9 +44,9 @@ mod present {
         pub tex_coords: D::Vec2,
     }
 
-    #[derive(Uniform)]
-    pub struct Uniforms<D: UniformDom = Sl> {
-        pub globals: D::Block<Globals>,
+    #[derive(posh::Uniform)]
+    pub struct Uniform<D: UniformDom = Sl> {
+        pub state: D::Block<State>,
         pub scene: D::ColorSampler2d<sl::Vec4>,
     }
 
@@ -57,8 +57,8 @@ mod present {
         }
     }
 
-    pub fn fragment(uniform: Uniforms, tex_coords: sl::Vec2) -> sl::Vec4 {
-        let flip = uniform.globals.flip;
+    pub fn fragment(uniform: Uniform, tex_coords: sl::Vec2) -> sl::Vec4 {
+        let flip = uniform.state.flip;
         let coords = flip.eq(0u32).branch(tex_coords, tex_coords * -1.0);
 
         uniform.scene.lookup(coords)
@@ -68,14 +68,14 @@ mod present {
 // Host code
 
 struct Demo {
-    scene_program: gl::Program<Globals, sl::Vec2>,
-    present_program: gl::Program<present::Uniforms, present::Vertex>,
+    scene_program: gl::Program<State, sl::Vec2>,
+    present_program: gl::Program<present_pass::Uniform, present_pass::Vertex>,
 
-    globals: gl::UniformBuffer<Globals>,
+    state: gl::UniformBuffer<State>,
     texture: gl::ColorTexture2d<sl::Vec4>,
 
     triangle_vertices: gl::VertexBuffer<sl::Vec2>,
-    quad_vertices: gl::VertexBuffer<present::Vertex>,
+    quad_vertices: gl::VertexBuffer<present_pass::Vertex>,
     quad_elements: gl::ElementBuffer,
 
     start_time: Instant,
@@ -83,11 +83,12 @@ struct Demo {
 
 impl Demo {
     pub fn new(context: gl::Context) -> Result<Self, gl::CreateError> {
-        let scene_program = context.create_program(scene::vertex, scene::fragment)?;
-        let present_program = context.create_program(present::vertex, present::fragment)?;
+        let scene_program = context.create_program(scene_pass::vertex, scene_pass::fragment)?;
+        let present_program =
+            context.create_program(present_pass::vertex, present_pass::fragment)?;
 
-        let globals = context
-            .create_uniform_buffer(Globals { time: 0.0, flip: 0 }, gl::BufferUsage::StreamDraw)?;
+        let state = context
+            .create_uniform_buffer(State { time: 0.0, flip: 0 }, gl::BufferUsage::StreamDraw)?;
         let texture =
             context.create_color_texture_2d(gl::ColorImage::zero_u8(glam::uvec2(1024, 768)))?;
 
@@ -97,19 +98,19 @@ impl Demo {
         )?;
         let quad_vertices = context.create_vertex_buffer(
             &[
-                present::Vertex {
+                present_pass::Vertex {
                     pos: [-1.0, -1.0].into(),
                     tex_coords: [0.0, 0.0].into(),
                 },
-                present::Vertex {
+                present_pass::Vertex {
                     pos: [1.0, -1.0].into(),
                     tex_coords: [1.0, 0.0].into(),
                 },
-                present::Vertex {
+                present_pass::Vertex {
                     pos: [1.0, 1.0].into(),
                     tex_coords: [1.0, 1.0].into(),
                 },
-                present::Vertex {
+                present_pass::Vertex {
                     pos: [-1.0, 1.0].into(),
                     tex_coords: [0.0, 1.0].into(),
                 },
@@ -124,7 +125,7 @@ impl Demo {
         Ok(Self {
             scene_program,
             present_program,
-            globals,
+            state,
             texture,
             triangle_vertices,
             quad_vertices,
@@ -134,13 +135,13 @@ impl Demo {
     }
 
     pub fn draw(&self, flip: u32) -> Result<(), gl::DrawError> {
-        self.globals.set(Globals {
+        self.state.set(State {
             time: Instant::now().duration_since(self.start_time).as_secs_f32(),
             flip,
         });
 
         self.scene_program.draw(
-            self.globals.as_binding(),
+            self.state.as_binding(),
             gl::VertexStream {
                 vertices: self.triangle_vertices.as_binding(),
                 elements: gl::Elements::Range(0..3),
@@ -151,8 +152,8 @@ impl Demo {
         )?;
 
         self.present_program.draw(
-            present::Uniforms {
-                globals: self.globals.as_binding(),
+            present_pass::Uniform {
+                state: self.state.as_binding(),
                 scene: self
                     .texture
                     .as_color_sampler(gl::Sampler2dParams::default()),
