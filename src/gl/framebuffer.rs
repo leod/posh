@@ -8,7 +8,7 @@ use crate::{
 
 use super::{
     raw::{self},
-    Sampler2d, Sampler2dParams,
+    ColorSampler2d, Sampler2dParams,
 };
 
 pub trait Framebuffer<F: Fragment<Gl>> {
@@ -18,7 +18,43 @@ pub trait Framebuffer<F: Fragment<Gl>> {
 #[derive(Debug, Clone, Default)]
 pub struct DefaultFramebuffer {}
 
-impl Framebuffer<Attachment<sl::Vec4>> for DefaultFramebuffer {
+#[derive(Clone)]
+pub struct ColorAttachment<S> {
+    raw: raw::Attachment,
+    _phantom: PhantomData<S>,
+}
+
+#[derive(Clone)]
+pub struct DepthAttachment {
+    raw: raw::Attachment,
+}
+
+#[derive(Clone)]
+pub struct FramebufferWithDepth<F: Fragment<Gl>> {
+    pub color: F,
+    pub depth: DepthAttachment,
+}
+
+impl<S> ColorAttachment<S> {
+    pub(super) fn from_raw(raw: raw::Attachment) -> Self {
+        Self {
+            raw,
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn sampler(&self, params: Sampler2dParams) -> ColorSampler2d<S> {
+        ColorSampler2d::from_raw(self.raw.sampler(params, None))
+    }
+}
+
+impl DepthAttachment {
+    pub(super) fn from_raw(raw: raw::Attachment) -> Self {
+        Self { raw }
+    }
+}
+
+impl Framebuffer<ColorAttachment<sl::Vec4>> for DefaultFramebuffer {
     fn raw(&self) -> raw::Framebuffer {
         raw::Framebuffer::Default
     }
@@ -27,34 +63,25 @@ impl Framebuffer<Attachment<sl::Vec4>> for DefaultFramebuffer {
 impl<F: Fragment<Gl>> Framebuffer<F> for F {
     fn raw(&self) -> raw::Framebuffer {
         raw::Framebuffer::Attachments {
-            attachments: raw_attachments(self),
+            attachments: raw_color_attachments(self),
         }
     }
 }
 
-#[derive(Clone)]
-pub struct Attachment<S> {
-    raw: raw::Attachment,
-    _phantom: PhantomData<S>,
-}
+impl<F: Fragment<Gl>> Framebuffer<F> for FramebufferWithDepth<F> {
+    fn raw(&self) -> raw::Framebuffer {
+        let mut attachments = raw_color_attachments(&self.color);
+        attachments.push(self.depth.raw.clone());
 
-impl<S> Attachment<S> {
-    pub(super) fn from_raw(raw: raw::Attachment) -> Self {
-        Self {
-            raw,
-            _phantom: PhantomData,
-        }
-    }
-
-    pub fn sampler(&self, params: Sampler2dParams) -> Sampler2d<S> {
-        Sampler2d::from_raw(self.raw.sampler(params, None))
+        raw::Framebuffer::Attachments { attachments }
     }
 }
 
-fn raw_attachments<F: Fragment<Gl>>(attachments: &F) -> Vec<raw::Attachment> {
+fn raw_color_attachments<F: Fragment<Gl>>(attachments: &F) -> Vec<raw::Attachment> {
     struct Visitor(Vec<raw::Attachment>);
+
     impl<'a> FragmentVisitor<'a, Gl> for Visitor {
-        fn accept<S: ColorSample>(&mut self, _: &str, attachment: &Attachment<S>) {
+        fn accept<S: ColorSample>(&mut self, _: &str, attachment: &ColorAttachment<S>) {
             self.0.push(attachment.raw.clone());
         }
     }

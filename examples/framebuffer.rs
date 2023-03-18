@@ -63,7 +63,7 @@ struct Demo {
     triangle_vertices: gl::VertexBuffer<sl::Vec2>,
     quad_vertices: gl::VertexBuffer<Vertex>,
     quad_elements: gl::ElementBuffer,
-    texture: gl::Texture2d<sl::Vec4>,
+    texture: gl::ColorTexture2d<sl::Vec4>,
 
     start_time: Instant,
 }

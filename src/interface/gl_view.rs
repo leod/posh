@@ -1,7 +1,7 @@
 use sealed::sealed;
 
 use crate::{
-    gl::{Attachment, Sampler2d, UniformBufferBinding, VertexBufferBinding},
+    gl::{ColorAttachment, ColorSampler2d, UniformBufferBinding, VertexBufferBinding},
     internal::join_ident_path,
     sl::{self, program_def::VertexInputRate, ColorSample},
 };
@@ -94,7 +94,7 @@ impl<B: Block<Sl>> super::VertexField<Gl> for VertexBufferBinding<B> {}
 #[sealed]
 impl super::UniformDom for Gl {
     type Block<B: Block<Sl, Sl = B>> = UniformBufferBinding<B>;
-    type Sampler2d<S: ColorSample> = Sampler2d<S>;
+    type Sampler2d<S: ColorSample> = ColorSampler2d<S>;
     type Uniform<R: Uniform<Sl>> = R::Gl;
 }
 
@@ -107,7 +107,7 @@ unsafe impl<U: Block<Sl, Sl = U>> Uniform<Gl> for UniformBufferBinding<U> {
     }
 }
 
-unsafe impl<S: ColorSample> Uniform<Gl> for Sampler2d<S> {
+unsafe impl<S: ColorSample> Uniform<Gl> for ColorSampler2d<S> {
     type Gl = Self;
     type Sl = sl::Sampler2d<S>;
 
@@ -134,10 +134,10 @@ where
 
 #[sealed]
 impl super::FragmentDom for Gl {
-    type Output<S: ColorSample> = Attachment<S>;
+    type Output<S: ColorSample> = ColorAttachment<S>;
 }
 
-unsafe impl<S: ColorSample> Fragment<Gl> for Attachment<S> {
+unsafe impl<S: ColorSample> Fragment<Gl> for ColorAttachment<S> {
     type Gl = Self;
     type Sl = S;
 

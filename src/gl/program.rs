@@ -7,7 +7,7 @@ use crate::{
 };
 
 use super::{
-    raw, vertex_stream::VertexStream, DrawError, DrawParams, Framebuffer, Sampler2d,
+    raw, vertex_stream::VertexStream, ColorSampler2d, DrawError, DrawParams, Framebuffer,
     UniformBufferBinding,
 };
 
@@ -22,6 +22,13 @@ where
     V: Vertex<Sl>,
     F: Fragment<Sl>,
 {
+    pub(super) fn unchecked_from_raw(raw: raw::Program) -> Self {
+        Program {
+            raw: Rc::new(raw),
+            _phantom: PhantomData,
+        }
+    }
+
     pub fn draw(
         &self,
         uniforms: U::Gl,
@@ -45,14 +52,9 @@ where
                 &framebuffer.raw(),
                 &draw_params,
             )
-        }
-    }
+        }?;
 
-    pub(super) fn unchecked_from_raw(raw: raw::Program) -> Self {
-        Program {
-            raw: Rc::new(raw),
-            _phantom: PhantomData,
-        }
+        Ok(())
     }
 }
 
@@ -63,7 +65,7 @@ struct CollectUniforms<'a> {
 }
 
 impl<'a> UniformVisitor<'a, Gl> for CollectUniforms<'a> {
-    fn accept_sampler2d<S: ColorSample>(&mut self, _: &str, sampler: &Sampler2d<S>) {
+    fn accept_sampler2d<S: ColorSample>(&mut self, _: &str, sampler: &ColorSampler2d<S>) {
         self.raw_samplers
             .push(raw::Sampler::Sampler2d(sampler.raw().clone()))
     }
