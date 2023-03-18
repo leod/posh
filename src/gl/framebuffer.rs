@@ -43,7 +43,7 @@ impl<S> ColorAttachment<S> {
         }
     }
 
-    pub fn sampler(&self, params: Sampler2dParams) -> ColorSampler2d<S> {
+    pub fn color_sampler(&self, params: Sampler2dParams) -> ColorSampler2d<S> {
         ColorSampler2d::from_raw(self.raw.sampler(params, None))
     }
 }

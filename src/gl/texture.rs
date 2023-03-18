@@ -39,18 +39,18 @@ impl<S> ColorTexture2d<S> {
 }
 
 impl<S: ColorSample> ColorTexture2d<S> {
-    pub fn attachment(&self) -> ColorAttachment<S> {
-        self.attachment_with_level(0)
+    pub fn as_color_attachment(&self) -> ColorAttachment<S> {
+        self.as_color_attachment_with_level(0)
     }
 
-    pub fn attachment_with_level(&self, level: u32) -> ColorAttachment<S> {
+    pub fn as_color_attachment_with_level(&self, level: u32) -> ColorAttachment<S> {
         ColorAttachment::from_raw(raw::Attachment::Texture2d {
             texture: self.raw.clone(),
             level,
         })
     }
 
-    pub fn sampler(&self, params: Sampler2dParams) -> ColorSampler2d<S> {
+    pub fn as_color_sampler(&self, params: Sampler2dParams) -> ColorSampler2d<S> {
         // FIXME: Check texture completeness.
         ColorSampler2d::from_raw(raw::Sampler2d {
             texture: self.raw.clone(),
@@ -61,18 +61,18 @@ impl<S: ColorSample> ColorTexture2d<S> {
 }
 
 impl DepthTexture2d {
-    pub fn attachment(&self) -> DepthAttachment {
-        self.attachment_with_level(0)
+    pub fn as_depth_attachment(&self) -> DepthAttachment {
+        self.as_depth_attachment_with_level(0)
     }
 
-    pub fn attachment_with_level(&self, level: u32) -> DepthAttachment {
+    pub fn as_depth_attachment_with_level(&self, level: u32) -> DepthAttachment {
         DepthAttachment::from_raw(raw::Attachment::Texture2d {
             texture: self.raw.clone(),
             level,
         })
     }
 
-    pub fn sampler(&self, params: Sampler2dParams) -> ColorSampler2d<sl::F32> {
+    pub fn as_color_sampler(&self, params: Sampler2dParams) -> ColorSampler2d<sl::F32> {
         // FIXME: Check texture completeness.
         ColorSampler2d::from_raw(raw::Sampler2d {
             texture: self.raw.clone(),
@@ -81,7 +81,7 @@ impl DepthTexture2d {
         })
     }
 
-    pub fn comparison_sampler(
+    pub fn as_comparison_sampler(
         &self,
         params: Sampler2dParams,
         compare: CompareFunction,
@@ -95,18 +95,22 @@ impl DepthTexture2d {
     }
 }
 
-impl ComparisonSampler2d {
-    fn from_raw(raw: raw::Sampler2d) -> Self {
-        Self { raw }
-    }
-}
-
 impl<S> ColorSampler2d<S> {
     pub(super) fn from_raw(raw: raw::Sampler2d) -> Self {
         Self {
             raw,
             _phantom: PhantomData,
         }
+    }
+
+    pub fn raw(&self) -> &raw::Sampler2d {
+        &self.raw
+    }
+}
+
+impl ComparisonSampler2d {
+    fn from_raw(raw: raw::Sampler2d) -> Self {
+        Self { raw }
     }
 
     pub fn raw(&self) -> &raw::Sampler2d {

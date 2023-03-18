@@ -70,7 +70,7 @@ fn vertex_shader(uniforms: Uniform, vertex: Vertex) -> sl::VaryingOutput<sl::Vec
 // Host code
 
 struct Demo {
-    program: gl::Program<(Uniform, sl::Sampler2d<sl::Vec4>), Vertex>,
+    program: gl::Program<(Uniform, sl::ColorSampler2d<sl::Vec4>), Vertex>,
 
     camera: gl::UniformBuffer<Camera>,
     time: gl::UniformBuffer<sl::F32>,
@@ -83,7 +83,7 @@ struct Demo {
 
 impl Demo {
     pub fn new(context: gl::Context) -> Result<Self, gl::CreateError> {
-        let program = context.create_program(vertex_shader, sl::Sampler2d::lookup)?;
+        let program = context.create_program(vertex_shader, sl::ColorSampler2d::lookup)?;
 
         let camera =
             context.create_uniform_buffer(Camera::default(), gl::BufferUsage::StaticDraw)?;
@@ -120,16 +120,18 @@ impl Demo {
         self.time.set(time);
 
         let uniform = Uniform {
-            camera: self.camera.binding(),
-            time: self.time.binding(),
+            camera: self.camera.as_binding(),
+            time: self.time.as_binding(),
         };
-        let sampler = self.texture.sampler(gl::Sampler2dParams::default());
+        let sampler = self
+            .texture
+            .as_color_sampler(gl::Sampler2dParams::default());
 
         self.program.draw(
             (uniform, sampler),
             gl::VertexStream {
-                vertices: self.vertices.binding(),
-                elements: self.elements.binding(),
+                vertices: self.vertices.as_binding(),
+                elements: self.elements.as_binding(),
                 primitive: gl::PrimitiveType::Triangles,
             },
             gl::DefaultFramebuffer::default(),

@@ -36,38 +36,43 @@ macro_rules! impl_color_sample {
     };
 }
 
-impl_color_sample!(F32, Sampler2d);
-impl_color_sample!(I32, ISampler2d);
-impl_color_sample!(U32, USampler2d);
-impl_color_sample!(Vec2, Sampler2d);
-impl_color_sample!(IVec2, ISampler2d);
-impl_color_sample!(UVec2, USampler2d);
-impl_color_sample!(Vec3, Sampler2d);
-impl_color_sample!(IVec3, ISampler2d);
-impl_color_sample!(UVec3, USampler2d);
-impl_color_sample!(Vec4, Sampler2d);
-impl_color_sample!(IVec4, ISampler2d);
-impl_color_sample!(UVec4, USampler2d);
+impl_color_sample!(F32, ColorSampler2d);
+impl_color_sample!(I32, IColorSampler2d);
+impl_color_sample!(U32, UColorSampler2d);
+impl_color_sample!(Vec2, ColorSampler2d);
+impl_color_sample!(IVec2, IColorSampler2d);
+impl_color_sample!(UVec2, UColorSampler2d);
+impl_color_sample!(Vec3, ColorSampler2d);
+impl_color_sample!(IVec3, IColorSampler2d);
+impl_color_sample!(UVec3, UColorSampler2d);
+impl_color_sample!(Vec4, ColorSampler2d);
+impl_color_sample!(IVec4, IColorSampler2d);
+impl_color_sample!(UVec4, UColorSampler2d);
 
 pub struct Depth;
 
 #[sealed]
 impl Sample for Depth {
-    const SAMPLER_TYPE: SamplerType = SamplerType::Sampler2dComparison;
+    const SAMPLER_TYPE: SamplerType = SamplerType::ComparisonSampler2d;
 
     type Gl = f32;
 }
 
 /// An object which can be sampled.
 #[derive(Debug, Copy, Clone)]
-pub struct Sampler2d<S = Vec4> {
+pub struct ColorSampler2d<S = Vec4> {
     trace: Trace,
     _phantom: PhantomData<S>,
 }
 
-impl<S: ColorSample> Object for Sampler2d<S> {
+#[derive(Debug, Copy, Clone)]
+pub struct ComparisonSampler2d {
+    trace: Trace,
+}
+
+impl<S: ColorSample> Object for ColorSampler2d<S> {
     fn ty() -> Type {
-        Type::BuiltIn(BuiltInType::Sampler(SamplerType::Sampler2d))
+        Type::BuiltIn(BuiltInType::Sampler(S::SAMPLER_TYPE))
     }
 
     fn expr(&self) -> Rc<Expr> {
@@ -85,16 +90,16 @@ impl<S: ColorSample> Object for Sampler2d<S> {
     }
 }
 
-impl<S: ColorSample> Sampler2d<S> {
+impl<S: ColorSample> ColorSampler2d<S> {
     pub fn lookup(self, tex_coords: Vec2) -> S {
         // TODO: Convert sample
         built_in_2("texture", self, tex_coords)
     }
 }
 
-impl Object for Sampler2d<Depth> {
+impl Object for ComparisonSampler2d {
     fn ty() -> Type {
-        Type::BuiltIn(BuiltInType::Sampler(SamplerType::Sampler2dComparison))
+        Type::BuiltIn(BuiltInType::Sampler(SamplerType::ComparisonSampler2d))
     }
 
     fn expr(&self) -> Rc<Expr> {
@@ -107,14 +112,13 @@ impl Object for Sampler2d<Depth> {
                 ty: Self::ty(),
                 name: name.into(),
             }),
-            _phantom: PhantomData,
         }
     }
 }
 
-impl Sampler2d<Depth> {
-    /*pub fn lookup(self, tex_coords: Vec2) -> S {
+impl ComparisonSampler2d {
+    pub fn lookup(self, tex_coords: Vec2) -> F32 {
         // TODO: Convert sample
         built_in_2("texture", self, tex_coords)
-    }*/
+    }
 }

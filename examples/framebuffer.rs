@@ -19,7 +19,7 @@ struct Vertex<D: BlockDom = Sl> {
 #[derive(Uniform)]
 struct PresentUniforms<D: UniformDom = Sl> {
     globals: D::Block<Globals>,
-    scene: D::Sampler2d<sl::Vec4>,
+    scene: D::ColorSampler2d<sl::Vec4>,
 }
 
 // Shader code
@@ -125,24 +125,26 @@ impl Demo {
         });
 
         self.scene_program.draw(
-            self.globals.binding(),
+            self.globals.as_binding(),
             gl::VertexStream {
-                vertices: self.triangle_vertices.binding(),
+                vertices: self.triangle_vertices.as_binding(),
                 elements: gl::Elements::Range(0..3),
                 primitive: gl::PrimitiveType::Triangles,
             },
-            self.texture.attachment(),
+            self.texture.as_color_attachment(),
             gl::DrawParams::default(),
         )?;
 
         self.present_program.draw(
             PresentUniforms {
-                globals: self.globals.binding(),
-                scene: self.texture.sampler(gl::Sampler2dParams::default()),
+                globals: self.globals.as_binding(),
+                scene: self
+                    .texture
+                    .as_color_sampler(gl::Sampler2dParams::default()),
             },
             gl::VertexStream {
-                vertices: self.quad_vertices.binding(),
-                elements: self.quad_elements.binding(),
+                vertices: self.quad_vertices.as_binding(),
+                elements: self.quad_elements.as_binding(),
                 primitive: gl::PrimitiveType::Triangles,
             },
             gl::DefaultFramebuffer::default(),
