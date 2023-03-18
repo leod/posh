@@ -11,8 +11,8 @@ const NUM_CUBES: u32 = 1000;
 
 #[derive(Clone, Copy, Block)]
 pub struct Camera<D: BlockDom = Sl> {
-    pub projection: D::Mat4,
-    pub view: D::Mat4,
+    pub world_to_view: D::Mat4,
+    pub view_to_screen: D::Mat4,
 }
 
 #[derive(Clone, Copy, Block)]
@@ -42,7 +42,7 @@ mod scene {
 
     #[derive(Clone, Copy, Value, Varying)]
     pub struct Varyings {
-        pos: sl::Vec3,
+        world_pos: sl::Vec3,
         normal: sl::Vec3,
         color: sl::Vec3,
     }
@@ -56,11 +56,12 @@ mod scene {
 
     pub fn vertex(uniform: Uniforms, input: Vertex) -> sl::VaryingOutput<Varyings> {
         let output = Varyings {
-            pos: input.pos,
+            world_pos: input.pos,
             normal: input.normal,
             color: input.color,
         };
-        let position = uniform.player.projection * uniform.player.view * input.pos.extend(1.0);
+        let position =
+            uniform.player.view_to_screen * uniform.player.world_to_view * input.pos.extend(1.0);
 
         sl::VaryingOutput { output, position }
     }
@@ -69,7 +70,7 @@ mod scene {
         let light = uniform.light;
 
         let normal = input.normal.normalize();
-        let light_dir = (light.pos - input.pos).normalize();
+        let light_dir = (light.pos - input.world_pos).normalize();
         let diffuse = light.color * normal.dot(light_dir).max(0.0);
 
         ((light.ambient + diffuse) * input.color).extend(1.0)
@@ -147,16 +148,16 @@ impl Demo {
 impl Default for Camera<Gl> {
     fn default() -> Self {
         Self {
-            projection: glam::Mat4::perspective_rh_gl(
+            world_to_view: glam::Mat4::look_at_rh(
+                glam::vec3(5.0, 20.0, -20.0),
+                glam::Vec3::ZERO,
+                glam::vec3(0.0, 1.0, 0.0),
+            ),
+            view_to_screen: glam::Mat4::perspective_rh_gl(
                 std::f32::consts::PI / 2.0,
                 SCREEN_WIDTH as f32 / SCREEN_HEIGHT as f32,
                 1.0,
                 100.0,
-            ),
-            view: glam::Mat4::look_at_rh(
-                glam::vec3(5.0, 20.0, -20.0),
-                glam::Vec3::ZERO,
-                glam::vec3(0.0, 1.0, 0.0),
             ),
         }
     }
@@ -166,12 +167,12 @@ impl Light<Gl> {
     pub fn new(pos: glam::Vec3) -> Self {
         Self {
             camera: Camera {
-                projection: glam::Mat4::orthographic_rh_gl(-10.0, 10.0, -10.0, 0.0, 1.0, 7.5),
-                view: glam::Mat4::look_at_rh(
+                world_to_view: glam::Mat4::look_at_rh(
                     glam::vec3(-2.0, 4.0, -1.0),
                     pos,
                     glam::vec3(0.0, 1.0, 0.0),
                 ),
+                view_to_screen: glam::Mat4::orthographic_rh_gl(-10.0, 10.0, -10.0, 0.0, 1.0, 7.5),
             },
             pos,
             color: glam::vec3(1.0, 1.0, 0.7),
