@@ -212,7 +212,7 @@ fn main() {
             }
         }
 
-        demo.draw(flip);
+        demo.draw(flip).unwrap();
         window.gl_swap_window();
     }
 }
