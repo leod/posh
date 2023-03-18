@@ -345,6 +345,8 @@ fn validate_program_def(def: &ProgramDef) -> Result<(), ProgramValidationError> 
         }
     }
 
+    // FIXME: Check that the number of fragment fields is <= MAX_DRAW_BUFFERS.
+
     Ok(())
 }
 

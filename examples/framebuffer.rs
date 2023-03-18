@@ -10,29 +10,29 @@ pub struct Globals<D: BlockDom = Sl> {
     flip: D::U32,
 }
 
-/// Scene shader.
+// Shaders
+
 mod scene {
     use posh::sl;
 
     use super::Globals;
 
-    pub fn vertex(_: (), vertex: sl::Vec2) -> sl::VaryingOutput<sl::Vec2> {
-        let vertex = vertex - sl::vec2(0.5, 0.5);
+    pub fn vertex(_: (), input: sl::Vec2) -> sl::VaryingOutput<sl::Vec2> {
+        let vertex = input - sl::vec2(0.5, 0.5);
 
         sl::VaryingOutput {
-            varying: vertex,
+            output: vertex,
             position: vertex.extend(0.0).extend(1.0),
         }
     }
 
-    pub fn fragment(uniform: Globals, varying: sl::Vec2) -> sl::Vec4 {
-        let rg = (varying + uniform.time).cos().pow(sl::vec2(2.0, 2.0));
+    pub fn fragment(uniform: Globals, input: sl::Vec2) -> sl::Vec4 {
+        let rg = (input + uniform.time).cos().pow(sl::vec2(2.0, 2.0));
 
         sl::vec4(rg.x, rg.y, 0.5, 1.0)
     }
 }
 
-/// Present shader.
 mod present {
     use posh::{sl, Block, BlockDom, Sl, Uniform, UniformDom};
 
@@ -52,7 +52,7 @@ mod present {
 
     pub fn vertex(_: (), vertex: Vertex) -> sl::VaryingOutput<sl::Vec2> {
         sl::VaryingOutput {
-            varying: vertex.tex_coords,
+            output: vertex.tex_coords,
             position: vertex.pos.extend(0.0).extend(1.0),
         }
     }
