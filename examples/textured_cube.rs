@@ -74,9 +74,10 @@ struct Demo {
 
     camera: gl::UniformBuffer<Camera>,
     time: gl::UniformBuffer<sl::F32>,
+    texture: gl::ColorTexture2d<sl::Vec4>,
+
     vertices: gl::VertexBuffer<Vertex>,
     elements: gl::ElementBuffer,
-    texture: gl::ColorTexture2d<sl::Vec4>,
 
     start_time: Instant,
 }
@@ -88,19 +89,20 @@ impl Demo {
         let camera =
             context.create_uniform_buffer(Camera::default(), gl::BufferUsage::StaticDraw)?;
         let time = context.create_uniform_buffer(0.0, gl::BufferUsage::StreamDraw)?;
-        let vertices =
-            context.create_vertex_buffer(&cube_vertices(), gl::BufferUsage::StaticDraw)?;
-        let elements =
-            context.create_element_buffer(&cube_elements(), gl::BufferUsage::StaticDraw)?;
         let image = ImageReader::open("examples/resources/smile.png")
             .unwrap()
             .decode()
             .unwrap()
             .to_rgba8();
-        let texture = context.create_texture_2d_with_mipmap(gl::Image::slice_u8(
+        let texture = context.create_color_texture_2d_with_mipmap(gl::ColorImage::slice_u8(
             image.dimensions().into(),
             image.as_bytes(),
         ))?;
+
+        let vertices =
+            context.create_vertex_buffer(&cube_vertices(), gl::BufferUsage::StaticDraw)?;
+        let elements =
+            context.create_element_buffer(&cube_elements(), gl::BufferUsage::StaticDraw)?;
 
         let start_time = Instant::now();
 
@@ -108,9 +110,9 @@ impl Demo {
             program,
             camera,
             time,
+            texture,
             vertices,
             elements,
-            texture,
             start_time,
         })
     }
@@ -183,7 +185,7 @@ fn cube_vertices() -> Vec<Vertex<Gl>> {
 
 fn cube_elements() -> Vec<u32> {
     (0..6u32)
-        .flat_map(|f| [0, 1, 2, 0, 2, 3].map(|j| f * 4 + j))
+        .flat_map(|face| [0, 1, 2, 0, 2, 3].map(|i| face * 4 + i))
         .collect()
 }
 

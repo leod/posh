@@ -95,19 +95,4 @@ impl Context {
     pub fn create_program(&self, def: ProgramDef) -> Result<Program, ProgramError> {
         Program::new(self.shared.clone(), def)
     }
-
-    pub fn clear_color(&self, color: glam::Vec4) {
-        let gl = self.shared.gl();
-
-        unsafe { gl.clear_color(color.x, color.y, color.z, color.w) };
-        unsafe { gl.clear(glow::COLOR_BUFFER_BIT) };
-    }
-
-    pub fn clear_color_and_depth(&self, color: glam::Vec4, depth: f32) {
-        let gl = self.shared.gl();
-
-        unsafe { gl.clear_color(color.x, color.y, color.z, color.w) };
-        unsafe { gl.clear_depth_f32(depth) };
-        unsafe { gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT) };
-    }
 }

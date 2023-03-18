@@ -10,8 +10,9 @@ use crate::{
 };
 
 use super::{
-    raw, BufferError, BufferUsage, Caps, ColorTexture2d, ContextError, Element, ElementBuffer,
-    Image, Program, ProgramError, TextureError, UniformBuffer, VertexBuffer,
+    raw, BufferError, BufferUsage, Caps, ColorImage, ColorTexture2d, ContextError, DepthImage,
+    DepthTexture2d, Element, ElementBuffer, Program, ProgramError, TextureError, UniformBuffer,
+    VertexBuffer,
 };
 
 /// The graphics context, which is used for creating GPU objects.
@@ -72,24 +73,33 @@ impl Context {
         Ok(UniformBuffer::from_raw(raw))
     }
 
-    pub fn create_texture_2d<S: ColorSample>(
+    pub fn create_color_texture_2d<S: ColorSample>(
         &self,
-        image: Image<'_, S>,
+        image: ColorImage<'_, S>,
     ) -> Result<ColorTexture2d<S>, TextureError> {
         let raw = self.raw.create_texture_2d(image.raw().clone())?;
 
         Ok(ColorTexture2d::from_raw(raw))
     }
 
-    pub fn create_texture_2d_with_mipmap<S: ColorSample>(
+    pub fn create_color_texture_2d_with_mipmap<S: ColorSample>(
         &self,
-        image: Image<'_, S>,
+        image: ColorImage<'_, S>,
     ) -> Result<ColorTexture2d<S>, TextureError> {
         let raw = self
             .raw
             .create_texture_2d_with_mipmap(image.raw().clone())?;
 
         Ok(ColorTexture2d::from_raw(raw))
+    }
+
+    pub fn create_depth_texture_2d(
+        &self,
+        image: DepthImage<'_>,
+    ) -> Result<DepthTexture2d, TextureError> {
+        let raw = self.raw.create_texture_2d(image.raw().clone())?;
+
+        Ok(DepthTexture2d::from_raw(raw))
     }
 
     pub fn create_program<U, U1, U2, V, F, W, InV, OutW, InW, OutF>(
