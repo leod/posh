@@ -158,3 +158,10 @@ unsafe impl<S: ColorSample> Fragment<Gl> for ColorAttachment<S> {
         visitor.accept(path, self);
     }
 }
+
+unsafe impl Fragment<Gl> for () {
+    type Sl = ();
+    type Gl = ();
+
+    fn visit<'a>(&'a self, _: &str, _: &mut impl FragmentVisitor<'a, Gl>) {}
+}
