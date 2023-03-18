@@ -47,7 +47,7 @@ impl<S> Attachment<S> {
     }
 
     pub fn sampler(&self, params: Sampler2dParams) -> Sampler2d<S> {
-        Sampler2d::from_raw(self.raw.sampler(params))
+        Sampler2d::from_raw(self.raw.sampler(params, None))
     }
 }
 
