@@ -61,7 +61,7 @@ macro_rules! impl_gen_type {
                 super::primitives::built_in_1("atanh", self)
             }
 
-            pub fn dot(self, y: impl super::ToValue<Output = Self>) -> Self {
+            pub fn dot(self, y: impl super::ToValue<Output = Self>) -> super::F32 {
                 super::primitives::built_in_2("dot", self, y.to_value())
             }
 
@@ -70,7 +70,7 @@ macro_rules! impl_gen_type {
             }
 
             pub fn max(self, y: impl super::ToValue<Output = Self>) -> Self {
-                super::primitives::built_in_2("min", self, y.to_value())
+                super::primitives::built_in_2("max", self, y.to_value())
             }
 
             pub fn clamp(
