@@ -40,7 +40,7 @@ fn vertex_shader(globals: Globals, vertex: ColorVertex) -> VaryingOutput<sl::Vec
     let position = sl::Mat2::identity() * vertex.position + shift2 + sl::Mat2::diagonal(4.0).x_axis;
 
     VaryingOutput {
-        varying: sl::Vec4::splat(0.0),
+        output: sl::Vec4::splat(0.0),
         position: globals.projection * globals.camera * position.extend(1.0).extend(1.0),
     }
 }

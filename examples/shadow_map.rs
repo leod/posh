@@ -1,6 +1,6 @@
-// Shader interface
-
 use posh::{gl, Block, BlockDom, Gl, Sl};
+
+// Shader interface
 
 #[derive(Clone, Copy, Block)]
 pub struct Camera<D: BlockDom = Sl> {
@@ -9,25 +9,68 @@ pub struct Camera<D: BlockDom = Sl> {
 }
 
 #[derive(Clone, Copy, Block)]
-pub struct Vertex<D: BlockDom = Sl> {
+pub struct Light<D: BlockDom = Sl> {
+    pub camera: Camera<D>,
     pub pos: D::Vec3,
-    pub tex_coords: D::Vec2,
+    pub color: D::Vec4,
 }
 
-/// Scene shader.
-mod scene {
-    use super::{Camera, Vertex};
+#[derive(Clone, Copy, Block)]
+pub struct Vertex<D: BlockDom = Sl> {
+    pub pos: D::Vec3,
+    pub normal: D::Vec3,
+    pub color: D::Vec4,
+}
 
-    //pub fn vertex(camera: Camera, v: Vertex) ->
+// Shaders
+
+mod scene {
+    use posh::{
+        sl::{self, Value, Varying},
+        Sl, Uniform, UniformDom,
+    };
+
+    use super::{Camera, Light, Vertex};
+
+    #[derive(Clone, Copy, Value, Varying)]
+    pub struct Varyings {
+        normal: sl::Vec4,
+        color: sl::Vec4,
+    }
+
+    #[derive(Uniform)]
+    pub struct Uniforms<D: UniformDom = Sl> {
+        player: D::Block<Camera>,
+        light: D::Block<Light>,
+        depth: D::ComparisonSampler2d,
+    }
+
+    pub fn vertex(uniform: Uniforms, input: Vertex) -> sl::VaryingOutput<Varyings> {
+        let output = Varyings {
+            normal: uniform.player.view * input.normal.extend(1.0), // TODO
+            color: input.color,
+        };
+        let position = uniform.player.projection * uniform.player.view * input.pos.extend(1.0);
+
+        sl::VaryingOutput { output, position }
+    }
+
+    pub fn fragment(uniform: Uniforms, input: Varyings) -> sl::Vec4 {
+        input.color
+    }
 }
 
 // Host code
 
-struct Demo {}
+struct Demo {
+    scene_program: gl::Program<scene::Uniforms, Vertex>,
+}
 
 impl Demo {
     pub fn new(context: gl::Context) -> Result<Self, gl::CreateError> {
-        Ok(Demo {})
+        let scene_program = context.create_program(scene::vertex, scene::fragment)?;
+
+        Ok(Demo { scene_program })
     }
 
     pub fn draw(&self) -> Result<(), gl::DrawError> {
@@ -37,7 +80,7 @@ impl Demo {
 
 // Mesh data
 
-fn cube_vertices() -> Vec<Vertex<Gl>> {
+fn cube_vertices(color: glam::Vec4) -> Vec<Vertex<Gl>> {
     [
         [0.5, -0.5, -0.5],
         [0.5, -0.5, 0.5],
@@ -68,7 +111,8 @@ fn cube_vertices() -> Vec<Vertex<Gl>> {
     .enumerate()
     .map(|(i, pos)| Vertex {
         pos: pos.into(),
-        tex_coords: [[0.0, 0.0], [0.0, 1.0], [1.0, 1.0], [1.0, 0.0]][i % 4].into(),
+        normal: [0.0, 0.0, 1.0].into(), // TODO
+        color,
     })
     .collect()
 }

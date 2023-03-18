@@ -40,7 +40,7 @@ pub use {
     },
 };
 
-pub use posh_derive::Value;
+pub use posh_derive::{Value, Varying};
 
 /// Base trait for types representing objects in the shading language.
 ///
