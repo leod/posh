@@ -32,30 +32,30 @@ pub struct Vertex<D: BlockDom = Sl> {
 
 // Shaders
 
-mod scene {
+mod scene_pass {
     use posh::{
         sl::{self, Value, Varying},
-        Sl, Uniform, UniformDom,
+        Sl, UniformDom,
     };
 
     use super::{Camera, Light, Vertex};
 
     #[derive(Clone, Copy, Value, Varying)]
-    pub struct Varyings {
+    pub struct OutputVertex {
         world_pos: sl::Vec3,
         normal: sl::Vec3,
         color: sl::Vec3,
     }
 
-    #[derive(Uniform)]
-    pub struct Uniforms<D: UniformDom = Sl> {
+    #[derive(posh::Uniform)]
+    pub struct Uniform<D: UniformDom = Sl> {
         pub player: D::Block<Camera>,
         pub light: D::Block<Light>,
         pub light_depth_map: D::ComparisonSampler2d,
     }
 
-    pub fn vertex(uniform: Uniforms, input: Vertex) -> sl::VaryingOutput<Varyings> {
-        let output = Varyings {
+    pub fn vertex(uniform: Uniform, input: Vertex) -> sl::VaryingOutput<OutputVertex> {
+        let output = OutputVertex {
             world_pos: input.pos,
             normal: input.normal,
             color: input.color,
@@ -66,7 +66,7 @@ mod scene {
         sl::VaryingOutput { output, position }
     }
 
-    pub fn fragment(uniform: Uniforms, input: Varyings) -> sl::Vec4 {
+    pub fn fragment(uniform: Uniform, input: OutputVertex) -> sl::Vec4 {
         let light = uniform.light;
 
         let normal = input.normal.normalize();
@@ -80,7 +80,7 @@ mod scene {
 // Host code
 
 struct Demo {
-    scene_program: gl::Program<scene::Uniforms, Vertex>,
+    scene_program: gl::Program<scene_pass::Uniform, Vertex>,
 
     player: gl::UniformBuffer<Camera>,
     light: gl::UniformBuffer<Light>,
@@ -92,7 +92,7 @@ struct Demo {
 
 impl Demo {
     pub fn new(context: gl::Context) -> Result<Self, gl::CreateError> {
-        let scene_program = context.create_program(scene::vertex, scene::fragment)?;
+        let scene_program = context.create_program(scene_pass::vertex, scene_pass::fragment)?;
 
         let player =
             context.create_uniform_buffer(Camera::default(), gl::BufferUsage::StaticDraw)?;
@@ -121,7 +121,7 @@ impl Demo {
 
     pub fn draw(&self) -> Result<(), gl::DrawError> {
         self.scene_program.draw(
-            scene::Uniforms {
+            scene_pass::Uniform {
                 player: self.player.as_binding(),
                 light: self.light.as_binding(),
                 light_depth_map: self.light_depth_map.as_comparison_sampler(
@@ -135,10 +135,12 @@ impl Demo {
                 primitive: gl::PrimitiveType::Triangles,
             },
             gl::DefaultFramebuffer::default(),
-            gl::DrawParams::default()
-                .with_clear_color(glam::Vec4::ONE)
-                .with_clear_depth(1.0)
-                .with_depth_compare(gl::CompareFunction::Less),
+            gl::DrawParams {
+                clear_color: Some(glam::Vec4::ONE),
+                clear_depth: Some(1.0),
+                depth_compare: Some(gl::CompareFunction::Less),
+                ..Default::default()
+            },
         )
     }
 }
@@ -168,8 +170,8 @@ impl Light<Gl> {
         Self {
             camera: Camera {
                 world_to_view: glam::Mat4::look_at_rh(
-                    glam::vec3(-2.0, 4.0, -1.0),
                     pos,
+                    pos - glam::vec3(0.0, 10.0, 0.0),
                     glam::vec3(0.0, 1.0, 0.0),
                 ),
                 view_to_screen: glam::Mat4::orthographic_rh_gl(-10.0, 10.0, -10.0, 0.0, 1.0, 7.5),
