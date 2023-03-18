@@ -11,20 +11,20 @@ const HEIGHT: u32 = 768;
 
 #[derive(Clone, Copy, Block)]
 struct Camera<D: BlockDom = Sl> {
-    projection: D::Mat4,
-    view: D::Mat4,
+    world_to_view: D::Mat4,
+    view_to_screen: D::Mat4,
 }
 
 impl Default for Camera<Gl> {
     fn default() -> Self {
         Self {
-            projection: glam::Mat4::perspective_rh_gl(
+            world_to_view: glam::Mat4::from_translation(glam::Vec3::new(0.0, 0.0, -3.0)),
+            view_to_screen: glam::Mat4::perspective_rh_gl(
                 std::f32::consts::PI / 2.0,
                 WIDTH as f32 / HEIGHT as f32,
                 1.0,
                 10.0,
             ),
-            view: glam::Mat4::from_translation(glam::Vec3::new(0.0, 0.0, -3.0)),
         }
     }
 }
@@ -59,7 +59,7 @@ fn vertex_shader(uniforms: Uniform, input: Vertex) -> sl::VaryingOutput<sl::Vec2
     let time = uniforms.time / 3.0;
 
     let vertex_pos = (rotate(time) * sl::vec2(input.pos.x, input.pos.y)).extend(input.pos.z);
-    let position = camera.projection * camera.view * zxy(vertex_pos).extend(1.0);
+    let position = camera.view_to_screen * camera.world_to_view * zxy(vertex_pos).extend(1.0);
 
     sl::VaryingOutput {
         output: input.tex_coords,
