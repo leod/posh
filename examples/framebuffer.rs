@@ -1,67 +1,79 @@
 use std::time::Instant;
 
-use posh::{gl, sl, Block, BlockDom, Sl, Uniform, UniformDom};
+use posh::{gl, sl, Block, BlockDom, Sl};
 
 // Shader interface
 
 #[derive(Clone, Copy, Block)]
-struct Globals<D: BlockDom = Sl> {
+pub struct Globals<D: BlockDom = Sl> {
     time: D::F32,
     flip: D::U32,
 }
 
-#[derive(Clone, Copy, Block)]
-struct Vertex<D: BlockDom = Sl> {
-    pos: D::Vec2,
-    tex_coords: D::Vec2,
-}
+/// Scene shader.
+mod scene {
+    use posh::sl;
 
-#[derive(Uniform)]
-struct PresentUniforms<D: UniformDom = Sl> {
-    globals: D::Block<Globals>,
-    scene: D::ColorSampler2d<sl::Vec4>,
-}
+    use super::Globals;
 
-// Shader code
+    pub fn vertex(_: (), vertex: sl::Vec2) -> sl::VaryingOutput<sl::Vec2> {
+        let vertex = vertex - sl::vec2(0.5, 0.5);
 
-fn scene_vertex(_: (), vertex: sl::Vec2) -> sl::VaryingOutput<sl::Vec2> {
-    let vertex = vertex - sl::vec2(0.5, 0.5);
+        sl::VaryingOutput {
+            varying: vertex,
+            position: vertex.extend(0.0).extend(1.0),
+        }
+    }
 
-    sl::VaryingOutput {
-        varying: vertex,
-        position: vertex.extend(0.0).extend(1.0),
+    pub fn fragment(uniform: Globals, varying: sl::Vec2) -> sl::Vec4 {
+        let rg = (varying + uniform.time).cos().pow(sl::vec2(2.0, 2.0));
+
+        sl::vec4(rg.x, rg.y, 0.5, 1.0)
     }
 }
 
-fn scene_fragment(uniform: Globals, varying: sl::Vec2) -> sl::Vec4 {
-    let rg = (varying + uniform.time).cos().pow(sl::vec2(2.0, 2.0));
+/// Present shader.
+mod present {
+    use posh::{sl, Block, BlockDom, Sl, Uniform, UniformDom};
 
-    sl::vec4(rg.x, rg.y, 0.5, 1.0)
-}
+    use super::Globals;
 
-fn present_vertex(_: (), vertex: Vertex) -> sl::VaryingOutput<sl::Vec2> {
-    sl::VaryingOutput {
-        varying: vertex.tex_coords,
-        position: vertex.pos.extend(0.0).extend(1.0),
+    #[derive(Clone, Copy, Block)]
+    pub struct Vertex<D: BlockDom = Sl> {
+        pub pos: D::Vec2,
+        pub tex_coords: D::Vec2,
     }
-}
 
-fn present_fragment(uniform: PresentUniforms, tex_coords: sl::Vec2) -> sl::Vec4 {
-    let flip = uniform.globals.flip;
-    let coords = flip.eq(0u32).branch(tex_coords, tex_coords * -1.0);
+    #[derive(Uniform)]
+    pub struct Uniforms<D: UniformDom = Sl> {
+        pub globals: D::Block<Globals>,
+        pub scene: D::ColorSampler2d<sl::Vec4>,
+    }
 
-    uniform.scene.lookup(coords)
+    pub fn vertex(_: (), vertex: Vertex) -> sl::VaryingOutput<sl::Vec2> {
+        sl::VaryingOutput {
+            varying: vertex.tex_coords,
+            position: vertex.pos.extend(0.0).extend(1.0),
+        }
+    }
+
+    pub fn fragment(uniform: Uniforms, tex_coords: sl::Vec2) -> sl::Vec4 {
+        let flip = uniform.globals.flip;
+        let coords = flip.eq(0u32).branch(tex_coords, tex_coords * -1.0);
+
+        uniform.scene.lookup(coords)
+    }
 }
 
 // Host code
 
 struct Demo {
     scene_program: gl::Program<Globals, sl::Vec2>,
-    present_program: gl::Program<PresentUniforms, Vertex>,
+    present_program: gl::Program<present::Uniforms, present::Vertex>,
 
     globals: gl::UniformBuffer<Globals>,
     triangle_vertices: gl::VertexBuffer<sl::Vec2>,
-    quad_vertices: gl::VertexBuffer<Vertex>,
+    quad_vertices: gl::VertexBuffer<present::Vertex>,
     quad_elements: gl::ElementBuffer,
     texture: gl::ColorTexture2d<sl::Vec4>,
 
@@ -70,8 +82,8 @@ struct Demo {
 
 impl Demo {
     pub fn new(context: gl::Context) -> Result<Self, gl::CreateError> {
-        let scene_program = context.create_program(scene_vertex, scene_fragment)?;
-        let present_program = context.create_program(present_vertex, present_fragment)?;
+        let scene_program = context.create_program(scene::vertex, scene::fragment)?;
+        let present_program = context.create_program(present::vertex, present::fragment)?;
 
         let globals = context
             .create_uniform_buffer(Globals { time: 0.0, flip: 0 }, gl::BufferUsage::StreamDraw)?;
@@ -81,19 +93,19 @@ impl Demo {
         )?;
         let quad_vertices = context.create_vertex_buffer(
             &[
-                Vertex {
+                present::Vertex {
                     pos: [-1.0, -1.0].into(),
                     tex_coords: [0.0, 0.0].into(),
                 },
-                Vertex {
+                present::Vertex {
                     pos: [1.0, -1.0].into(),
                     tex_coords: [1.0, 0.0].into(),
                 },
-                Vertex {
+                present::Vertex {
                     pos: [1.0, 1.0].into(),
                     tex_coords: [1.0, 1.0].into(),
                 },
-                Vertex {
+                present::Vertex {
                     pos: [-1.0, 1.0].into(),
                     tex_coords: [0.0, 1.0].into(),
                 },
@@ -136,7 +148,7 @@ impl Demo {
         )?;
 
         self.present_program.draw(
-            PresentUniforms {
+            present::Uniforms {
                 globals: self.globals.as_binding(),
                 scene: self
                     .texture
