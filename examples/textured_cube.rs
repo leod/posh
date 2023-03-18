@@ -76,7 +76,7 @@ struct Demo {
     time: gl::UniformBuffer<sl::F32>,
     vertices: gl::VertexBuffer<Vertex>,
     elements: gl::ElementBuffer,
-    texture: gl::Texture2d<sl::Vec4>,
+    texture: gl::ColorTexture2d<sl::Vec4>,
 
     start_time: Instant,
 }

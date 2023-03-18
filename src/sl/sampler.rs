@@ -2,7 +2,7 @@ use std::{marker::PhantomData, rc::Rc};
 
 use sealed::sealed;
 
-use crate::{Block, Sl};
+use crate::{gl, Block, Sl};
 
 use super::{
     dag::{BuiltInType, Expr, SamplerType, Trace, Type},
@@ -90,4 +90,31 @@ impl<S: ColorSample> Sampler2d<S> {
         // TODO: Convert sample
         built_in_2("texture", self, tex_coords)
     }
+}
+
+impl Object for Sampler2d<Depth> {
+    fn ty() -> Type {
+        Type::BuiltIn(BuiltInType::Sampler(SamplerType::Sampler2dComparison))
+    }
+
+    fn expr(&self) -> Rc<Expr> {
+        self.trace.expr()
+    }
+
+    fn from_arg(name: &str) -> Self {
+        Self {
+            trace: Trace::new(Expr::Arg {
+                ty: Self::ty(),
+                name: name.into(),
+            }),
+            _phantom: PhantomData,
+        }
+    }
+}
+
+impl Sampler2d<Depth> {
+    /*pub fn lookup(self, tex_coords: Vec2) -> S {
+        // TODO: Convert sample
+        built_in_2("texture", self, tex_coords)
+    }*/
 }

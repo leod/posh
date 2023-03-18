@@ -178,7 +178,7 @@ impl<B: Block<Sl, Sl = B>> UniformNonUnit for B {}
 
 unsafe impl<S: ColorSample> Uniform<Sl> for sl::Sampler2d<S> {
     type Sl = Self;
-    type Gl = gl::Sampler2d<S>;
+    type Gl = gl::ColorSampler2d<S>;
 
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::UniformVisitor<'a, Sl>) {
         visitor.accept_sampler2d(path, self)
@@ -228,7 +228,7 @@ impl super::FragmentDom for Sl {
 
 unsafe impl<S: ColorSample> Fragment<Sl> for S {
     type Sl = Self;
-    type Gl = gl::Attachment<S>;
+    type Gl = gl::ColorAttachment<S>;
 
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl FragmentVisitor<'a, Sl>) {
         visitor.accept(path, self);

@@ -156,6 +156,7 @@ impl Texture2d {
         new.set_delta(gl, &current);
         self.sampler_params.set(new);
 
+        // FIXME: Check that comparison can be applied to the texture.
         set_comparison_func(gl, glow::TEXTURE_2D, compare);
 
         check_gl_error(gl).unwrap();
