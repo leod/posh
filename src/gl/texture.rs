@@ -61,6 +61,14 @@ impl<S: ColorSample> ColorTexture2d<S> {
 }
 
 impl DepthTexture2d {
+    pub(super) fn from_raw(raw: raw::Texture2d) -> Self {
+        // FIXME: This should validate against depth.
+
+        Self { raw: Rc::new(raw) }
+    }
+}
+
+impl DepthTexture2d {
     pub fn as_depth_attachment(&self) -> DepthAttachment {
         self.as_depth_attachment_with_level(0)
     }

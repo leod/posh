@@ -72,10 +72,11 @@ struct Demo {
     present_program: gl::Program<present::Uniforms, present::Vertex>,
 
     globals: gl::UniformBuffer<Globals>,
+    texture: gl::ColorTexture2d<sl::Vec4>,
+
     triangle_vertices: gl::VertexBuffer<sl::Vec2>,
     quad_vertices: gl::VertexBuffer<present::Vertex>,
     quad_elements: gl::ElementBuffer,
-    texture: gl::ColorTexture2d<sl::Vec4>,
 
     start_time: Instant,
 }
@@ -87,6 +88,9 @@ impl Demo {
 
         let globals = context
             .create_uniform_buffer(Globals { time: 0.0, flip: 0 }, gl::BufferUsage::StreamDraw)?;
+        let texture =
+            context.create_color_texture_2d(gl::ColorImage::zero_u8(glam::uvec2(1024, 768)))?;
+
         let triangle_vertices = context.create_vertex_buffer(
             &[[0.5f32, 1.0].into(), [0.0, 0.0].into(), [1.0, 0.0].into()],
             gl::BufferUsage::StaticDraw,
@@ -114,7 +118,6 @@ impl Demo {
         )?;
         let quad_elements =
             context.create_element_buffer(&[0, 1, 2, 0, 2, 3], gl::BufferUsage::StaticDraw)?;
-        let texture = context.create_texture_2d(gl::Image::zero_u8(glam::uvec2(1024, 768)))?;
 
         let start_time = Instant::now();
 
@@ -122,10 +125,10 @@ impl Demo {
             scene_program,
             present_program,
             globals,
+            texture,
             triangle_vertices,
             quad_vertices,
             quad_elements,
-            texture,
             start_time,
         })
     }

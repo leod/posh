@@ -11,7 +11,7 @@ mod uniform_buffer;
 mod vertex_buffer;
 mod vertex_stream;
 
-pub use self::image::Image;
+pub use self::image::{ColorImage, DepthImage};
 pub use context::Context;
 pub use element_buffer::{Element, ElementBuffer, ElementBufferBinding, Elements};
 pub use framebuffer::{ColorAttachment, DefaultFramebuffer, DepthAttachment, Framebuffer};
@@ -21,7 +21,7 @@ pub use raw::{
     DrawParams, ElementType, FramebufferError, ImageFormat, ImageInternalFormat, PrimitiveType,
     ProgramError, ProgramValidationError, Sampler2dParams, TextureError, VertexArrayError,
 };
-pub use texture::{ColorSampler2d, ColorTexture2d, ComparisonSampler2d};
+pub use texture::{ColorSampler2d, ColorTexture2d, ComparisonSampler2d, DepthTexture2d};
 pub use uniform_buffer::{UniformBuffer, UniformBufferBinding};
 pub use vertex_buffer::{VertexBuffer, VertexBufferBinding};
 pub use vertex_stream::VertexStream;

@@ -25,7 +25,7 @@ impl ImageFormat {
             RgbInteger => glow::RGB_INTEGER,
             RgInteger => glow::RG_INTEGER,
             RedInteger => glow::RED_INTEGER,
-            Depth => glow::DEPTH,
+            Depth => glow::DEPTH_COMPONENT,
             DepthStencil => glow::DEPTH_STENCIL,
         }
     }
@@ -49,6 +49,8 @@ impl ImageFormat {
 }
 
 // FIXME: When is `ImageComponentType` not implied by `ImageInternalFormat`?
+// Looks like the internal format `DepthComponent16` can be used with both `U16`
+// and `U32` (OpenGL ES 3.0.6, Table 3.2)?
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ImageComponentType {
     U8,
@@ -84,6 +86,7 @@ pub enum ImageInternalFormat {
     SrgbU8AlphaU8,
     RgbaI8Snorm,
     RgbaF32,
+    DepthF32,
 }
 
 impl ImageInternalFormat {
@@ -95,6 +98,7 @@ impl ImageInternalFormat {
             SrgbU8AlphaU8 => glow::SRGB8_ALPHA8,
             RgbaI8Snorm => glow::RGBA8_SNORM,
             RgbaF32 => glow::RGBA32F,
+            DepthF32 => glow::DEPTH_COMPONENT32F,
         }
     }
 
@@ -103,6 +107,7 @@ impl ImageInternalFormat {
 
         match self {
             RgbaU8 | SrgbU8AlphaU8 | RgbaI8Snorm | RgbaF32 => ImageFormat::Rgba,
+            DepthF32 => ImageFormat::Depth,
         }
     }
 
@@ -114,6 +119,7 @@ impl ImageInternalFormat {
             SrgbU8AlphaU8 => ty == ImageComponentType::U8,
             RgbaI8Snorm => ty == ImageComponentType::I8,
             RgbaF32 => ty == ImageComponentType::F32,
+            DepthF32 => ty == ImageComponentType::F32,
         }
     }
 
@@ -122,6 +128,7 @@ impl ImageInternalFormat {
 
         match self {
             RgbaU8 | SrgbU8AlphaU8 | RgbaI8Snorm | RgbaF32 => true,
+            DepthF32 => false,
         }
     }
 
@@ -130,6 +137,7 @@ impl ImageInternalFormat {
 
         match self {
             RgbaU8 | SrgbU8AlphaU8 | RgbaI8Snorm | RgbaF32 => false,
+            DepthF32 => true,
         }
     }
 
@@ -138,6 +146,7 @@ impl ImageInternalFormat {
 
         match self {
             RgbaU8 | SrgbU8AlphaU8 | RgbaI8Snorm | RgbaF32 => false,
+            DepthF32 => false,
         }
     }
 }

@@ -4,20 +4,20 @@ use crate::sl::{self, ColorSample};
 
 use super::raw::{self, ImageComponentType, ImageInternalFormat};
 
-pub struct Image<'a, S> {
+pub struct ColorImage<'a, S> {
     raw: raw::Image<'a>,
     _phantom: PhantomData<S>,
 }
 
-impl<'a, S: ColorSample> Image<'a, S> {
+impl<'a, S: ColorSample> ColorImage<'a, S> {
     pub fn raw(self) -> raw::Image<'a> {
         self.raw
     }
 }
 
-impl<'a> Image<'a, sl::Vec4> {
+impl<'a> ColorImage<'a, sl::Vec4> {
     pub fn slice_u8(size: glam::UVec2, data: &'a [u8]) -> Self {
-        Image {
+        ColorImage {
             raw: raw::Image {
                 size,
                 ty: ImageComponentType::U8,
@@ -29,7 +29,7 @@ impl<'a> Image<'a, sl::Vec4> {
     }
 
     pub fn slice_u8_srgb(size: glam::UVec2, data: &'a [u8]) -> Self {
-        Image {
+        ColorImage {
             raw: raw::Image {
                 size,
                 ty: ImageComponentType::U8,
@@ -41,7 +41,7 @@ impl<'a> Image<'a, sl::Vec4> {
     }
 
     pub fn slice_i8_snorm(size: glam::UVec2, data: &'a [i8]) -> Self {
-        Image {
+        ColorImage {
             raw: raw::Image {
                 size,
                 ty: ImageComponentType::I8,
@@ -53,7 +53,7 @@ impl<'a> Image<'a, sl::Vec4> {
     }
 
     pub fn slice_f32(size: glam::UVec2, data: &'a [f32]) -> Self {
-        Image {
+        ColorImage {
             raw: raw::Image {
                 size,
                 ty: ImageComponentType::F32,
@@ -65,7 +65,7 @@ impl<'a> Image<'a, sl::Vec4> {
     }
 
     pub fn zero_u8(size: glam::UVec2) -> Self {
-        Image {
+        ColorImage {
             raw: raw::Image {
                 size,
                 ty: ImageComponentType::U8,
@@ -77,7 +77,7 @@ impl<'a> Image<'a, sl::Vec4> {
     }
 
     pub fn zero_u8_srgb(size: glam::UVec2) -> Self {
-        Image {
+        ColorImage {
             raw: raw::Image {
                 size,
                 ty: ImageComponentType::U8,
@@ -89,7 +89,7 @@ impl<'a> Image<'a, sl::Vec4> {
     }
 
     pub fn zero_i8_snorm(size: glam::UVec2) -> Self {
-        Image {
+        ColorImage {
             raw: raw::Image {
                 size,
                 ty: ImageComponentType::I8,
@@ -101,7 +101,7 @@ impl<'a> Image<'a, sl::Vec4> {
     }
 
     pub fn zero_f32(size: glam::UVec2) -> Self {
-        Image {
+        ColorImage {
             raw: raw::Image {
                 size,
                 ty: ImageComponentType::F32,
@@ -109,6 +109,40 @@ impl<'a> Image<'a, sl::Vec4> {
                 data: None,
             },
             _phantom: PhantomData,
+        }
+    }
+}
+
+pub struct DepthImage<'a> {
+    raw: raw::Image<'a>,
+}
+
+impl<'a> DepthImage<'a> {
+    pub fn raw(self) -> raw::Image<'a> {
+        self.raw
+    }
+}
+
+impl<'a> DepthImage<'a> {
+    pub fn slice_f32(size: glam::UVec2, data: &'a [f32]) -> Self {
+        DepthImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::F32,
+                internal_format: ImageInternalFormat::DepthF32,
+                data: Some(bytemuck::cast_slice(data)),
+            },
+        }
+    }
+
+    pub fn zero_f32(size: glam::UVec2) -> Self {
+        DepthImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::F32,
+                internal_format: ImageInternalFormat::DepthF32,
+                data: None,
+            },
         }
     }
 }
@@ -125,7 +159,6 @@ impl<'a> Image<'a, sl::Vec4> {
 // - RedFormat
 // - RedIntFormat
 // - RedUnsignedIntFormat
-// - DepthFormat
 // - DepthStencilFormat
 
 /*
