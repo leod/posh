@@ -32,7 +32,7 @@ pub struct Light<D: BlockDom = Sl> {
 }
 
 #[derive(Clone, Copy, Block)]
-pub struct Vertex<D: BlockDom = Sl> {
+pub struct SceneVertex<D: BlockDom = Sl> {
     pub world_pos: D::Vec3,
     pub world_normal: D::Vec3,
     pub color: D::Vec3,
@@ -43,17 +43,31 @@ pub struct Vertex<D: BlockDom = Sl> {
 mod flat_pass {
     use posh::sl;
 
-    use super::{Camera, Vertex};
+    use super::{Camera, SceneVertex};
 
-    pub fn vertex(camera: Camera, input: Vertex) -> sl::VaryingOutput<sl::Vec3> {
+    pub fn vertex(camera: Camera, vertex: SceneVertex) -> sl::VaryingOutput<sl::Vec3> {
         sl::VaryingOutput {
-            output: input.color,
-            position: camera.world_to_clip(input.world_pos),
+            output: vertex.color,
+            position: camera.world_to_clip(vertex.world_pos),
         }
     }
 
     pub fn fragment(_: (), color: sl::Vec3) -> sl::Vec4 {
         color.extend(1.0)
+    }
+}
+
+mod depth_pass {
+    use posh::sl;
+
+    use super::{Light, SceneVertex};
+
+    pub fn vertex(light: Light, vertex: SceneVertex) -> sl::Vec4 {
+        light.camera.world_to_clip(vertex.world_pos)
+    }
+
+    pub fn fragment(_: (), _: ()) -> () {
+        ()
     }
 }
 
@@ -63,7 +77,7 @@ mod shaded_pass {
         Sl, UniformDom,
     };
 
-    use super::{Camera, Light, Vertex};
+    use super::{Camera, Light, SceneVertex};
 
     #[derive(Clone, posh::Uniform)]
     pub struct Uniform<D: UniformDom = Sl> {
@@ -79,24 +93,47 @@ mod shaded_pass {
         color: sl::Vec3,
     }
 
-    pub fn vertex(uniform: Uniform, input: Vertex) -> sl::VaryingOutput<OutputVertex> {
+    pub fn vertex(uniform: Uniform, vertex: SceneVertex) -> sl::VaryingOutput<OutputVertex> {
         let output = OutputVertex {
-            world_pos: input.world_pos,
-            world_normal: input.world_normal,
-            color: input.color,
+            world_pos: vertex.world_pos,
+            world_normal: vertex.world_normal,
+            color: vertex.color,
         };
-        let position = uniform.camera.world_to_clip(input.world_pos);
+        let position = uniform.camera.world_to_clip(vertex.world_pos);
 
         sl::VaryingOutput { output, position }
     }
 
-    pub fn fragment(uniform: Uniform, input: OutputVertex) -> sl::Vec4 {
+    pub fn fragment(uniform: Uniform, vertex: OutputVertex) -> sl::Vec4 {
         let light = uniform.light;
-        let world_normal = input.world_normal.normalize();
-        let light_dir = (light.world_pos - input.world_pos).normalize();
+        let world_normal = vertex.world_normal.normalize();
+        let light_dir = (light.world_pos - vertex.world_pos).normalize();
         let diffuse = light.color * world_normal.dot(light_dir).max(0.0);
 
-        ((light.ambient + diffuse) * input.color).extend(1.0)
+        ((light.ambient + diffuse) * vertex.color).extend(1.0)
+    }
+}
+
+mod debug_pass {
+    use posh::{sl, Block, BlockDom, Sl};
+
+    #[derive(Clone, Copy, Block)]
+    pub struct Vertex<D: BlockDom = Sl> {
+        pub pos: D::Vec2,
+        pub tex_coords: D::Vec2,
+    }
+
+    pub fn vertex(_: (), vertex: Vertex) -> sl::VaryingOutput<sl::Vec2> {
+        sl::VaryingOutput {
+            output: vertex.tex_coords,
+            position: vertex.pos.extend(0.0).extend(1.0),
+        }
+    }
+
+    pub fn fragment(sampler: sl::ColorSampler2d<sl::F32>, tex_coords: sl::Vec2) -> sl::Vec4 {
+        let depth = sampler.lookup(tex_coords);
+
+        sl::Vec4::splat(1.0 - depth)
     }
 }
 
@@ -105,24 +142,31 @@ mod shaded_pass {
 struct Demo {
     context: gl::Context,
 
-    scene_program: gl::Program<shaded_pass::Uniform, Vertex>,
-    flat_program: gl::Program<Camera, Vertex>,
+    flat_program: gl::Program<Camera, SceneVertex>,
+    depth_program: gl::Program<Light, SceneVertex, ()>,
+    shaded_program: gl::Program<shaded_pass::Uniform, SceneVertex>,
+    debug_program: gl::Program<sl::ColorSampler2d<sl::F32>, debug_pass::Vertex>,
 
     camera_buffer: gl::UniformBuffer<Camera>,
     light_buffer: gl::UniformBuffer<Light>,
     light_depth_map: gl::DepthTexture2d,
 
-    scene_vertices: gl::VertexBuffer<Vertex>,
+    scene_vertices: gl::VertexBuffer<SceneVertex>,
     scene_elements: gl::ElementBuffer,
 
-    mouse_vertices: gl::VertexBuffer<Vertex>,
+    mouse_vertices: gl::VertexBuffer<SceneVertex>,
     mouse_elements: gl::ElementBuffer,
+
+    debug_vertices: gl::VertexBuffer<debug_pass::Vertex>,
+    debug_elements: gl::ElementBuffer,
 }
 
 impl Demo {
     pub fn new(context: gl::Context) -> Result<Self, gl::CreateError> {
-        let scene_program = context.create_program(shaded_pass::vertex, shaded_pass::fragment)?;
         let flat_program = context.create_program(flat_pass::vertex, flat_pass::fragment)?;
+        let depth_program = context.create_program(depth_pass::vertex, depth_pass::fragment)?;
+        let shaded_program = context.create_program(shaded_pass::vertex, shaded_pass::fragment)?;
+        let debug_program = context.create_program(debug_pass::vertex, debug_pass::fragment)?;
 
         let camera_buffer =
             context.create_uniform_buffer(Camera::default(), gl::BufferUsage::StaticDraw)?;
@@ -146,10 +190,17 @@ impl Demo {
         let mouse_elements =
             context.create_element_buffer(&mouse_elements(), gl::BufferUsage::StaticDraw)?;
 
+        let debug_vertices =
+            context.create_vertex_buffer(&debug_vertices(), gl::BufferUsage::StaticDraw)?;
+        let debug_elements =
+            context.create_element_buffer(&debug_elements(), gl::BufferUsage::StaticDraw)?;
+
         Ok(Demo {
             context,
-            scene_program,
             flat_program,
+            depth_program,
+            shaded_program,
+            debug_program,
             camera_buffer,
             light_buffer,
             light_depth_map,
@@ -157,6 +208,8 @@ impl Demo {
             scene_elements,
             mouse_vertices,
             mouse_elements,
+            debug_vertices,
+            debug_elements,
         })
     }
 
@@ -171,7 +224,24 @@ impl Demo {
             .create_vertex_buffer(&mouse_vertices(light_pos), gl::BufferUsage::StreamDraw)
             .unwrap();
 
-        self.scene_program.draw(
+        let scene_stream = gl::VertexStream {
+            vertices: self.scene_vertices.as_binding(),
+            elements: self.scene_elements.as_binding(),
+            primitive: gl::PrimitiveType::Triangles,
+        };
+
+        self.depth_program.draw(
+            self.light_buffer.as_binding(),
+            scene_stream.clone(),
+            self.light_depth_map.as_depth_attachment(),
+            gl::DrawParams {
+                clear_depth: Some(1.0),
+                depth_compare: Some(gl::CompareFunction::Less),
+                ..Default::default()
+            },
+        )?;
+
+        self.shaded_program.draw(
             shaded_pass::Uniform {
                 camera: self.camera_buffer.as_binding(),
                 light: self.light_buffer.as_binding(),
@@ -180,11 +250,7 @@ impl Demo {
                     gl::CompareFunction::Less,
                 ),
             },
-            gl::VertexStream {
-                vertices: self.scene_vertices.as_binding(),
-                elements: self.scene_elements.as_binding(),
-                primitive: gl::PrimitiveType::Triangles,
-            },
+            scene_stream,
             gl::DefaultFramebuffer::default(),
             gl::DrawParams {
                 clear_color: Some(glam::Vec4::ONE),
@@ -206,6 +272,18 @@ impl Demo {
                 depth_compare: Some(gl::CompareFunction::Less),
                 ..Default::default()
             },
+        )?;
+
+        self.debug_program.draw(
+            self.light_depth_map
+                .as_color_sampler(gl::Sampler2dParams::default()),
+            gl::VertexStream {
+                vertices: self.debug_vertices.as_binding(),
+                elements: self.debug_elements.as_binding(),
+                primitive: gl::PrimitiveType::Triangles,
+            },
+            gl::DefaultFramebuffer::default(),
+            gl::DrawParams::default(),
         )?;
 
         Ok(())
@@ -239,9 +317,9 @@ impl Light<Gl> {
                 world_to_eye: glam::Mat4::look_at_rh(
                     pos,
                     pos - glam::vec3(0.0, 10.0, 0.0),
-                    glam::vec3(0.0, 1.0, 0.0),
+                    glam::vec3(0.0, 0.0, 1.0),
                 ),
-                eye_to_clip: glam::Mat4::orthographic_rh_gl(-10.0, 10.0, -10.0, 0.0, 1.0, 7.5),
+                eye_to_clip: glam::Mat4::orthographic_rh_gl(-10.0, 10.0, -10.0, 0.0, 1.0, 30.0),
             },
             world_pos: pos,
             color: glam::vec3(1.0, 1.0, 0.7),
@@ -254,7 +332,7 @@ fn cube_vertices(
     center: glam::Vec3,
     color: glam::Vec3,
     size: f32,
-) -> impl Iterator<Item = Vertex<Gl>> {
+) -> impl Iterator<Item = SceneVertex<Gl>> {
     [
         [0.5, -0.5, -0.5],
         [0.5, -0.5, 0.5],
@@ -283,7 +361,7 @@ fn cube_vertices(
     ]
     .into_iter()
     .enumerate()
-    .map(move |(i, pos)| Vertex {
+    .map(move |(i, pos)| SceneVertex {
         world_pos: center + glam::Vec3::from(pos) * size,
         world_normal: [
             [1.0, 0.0, 0.0],
@@ -304,7 +382,7 @@ fn cube_elements(n: u32) -> impl Iterator<Item = u32> {
     (0..6u32).flat_map(move |face| [0, 1, 2, 0, 2, 3].map(|i| start + face * 4 + i))
 }
 
-fn scene_vertices() -> Vec<Vertex<Gl>> {
+fn scene_vertices() -> Vec<SceneVertex<Gl>> {
     let mut rng = WyRand::new();
 
     (0..NUM_CUBES)
@@ -322,12 +400,39 @@ fn scene_elements() -> Vec<u32> {
     (0..NUM_CUBES).flat_map(cube_elements).collect()
 }
 
-fn mouse_vertices(pos: glam::Vec3) -> Vec<Vertex<Gl>> {
+fn mouse_vertices(pos: glam::Vec3) -> Vec<SceneVertex<Gl>> {
     cube_vertices(pos, glam::vec3(0.5, 0.5, 0.1), 1.3).collect()
 }
 
 fn mouse_elements() -> Vec<u32> {
     cube_elements(0).collect()
+}
+
+fn debug_vertices() -> Vec<debug_pass::Vertex<Gl>> {
+    use debug_pass::Vertex;
+
+    vec![
+        Vertex {
+            pos: [-1.0, -1.0].into(),
+            tex_coords: [0.0, 0.0].into(),
+        },
+        Vertex {
+            pos: [-0.5, -1.0].into(),
+            tex_coords: [1.0, 0.0].into(),
+        },
+        Vertex {
+            pos: [-0.5, -0.5].into(),
+            tex_coords: [1.0, 1.0].into(),
+        },
+        Vertex {
+            pos: [-1.0, -0.5].into(),
+            tex_coords: [0.0, 1.0].into(),
+        },
+    ]
+}
+
+fn debug_elements() -> Vec<u32> {
+    vec![0, 1, 2, 0, 2, 3]
 }
 
 fn light_pos(mouse_pos: glam::UVec2) -> glam::Vec3 {

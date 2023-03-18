@@ -68,6 +68,14 @@ impl<F: Fragment<Gl>> Framebuffer<F> for F {
     }
 }
 
+impl Framebuffer<()> for DepthAttachment {
+    fn raw(&self) -> raw::Framebuffer {
+        raw::Framebuffer::Attachments {
+            attachments: vec![self.raw.clone()],
+        }
+    }
+}
+
 impl<F: Fragment<Gl>> Framebuffer<F> for ColorDepthFramebuffer<F> {
     fn raw(&self) -> raw::Framebuffer {
         let mut attachments = raw_color_attachments(&self.color);

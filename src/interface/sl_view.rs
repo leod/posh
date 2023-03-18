@@ -250,3 +250,10 @@ unsafe impl<S: ColorSample> Fragment<Sl> for S {
         visitor.accept(path, self);
     }
 }
+
+unsafe impl Fragment<Sl> for () {
+    type Sl = ();
+    type Gl = ();
+
+    fn visit<'a>(&'a self, _: &str, _: &mut impl FragmentVisitor<'a, Sl>) {}
+}
