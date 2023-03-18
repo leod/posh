@@ -43,9 +43,11 @@ impl<S: ColorSample> Texture2d<S> {
     }
 
     pub fn sampler(&self, params: Sampler2dParams) -> Sampler2d<S> {
+        // FIXME: Check texture completeness.
         Sampler2d::from_raw(raw::Sampler2d {
             texture: self.raw.clone(),
             params,
+            compare: None,
         })
     }
 }
