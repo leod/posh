@@ -75,6 +75,7 @@ pub fn write_shader_stage(
 
     writeln!(f, "precision highp float;")?;
     writeln!(f, "precision highp int;")?;
+    writeln!(f)?;
 
     write_struct_defs(f, &struct_registry)?;
 
