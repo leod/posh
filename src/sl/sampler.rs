@@ -10,25 +10,35 @@ use super::{
     IVec2, IVec3, IVec4, Object, UVec2, UVec3, UVec4, Value, Vec2, Vec3, Vec4, F32, I32, U32,
 };
 
-// FIXME: These traits desparately needs to move to `interface`
+// FIXME: These traits desperately need to move to `interface`.
 
 #[sealed]
 pub trait Sample {
     const SAMPLER_TYPE: SamplerType;
 
+    type Vec4: Value;
+
     type Gl;
+
+    fn from_vec4(v: Self::Vec4) -> Self;
 }
 
 #[sealed]
 pub trait ColorSample: Value + Sample {}
 
 macro_rules! impl_color_sample {
-    ($sample:ident, $ty:ident) => {
+    ($sample:ident, $ty:ident, |$vec4_name:ident: $vec4:ident| $from_vec4:expr) => {
         #[sealed]
         impl Sample for $sample {
             const SAMPLER_TYPE: SamplerType = SamplerType::$ty;
 
+            type Vec4 = $vec4;
+
             type Gl = <$sample as Block<Sl>>::Gl;
+
+            fn from_vec4($vec4_name: Self::Vec4) -> Self {
+                $from_vec4
+            }
         }
 
         #[sealed]
@@ -36,27 +46,18 @@ macro_rules! impl_color_sample {
     };
 }
 
-impl_color_sample!(F32, ColorSampler2d);
-impl_color_sample!(I32, IColorSampler2d);
-impl_color_sample!(U32, UColorSampler2d);
-impl_color_sample!(Vec2, ColorSampler2d);
-impl_color_sample!(IVec2, IColorSampler2d);
-impl_color_sample!(UVec2, UColorSampler2d);
-impl_color_sample!(Vec3, ColorSampler2d);
-impl_color_sample!(IVec3, IColorSampler2d);
-impl_color_sample!(UVec3, UColorSampler2d);
-impl_color_sample!(Vec4, ColorSampler2d);
-impl_color_sample!(IVec4, IColorSampler2d);
-impl_color_sample!(UVec4, UColorSampler2d);
-
-pub struct Depth;
-
-#[sealed]
-impl Sample for Depth {
-    const SAMPLER_TYPE: SamplerType = SamplerType::ComparisonSampler2d;
-
-    type Gl = f32;
-}
+impl_color_sample!(F32, ColorSampler2d, |v: Vec4| v.x);
+impl_color_sample!(I32, IColorSampler2d, |v: IVec4| v.x);
+impl_color_sample!(U32, UColorSampler2d, |v: UVec4| v.x);
+impl_color_sample!(Vec2, ColorSampler2d, |v: Vec4| v.xy());
+impl_color_sample!(IVec2, IColorSampler2d, |v: IVec4| v.xy());
+impl_color_sample!(UVec2, UColorSampler2d, |v: UVec4| v.xy());
+impl_color_sample!(Vec3, ColorSampler2d, |v: Vec4| v.xyz());
+impl_color_sample!(IVec3, IColorSampler2d, |v: IVec4| v.xyz());
+impl_color_sample!(UVec3, UColorSampler2d, |v: UVec4| v.xyz());
+impl_color_sample!(Vec4, ColorSampler2d, |v: Vec4| v);
+impl_color_sample!(IVec4, IColorSampler2d, |v: IVec4| v);
+impl_color_sample!(UVec4, UColorSampler2d, |v: UVec4| v);
 
 /// An object which can be sampled.
 #[derive(Debug, Copy, Clone)]
@@ -92,8 +93,9 @@ impl<S: ColorSample> Object for ColorSampler2d<S> {
 
 impl<S: ColorSample> ColorSampler2d<S> {
     pub fn lookup(self, tex_coords: Vec2) -> S {
-        // TODO: Convert sample
-        built_in_2("texture", self, tex_coords)
+        let sample = built_in_2("texture", self, tex_coords);
+
+        S::from_vec4(sample)
     }
 }
 
