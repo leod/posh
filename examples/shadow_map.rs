@@ -127,7 +127,8 @@ mod shaded_pass {
 
         let shadow = lookup_shadow(uniform.light_depth_map, vertex.light_clip_pos);
 
-        ((light.ambient + (1.0 - shadow) * diffuse) * vertex.color).extend(1.0)
+        //((light.ambient + (1.0 - shadow) * diffuse) * vertex.color).extend(1.0)
+        ((light.ambient + diffuse) * vertex.color).extend(1.0)
 
         //(vertex.color * (1.0 - shadow)).extend(1.0)
     }
@@ -289,9 +290,9 @@ impl Demo {
 
 // Scene data
 
-const CAMERA_WORLD_POS: glam::Vec3 = glam::vec3(-5.0, 0.0, 5.0);
-const LIGHT_WORLD_POS: glam::Vec3 = glam::vec3(0.0, 5.0, 0.0);
-const LIGHT_CENTER_Z: f32 = -10.0;
+const CAMERA_WORLD_POS: glam::Vec3 = glam::vec3(-5.0, 5.0, 10.0);
+const LIGHT_WORLD_POS: glam::Vec3 = glam::vec3(0.0, 5.0, 5.0);
+const LIGHT_CENTER_Z: f32 = -20.0;
 
 impl Default for Camera<Gl> {
     fn default() -> Self {
@@ -334,16 +335,17 @@ fn scene_vertices() -> Vec<SceneVertex<Gl>> {
 
     (0..NUM_CUBES)
         .flat_map(|_| {
-            let center = ((glam::vec2(rng.generate(), rng.generate()) - 0.5) * 30.0).extend(-5.0);
+            let center = ((glam::vec2(rng.generate(), rng.generate()) - 0.5) * 30.0).extend(-15.0);
             let color = glam::vec3(rng.generate(), rng.generate(), rng.generate());
-            let size = glam::Vec3::splat(1.0);
+            let size = glam::Vec3::splat(4.0);
 
-            cube_vertices(center, color, size)
+            cube_vertices(center, color, size, false)
         })
         .chain(cube_vertices(
-            glam::vec3(0.0, 0.0, -20.0),
-            glam::vec3(0.6, 0.6, 0.6),
-            glam::vec3(200.0, 50.0, 5.0),
+            glam::vec3(0.0, 0.0, 0.0),
+            glam::vec3(0.9, 0.9, 0.9),
+            glam::Vec3::splat(50.0),
+            true,
         ))
         .collect()
 }
@@ -357,11 +359,13 @@ fn light_vertices(center_pos: glam::Vec3) -> Vec<SceneVertex<Gl>> {
         LIGHT_WORLD_POS,
         glam::vec3(0.5, 0.5, 0.1),
         glam::Vec3::splat(2.0),
+        false,
     )
     .chain(cube_vertices(
         center_pos,
         glam::vec3(0.5, 0.5, 0.1),
         glam::Vec3::splat(1.3),
+        false,
     ))
     .collect()
 }
@@ -395,6 +399,7 @@ fn cube_vertices(
     center: glam::Vec3,
     color: glam::Vec3,
     size: glam::Vec3,
+    invert: bool,
 ) -> impl Iterator<Item = SceneVertex<Gl>> {
     [
         [0.5, -0.5, -0.5],
@@ -426,15 +431,16 @@ fn cube_vertices(
     .enumerate()
     .map(move |(i, pos)| SceneVertex {
         world_pos: center + glam::Vec3::from(pos) * size,
-        world_normal: [
-            [1.0, 0.0, 0.0],
-            [-1.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0],
-            [0.0, -1.0, 0.0],
-            [0.0, 0.0, 1.0],
-            [0.0, 0.0, -1.0],
-        ][i / 4]
-            .into(),
+        world_normal: glam::Vec3::from(
+            [
+                [1.0, 0.0, 0.0],
+                [-1.0, 0.0, 0.0],
+                [0.0, 1.0, 0.0],
+                [0.0, -1.0, 0.0],
+                [0.0, 0.0, 1.0],
+                [0.0, 0.0, -1.0],
+            ][i / 4],
+        ) * if invert { -1.0 } else { 1.0 },
         color,
     })
 }
