@@ -30,7 +30,7 @@ pub(crate) use scalar::scalar_physical;
 pub use {
     array::Array,
     mat::{mat2, mat3, mat4, Mat2, Mat3, Mat4},
-    sampler::{ColorSample, ColorSampler2d, ComparisonSampler2d, Depth, Sample},
+    sampler::{ColorSample, ColorSampler2d, ComparisonSampler2d, Sample},
     scalar::{Bool, F32, I32, U32},
     sig::{ConstParams, FragmentInput, FragmentOutput, VaryingOutput, VertexInput, VertexOutput},
     varying::Varying,
