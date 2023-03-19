@@ -14,9 +14,14 @@ impl Display for BinaryOp {
             Sub => "-",
             Mul => "*",
             Div => "/",
-            Eq => "==",
             And => "&&",
             Or => "||",
+            Eq => "==",
+            Lt => "<",
+            Le => "<=",
+            Ne => "!=",
+            Ge => ">=",
+            Gt => ">",
         };
 
         f.write_str(s)

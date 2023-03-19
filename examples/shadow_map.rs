@@ -110,11 +110,18 @@ mod shaded_pass {
         let light_eye_ndc =
             sl::vec3(light_eye_pos.x, light_eye_pos.y, light_eye_pos.z) / light_eye_pos.w;
 
-        let light_eye_coords = light_eye_ndc * 0.5 + 0.5;
+        let tex_coords = light_eye_ndc * 0.5 + 0.5;
 
-        light_depth_map.lookup(
-            sl::vec2(light_eye_coords.x, light_eye_coords.y),
-            light_eye_coords.z,
+        let is_outside = tex_coords
+            .x
+            .lt(0.0)
+            .or(tex_coords.y.lt(0.0))
+            .or(tex_coords.x.gt(1.0))
+            .or(tex_coords.y.gt(1.0));
+
+        is_outside.branch(
+            0.0,
+            light_depth_map.lookup(sl::vec2(tex_coords.x, tex_coords.y), tex_coords.z),
         )
     }
 
@@ -127,10 +134,10 @@ mod shaded_pass {
 
         let shadow = lookup_shadow(uniform.light_depth_map, vertex.light_clip_pos);
 
-        //((light.ambient + (1.0 - shadow) * diffuse) * vertex.color).extend(1.0)
-        ((light.ambient + diffuse) * vertex.color).extend(1.0)
+        ((light.ambient + shadow * diffuse) * vertex.color).extend(1.0)
+        //((light.ambient + diffuse) * vertex.color).extend(1.0)
 
-        //(vertex.color * (1.0 - shadow)).extend(1.0)
+        //(vertex.color * shadow).extend(1.0)
     }
 }
 
@@ -321,7 +328,7 @@ impl Light<Gl> {
                     center,
                     glam::vec3(0.0, 0.0, 1.0),
                 ),
-                eye_to_clip: glam::Mat4::orthographic_rh_gl(-10.0, 10.0, -10.0, 0.0, 1.0, 30.0),
+                eye_to_clip: glam::Mat4::orthographic_rh_gl(-20.0, 20.0, -20.0, 20.0, 1.0, 30.0),
             },
             world_pos: LIGHT_WORLD_POS,
             color: glam::vec3(1.0, 1.0, 0.7),
