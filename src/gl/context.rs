@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crevice::std140::AsStd140;
 
 use crate::{
@@ -16,15 +18,16 @@ use super::{
 };
 
 /// The graphics context, which is used for creating GPU objects.
+#[derive(Clone)]
 pub struct Context {
-    raw: raw::Context,
+    raw: Rc<raw::Context>,
 }
 
 impl Context {
     pub fn new(gl: glow::Context) -> Result<Self, ContextError> {
         let raw = raw::Context::new(gl)?;
 
-        Ok(Self { raw })
+        Ok(Self { raw: Rc::new(raw) })
     }
 
     pub fn caps(&self) -> &Caps {

@@ -117,8 +117,7 @@ impl Object for ComparisonSampler2d {
 }
 
 impl ComparisonSampler2d {
-    pub fn lookup(self, tex_coords: Vec2) -> F32 {
-        // TODO: Convert sample
-        built_in_2("texture", self, tex_coords)
+    pub fn lookup(self, tex_coords: Vec2, reference_depth: F32) -> F32 {
+        built_in_2("texture", self, tex_coords.extend(reference_depth))
     }
 }
