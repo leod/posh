@@ -61,7 +61,7 @@ mod present_pass {
         let flip = uniform.state.flip;
         let coords = flip.eq(0u32).branch(tex_coords, tex_coords * -1.0);
 
-        uniform.scene.lookup(coords)
+        uniform.scene.sample(coords)
     }
 }
 

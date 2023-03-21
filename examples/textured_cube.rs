@@ -84,7 +84,7 @@ struct Demo {
 
 impl Demo {
     pub fn new(context: gl::Context) -> Result<Self, gl::CreateError> {
-        let program = context.create_program(vertex_shader, sl::ColorSampler2d::lookup)?;
+        let program = context.create_program(vertex_shader, sl::ColorSampler2d::sample)?;
 
         let camera =
             context.create_uniform_buffer(Camera::default(), gl::BufferUsage::StaticDraw)?;
