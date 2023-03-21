@@ -38,23 +38,17 @@ struct Demo {
 }
 
 impl Demo {
-    pub fn new(context: gl::Context) -> Result<Self, gl::CreateError> {
-        let program = context.create_program(vertex_shader, fragment_shader)?;
+    pub fn new(ctx: gl::Context) -> Result<Self, gl::CreateError> {
+        use gl::BufferUsage::*;
 
-        let globals =
-            context.create_uniform_buffer(Globals { time: 0.0 }, gl::BufferUsage::StreamDraw)?;
-        let vertices = context.create_vertex_buffer(
-            &[[0.5f32, 1.0].into(), [0.0, 0.0].into(), [1.0, 0.0].into()],
-            gl::BufferUsage::StaticDraw,
-        )?;
-
-        let start_time = Instant::now();
+        let globals = Globals { time: 0.0 };
+        let vertices = vec![[0.5f32, 1.0].into(), [0.0, 0.0].into(), [1.0, 0.0].into()];
 
         Ok(Self {
-            program,
-            globals,
-            vertices,
-            start_time,
+            program: ctx.create_program(vertex_shader, fragment_shader)?,
+            globals: ctx.create_uniform_buffer(globals, StreamDraw)?,
+            vertices: ctx.create_vertex_buffer(&vertices, StaticDraw)?,
+            start_time: Instant::now(),
         })
     }
 
@@ -93,11 +87,11 @@ fn main() {
         .unwrap();
 
     let _gl_context = window.gl_create_context().unwrap();
-    let context = unsafe {
+    let ctx = unsafe {
         glow::Context::from_loader_function(|s| video.gl_get_proc_address(s) as *const _)
     };
-    let context = gl::Context::new(context).unwrap();
-    let demo = Demo::new(context).unwrap();
+    let ctx = gl::Context::new(ctx).unwrap();
+    let demo = Demo::new(ctx).unwrap();
 
     let mut event_loop = sdl.event_pump().unwrap();
     let mut running = true;
