@@ -96,7 +96,10 @@ mod shaded_pass {
     pub fn vertex(uniform: Uniform, vertex: SceneVertex) -> sl::VaryingOutput<OutputVertex> {
         let output = OutputVertex {
             world_pos: vertex.world_pos,
-            light_clip_pos: uniform.light.camera.world_to_clip(vertex.world_pos),
+            light_clip_pos: uniform
+                .light
+                .camera
+                .world_to_clip(vertex.world_pos + vertex.world_normal * 0.1),
             world_normal: vertex.world_normal,
             color: vertex.color,
         };
@@ -110,19 +113,11 @@ mod shaded_pass {
         let light_eye_ndc =
             sl::vec3(light_eye_pos.x, light_eye_pos.y, light_eye_pos.z) / light_eye_pos.w;
 
-        let tex_coords = light_eye_ndc * 0.5 + 0.5;
+        let uv = light_eye_ndc * 0.5 + 0.5;
 
-        let is_outside = tex_coords
-            .x
-            .lt(0.0)
-            .or(tex_coords.y.lt(0.0))
-            .or(tex_coords.x.gt(1.0))
-            .or(tex_coords.y.gt(1.0));
+        let is_outside = sl::any([uv.x.lt(0.0), uv.x.gt(1.0), uv.x.lt(0.0), uv.x.gt(1.0)]);
 
-        is_outside.branch(
-            0.0,
-            light_depth_map.lookup(sl::vec2(tex_coords.x, tex_coords.y), tex_coords.z),
-        )
+        is_outside.branch(0.0, light_depth_map.lookup(sl::vec2(uv.x, uv.y), uv.z))
     }
 
     pub fn fragment(uniform: Uniform, vertex: OutputVertex) -> sl::Vec4 {
@@ -328,7 +323,7 @@ impl Light<Gl> {
                     center,
                     glam::vec3(0.0, 0.0, 1.0),
                 ),
-                eye_to_clip: glam::Mat4::orthographic_rh_gl(-20.0, 20.0, -20.0, 20.0, 1.0, 30.0),
+                eye_to_clip: glam::Mat4::orthographic_rh_gl(-40.0, 40.0, -40.0, 40.0, 0.1, 100.0),
             },
             world_pos: LIGHT_WORLD_POS,
             color: glam::vec3(1.0, 1.0, 0.7),

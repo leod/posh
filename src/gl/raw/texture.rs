@@ -12,6 +12,7 @@ use super::{
 pub struct Texture2d {
     ctx: Rc<ContextShared>,
     id: glow::Texture,
+    size: glam::UVec2,
     internal_format: ImageInternalFormat,
     levels: usize,
     sampler_params: Cell<Sampler2dParams>,
@@ -98,6 +99,7 @@ impl Texture2d {
         let texture = Texture2d {
             ctx: ctx.clone(),
             id,
+            size: image.size,
             internal_format: image.internal_format,
             levels: levels as usize,
             sampler_params: Default::default(),
@@ -145,6 +147,14 @@ impl Texture2d {
         self.id
     }
 
+    pub fn size(&self) -> glam::UVec2 {
+        self.size
+    }
+
+    pub fn internal_format(&self) -> ImageInternalFormat {
+        self.internal_format
+    }
+
     pub(super) fn set_sampler_params(
         &self,
         new: Sampler2dParams,
@@ -160,10 +170,6 @@ impl Texture2d {
         set_comparison_func(gl, glow::TEXTURE_2D, compare);
 
         check_gl_error(gl).unwrap();
-    }
-
-    pub fn internal_format(&self) -> ImageInternalFormat {
-        self.internal_format
     }
 }
 

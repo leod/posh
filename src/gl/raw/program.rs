@@ -165,9 +165,11 @@ impl Program {
 
         framebuffer.bind(&self.ctx)?;
 
+        let framebuffer_size = framebuffer.size(&self.ctx);
+
         // `set_draw_params` also clears the screen, so it must come after
         // binding the framebuffer.
-        ctx.set_draw_params(draw_params);
+        ctx.set_draw_params(draw_params, framebuffer_size);
 
         unsafe {
             gl.use_program(Some(self.id));

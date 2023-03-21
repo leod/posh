@@ -14,6 +14,14 @@ pub enum Attachment {
 }
 
 impl Attachment {
+    pub fn size(&self) -> glam::UVec2 {
+        use Attachment::*;
+
+        match self {
+            Texture2d { texture, .. } => texture.size(),
+        }
+    }
+
     pub fn internal_format(&self) -> ImageInternalFormat {
         use Attachment::*;
 
@@ -39,6 +47,20 @@ impl Attachment {
 pub enum Framebuffer {
     Default,
     Attachments { attachments: Vec<Attachment> },
+}
+
+impl Framebuffer {
+    pub(super) fn size(&self, ctx: &ContextShared) -> glam::UVec2 {
+        use Framebuffer::*;
+
+        match self {
+            Default => ctx.default_framebuffer_size(),
+            Attachments { attachments } => attachments
+                .iter()
+                .map(|attachment| attachment.size())
+                .fold(glam::UVec2::ZERO, glam::UVec2::max),
+        }
+    }
 }
 
 fn with_locations(attachments: &[Attachment]) -> impl Iterator<Item = (u32, &Attachment)> {
