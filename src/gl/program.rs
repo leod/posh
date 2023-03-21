@@ -7,8 +7,8 @@ use crate::{
 };
 
 use super::{
-    raw, vertex_stream::VertexStream, ColorSampler2d, ComparisonSampler2d, DrawError, DrawParams,
-    Framebuffer, UniformBufferBinding,
+    raw, ColorSampler2d, ComparisonSampler2d, DrawError, DrawParams, Framebuffer, PrimitiveStream,
+    UniformBufferBinding,
 };
 
 pub struct Program<U, V, F = sl::Vec4> {
@@ -32,7 +32,7 @@ where
     pub fn draw(
         &self,
         uniforms: U::Gl,
-        vertices: VertexStream<V::Gl>,
+        primitives: PrimitiveStream<V::Gl>,
         framebuffer: impl Framebuffer<F::Gl>,
         draw_params: DrawParams,
     ) -> Result<(), DrawError> {
@@ -48,7 +48,7 @@ where
             self.raw.draw(
                 &uniform_visitor.raw_uniform_buffers,
                 &uniform_visitor.raw_samplers,
-                &vertices.raw(),
+                &primitives.raw(),
                 &framebuffer.raw(),
                 &draw_params,
             )

@@ -131,10 +131,10 @@ impl Demo {
 
         self.program.draw(
             (uniform, sampler),
-            gl::VertexStream {
+            gl::PrimitiveStream {
                 vertices: self.vertices.as_binding(),
                 elements: self.elements.as_binding(),
-                primitive: gl::PrimitiveType::Triangles,
+                mode: gl::Mode::Triangles,
             },
             gl::DefaultFramebuffer::default(),
             gl::DrawParams::default()
