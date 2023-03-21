@@ -92,7 +92,7 @@ impl<S: ColorSample> Object for ColorSampler2d<S> {
 }
 
 impl<S: ColorSample> ColorSampler2d<S> {
-    pub fn lookup(self, tex_coords: Vec2) -> S {
+    pub fn sample(self, tex_coords: Vec2) -> S {
         let sample = built_in_2("texture", self, tex_coords);
 
         S::from_vec4(sample)
@@ -119,7 +119,7 @@ impl Object for ComparisonSampler2d {
 }
 
 impl ComparisonSampler2d {
-    pub fn lookup(self, tex_coords: Vec2, reference_depth: F32) -> F32 {
+    pub fn sample_compare(self, tex_coords: Vec2, reference_depth: F32) -> F32 {
         built_in_2("texture", self, tex_coords.extend(reference_depth))
     }
 }
