@@ -233,10 +233,10 @@ impl Demo {
             .create_vertex_buffer(&light_vertices(light_pos), gl::BufferUsage::StreamDraw)
             .unwrap();
 
-        let scene_stream = gl::VertexStream {
+        let scene_stream = gl::PrimitiveStream {
             vertices: self.scene_vertices.as_binding(),
             elements: self.scene_elements.as_binding(),
-            primitive: gl::PrimitiveType::Triangles,
+            mode: gl::Mode::Triangles,
         };
 
         self.depth_program.draw(
@@ -271,10 +271,10 @@ impl Demo {
 
         self.flat_program.draw(
             self.camera_buffer.as_binding(),
-            gl::VertexStream {
+            gl::PrimitiveStream {
                 vertices: self.light_vertices.as_binding(),
                 elements: self.light_elements.as_binding(),
-                primitive: gl::PrimitiveType::Triangles,
+                mode: gl::Mode::Triangles,
             },
             gl::DefaultFramebuffer::default(),
             gl::DrawParams {
@@ -286,10 +286,10 @@ impl Demo {
         self.debug_program.draw(
             self.light_depth_map
                 .as_color_sampler(gl::Sampler2dParams::default()),
-            gl::VertexStream {
+            gl::PrimitiveStream {
                 vertices: self.debug_vertices.as_binding(),
                 elements: self.debug_elements.as_binding(),
-                primitive: gl::PrimitiveType::Triangles,
+                mode: gl::Mode::Triangles,
             },
             gl::DefaultFramebuffer::default(),
             gl::DrawParams::default(),

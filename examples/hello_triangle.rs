@@ -65,10 +65,10 @@ impl Demo {
 
         self.program.draw(
             self.globals.as_binding(),
-            gl::VertexStream {
+            gl::PrimitiveStream {
                 vertices: self.vertices.as_binding(),
                 elements: gl::Elements::Range(0..3),
-                primitive: gl::PrimitiveType::Triangles,
+                mode: gl::Mode::Triangles,
             },
             gl::DefaultFramebuffer::default(),
             gl::DrawParams::default().with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0)),

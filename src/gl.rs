@@ -18,10 +18,10 @@ pub use framebuffer::{ColorAttachment, DefaultFramebuffer, DepthAttachment, Fram
 pub use program::Program;
 pub use raw::{
     BufferError, BufferUsage, Caps, CompareFunction, ContextError, CreateError, DrawError,
-    DrawParams, ElementType, FramebufferError, ImageFormat, ImageInternalFormat, PrimitiveType,
+    DrawParams, ElementType, FramebufferError, ImageFormat, ImageInternalFormat, Mode,
     ProgramError, ProgramValidationError, Sampler2dParams, TextureError, VertexArrayError,
 };
 pub use texture::{ColorSampler2d, ColorTexture2d, ComparisonSampler2d, DepthTexture2d};
 pub use uniform_buffer::{UniformBuffer, UniformBufferBinding};
 pub use vertex_buffer::{VertexBuffer, VertexBufferBinding};
-pub use vertex_stream::VertexStream;
+pub use vertex_stream::PrimitiveStream;
