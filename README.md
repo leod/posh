@@ -1,6 +1,6 @@
 # posh
 
-`posh` is a type-safe OpenGL wrapper library with the aim of making graphics programming enjoyable.
+`posh` is a type-safe OpenGL ES 3.0 wrapper library with the aim of making graphics programming enjoyable.
 
 ## Example
 

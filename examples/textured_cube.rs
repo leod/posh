@@ -15,20 +15,6 @@ struct Camera<D: BlockDom = Sl> {
     view_to_screen: D::Mat4,
 }
 
-impl Default for Camera<Gl> {
-    fn default() -> Self {
-        Self {
-            world_to_view: glam::Mat4::from_translation(glam::Vec3::new(0.0, 0.0, -3.0)),
-            view_to_screen: glam::Mat4::perspective_rh_gl(
-                std::f32::consts::PI / 2.0,
-                WIDTH as f32 / HEIGHT as f32,
-                1.0,
-                10.0,
-            ),
-        }
-    }
-}
-
 #[derive(Clone, Copy, Block)]
 struct Vertex<D: BlockDom = Sl> {
     pos: D::Vec3,
@@ -83,37 +69,24 @@ struct Demo {
 }
 
 impl Demo {
-    pub fn new(context: gl::Context) -> Result<Self, gl::CreateError> {
-        let program = context.create_program(vertex_shader, sl::ColorSampler2d::sample)?;
+    pub fn new(ctx: gl::Context) -> Result<Self, gl::CreateError> {
+        use gl::BufferUsage::*;
 
-        let camera =
-            context.create_uniform_buffer(Camera::default(), gl::BufferUsage::StaticDraw)?;
-        let time = context.create_uniform_buffer(0.0, gl::BufferUsage::StreamDraw)?;
         let image = ImageReader::open("examples/resources/smile.png")
             .unwrap()
             .decode()
             .unwrap()
             .to_rgba8();
-        let texture = context.create_color_texture_2d_with_mipmap(gl::ColorImage::slice_u8(
-            image.dimensions().into(),
-            image.as_bytes(),
-        ))?;
-
-        let vertices =
-            context.create_vertex_buffer(&cube_vertices(), gl::BufferUsage::StaticDraw)?;
-        let elements =
-            context.create_element_buffer(&cube_elements(), gl::BufferUsage::StaticDraw)?;
-
-        let start_time = Instant::now();
+        let image = gl::ColorImage::slice_u8(image.dimensions().into(), image.as_bytes());
 
         Ok(Self {
-            program,
-            camera,
-            time,
-            texture,
-            vertices,
-            elements,
-            start_time,
+            program: ctx.create_program(vertex_shader, sl::ColorSampler2d::sample)?,
+            camera: ctx.create_uniform_buffer(Camera::default(), StaticDraw)?,
+            time: ctx.create_uniform_buffer(0.0, StreamDraw)?,
+            texture: ctx.create_color_texture_2d_with_mipmap(image)?,
+            vertices: ctx.create_vertex_buffer(&cube_vertices(), StaticDraw)?,
+            elements: ctx.create_element_buffer(&cube_elements(), StaticDraw)?,
+            start_time: Instant::now(),
         })
     }
 
@@ -145,7 +118,21 @@ impl Demo {
     }
 }
 
-// Mesh data
+// Scene data
+
+impl Default for Camera<Gl> {
+    fn default() -> Self {
+        Self {
+            world_to_view: glam::Mat4::from_translation(glam::Vec3::new(0.0, 0.0, -3.0)),
+            view_to_screen: glam::Mat4::perspective_rh_gl(
+                std::f32::consts::PI / 2.0,
+                WIDTH as f32 / HEIGHT as f32,
+                1.0,
+                10.0,
+            ),
+        }
+    }
+}
 
 fn cube_vertices() -> Vec<Vertex<Gl>> {
     [
@@ -206,11 +193,11 @@ fn main() {
         .unwrap();
 
     let _gl_context = window.gl_create_context().unwrap();
-    let context = unsafe {
+    let ctx = unsafe {
         glow::Context::from_loader_function(|s| video.gl_get_proc_address(s) as *const _)
     };
-    let context = gl::Context::new(context).unwrap();
-    let demo = Demo::new(context).unwrap();
+    let ctx = gl::Context::new(ctx).unwrap();
+    let demo = Demo::new(ctx).unwrap();
 
     let mut event_loop = sdl.event_pump().unwrap();
     let mut running = true;

@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use posh::{gl, sl, Block, BlockDom, Sl};
+use posh::{gl, sl, Block, BlockDom, Gl, Sl};
 
 // Shader interface
 
@@ -82,55 +82,20 @@ struct Demo {
 }
 
 impl Demo {
-    pub fn new(context: gl::Context) -> Result<Self, gl::CreateError> {
-        let scene_program = context.create_program(scene_pass::vertex, scene_pass::fragment)?;
-        let present_program =
-            context.create_program(present_pass::vertex, present_pass::fragment)?;
+    pub fn new(ctx: gl::Context) -> Result<Self, gl::CreateError> {
+        use gl::BufferUsage::*;
 
-        let state = context
-            .create_uniform_buffer(State { time: 0.0, flip: 0 }, gl::BufferUsage::StreamDraw)?;
-        let texture =
-            context.create_color_texture_2d(gl::ColorImage::zero_u8(glam::uvec2(1024, 768)))?;
-
-        let triangle_vertices = context.create_vertex_buffer(
-            &[[0.5f32, 1.0].into(), [0.0, 0.0].into(), [1.0, 0.0].into()],
-            gl::BufferUsage::StaticDraw,
-        )?;
-        let quad_vertices = context.create_vertex_buffer(
-            &[
-                present_pass::Vertex {
-                    pos: [-1.0, -1.0].into(),
-                    tex_coords: [0.0, 0.0].into(),
-                },
-                present_pass::Vertex {
-                    pos: [1.0, -1.0].into(),
-                    tex_coords: [1.0, 0.0].into(),
-                },
-                present_pass::Vertex {
-                    pos: [1.0, 1.0].into(),
-                    tex_coords: [1.0, 1.0].into(),
-                },
-                present_pass::Vertex {
-                    pos: [-1.0, 1.0].into(),
-                    tex_coords: [0.0, 1.0].into(),
-                },
-            ],
-            gl::BufferUsage::StaticDraw,
-        )?;
-        let quad_elements =
-            context.create_element_buffer(&[0, 1, 2, 0, 2, 3], gl::BufferUsage::StaticDraw)?;
-
-        let start_time = Instant::now();
+        let image = gl::ColorImage::zero_u8(glam::uvec2(1024, 768));
 
         Ok(Self {
-            scene_program,
-            present_program,
-            state,
-            texture,
-            triangle_vertices,
-            quad_vertices,
-            quad_elements,
-            start_time,
+            scene_program: ctx.create_program(scene_pass::vertex, scene_pass::fragment)?,
+            present_program: ctx.create_program(present_pass::vertex, present_pass::fragment)?,
+            state: ctx.create_uniform_buffer(State { time: 0.0, flip: 0 }, StreamDraw)?,
+            texture: ctx.create_color_texture_2d(image)?,
+            triangle_vertices: ctx.create_vertex_buffer(&triangle_vertices(), StaticDraw)?,
+            quad_vertices: ctx.create_vertex_buffer(&quad_vertices(), StaticDraw)?,
+            quad_elements: ctx.create_element_buffer(&[0, 1, 2, 0, 2, 3], StaticDraw)?,
+            start_time: Instant::now(),
         })
     }
 
@@ -171,6 +136,33 @@ impl Demo {
     }
 }
 
+// Scene data
+
+fn triangle_vertices() -> Vec<glam::Vec2> {
+    vec![[0.5f32, 1.0].into(), [0.0, 0.0].into(), [1.0, 0.0].into()]
+}
+
+fn quad_vertices() -> Vec<present_pass::Vertex<Gl>> {
+    vec![
+        present_pass::Vertex {
+            pos: [-1.0, -1.0].into(),
+            tex_coords: [0.0, 0.0].into(),
+        },
+        present_pass::Vertex {
+            pos: [1.0, -1.0].into(),
+            tex_coords: [1.0, 0.0].into(),
+        },
+        present_pass::Vertex {
+            pos: [1.0, 1.0].into(),
+            tex_coords: [1.0, 1.0].into(),
+        },
+        present_pass::Vertex {
+            pos: [-1.0, 1.0].into(),
+            tex_coords: [0.0, 1.0].into(),
+        },
+    ]
+}
+
 // SDL glue
 
 fn main() {
@@ -188,11 +180,11 @@ fn main() {
         .unwrap();
 
     let _gl_context = window.gl_create_context().unwrap();
-    let context = unsafe {
+    let ctx = unsafe {
         glow::Context::from_loader_function(|s| video.gl_get_proc_address(s) as *const _)
     };
-    let context = gl::Context::new(context).unwrap();
-    let demo = Demo::new(context).unwrap();
+    let ctx = gl::Context::new(ctx).unwrap();
+    let demo = Demo::new(ctx).unwrap();
 
     let mut event_loop = sdl.event_pump().unwrap();
     let mut running = true;
