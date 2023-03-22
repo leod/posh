@@ -150,7 +150,7 @@ impl PrimitiveStream {
             }
         }
 
-        check_gl_error(gl).expect("OpenGL error after VertexStream::bind()");
+        check_gl_error(gl).expect("OpenGL error after PrimitiveStream::bind()");
     }
 
     fn unbind(&self, ctx: &ContextShared) {
@@ -179,7 +179,7 @@ impl PrimitiveStream {
             }
         }
 
-        check_gl_error(gl).expect("OpenGL error after VertexStream::unbind()");
+        check_gl_error(gl).expect("OpenGL error after PrimitiveStream::unbind()");
     }
 
     pub(super) fn draw(&self, ctx: &ContextShared) {
