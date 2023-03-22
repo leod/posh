@@ -17,8 +17,14 @@ pub struct Camera<D: BlockDom = Sl> {
 }
 
 impl Camera<Sl> {
-    pub fn world_to_clip(self, world_pos: sl::Vec3) -> sl::Vec4 {
-        self.eye_to_clip * self.world_to_eye * world_pos.extend(1.0)
+    pub fn world_to_clip_pos(self, world_pos: sl::Vec3) -> sl::Vec4 {
+        self.eye_to_clip * (self.world_to_eye * world_pos.extend(1.0))
+    }
+
+    pub fn world_to_clip_normal(self, world_normal: sl::Vec3) -> sl::Vec3 {
+        ((self.eye_to_clip * self.world_to_eye).transpose().inverse() * world_normal.extend(0.0))
+            .xyz()
+            .normalize()
     }
 }
 
@@ -47,7 +53,7 @@ mod flat_pass {
     pub fn vertex(camera: Camera, vertex: SceneVertex) -> sl::VaryingOutput<sl::Vec3> {
         sl::VaryingOutput {
             output: vertex.color,
-            position: camera.world_to_clip(vertex.world_pos),
+            position: camera.world_to_clip_pos(vertex.world_pos),
         }
     }
 
@@ -62,7 +68,7 @@ mod depth_pass {
     use super::{Light, SceneVertex};
 
     pub fn vertex(light: Light, vertex: SceneVertex) -> sl::Vec4 {
-        light.camera.world_to_clip(vertex.world_pos)
+        light.camera.world_to_clip_pos(vertex.world_pos)
     }
 
     pub fn fragment(_: (), _: ()) -> () {
@@ -91,6 +97,7 @@ mod shaded_pass {
         world_normal: sl::Vec3,
         color: sl::Vec3,
         light_clip_pos: sl::Vec4,
+        light_clip_normal: sl::Vec3,
     }
 
     pub fn vertex(
@@ -99,30 +106,34 @@ mod shaded_pass {
     ) -> sl::VaryingOutput<OutputVertex> {
         let light_clip_pos = light
             .camera
-            .world_to_clip(vertex.world_pos + vertex.world_normal * 0.1);
+            .world_to_clip_pos(vertex.world_pos + vertex.world_normal * 0.1);
+        let light_clip_normal = light.camera.world_to_clip_normal(vertex.world_normal);
 
         let output = OutputVertex {
             world_pos: vertex.world_pos,
             world_normal: vertex.world_normal,
             color: vertex.color,
             light_clip_pos,
+            light_clip_normal,
         };
 
         sl::VaryingOutput {
             output,
-            position: camera.world_to_clip(vertex.world_pos),
+            position: camera.world_to_clip_pos(vertex.world_pos),
         }
     }
 
     fn sample_shadow(
         light_depth_map: sl::ComparisonSampler2d,
         light_clip_pos: sl::Vec4,
+        light_clip_normal: sl::Vec3,
     ) -> sl::F32 {
         let ndc = light_clip_pos.xyz() / light_clip_pos.w;
+        let norm = ndc.xy().dot(ndc.xy());
         let uvw = ndc * 0.5 + 0.5;
-        let is_outside = sl::any([uvw.x.lt(0.0), uvw.x.gt(1.0), uvw.y.lt(0.0), uvw.y.gt(1.0)]);
-
-        is_outside.branch(0.0, light_depth_map.sample_compare(uvw.xy(), uvw.z))
+        let is_outside = norm.ge(1.0);
+        (-1.0 * light_clip_normal.z).clamp(0.0, 1.0)
+            * is_outside.branch(0.0, light_depth_map.sample_compare(uvw.xy(), uvw.z))
     }
 
     pub fn fragment(
@@ -133,11 +144,15 @@ mod shaded_pass {
         }: Uniform,
         vertex: OutputVertex,
     ) -> sl::Vec4 {
-        let shadow = sample_shadow(light_depth_map, vertex.light_clip_pos);
+        let shadow = sample_shadow(
+            light_depth_map,
+            vertex.light_clip_pos,
+            vertex.light_clip_normal,
+        );
 
-        let world_normal = vertex.world_normal.normalize();
+        //let world_normal = vertex.world_normal.normalize();
         let light_dir = (light.world_pos - vertex.world_pos).normalize();
-        let diffuse = light.color * world_normal.dot(light_dir).max(0.0);
+        let diffuse = light.color * vertex.world_normal.dot(light_dir).max(0.0);
 
         let color = (light.ambient + shadow * diffuse) * vertex.color;
 
