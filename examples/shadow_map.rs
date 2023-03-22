@@ -120,7 +120,7 @@ mod shaded_pass {
     ) -> sl::F32 {
         let ndc = light_clip_pos.xyz() / light_clip_pos.w;
         let uvw = ndc * 0.5 + 0.5;
-        let is_outside = sl::any([uvw.x.lt(0.0), uvw.x.gt(1.0), uvw.x.lt(0.0), uvw.x.gt(1.0)]);
+        let is_outside = sl::any([uvw.x.lt(0.0), uvw.x.gt(1.0), uvw.y.lt(0.0), uvw.y.gt(1.0)]);
 
         is_outside.branch(0.0, light_depth_map.sample_compare(uvw.xy(), uvw.z))
     }
@@ -226,12 +226,7 @@ impl Demo {
         let light_pos = light_pos(mouse_pos);
 
         self.light_buffer.set(Light::new(light_pos));
-
-        // FIXME: lol
-        self.light_vertices = self
-            .ctx
-            .create_vertex_buffer(&light_vertices(light_pos), gl::BufferUsage::StreamDraw)
-            .unwrap();
+        self.light_vertices.set(&light_vertices(light_pos));
 
         let scene_stream = gl::PrimitiveStream {
             vertices: self.scene_vertices.as_binding(),
@@ -246,6 +241,7 @@ impl Demo {
             gl::DrawParams {
                 clear_depth: Some(1.0),
                 depth_compare: Some(gl::CompareFunction::Less),
+                cull_face: Some(gl::CullFace::Back),
                 ..Default::default()
             },
         )?;
@@ -265,6 +261,7 @@ impl Demo {
                 clear_color: Some(glam::Vec4::ONE),
                 clear_depth: Some(1.0),
                 depth_compare: Some(gl::CompareFunction::Less),
+                cull_face: Some(gl::CullFace::Back),
                 ..Default::default()
             },
         )?;
@@ -279,6 +276,7 @@ impl Demo {
             gl::DefaultFramebuffer::default(),
             gl::DrawParams {
                 depth_compare: Some(gl::CompareFunction::Less),
+                cull_face: Some(gl::CullFace::Back),
                 ..Default::default()
             },
         )?;
@@ -332,7 +330,9 @@ impl Light<Gl> {
                     center,
                     glam::vec3(0.0, 0.0, 1.0),
                 ),
-                eye_to_clip: glam::Mat4::orthographic_rh_gl(-40.0, 40.0, -40.0, 40.0, 0.1, 100.0),
+                eye_to_clip: glam::Mat4::orthographic_rh_gl(
+                    -40.0, 40.0, -40.0, 40.0, -100.0, 100.0,
+                ),
             },
             world_pos: LIGHT_WORLD_POS,
             color: glam::vec3(1.0, 1.0, 0.7),
@@ -441,7 +441,7 @@ fn cube_vertices(
     .into_iter()
     .enumerate()
     .map(move |(i, pos)| SceneVertex {
-        world_pos: center + glam::Vec3::from(pos) * size,
+        world_pos: center + glam::Vec3::from(pos) * size * if invert { -1.0 } else { 1.0 },
         world_normal: glam::Vec3::from(
             [
                 [1.0, 0.0, 0.0],
@@ -451,7 +451,7 @@ fn cube_vertices(
                 [0.0, 0.0, 1.0],
                 [0.0, 0.0, -1.0],
             ][i / 4],
-        ) * if invert { -1.0 } else { 1.0 },
+        ),
         color,
     })
 }
@@ -459,7 +459,7 @@ fn cube_vertices(
 fn cube_elements(n: u32) -> impl Iterator<Item = u32> {
     let start = 24 * n;
 
-    (0..6u32).flat_map(move |face| [0, 1, 2, 0, 2, 3].map(|i| start + face * 4 + i))
+    (0..6u32).flat_map(move |face| [1, 0, 2, 2, 0, 3].map(|i| start + face * 4 + i))
 }
 
 fn debug_vertices() -> Vec<debug_pass::Vertex<Gl>> {

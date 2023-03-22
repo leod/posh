@@ -98,6 +98,8 @@ impl Buffer {
         }
 
         self.len.set(raw_data.len());
+
+        check_gl_error(gl).expect("OpenGL error after Buffer::set");
     }
 }
 

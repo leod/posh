@@ -43,7 +43,7 @@ impl Context {
         B: Block<Sl>,
     {
         // TODO
-        let data: Vec<_> = data.iter().map(|vertex| vertex.as_std140()).collect();
+        let data: Vec<_> = data.iter().map(AsStd140::as_std140).collect();
 
         let raw = self.raw.create_buffer(&data, usage)?;
 

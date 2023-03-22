@@ -35,6 +35,23 @@ pub struct Viewport {
     pub size: glam::UVec2,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum CullFace {
+    Front,
+    Back,
+}
+
+impl CullFace {
+    pub const fn to_gl(self) -> u32 {
+        use CullFace::*;
+
+        match self {
+            Front => glow::FRONT,
+            Back => glow::BACK,
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct DrawParams {
     pub clear_color: Option<glam::Vec4>,
@@ -42,6 +59,7 @@ pub struct DrawParams {
     pub clear_stencil: Option<u8>,
     pub depth_compare: Option<CompareFunction>,
     pub viewport: Option<Viewport>,
+    pub cull_face: Option<CullFace>,
 }
 
 impl Default for DrawParams {
@@ -52,6 +70,7 @@ impl Default for DrawParams {
             clear_stencil: None,
             depth_compare: None,
             viewport: None,
+            cull_face: None,
         }
     }
 }
@@ -102,6 +121,17 @@ impl DrawParams {
             lower_left_corner: glam::UVec2::ZERO,
             size: framebuffer_size,
         });
+
+        if self.cull_face != current.cull_face {
+            if let Some(cull_face) = self.cull_face {
+                let cull_face = cull_face.to_gl();
+
+                unsafe { gl.enable(glow::CULL_FACE) };
+                unsafe { gl.cull_face(cull_face) };
+            } else {
+                unsafe { gl.disable(glow::CULL_FACE) };
+            }
+        }
 
         unsafe {
             gl.viewport(
