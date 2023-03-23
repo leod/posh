@@ -94,14 +94,13 @@ fn main() {
     let demo = Demo::new(ctx).unwrap();
 
     let mut event_loop = sdl.event_pump().unwrap();
-    let mut running = true;
 
-    while running {
+    loop {
         for event in event_loop.poll_iter() {
             use sdl2::event::Event::*;
 
             if matches!(event, Quit { .. }) {
-                running = false;
+                return;
             }
         }
 

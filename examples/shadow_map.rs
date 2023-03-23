@@ -1,12 +1,13 @@
-use glam::{Vec3Swizzles, Vec4Swizzles};
+use std::time::Instant;
+
 use nanorand::{Rng, WyRand};
 
 use posh::{gl, sl, Block, BlockDom, Gl, Sl};
 
-const SCREEN_WIDTH: u32 = 1024;
-const SCREEN_HEIGHT: u32 = 768;
-const DEPTH_MAP_SIZE: u32 = 1024;
-const NUM_CUBES: u32 = 10;
+const SCREEN_WIDTH: u32 = 1920;
+const SCREEN_HEIGHT: u32 = 1080;
+const DEPTH_MAP_SIZE: u32 = 2048;
+const NUM_CUBES: u32 = 30;
 
 // Shader interface
 
@@ -17,14 +18,8 @@ pub struct Camera<D: BlockDom = Sl> {
 }
 
 impl Camera<Sl> {
-    pub fn world_to_clip_pos(self, world_pos: sl::Vec3) -> sl::Vec4 {
+    pub fn world_to_clip(self, world_pos: sl::Vec3) -> sl::Vec4 {
         self.eye_to_clip * (self.world_to_eye * world_pos.extend(1.0))
-    }
-
-    pub fn world_to_clip_normal(self, world_normal: sl::Vec3) -> sl::Vec3 {
-        ((self.eye_to_clip * self.world_to_eye).transpose().inverse() * world_normal.extend(0.0))
-            .xyz()
-            .normalize()
     }
 }
 
@@ -53,7 +48,7 @@ mod flat_pass {
     pub fn vertex(camera: Camera, vertex: SceneVertex) -> sl::VaryingOutput<sl::Vec3> {
         sl::VaryingOutput {
             output: vertex.color,
-            position: camera.world_to_clip_pos(vertex.world_pos),
+            position: camera.world_to_clip(vertex.world_pos),
         }
     }
 
@@ -68,7 +63,7 @@ mod depth_pass {
     use super::{Light, SceneVertex};
 
     pub fn vertex(light: Light, vertex: SceneVertex) -> sl::Vec4 {
-        light.camera.world_to_clip_pos(vertex.world_pos)
+        light.camera.world_to_clip(vertex.world_pos)
     }
 
     pub fn fragment(_: (), _: ()) -> () {
@@ -97,43 +92,41 @@ mod shaded_pass {
         world_normal: sl::Vec3,
         color: sl::Vec3,
         light_clip_pos: sl::Vec4,
-        light_clip_normal: sl::Vec3,
     }
 
     pub fn vertex(
         Uniform { light, camera, .. }: Uniform,
         vertex: SceneVertex,
     ) -> sl::VaryingOutput<OutputVertex> {
+        const EXTRUDE: f32 = 0.1;
+
         let light_clip_pos = light
             .camera
-            .world_to_clip_pos(vertex.world_pos + vertex.world_normal * 0.1);
-        let light_clip_normal = light.camera.world_to_clip_normal(vertex.world_normal);
+            .world_to_clip(vertex.world_pos + vertex.world_normal * EXTRUDE);
 
         let output = OutputVertex {
             world_pos: vertex.world_pos,
             world_normal: vertex.world_normal,
             color: vertex.color,
             light_clip_pos,
-            light_clip_normal,
         };
 
         sl::VaryingOutput {
             output,
-            position: camera.world_to_clip_pos(vertex.world_pos),
+            position: camera.world_to_clip(vertex.world_pos),
         }
     }
 
     fn sample_shadow(
         light_depth_map: sl::ComparisonSampler2d,
         light_clip_pos: sl::Vec4,
-        light_clip_normal: sl::Vec3,
     ) -> sl::F32 {
         let ndc = light_clip_pos.xyz() / light_clip_pos.w;
-        let norm = ndc.xy().dot(ndc.xy());
         let uvw = ndc * 0.5 + 0.5;
-        let is_outside = norm.ge(1.0);
-        (-1.0 * light_clip_normal.z).clamp(0.0, 1.0)
-            * is_outside.branch(0.0, light_depth_map.sample_compare(uvw.xy(), uvw.z))
+
+        let is_outside = sl::any([uvw.x.lt(0.0), uvw.x.gt(1.0), uvw.y.lt(0.0), uvw.y.gt(1.0)]);
+
+        is_outside.branch(0.0, light_depth_map.sample_compare(uvw.xy(), uvw.z))
     }
 
     pub fn fragment(
@@ -144,15 +137,10 @@ mod shaded_pass {
         }: Uniform,
         vertex: OutputVertex,
     ) -> sl::Vec4 {
-        let shadow = sample_shadow(
-            light_depth_map,
-            vertex.light_clip_pos,
-            vertex.light_clip_normal,
-        );
-
-        //let world_normal = vertex.world_normal.normalize();
         let light_dir = (light.world_pos - vertex.world_pos).normalize();
         let diffuse = light.color * vertex.world_normal.dot(light_dir).max(0.0);
+
+        let shadow = sample_shadow(light_depth_map, vertex.light_clip_pos);
 
         let color = (light.ambient + shadow * diffuse) * vertex.color;
 
@@ -186,8 +174,6 @@ mod debug_pass {
 // Host code
 
 struct Demo {
-    ctx: gl::Context,
-
     flat_program: gl::Program<Camera, SceneVertex>,
     depth_program: gl::Program<Light, SceneVertex, ()>,
     shaded_program: gl::Program<shaded_pass::Uniform, SceneVertex>,
@@ -205,6 +191,8 @@ struct Demo {
 
     debug_vertices: gl::VertexBuffer<debug_pass::Vertex>,
     debug_elements: gl::ElementBuffer,
+
+    start_time: Instant,
 }
 
 impl Demo {
@@ -215,15 +203,13 @@ impl Demo {
         let light_depth_image = gl::DepthImage::zero_f32(depth_map_size);
 
         Ok(Demo {
-            ctx: ctx.clone(),
-
             flat_program: ctx.create_program(flat_pass::vertex, flat_pass::fragment)?,
             depth_program: ctx.create_program(depth_pass::vertex, depth_pass::fragment)?,
             shaded_program: ctx.create_program(shaded_pass::vertex, shaded_pass::fragment)?,
             debug_program: ctx.create_program(debug_pass::vertex, debug_pass::fragment)?,
 
             camera_buffer: ctx.create_uniform_buffer(Camera::default(), StaticDraw)?,
-            light_buffer: ctx.create_uniform_buffer(Light::new(glam::Vec3::ZERO), StreamDraw)?,
+            light_buffer: ctx.create_uniform_buffer(Light::new(0.0, 0.0), StreamDraw)?,
             light_depth_map: ctx.create_depth_texture_2d(light_depth_image)?,
 
             scene_vertices: ctx.create_vertex_buffer(&scene_vertices(), StaticDraw)?,
@@ -234,14 +220,19 @@ impl Demo {
 
             debug_vertices: ctx.create_vertex_buffer(&debug_vertices(), StaticDraw)?,
             debug_elements: ctx.create_element_buffer(&debug_elements(), StaticDraw)?,
+
+            start_time: Instant::now(),
         })
     }
 
-    pub fn draw(&mut self, mouse_pos: glam::UVec2) -> Result<(), gl::DrawError> {
-        let light_pos = light_pos(mouse_pos);
+    pub fn draw(&mut self) -> Result<(), gl::DrawError> {
+        let dt = Instant::now().duration_since(self.start_time).as_secs_f32();
 
-        self.light_buffer.set(Light::new(light_pos));
-        self.light_vertices.set(&light_vertices(light_pos));
+        let light_x = (dt * 0.5).sin() * 20.0;
+        let light_y = 20.0 + dt.sin() * 10.0;
+
+        self.light_buffer.set(Light::new(light_x, light_y));
+        self.light_vertices.set(&light_vertices(light_x, light_y));
 
         let scene_stream = gl::PrimitiveStream {
             vertices: self.scene_vertices.as_binding(),
@@ -314,16 +305,17 @@ impl Demo {
 
 // Scene data
 
-const CAMERA_WORLD_POS: glam::Vec3 = glam::vec3(-5.0, 5.0, 10.0);
-const LIGHT_WORLD_POS: glam::Vec3 = glam::vec3(0.0, 5.0, 5.0);
-const LIGHT_CENTER_Z: f32 = -20.0;
+const CAMERA_POS: glam::Vec3 = glam::vec3(0.0, 40.0, 40.0);
+const CUBE_SIZE: f32 = 4.0;
+const FLOOR_POS: glam::Vec3 = glam::vec3(0.0, -2.5, 0.0);
+const FLOOR_SIZE: glam::Vec3 = glam::vec3(200.0, 5.0, 100.0);
 
 impl Default for Camera<Gl> {
     fn default() -> Self {
         Self {
             world_to_eye: glam::Mat4::look_at_rh(
-                CAMERA_WORLD_POS,
-                glam::vec3(0.0, 0.0, LIGHT_CENTER_Z),
+                CAMERA_POS,
+                glam::Vec3::new(0.0, 0.0, 10.0),
                 glam::vec3(0.0, 1.0, 0.0),
             ),
             eye_to_clip: glam::Mat4::perspective_rh_gl(
@@ -337,19 +329,24 @@ impl Default for Camera<Gl> {
 }
 
 impl Light<Gl> {
-    pub fn new(center: glam::Vec3) -> Self {
+    pub fn new(world_x: f32, world_y: f32) -> Self {
+        let world_pos = glam::vec3(world_x, world_y, 35.0);
+
         Self {
             camera: Camera {
                 world_to_eye: glam::Mat4::look_at_rh(
-                    LIGHT_WORLD_POS,
-                    center,
-                    glam::vec3(0.0, 0.0, 1.0),
+                    world_pos,
+                    glam::vec3(0.0, 0.0, 0.0),
+                    glam::vec3(0.0, 1.0, 0.0),
                 ),
-                eye_to_clip: glam::Mat4::orthographic_rh_gl(
-                    -40.0, 40.0, -40.0, 40.0, -100.0, 100.0,
+                eye_to_clip: glam::Mat4::perspective_rh_gl(
+                    std::f32::consts::PI / 1.5,
+                    1.0,
+                    10.0,
+                    150.0,
                 ),
             },
-            world_pos: LIGHT_WORLD_POS,
+            world_pos,
             color: glam::vec3(1.0, 1.0, 0.7),
             ambient: glam::vec3(0.1, 0.1, 0.1),
         }
@@ -361,71 +358,42 @@ fn scene_vertices() -> Vec<SceneVertex<Gl>> {
 
     (0..NUM_CUBES)
         .flat_map(|_| {
-            let center = ((glam::vec2(rng.generate(), rng.generate()) - 0.5) * 30.0).extend(-15.0);
+            let center = glam::vec3(
+                (rng.generate::<f32>() - 0.5) * FLOOR_SIZE.x,
+                CUBE_SIZE / 2.0,
+                -rng.generate::<f32>() * 60.0 + 25.0,
+            );
+            let size = glam::Vec3::splat(CUBE_SIZE);
             let color = glam::vec3(rng.generate(), rng.generate(), rng.generate());
-            let size = glam::Vec3::splat(4.0);
 
-            cube_vertices(center, color, size, false)
+            rect_cuboid_vertices(center, size, color)
         })
-        .chain(cube_vertices(
-            glam::vec3(0.0, 0.0, 0.0),
+        .chain(rect_cuboid_vertices(
+            FLOOR_POS,
+            FLOOR_SIZE,
             glam::vec3(0.9, 0.9, 0.9),
-            glam::Vec3::splat(50.0),
-            true,
         ))
         .collect()
 }
 
 fn scene_elements() -> Vec<u32> {
-    (0..NUM_CUBES + 1).flat_map(cube_elements).collect()
+    (0..NUM_CUBES + 1).flat_map(cuboid_elements).collect()
 }
 
-fn light_vertices(center_pos: glam::Vec3) -> Vec<SceneVertex<Gl>> {
-    cube_vertices(
-        LIGHT_WORLD_POS,
-        glam::vec3(0.5, 0.5, 0.1),
-        glam::Vec3::splat(2.0),
-        false,
-    )
-    .chain(cube_vertices(
-        center_pos,
-        glam::vec3(0.5, 0.5, 0.1),
-        glam::Vec3::splat(1.3),
-        false,
-    ))
-    .collect()
+fn light_vertices(x: f32, y: f32) -> Vec<SceneVertex<Gl>> {
+    let world_pos = Light::new(x, y).world_pos;
+
+    rect_cuboid_vertices(world_pos, glam::Vec3::splat(2.0), glam::vec3(0.5, 0.5, 0.1)).collect()
 }
 
 fn light_elements() -> Vec<u32> {
-    (0..2).flat_map(cube_elements).collect()
+    cuboid_elements(0).collect()
 }
 
-fn light_pos(mouse_pos: glam::UVec2) -> glam::Vec3 {
-    let camera = Camera::default();
-    let world_pos = CAMERA_WORLD_POS;
-
-    let dir_ndc = glam::vec3(
-        (2.0 * mouse_pos.x as f32) / SCREEN_WIDTH as f32 - 1.0,
-        1.0 - (2.0 * mouse_pos.y as f32) / SCREEN_HEIGHT as f32,
-        1.0,
-    );
-    let dir_clip = dir_ndc.xy().extend(-1.0).extend(1.0);
-    let dir_eye = (camera.eye_to_clip.inverse() * dir_clip)
-        .xy()
-        .extend(-1.0)
-        .extend(0.0);
-    let dir_world = (camera.world_to_eye.inverse() * dir_eye).xyz().normalize();
-
-    let t = (LIGHT_CENTER_Z - world_pos.z) / dir_world.z;
-
-    world_pos + t * dir_world.xyz()
-}
-
-fn cube_vertices(
+fn rect_cuboid_vertices(
     center: glam::Vec3,
-    color: glam::Vec3,
     size: glam::Vec3,
-    invert: bool,
+    color: glam::Vec3,
 ) -> impl Iterator<Item = SceneVertex<Gl>> {
     [
         [0.5, -0.5, -0.5],
@@ -456,7 +424,7 @@ fn cube_vertices(
     .into_iter()
     .enumerate()
     .map(move |(i, pos)| SceneVertex {
-        world_pos: center + glam::Vec3::from(pos) * size * if invert { -1.0 } else { 1.0 },
+        world_pos: center + glam::Vec3::from(pos) * size,
         world_normal: glam::Vec3::from(
             [
                 [1.0, 0.0, 0.0],
@@ -471,7 +439,7 @@ fn cube_vertices(
     })
 }
 
-fn cube_elements(n: u32) -> impl Iterator<Item = u32> {
+fn cuboid_elements(n: u32) -> impl Iterator<Item = u32> {
     let start = 24 * n;
 
     (0..6u32).flat_map(move |face| [1, 0, 2, 2, 0, 3].map(|i| start + face * 4 + i))
@@ -482,20 +450,20 @@ fn debug_vertices() -> Vec<debug_pass::Vertex<Gl>> {
 
     vec![
         Vertex {
-            pos: [-1.0, -1.0].into(),
-            tex_coords: [0.0, 0.0].into(),
+            pos: [-1.0, 1.0].into(),
+            tex_coords: [0.0, 1.0].into(),
         },
         Vertex {
-            pos: [-0.5, -1.0].into(),
-            tex_coords: [1.0, 0.0].into(),
-        },
-        Vertex {
-            pos: [-0.5, -0.5].into(),
+            pos: [-0.5, 1.0].into(),
             tex_coords: [1.0, 1.0].into(),
         },
         Vertex {
-            pos: [-1.0, -0.5].into(),
-            tex_coords: [0.0, 1.0].into(),
+            pos: [-0.5, 0.5].into(),
+            tex_coords: [1.0, 0.0].into(),
+        },
+        Vertex {
+            pos: [-1.0, 0.5].into(),
+            tex_coords: [0.0, 0.0].into(),
         },
     ]
 }
@@ -515,7 +483,7 @@ fn main() {
     gl_attr.set_context_version(3, 0);
 
     let window = video
-        .window("Simple shadow mapping", 1024, 768)
+        .window("Simple shadow mapping", SCREEN_WIDTH, SCREEN_HEIGHT)
         .opengl()
         .build()
         .unwrap();
@@ -528,25 +496,17 @@ fn main() {
     let mut demo = Demo::new(ctx).unwrap();
 
     let mut event_loop = sdl.event_pump().unwrap();
-    let mut mouse_pos = glam::UVec2::ZERO;
 
     loop {
         for event in event_loop.poll_iter() {
             use sdl2::event::Event::*;
 
-            match event {
-                Quit { .. } => {
-                    return;
-                }
-                MouseMotion { x, y, .. } => {
-                    mouse_pos.x = (x.max(0) as u32).min(SCREEN_WIDTH);
-                    mouse_pos.y = (y.max(0) as u32).min(SCREEN_HEIGHT);
-                }
-                _ => (),
+            if matches!(event, Quit { .. }) {
+                return;
             }
         }
 
-        demo.draw(mouse_pos).unwrap();
+        demo.draw().unwrap();
         window.gl_swap_window();
     }
 }
