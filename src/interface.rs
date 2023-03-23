@@ -228,8 +228,8 @@ pub trait VertexField<D: VertexDom>: Sized {
 ///     vertex: MyVertex,
 /// ) -> sl::VaryingOutput<sl::Vec4> {
 ///     sl::VaryingOutput {
+///         output: vertex.material.color,
 ///         position: (vertex.position + vertex.material.normal * 1.3).extend(1.0),
-///         varying: vertex.material.color,
 ///     }
 /// }
 /// ```
@@ -274,11 +274,14 @@ pub trait VertexVisitor<'a, D: VertexDom> {
 /// See [`Uniform`] for more details.
 #[sealed]
 pub trait UniformDom: Copy {
-    /// A uniform block field.
+    /// A block field.
     type Block<B: Block<Sl, Sl = B>>: Uniform<Self>;
 
-    /// A two-dimensional uniform sampler field.
-    type Sampler2d<S: ColorSample>: Uniform<Self>;
+    /// A two-dimensional color sampler field.
+    type ColorSampler2d<S: ColorSample>: Uniform<Self>;
+
+    /// A two-dimensional comparison sampler field.
+    type ComparisonSampler2d: Uniform<Self>;
 
     /// A nested uniform interface field.
     type Uniform<U: Uniform<Sl>>: Uniform<Self>;
@@ -416,7 +419,12 @@ where
 #[doc(hidden)]
 pub trait UniformVisitor<'a, D: UniformDom> {
     fn accept_block<B: Block<Sl, Sl = B>>(&mut self, path: &str, block: &'a D::Block<B>);
-    fn accept_sampler2d<S: ColorSample>(&mut self, path: &str, sampler: &'a D::Sampler2d<S>);
+    fn accept_color_sampler_2d<S: ColorSample>(
+        &mut self,
+        path: &str,
+        sampler: &'a D::ColorSampler2d<S>,
+    );
+    fn accept_comparison_sampler_2d(&mut self, path: &str, sampler: &'a D::ComparisonSampler2d);
 }
 
 // Fragment

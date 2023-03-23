@@ -29,12 +29,37 @@ impl CompareFunction {
     }
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct Viewport {
+    pub lower_left_corner: glam::UVec2,
+    pub size: glam::UVec2,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum CullFace {
+    Front,
+    Back,
+}
+
+impl CullFace {
+    pub const fn to_gl(self) -> u32 {
+        use CullFace::*;
+
+        match self {
+            Front => glow::FRONT,
+            Back => glow::BACK,
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct DrawParams {
     pub clear_color: Option<glam::Vec4>,
     pub clear_depth: Option<f32>,
     pub clear_stencil: Option<u8>,
     pub depth_compare: Option<CompareFunction>,
+    pub viewport: Option<Viewport>,
+    pub cull_face: Option<CullFace>,
 }
 
 impl Default for DrawParams {
@@ -44,12 +69,19 @@ impl Default for DrawParams {
             clear_depth: None,
             clear_stencil: None,
             depth_compare: None,
+            viewport: None,
+            cull_face: None,
         }
     }
 }
 
 impl DrawParams {
-    pub(super) fn set_delta(&self, gl: &glow::Context, current: &DrawParams) {
+    pub(super) fn set_delta(
+        &self,
+        gl: &glow::Context,
+        current: &DrawParams,
+        framebuffer_size: glam::UVec2,
+    ) {
         let mut clear_mask = 0;
 
         if let Some(c) = self.clear_color {
@@ -84,6 +116,31 @@ impl DrawParams {
                 unsafe { gl.disable(glow::DEPTH_TEST) };
             }
         }
+
+        let viewport = self.viewport.unwrap_or_else(|| Viewport {
+            lower_left_corner: glam::UVec2::ZERO,
+            size: framebuffer_size,
+        });
+
+        if self.cull_face != current.cull_face {
+            if let Some(cull_face) = self.cull_face {
+                let cull_face = cull_face.to_gl();
+
+                unsafe { gl.enable(glow::CULL_FACE) };
+                unsafe { gl.cull_face(cull_face) };
+            } else {
+                unsafe { gl.disable(glow::CULL_FACE) };
+            }
+        }
+
+        unsafe {
+            gl.viewport(
+                viewport.lower_left_corner.x.try_into().unwrap(),
+                viewport.lower_left_corner.y.try_into().unwrap(),
+                viewport.size.x.try_into().unwrap(),
+                viewport.size.y.try_into().unwrap(),
+            )
+        };
     }
 
     pub fn with_depth_compare(mut self, depth_compare: CompareFunction) -> Self {

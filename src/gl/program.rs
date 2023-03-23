@@ -7,7 +7,7 @@ use crate::{
 };
 
 use super::{
-    raw, vertex_stream::VertexStream, DrawError, DrawParams, Framebuffer, Sampler2d,
+    raw, ColorSampler2d, ComparisonSampler2d, DrawError, DrawParams, Framebuffer, PrimitiveStream,
     UniformBufferBinding,
 };
 
@@ -22,10 +22,17 @@ where
     V: Vertex<Sl>,
     F: Fragment<Sl>,
 {
+    pub(super) fn unchecked_from_raw(raw: raw::Program) -> Self {
+        Program {
+            raw: Rc::new(raw),
+            _phantom: PhantomData,
+        }
+    }
+
     pub fn draw(
         &self,
         uniforms: U::Gl,
-        vertices: VertexStream<V::Gl>,
+        primitives: PrimitiveStream<V::Gl>,
         framebuffer: impl Framebuffer<F::Gl>,
         draw_params: DrawParams,
     ) -> Result<(), DrawError> {
@@ -41,18 +48,13 @@ where
             self.raw.draw(
                 &uniform_visitor.raw_uniform_buffers,
                 &uniform_visitor.raw_samplers,
-                &vertices.raw(),
+                &primitives.raw(),
                 &framebuffer.raw(),
                 &draw_params,
             )
-        }
-    }
+        }?;
 
-    pub(super) fn unchecked_from_raw(raw: raw::Program) -> Self {
-        Program {
-            raw: Rc::new(raw),
-            _phantom: PhantomData,
-        }
+        Ok(())
     }
 }
 
@@ -63,16 +65,21 @@ struct CollectUniforms<'a> {
 }
 
 impl<'a> UniformVisitor<'a, Gl> for CollectUniforms<'a> {
-    fn accept_sampler2d<S: ColorSample>(&mut self, _: &str, sampler: &Sampler2d<S>) {
-        self.raw_samplers
-            .push(raw::Sampler::Sampler2d(sampler.raw().clone()))
-    }
-
     fn accept_block<B: Block<Sl, Sl = B>>(
         &mut self,
         _: &str,
         uniform: &'a UniformBufferBinding<B>,
     ) {
         self.raw_uniform_buffers.push(uniform.raw());
+    }
+
+    fn accept_color_sampler_2d<S: ColorSample>(&mut self, _: &str, sampler: &ColorSampler2d<S>) {
+        self.raw_samplers
+            .push(raw::Sampler::Sampler2d(sampler.raw().clone()))
+    }
+
+    fn accept_comparison_sampler_2d(&mut self, _: &str, sampler: &ComparisonSampler2d) {
+        self.raw_samplers
+            .push(raw::Sampler::Sampler2d(sampler.raw().clone()))
     }
 }

@@ -1,6 +1,8 @@
 use std::rc::Rc;
 
-use super::{dag::Expr, primitives::value_arg, Object, Value, Vec2, Vec4};
+use super::{
+    dag::Expr, primitives::value_arg, Mat2, Mat3, Mat4, Object, Value, Vec2, Vec3, Vec4, F32,
+};
 
 /// Data passed from a vertex stage to a fragment stage.
 ///
@@ -21,24 +23,30 @@ impl Varying for () {
     fn shader_input(_: &str) -> Self {}
 }
 
-// TODO: Impl Varying.
+macro_rules! impl_varying {
+    ($ty:ident) => {
+        impl Varying for $ty {
+            fn shader_outputs(&self, path: &str) -> Vec<(String, Rc<Expr>)> {
+                vec![(path.to_string(), self.expr())]
+            }
 
-impl Varying for Vec2 {
-    fn shader_outputs(&self, path: &str) -> Vec<(String, Rc<Expr>)> {
-        vec![(path.to_string(), self.expr())]
-    }
-
-    fn shader_input(path: &str) -> Self {
-        value_arg(path)
-    }
+            fn shader_input(path: &str) -> Self {
+                value_arg(path)
+            }
+        }
+    };
 }
 
-impl Varying for Vec4 {
-    fn shader_outputs(&self, path: &str) -> Vec<(String, Rc<Expr>)> {
-        vec![(path.to_string(), self.expr())]
-    }
+impl_varying!(F32);
+impl_varying!(Vec2);
+impl_varying!(Vec3);
+impl_varying!(Vec4);
+impl_varying!(Mat2);
+impl_varying!(Mat3);
+impl_varying!(Mat4);
 
-    fn shader_input(path: &str) -> Self {
-        value_arg(path)
-    }
-}
+// TODO: Impl Varying for integral types. But make sure to check this somehow:
+//
+// GLSL ES 3.0: 4.3.6 Output Variables
+// > Vertex shader outputs that are, or contain, signed or unsigned integers or
+// > integer vectors must be qualified with the interpolation qualifier flat

@@ -2,8 +2,12 @@ use std::rc::Rc;
 
 use super::{
     dag::{BinaryOp, Expr, FuncDef, StructType, Type},
-    Object, ToValue, Value,
+    Bool, Object, ToValue, Value,
 };
+
+pub fn any(vs: impl IntoIterator<Item = Bool>) -> Bool {
+    vs.into_iter().fold(false.to_value(), |x, v| x.or(v))
+}
 
 pub(crate) fn cast<U, V>(u: impl ToValue<Output = U>) -> V
 where

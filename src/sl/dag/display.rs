@@ -14,9 +14,14 @@ impl Display for BinaryOp {
             Sub => "-",
             Mul => "*",
             Div => "/",
-            Eq => "==",
             And => "&&",
             Or => "||",
+            Eq => "==",
+            Lt => "<",
+            Le => "<=",
+            Ne => "!=",
+            Ge => ">=",
+            Gt => ">",
         };
 
         f.write_str(s)
@@ -63,10 +68,10 @@ impl Display for SamplerType {
         use SamplerType::*;
 
         let s = match self {
-            Sampler2d => "sampler2D",
-            ISampler2d => "isampler2D",
-            USampler2d => "usampler2D",
-            Sampler2dComparison => "sampler2DShadow",
+            ColorSampler2d => "sampler2D",
+            IColorSampler2d => "isampler2D",
+            UColorSampler2d => "usampler2D",
+            ComparisonSampler2d => "sampler2DShadow",
         };
 
         f.write_str(s)

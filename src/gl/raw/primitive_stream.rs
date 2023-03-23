@@ -39,7 +39,7 @@ impl ElementType {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum PrimitiveType {
+pub enum Mode {
     Points,
     Lines,
     LineStrip,
@@ -49,9 +49,9 @@ pub enum PrimitiveType {
     TriangleFan,
 }
 
-impl PrimitiveType {
+impl Mode {
     pub const fn to_gl(self) -> u32 {
-        use PrimitiveType::*;
+        use Mode::*;
 
         match self {
             Points => glow::POINTS,
@@ -71,15 +71,15 @@ impl PrimitiveType {
 // TODO: Instancing.
 
 #[derive(Clone)]
-pub struct VertexStream {
+pub struct PrimitiveStream {
     pub vertices: Vec<(Rc<Buffer>, VertexBlockDef)>,
     pub elements: Option<(Rc<Buffer>, ElementType)>,
-    pub primitive: PrimitiveType,
+    pub primitive: Mode,
     pub range: Range<usize>,
     pub num_instances: usize,
 }
 
-impl VertexStream {
+impl PrimitiveStream {
     pub fn is_compatible(&self, vertex_block_defs: &[VertexBlockDef]) -> bool {
         // TODO: Check vertex stream compatibility. This is already ensured by
         // the typed interface on top of `raw`, but `raw` should be correct by
@@ -150,7 +150,7 @@ impl VertexStream {
             }
         }
 
-        check_gl_error(gl).expect("OpenGL error after VertexStream::bind()");
+        check_gl_error(gl).expect("OpenGL error after PrimitiveStream::bind()");
     }
 
     fn unbind(&self, ctx: &ContextShared) {
@@ -179,7 +179,7 @@ impl VertexStream {
             }
         }
 
-        check_gl_error(gl).expect("OpenGL error after VertexStream::unbind()");
+        check_gl_error(gl).expect("OpenGL error after PrimitiveStream::unbind()");
     }
 
     pub(super) fn draw(&self, ctx: &ContextShared) {

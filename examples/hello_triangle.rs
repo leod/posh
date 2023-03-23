@@ -11,17 +11,17 @@ struct Globals<D: BlockDom = Sl> {
 
 // Shader code
 
-fn vertex_shader(_: (), vertex: sl::Vec2) -> sl::VaryingOutput<sl::Vec2> {
-    let vertex = vertex - sl::vec2(0.5, 0.5);
+fn vertex_shader(_: (), input: sl::Vec2) -> sl::VaryingOutput<sl::Vec2> {
+    let vertex = input - sl::vec2(0.5, 0.5);
 
     sl::VaryingOutput {
-        varying: vertex,
+        output: vertex,
         position: sl::vec4(vertex.x, vertex.y, 0.0, 1.0),
     }
 }
 
-fn fragment_shader(uniform: Globals, varying: sl::Vec2) -> sl::Vec4 {
-    let rg = (varying + uniform.time).cos().pow(sl::vec2(2.0, 2.0));
+fn fragment_shader(uniform: Globals, input: sl::Vec2) -> sl::Vec4 {
+    let rg = (input + uniform.time).cos().pow(sl::vec2(2.0, 2.0));
 
     sl::vec4(rg.x, rg.y, 0.5, 1.0)
 }
@@ -38,23 +38,17 @@ struct Demo {
 }
 
 impl Demo {
-    pub fn new(context: gl::Context) -> Result<Self, gl::CreateError> {
-        let program = context.create_program(vertex_shader, fragment_shader)?;
+    pub fn new(ctx: gl::Context) -> Result<Self, gl::CreateError> {
+        use gl::BufferUsage::*;
 
-        let globals =
-            context.create_uniform_buffer(Globals { time: 0.0 }, gl::BufferUsage::StreamDraw)?;
-        let vertices = context.create_vertex_buffer(
-            &[[0.5f32, 1.0].into(), [0.0, 0.0].into(), [1.0, 0.0].into()],
-            gl::BufferUsage::StaticDraw,
-        )?;
-
-        let start_time = Instant::now();
+        let globals = Globals { time: 0.0 };
+        let vertices = vec![[0.5f32, 1.0].into(), [0.0, 0.0].into(), [1.0, 0.0].into()];
 
         Ok(Self {
-            program,
-            globals,
-            vertices,
-            start_time,
+            program: ctx.create_program(vertex_shader, fragment_shader)?,
+            globals: ctx.create_uniform_buffer(globals, StreamDraw)?,
+            vertices: ctx.create_vertex_buffer(&vertices, StaticDraw)?,
+            start_time: Instant::now(),
         })
     }
 
@@ -64,11 +58,11 @@ impl Demo {
         });
 
         self.program.draw(
-            self.globals.binding(),
-            gl::VertexStream {
-                vertices: self.vertices.binding(),
+            self.globals.as_binding(),
+            gl::PrimitiveStream {
+                vertices: self.vertices.as_binding(),
                 elements: gl::Elements::Range(0..3),
-                primitive: gl::PrimitiveType::Triangles,
+                mode: gl::Mode::Triangles,
             },
             gl::DefaultFramebuffer::default(),
             gl::DrawParams::default().with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0)),
@@ -93,25 +87,24 @@ fn main() {
         .unwrap();
 
     let _gl_context = window.gl_create_context().unwrap();
-    let context = unsafe {
+    let ctx = unsafe {
         glow::Context::from_loader_function(|s| video.gl_get_proc_address(s) as *const _)
     };
-    let context = gl::Context::new(context).unwrap();
-    let demo = Demo::new(context).unwrap();
+    let ctx = gl::Context::new(ctx).unwrap();
+    let demo = Demo::new(ctx).unwrap();
 
     let mut event_loop = sdl.event_pump().unwrap();
-    let mut running = true;
 
-    while running {
+    loop {
         for event in event_loop.poll_iter() {
             use sdl2::event::Event::*;
 
             if matches!(event, Quit { .. }) {
-                running = false;
+                return;
             }
         }
 
-        demo.draw();
+        demo.draw().unwrap();
         window.gl_swap_window();
     }
 }
