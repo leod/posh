@@ -228,8 +228,8 @@ pub trait VertexField<D: VertexDom>: Sized {
 ///     vertex: MyVertex,
 /// ) -> sl::VaryingOutput<sl::Vec4> {
 ///     sl::VaryingOutput {
+///         output: vertex.material.color,
 ///         position: (vertex.position + vertex.material.normal * 1.3).extend(1.0),
-///         varying: vertex.material.color,
 ///     }
 /// }
 /// ```
