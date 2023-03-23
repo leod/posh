@@ -2,10 +2,10 @@ use std::rc::Rc;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum SamplerType {
-    Sampler2d,
-    ISampler2d,
-    USampler2d,
-    Sampler2dComparison,
+    ColorSampler2d,
+    IColorSampler2d,
+    UColorSampler2d,
+    ComparisonSampler2d,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]

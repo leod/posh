@@ -143,7 +143,7 @@ macro_rules! impl_ops {
 
 // Implements two-dimensional `$vec`.
 macro_rules! impl_vec2 {
-    ($vec:ident, $vec_lower:ident, $scalar:ident, $extension:ident) => {
+    ($vec:ident, $vec_lower:ident, $scalar:ident, $vec3:ident) => {
         #[doc = concat!("A two-dimensional ", scalar_name!($scalar), " vector.")]
         #[derive(Debug, Copy, Clone)]
         pub struct $vec {
@@ -171,8 +171,8 @@ macro_rules! impl_vec2 {
             }
 
             /// Creates a three-dimensional vector from `self` and the given `z` value.
-            pub fn extend(self, z: impl ToValue<Output = $scalar>) -> $extension {
-                $extension {
+            pub fn extend(self, z: impl ToValue<Output = $scalar>) -> $vec3 {
+                $vec3 {
                     x: self.x,
                     y: self.y,
                     z: z.to_value(),
@@ -195,7 +195,7 @@ macro_rules! impl_vec2 {
 
 // Implements three-dimensional `$vec`.
 macro_rules! impl_vec3 {
-    ($vec:ident, $vec_lower:ident, $scalar:ident, $extension:ident) => {
+    ($vec:ident, $vec_lower:ident, $scalar:ident, $vec2:ident, $vec4:ident) => {
         #[doc = concat!("A three-dimensional ", scalar_name!($scalar), " vector.")]
         #[derive(Debug, Copy, Clone)]
         pub struct $vec {
@@ -226,12 +226,19 @@ macro_rules! impl_vec3 {
             }
 
             /// Creates a four-dimensional vector from `self` and the given `w` value.
-            pub fn extend(self, w: impl ToValue<Output = $scalar>) -> $extension {
-                $extension {
+            pub fn extend(self, w: impl ToValue<Output = $scalar>) -> $vec4 {
+                $vec4 {
                     x: self.x,
                     y: self.y,
                     z: self.z,
                     w: w.to_value(),
+                }
+            }
+
+            pub fn xy(&self) -> $vec2 {
+                $vec2 {
+                    x: self.x,
+                    y: self.y,
                 }
             }
         }
@@ -252,7 +259,7 @@ macro_rules! impl_vec3 {
 
 // Implements four-dimensional `$vec`.
 macro_rules! impl_vec4 {
-    ($vec:ident, $vec_lower:ident, $scalar:ident) => {
+    ($vec:ident, $vec_lower:ident, $scalar:ident, $vec2:ident, $vec3:ident) => {
         #[doc = concat!("A four-dimensional ", scalar_name!($scalar), " vector.")]
         #[derive(Debug, Copy, Clone)]
         pub struct $vec {
@@ -289,6 +296,21 @@ macro_rules! impl_vec4 {
                     w: v,
                 }
             }
+
+            pub fn xyz(&self) -> $vec3 {
+                $vec3 {
+                    x: self.x,
+                    y: self.y,
+                    z: self.z,
+                }
+            }
+
+            pub fn xy(&self) -> $vec2 {
+                $vec2 {
+                    x: self.x,
+                    y: self.y,
+                }
+            }
         }
 
         #[doc = concat!("Creates a four-dimensional ", scalar_name!($scalar), " vector.")]
@@ -311,15 +333,15 @@ impl_vec2!(IVec2, ivec2, I32, IVec3);
 impl_vec2!(UVec2, uvec2, U32, UVec3);
 impl_vec2!(BVec2, bvec2, Bool, BVec3);
 
-impl_vec3!(Vec3, vec3, F32, Vec4);
-impl_vec3!(IVec3, ivec3, I32, IVec4);
-impl_vec3!(UVec3, uvec3, U32, UVec4);
-impl_vec3!(BVec3, bvec3, Bool, BVec4);
+impl_vec3!(Vec3, vec3, F32, Vec2, Vec4);
+impl_vec3!(IVec3, ivec3, I32, IVec2, IVec4);
+impl_vec3!(UVec3, uvec3, U32, UVec2, UVec4);
+impl_vec3!(BVec3, bvec3, Bool, BVec2, BVec4);
 
-impl_vec4!(Vec4, vec4, F32);
-impl_vec4!(IVec4, ivec4, I32);
-impl_vec4!(UVec4, uvec4, U32);
-impl_vec4!(BVec4, bvec4, Bool);
+impl_vec4!(Vec4, vec4, F32, Vec2, Vec3);
+impl_vec4!(IVec4, ivec4, I32, IVec2, IVec3);
+impl_vec4!(UVec4, uvec4, U32, UVec2, UVec3);
+impl_vec4!(BVec4, bvec4, Bool, BVec2, BVec3);
 
 impl_gen_type!(Vec2);
 impl_gen_type!(Vec3);

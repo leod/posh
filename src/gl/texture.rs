@@ -1,61 +1,124 @@
 use std::{marker::PhantomData, rc::Rc};
 
-use crate::{gl::raw::ImageInternalFormat, sl::ColorSample};
+use crate::sl::{self, ColorSample};
 
 use super::{
     raw::{self, Sampler2dParams},
-    Attachment,
+    ColorAttachment, CompareFunction, DepthAttachment,
 };
 
-pub struct Texture2d<S> {
+pub struct ColorTexture2d<S> {
     raw: Rc<raw::Texture2d>,
     _phantom: PhantomData<S>,
 }
 
+pub struct DepthTexture2d {
+    raw: Rc<raw::Texture2d>,
+}
+
 #[derive(Clone)]
-pub struct Sampler2d<S> {
+pub struct ColorSampler2d<S> {
     raw: raw::Sampler2d,
     _phantom: PhantomData<S>,
 }
 
-impl<S: ColorSample> Texture2d<S> {
-    pub(super) fn from_raw(raw: raw::Texture2d) -> Self {
-        use ImageInternalFormat::*;
+#[derive(Clone)]
+pub struct ComparisonSampler2d {
+    raw: raw::Sampler2d,
+}
 
+impl<S> ColorTexture2d<S> {
+    pub(super) fn from_raw(raw: raw::Texture2d) -> Self {
         // FIXME: This should validate against `S`.
-        assert!([RgbaU8, SrgbU8AlphaU8, RgbaI8Snorm, RgbaF32].contains(&raw.internal_format()));
 
         Self {
             raw: Rc::new(raw),
             _phantom: PhantomData,
         }
     }
+}
 
-    pub fn attachment(&self) -> Attachment<S> {
-        self.attachment_with_level(0)
+impl<S: ColorSample> ColorTexture2d<S> {
+    pub fn as_color_attachment(&self) -> ColorAttachment<S> {
+        self.as_color_attachment_with_level(0)
     }
 
-    pub fn attachment_with_level(&self, level: u32) -> Attachment<S> {
-        Attachment::from_raw(raw::Attachment::Texture2d {
+    pub fn as_color_attachment_with_level(&self, level: u32) -> ColorAttachment<S> {
+        ColorAttachment::from_raw(raw::Attachment::Texture2d {
             texture: self.raw.clone(),
             level,
         })
     }
 
-    pub fn sampler(&self, params: Sampler2dParams) -> Sampler2d<S> {
-        Sampler2d::from_raw(raw::Sampler2d {
+    pub fn as_color_sampler(&self, params: Sampler2dParams) -> ColorSampler2d<S> {
+        // FIXME: Check texture completeness.
+        ColorSampler2d::from_raw(raw::Sampler2d {
             texture: self.raw.clone(),
             params,
+            compare: None,
         })
     }
 }
 
-impl<S> Sampler2d<S> {
+impl DepthTexture2d {
+    pub(super) fn from_raw(raw: raw::Texture2d) -> Self {
+        // FIXME: This should validate against depth.
+
+        Self { raw: Rc::new(raw) }
+    }
+}
+
+impl DepthTexture2d {
+    pub fn as_depth_attachment(&self) -> DepthAttachment {
+        self.as_depth_attachment_with_level(0)
+    }
+
+    pub fn as_depth_attachment_with_level(&self, level: u32) -> DepthAttachment {
+        DepthAttachment::from_raw(raw::Attachment::Texture2d {
+            texture: self.raw.clone(),
+            level,
+        })
+    }
+
+    pub fn as_color_sampler(&self, params: Sampler2dParams) -> ColorSampler2d<sl::F32> {
+        // FIXME: Check texture completeness.
+        ColorSampler2d::from_raw(raw::Sampler2d {
+            texture: self.raw.clone(),
+            params,
+            compare: None,
+        })
+    }
+
+    pub fn as_comparison_sampler(
+        &self,
+        params: Sampler2dParams,
+        compare: CompareFunction,
+    ) -> ComparisonSampler2d {
+        // FIXME: Check texture completeness.
+        ComparisonSampler2d::from_raw(raw::Sampler2d {
+            texture: self.raw.clone(),
+            params,
+            compare: Some(compare),
+        })
+    }
+}
+
+impl<S> ColorSampler2d<S> {
     pub(super) fn from_raw(raw: raw::Sampler2d) -> Self {
         Self {
             raw,
             _phantom: PhantomData,
         }
+    }
+
+    pub fn raw(&self) -> &raw::Sampler2d {
+        &self.raw
+    }
+}
+
+impl ComparisonSampler2d {
+    fn from_raw(raw: raw::Sampler2d) -> Self {
+        Self { raw }
     }
 
     pub fn raw(&self) -> &raw::Sampler2d {

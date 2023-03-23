@@ -17,7 +17,7 @@ pub struct VertexInput<V> {
 /// Per-vertex output computed by a vertex shader.
 #[derive(Debug, Clone)]
 pub struct VertexOutput<W> {
-    pub varying: W,
+    pub output: W,
     pub position: Vec4,
     pub point_size: Option<F32>,
 }
@@ -25,7 +25,7 @@ pub struct VertexOutput<W> {
 /// Per-vertex position and varying output computed by a vertex shader.
 #[derive(Debug, Clone)]
 pub struct VaryingOutput<W> {
-    pub varying: W,
+    pub output: W,
     pub position: Vec4,
 }
 

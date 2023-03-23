@@ -9,31 +9,31 @@ use crate::{
     Block, Gl, Sl, Vertex,
 };
 
-use super::{raw, Elements, PrimitiveType};
+use super::{raw, Elements, Mode};
 
 #[derive(Clone)]
-pub struct VertexStream<V> {
+pub struct PrimitiveStream<V> {
     pub vertices: V,
     pub elements: Elements,
-    pub primitive: PrimitiveType,
+    pub mode: Mode,
 }
 
-impl<V: Vertex<Gl>> VertexStream<V> {
-    pub(super) fn raw(&self) -> raw::VertexStream {
+impl<V: Vertex<Gl>> PrimitiveStream<V> {
+    pub(super) fn raw(&self) -> raw::PrimitiveStream {
         use Elements::*;
 
         match &self.elements {
-            BufferBinding(elements) => raw::VertexStream {
+            BufferBinding(elements) => raw::PrimitiveStream {
                 vertices: raw_vertices(&self.vertices),
                 elements: Some((elements.raw().clone(), elements.ty())),
-                primitive: self.primitive,
+                primitive: self.mode,
                 range: elements.range(),
                 num_instances: 1,
             },
-            Range(range) => raw::VertexStream {
+            Range(range) => raw::PrimitiveStream {
                 vertices: raw_vertices(&self.vertices),
                 elements: None,
-                primitive: self.primitive,
+                primitive: self.mode,
                 range: range.clone(),
                 num_instances: 1,
             },

@@ -15,6 +15,7 @@ pub(super) struct ContextShared {
     caps: Caps,
     draw_params: Cell<DrawParams>,
     draw_fbo: glow::Framebuffer,
+    default_framebuffer_size: Cell<glam::UVec2>,
 }
 
 pub struct Context {
@@ -34,16 +35,20 @@ impl ContextShared {
         &self.caps
     }
 
-    pub(super) fn set_draw_params(&self, new: &DrawParams) {
+    pub(super) fn set_draw_params(&self, new: &DrawParams, framebuffer_size: glam::UVec2) {
         let gl = &self.gl;
 
         let current = self.draw_params.get();
-        new.set_delta(gl, &current);
+        new.set_delta(gl, &current, framebuffer_size);
         self.draw_params.set(*new);
     }
 
     pub(super) fn draw_fbo(&self) -> glow::Framebuffer {
         self.draw_fbo
+    }
+
+    pub(super) fn default_framebuffer_size(&self) -> glam::UVec2 {
+        self.default_framebuffer_size.get()
     }
 }
 
@@ -62,11 +67,23 @@ impl Context {
         // that is created at the start.
         let draw_fbo = unsafe { gl.create_framebuffer() }.map_err(ContextError::ObjectCreation)?;
 
+        let default_framebuffer_size = {
+            let mut viewport = [0, 0, 0, 0];
+
+            unsafe { gl.get_parameter_i32_slice(glow::VIEWPORT, &mut viewport) };
+
+            glam::uvec2(
+                viewport[2].try_into().unwrap(),
+                viewport[3].try_into().unwrap(),
+            )
+        };
+
         let shared = Rc::new(ContextShared {
             gl,
             caps,
             draw_params: Cell::new(DrawParams::default()),
             draw_fbo,
+            default_framebuffer_size: Cell::new(default_framebuffer_size),
         });
 
         Ok(Self { shared })
@@ -96,18 +113,11 @@ impl Context {
         Program::new(self.shared.clone(), def)
     }
 
-    pub fn clear_color(&self, color: glam::Vec4) {
-        let gl = self.shared.gl();
-
-        unsafe { gl.clear_color(color.x, color.y, color.z, color.w) };
-        unsafe { gl.clear(glow::COLOR_BUFFER_BIT) };
+    pub(super) fn default_framebuffer_size(&self) -> glam::UVec2 {
+        self.shared.default_framebuffer_size.get()
     }
 
-    pub fn clear_color_and_depth(&self, color: glam::Vec4, depth: f32) {
-        let gl = self.shared.gl();
-
-        unsafe { gl.clear_color(color.x, color.y, color.z, color.w) };
-        unsafe { gl.clear_depth_f32(depth) };
-        unsafe { gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT) };
+    pub(super) fn set_default_framebuffer_size(&mut self, size: glam::UVec2) {
+        self.shared.default_framebuffer_size.set(size);
     }
 }

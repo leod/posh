@@ -19,8 +19,8 @@ use super::{
     program_def::{
         ProgramDef, UniformBlockDef, UniformSamplerDef, VertexBlockDef, VertexInputRate,
     },
-    ColorSample, ConstParams, FragmentInput, FragmentOutput, Object, Sampler2d, Varying,
-    VaryingOutput, Vec4, VertexInput, VertexOutput,
+    ColorSample, ColorSampler2d, ComparisonSampler2d, ConstParams, FragmentInput, FragmentOutput,
+    Object, Varying, VaryingOutput, Vec4, VertexInput, VertexOutput,
 };
 
 /// Types that can be used as vertex input for a vertex shader.
@@ -67,7 +67,7 @@ impl<V: Varying> IntoVertexOutput for VaryingOutput<V> {
     fn into(self) -> VertexOutput<V> {
         VertexOutput {
             position: self.position,
-            varying: self.varying,
+            output: self.output,
             point_size: None,
         }
     }
@@ -78,7 +78,7 @@ impl IntoVertexOutput for Vec4 {
 
     fn into(self) -> VertexOutput<()> {
         VertexOutput {
-            varying: (),
+            output: (),
             position: self,
             point_size: None,
         }
@@ -227,7 +227,7 @@ where
         };
         let output = vertex_shader(consts, uniforms, InV::from(input())).into();
 
-        let varying_outputs = output.varying.shader_outputs("vertex_output");
+        let varying_outputs = output.output.shader_outputs("vertex_output");
         let vertex_block_defs = {
             // TODO: Remove hardcoded path names.
             let mut visitor = CollectVertexBlocks::default();
@@ -347,17 +347,6 @@ struct CollectUniforms {
 }
 
 impl<'a> UniformVisitor<'a, Sl> for CollectUniforms {
-    fn accept_sampler2d<S: ColorSample>(&mut self, path: &str, _: &Sampler2d<S>) {
-        // TODO: Allow user-specified sampler texture units.
-        let block_def = UniformSamplerDef {
-            name: path.to_string(),
-            ty: SamplerType::Sampler2d,
-            texture_unit: self.sampler_defs.len(),
-        };
-
-        self.sampler_defs.push(block_def);
-    }
-
     fn accept_block<U: Block<Sl>>(&mut self, path: &str, _: &U) {
         // TODO: Allow user-specified uniform block locations.
         let block_def = UniformBlockDef {
@@ -368,6 +357,28 @@ impl<'a> UniformVisitor<'a, Sl> for CollectUniforms {
         };
 
         self.block_defs.push(block_def)
+    }
+
+    fn accept_color_sampler_2d<S: ColorSample>(&mut self, path: &str, _: &ColorSampler2d<S>) {
+        // TODO: Allow user-specified sampler texture units.
+        let sampler_def = UniformSamplerDef {
+            name: path.to_string(),
+            ty: S::SAMPLER_TYPE,
+            texture_unit: self.sampler_defs.len(),
+        };
+
+        self.sampler_defs.push(sampler_def);
+    }
+
+    fn accept_comparison_sampler_2d(&mut self, path: &str, _: &ComparisonSampler2d) {
+        // TODO: Allow user-specified sampler texture units.
+        let sampler_def = UniformSamplerDef {
+            name: path.to_string(),
+            ty: SamplerType::ComparisonSampler2d,
+            texture_unit: self.sampler_defs.len(),
+        };
+
+        self.sampler_defs.push(sampler_def);
     }
 }
 

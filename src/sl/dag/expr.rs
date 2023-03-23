@@ -8,9 +8,14 @@ pub enum BinaryOp {
     Sub,
     Mul,
     Div,
-    Eq,
     And,
     Or,
+    Eq,
+    Lt,
+    Le,
+    Ne,
+    Ge,
+    Gt,
 }
 
 #[derive(Debug, Clone)]

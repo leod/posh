@@ -6,8 +6,8 @@ use crate::sl::program_def::{ProgramDef, UniformSamplerDef};
 
 use super::{
     context::ContextShared, error::check_gl_error, vertex_layout::VertexAttributeLayout, Buffer,
-    DrawError, DrawParams, Framebuffer, ProgramError, ProgramValidationError, Sampler,
-    VertexStream,
+    DrawError, DrawParams, Framebuffer, PrimitiveStream, ProgramError, ProgramValidationError,
+    Sampler,
 };
 
 pub struct Program {
@@ -151,7 +151,7 @@ impl Program {
         &self,
         uniform_buffers: &[&Buffer],
         samplers: &[Sampler],
-        vertices: &VertexStream,
+        primitives: &PrimitiveStream,
         framebuffer: &Framebuffer,
         draw_params: &DrawParams,
     ) -> Result<(), DrawError> {
@@ -161,13 +161,15 @@ impl Program {
 
         assert_eq!(uniform_buffers.len(), def.uniform_block_defs.len());
         assert_eq!(samplers.len(), def.uniform_sampler_defs.len());
-        assert!(vertices.is_compatible(&self.def.vertex_block_defs));
+        assert!(primitives.is_compatible(&self.def.vertex_block_defs));
 
         framebuffer.bind(&self.ctx)?;
 
+        let framebuffer_size = framebuffer.size(&self.ctx);
+
         // `set_draw_params` also clears the screen, so it must come after
         // binding the framebuffer.
-        ctx.set_draw_params(draw_params);
+        ctx.set_draw_params(draw_params, framebuffer_size);
 
         unsafe {
             gl.use_program(Some(self.id));
@@ -192,7 +194,7 @@ impl Program {
             sampler.bind();
         }
 
-        vertices.draw(ctx);
+        primitives.draw(ctx);
 
         // TODO: Remove overly conservative unbinding.
         for (sampler, sampler_def) in samplers.iter().zip(&def.uniform_sampler_defs) {
@@ -344,6 +346,8 @@ fn validate_program_def(def: &ProgramDef) -> Result<(), ProgramValidationError> 
             }
         }
     }
+
+    // FIXME: Check that the number of fragment fields is <= MAX_DRAW_BUFFERS.
 
     Ok(())
 }

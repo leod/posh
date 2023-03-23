@@ -114,6 +114,24 @@ macro_rules! impl_numeric_ops {
         impl_binary_op!($scalar, Div, div);
         impl_binary_op!($scalar, Mul, mul);
         impl_binary_op!($scalar, Sub, sub);
+
+        impl $scalar {
+            pub fn lt(self, rhs: impl ToValue<Output = Self>) -> Bool {
+                binary(self, BinaryOp::Lt, rhs)
+            }
+
+            pub fn le(self, rhs: impl ToValue<Output = Self>) -> Bool {
+                binary(self, BinaryOp::Le, rhs)
+            }
+
+            pub fn ge(self, rhs: impl ToValue<Output = Self>) -> Bool {
+                binary(self, BinaryOp::Ge, rhs)
+            }
+
+            pub fn gt(self, rhs: impl ToValue<Output = Self>) -> Bool {
+                binary(self, BinaryOp::Gt, rhs)
+            }
+        }
     };
 }
 
@@ -208,7 +226,7 @@ impl Bool {
     }
 
     pub fn or(self, right: impl ToValue<Output = Self>) -> Self {
-        binary(self, BinaryOp::And, right)
+        binary(self, BinaryOp::Or, right)
     }
 
     pub fn branch<V: Value>(

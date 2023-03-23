@@ -11,22 +11,8 @@ const HEIGHT: u32 = 768;
 
 #[derive(Clone, Copy, Block)]
 struct Camera<D: BlockDom = Sl> {
-    projection: D::Mat4,
-    view: D::Mat4,
-}
-
-impl Default for Camera<Gl> {
-    fn default() -> Self {
-        Self {
-            projection: glam::Mat4::perspective_rh_gl(
-                std::f32::consts::PI / 2.0,
-                WIDTH as f32 / HEIGHT as f32,
-                1.0,
-                10.0,
-            ),
-            view: glam::Mat4::from_translation(glam::Vec3::new(0.0, 0.0, -3.0)),
-        }
-    }
+    world_to_view: D::Mat4,
+    view_to_screen: D::Mat4,
 }
 
 #[derive(Clone, Copy, Block)]
@@ -54,15 +40,15 @@ fn zxy(v: sl::Vec3) -> sl::Vec3 {
     sl::vec3(v.z, v.x, v.y)
 }
 
-fn vertex_shader(uniforms: Uniform, vertex: Vertex) -> sl::VaryingOutput<sl::Vec2> {
+fn vertex_shader(uniforms: Uniform, input: Vertex) -> sl::VaryingOutput<sl::Vec2> {
     let camera = uniforms.camera;
     let time = uniforms.time / 3.0;
 
-    let vertex_pos = (rotate(time) * sl::vec2(vertex.pos.x, vertex.pos.y)).extend(vertex.pos.z);
-    let position = camera.projection * camera.view * zxy(vertex_pos).extend(1.0);
+    let vertex_pos = (rotate(time) * sl::vec2(input.pos.x, input.pos.y)).extend(input.pos.z);
+    let position = camera.view_to_screen * camera.world_to_view * zxy(vertex_pos).extend(1.0);
 
     sl::VaryingOutput {
-        varying: vertex.tex_coords,
+        output: input.tex_coords,
         position,
     }
 }
@@ -70,48 +56,37 @@ fn vertex_shader(uniforms: Uniform, vertex: Vertex) -> sl::VaryingOutput<sl::Vec
 // Host code
 
 struct Demo {
-    program: gl::Program<(Uniform, sl::Sampler2d<sl::Vec4>), Vertex>,
+    program: gl::Program<(Uniform, sl::ColorSampler2d<sl::Vec4>), Vertex>,
 
     camera: gl::UniformBuffer<Camera>,
     time: gl::UniformBuffer<sl::F32>,
+    texture: gl::ColorTexture2d<sl::Vec4>,
+
     vertices: gl::VertexBuffer<Vertex>,
     elements: gl::ElementBuffer,
-    texture: gl::Texture2d<sl::Vec4>,
 
     start_time: Instant,
 }
 
 impl Demo {
-    pub fn new(context: gl::Context) -> Result<Self, gl::CreateError> {
-        let program = context.create_program(vertex_shader, sl::Sampler2d::lookup)?;
+    pub fn new(ctx: gl::Context) -> Result<Self, gl::CreateError> {
+        use gl::BufferUsage::*;
 
-        let camera =
-            context.create_uniform_buffer(Camera::default(), gl::BufferUsage::StaticDraw)?;
-        let time = context.create_uniform_buffer(0.0, gl::BufferUsage::StreamDraw)?;
-        let vertices =
-            context.create_vertex_buffer(&cube_vertices(), gl::BufferUsage::StaticDraw)?;
-        let elements =
-            context.create_element_buffer(&cube_elements(), gl::BufferUsage::StaticDraw)?;
         let image = ImageReader::open("examples/resources/smile.png")
             .unwrap()
             .decode()
             .unwrap()
             .to_rgba8();
-        let texture = context.create_texture_2d_with_mipmap(gl::Image::slice_u8(
-            image.dimensions().into(),
-            image.as_bytes(),
-        ))?;
-
-        let start_time = Instant::now();
+        let image = gl::ColorImage::slice_u8(image.dimensions().into(), image.as_bytes());
 
         Ok(Self {
-            program,
-            camera,
-            time,
-            vertices,
-            elements,
-            texture,
-            start_time,
+            program: ctx.create_program(vertex_shader, sl::ColorSampler2d::sample)?,
+            camera: ctx.create_uniform_buffer(Camera::default(), StaticDraw)?,
+            time: ctx.create_uniform_buffer(0.0, StreamDraw)?,
+            texture: ctx.create_color_texture_2d_with_mipmap(image)?,
+            vertices: ctx.create_vertex_buffer(&cube_vertices(), StaticDraw)?,
+            elements: ctx.create_element_buffer(&cube_elements(), StaticDraw)?,
+            start_time: Instant::now(),
         })
     }
 
@@ -120,17 +95,19 @@ impl Demo {
         self.time.set(time);
 
         let uniform = Uniform {
-            camera: self.camera.binding(),
-            time: self.time.binding(),
+            camera: self.camera.as_binding(),
+            time: self.time.as_binding(),
         };
-        let sampler = self.texture.sampler(gl::Sampler2dParams::default());
+        let sampler = self
+            .texture
+            .as_color_sampler(gl::Sampler2dParams::default());
 
         self.program.draw(
             (uniform, sampler),
-            gl::VertexStream {
-                vertices: self.vertices.binding(),
-                elements: self.elements.binding(),
-                primitive: gl::PrimitiveType::Triangles,
+            gl::PrimitiveStream {
+                vertices: self.vertices.as_binding(),
+                elements: self.elements.as_binding(),
+                mode: gl::Mode::Triangles,
             },
             gl::DefaultFramebuffer::default(),
             gl::DrawParams::default()
@@ -141,7 +118,21 @@ impl Demo {
     }
 }
 
-// Mesh data
+// Scene data
+
+impl Default for Camera<Gl> {
+    fn default() -> Self {
+        Self {
+            world_to_view: glam::Mat4::from_translation(glam::Vec3::new(0.0, 0.0, -3.0)),
+            view_to_screen: glam::Mat4::perspective_rh_gl(
+                std::f32::consts::PI / 2.0,
+                WIDTH as f32 / HEIGHT as f32,
+                1.0,
+                10.0,
+            ),
+        }
+    }
+}
 
 fn cube_vertices() -> Vec<Vertex<Gl>> {
     [
@@ -181,7 +172,7 @@ fn cube_vertices() -> Vec<Vertex<Gl>> {
 
 fn cube_elements() -> Vec<u32> {
     (0..6u32)
-        .flat_map(|f| [0, 1, 2, 0, 2, 3].map(|j| f * 4 + j))
+        .flat_map(|face| [0, 1, 2, 0, 2, 3].map(|i| face * 4 + i))
         .collect()
 }
 
@@ -196,31 +187,30 @@ fn main() {
     gl_attr.set_context_version(3, 0);
 
     let window = video
-        .window("Hello textured cube!", WIDTH, HEIGHT)
+        .window("Hello triangle!", 1024, 768)
         .opengl()
         .build()
         .unwrap();
 
     let _gl_context = window.gl_create_context().unwrap();
-    let context = unsafe {
+    let ctx = unsafe {
         glow::Context::from_loader_function(|s| video.gl_get_proc_address(s) as *const _)
     };
-    let context = gl::Context::new(context).unwrap();
-    let demo = Demo::new(context).unwrap();
+    let ctx = gl::Context::new(ctx).unwrap();
+    let demo = Demo::new(ctx).unwrap();
 
     let mut event_loop = sdl.event_pump().unwrap();
-    let mut running = true;
 
-    while running {
+    loop {
         for event in event_loop.poll_iter() {
             use sdl2::event::Event::*;
 
             if matches!(event, Quit { .. }) {
-                running = false;
+                return;
             }
         }
 
-        demo.draw();
+        demo.draw().unwrap();
         window.gl_swap_window();
     }
 }

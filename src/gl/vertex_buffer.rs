@@ -19,7 +19,6 @@ pub struct VertexBuffer<B> {
 pub struct VertexBufferBinding<B> {
     raw: Rc<raw::Buffer>,
     _phantom: PhantomData<B>,
-    // TODO: Uniform buffer slicing.
 }
 
 impl<B: Block<Sl>> VertexBuffer<B> {
@@ -47,11 +46,14 @@ impl<B: Block<Sl>> VertexBuffer<B> {
         self.len() == 0
     }
 
-    pub fn set(&self, data: &[B]) {
-        todo!()
+    pub fn set(&self, data: &[B::Gl]) {
+        // FIXME: Get rid of this conversion + allocation.
+        let data: Vec<_> = data.iter().map(AsStd140::as_std140).collect();
+
+        self.raw.set(&data);
     }
 
-    pub fn binding(&self) -> VertexBufferBinding<B> {
+    pub fn as_binding(&self) -> VertexBufferBinding<B> {
         VertexBufferBinding {
             raw: self.raw.clone(),
             _phantom: PhantomData,

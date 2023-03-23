@@ -53,7 +53,7 @@ impl<B: Block<Sl>> UniformBuffer<B> {
         self.raw.set(&[data.as_std140()]);
     }
 
-    pub fn binding(&self) -> UniformBufferBinding<B> {
+    pub fn as_binding(&self) -> UniformBufferBinding<B> {
         UniformBufferBinding {
             raw: self.raw.clone(),
             _phantom: PhantomData,

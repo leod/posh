@@ -1,149 +1,132 @@
 use std::time::Instant;
 
-use posh::{gl, sl, Block, BlockDom, Sl, Uniform, UniformDom};
+use posh::{gl, sl, Block, BlockDom, Gl, Sl};
 
 // Shader interface
 
 #[derive(Clone, Copy, Block)]
-struct Globals<D: BlockDom = Sl> {
+pub struct State<D: BlockDom = Sl> {
     time: D::F32,
     flip: D::U32,
 }
 
-#[derive(Clone, Copy, Block)]
-struct Vertex<D: BlockDom = Sl> {
-    pos: D::Vec2,
-    tex_coords: D::Vec2,
-}
+// Shaders
 
-#[derive(Uniform)]
-struct PresentUniforms<D: UniformDom = Sl> {
-    globals: D::Block<Globals>,
-    scene: D::Sampler2d<sl::Vec4>,
-}
+mod scene_pass {
+    use posh::sl;
 
-// Shader code
+    use super::State;
 
-fn scene_vertex(_: (), vertex: sl::Vec2) -> sl::VaryingOutput<sl::Vec2> {
-    let vertex = vertex - sl::vec2(0.5, 0.5);
+    pub fn vertex(_: (), input: sl::Vec2) -> sl::VaryingOutput<sl::Vec2> {
+        let vertex = input - sl::vec2(0.5, 0.5);
 
-    sl::VaryingOutput {
-        varying: vertex,
-        position: vertex.extend(0.0).extend(1.0),
+        sl::VaryingOutput {
+            output: vertex,
+            position: vertex.extend(0.0).extend(1.0),
+        }
+    }
+
+    pub fn fragment(state: State, input: sl::Vec2) -> sl::Vec4 {
+        let rg = (input + state.time).cos().pow(sl::vec2(2.0, 2.0));
+
+        sl::vec4(rg.x, rg.y, 0.5, 1.0)
     }
 }
 
-fn scene_fragment(uniform: Globals, varying: sl::Vec2) -> sl::Vec4 {
-    let rg = (varying + uniform.time).cos().pow(sl::vec2(2.0, 2.0));
+mod present_pass {
+    use posh::{sl, Block, BlockDom, Sl, UniformDom};
 
-    sl::vec4(rg.x, rg.y, 0.5, 1.0)
-}
+    use super::State;
 
-fn present_vertex(_: (), vertex: Vertex) -> sl::VaryingOutput<sl::Vec2> {
-    sl::VaryingOutput {
-        varying: vertex.tex_coords,
-        position: vertex.pos.extend(0.0).extend(1.0),
+    #[derive(Clone, Copy, Block)]
+    pub struct Vertex<D: BlockDom = Sl> {
+        pub pos: D::Vec2,
+        pub tex_coords: D::Vec2,
     }
-}
 
-fn present_fragment(uniform: PresentUniforms, tex_coords: sl::Vec2) -> sl::Vec4 {
-    let flip = uniform.globals.flip;
-    let coords = flip.eq(0u32).branch(tex_coords, tex_coords * -1.0);
+    #[derive(posh::Uniform)]
+    pub struct Uniform<D: UniformDom = Sl> {
+        pub state: D::Block<State>,
+        pub scene: D::ColorSampler2d<sl::Vec4>,
+    }
 
-    uniform.scene.lookup(coords)
+    pub fn vertex(_: (), vertex: Vertex) -> sl::VaryingOutput<sl::Vec2> {
+        sl::VaryingOutput {
+            output: vertex.tex_coords,
+            position: vertex.pos.extend(0.0).extend(1.0),
+        }
+    }
+
+    pub fn fragment(uniform: Uniform, tex_coords: sl::Vec2) -> sl::Vec4 {
+        let flip = uniform.state.flip;
+        let coords = flip.eq(0u32).branch(tex_coords, tex_coords * -1.0);
+
+        uniform.scene.sample(coords)
+    }
 }
 
 // Host code
 
 struct Demo {
-    scene_program: gl::Program<Globals, sl::Vec2>,
-    present_program: gl::Program<PresentUniforms, Vertex>,
+    scene_program: gl::Program<State, sl::Vec2>,
+    present_program: gl::Program<present_pass::Uniform, present_pass::Vertex>,
 
-    globals: gl::UniformBuffer<Globals>,
+    state: gl::UniformBuffer<State>,
+    texture: gl::ColorTexture2d<sl::Vec4>,
+
     triangle_vertices: gl::VertexBuffer<sl::Vec2>,
-    quad_vertices: gl::VertexBuffer<Vertex>,
+    quad_vertices: gl::VertexBuffer<present_pass::Vertex>,
     quad_elements: gl::ElementBuffer,
-    texture: gl::Texture2d<sl::Vec4>,
 
     start_time: Instant,
 }
 
 impl Demo {
-    pub fn new(context: gl::Context) -> Result<Self, gl::CreateError> {
-        let scene_program = context.create_program(scene_vertex, scene_fragment)?;
-        let present_program = context.create_program(present_vertex, present_fragment)?;
+    pub fn new(ctx: gl::Context) -> Result<Self, gl::CreateError> {
+        use gl::BufferUsage::*;
 
-        let globals = context
-            .create_uniform_buffer(Globals { time: 0.0, flip: 0 }, gl::BufferUsage::StreamDraw)?;
-        let triangle_vertices = context.create_vertex_buffer(
-            &[[0.5f32, 1.0].into(), [0.0, 0.0].into(), [1.0, 0.0].into()],
-            gl::BufferUsage::StaticDraw,
-        )?;
-        let quad_vertices = context.create_vertex_buffer(
-            &[
-                Vertex {
-                    pos: [-1.0, -1.0].into(),
-                    tex_coords: [0.0, 0.0].into(),
-                },
-                Vertex {
-                    pos: [1.0, -1.0].into(),
-                    tex_coords: [1.0, 0.0].into(),
-                },
-                Vertex {
-                    pos: [1.0, 1.0].into(),
-                    tex_coords: [1.0, 1.0].into(),
-                },
-                Vertex {
-                    pos: [-1.0, 1.0].into(),
-                    tex_coords: [0.0, 1.0].into(),
-                },
-            ],
-            gl::BufferUsage::StaticDraw,
-        )?;
-        let quad_elements =
-            context.create_element_buffer(&[0, 1, 2, 0, 2, 3], gl::BufferUsage::StaticDraw)?;
-        let texture = context.create_texture_2d(gl::Image::zero_u8(glam::uvec2(1024, 768)))?;
-
-        let start_time = Instant::now();
+        let image = gl::ColorImage::zero_u8(glam::uvec2(1024, 768));
 
         Ok(Self {
-            scene_program,
-            present_program,
-            globals,
-            triangle_vertices,
-            quad_vertices,
-            quad_elements,
-            texture,
-            start_time,
+            scene_program: ctx.create_program(scene_pass::vertex, scene_pass::fragment)?,
+            present_program: ctx.create_program(present_pass::vertex, present_pass::fragment)?,
+            state: ctx.create_uniform_buffer(State { time: 0.0, flip: 0 }, StreamDraw)?,
+            texture: ctx.create_color_texture_2d(image)?,
+            triangle_vertices: ctx.create_vertex_buffer(&triangle_vertices(), StaticDraw)?,
+            quad_vertices: ctx.create_vertex_buffer(&quad_vertices(), StaticDraw)?,
+            quad_elements: ctx.create_element_buffer(&[0, 1, 2, 0, 2, 3], StaticDraw)?,
+            start_time: Instant::now(),
         })
     }
 
     pub fn draw(&self, flip: u32) -> Result<(), gl::DrawError> {
-        self.globals.set(Globals {
+        self.state.set(State {
             time: Instant::now().duration_since(self.start_time).as_secs_f32(),
             flip,
         });
 
         self.scene_program.draw(
-            self.globals.binding(),
-            gl::VertexStream {
-                vertices: self.triangle_vertices.binding(),
+            self.state.as_binding(),
+            gl::PrimitiveStream {
+                vertices: self.triangle_vertices.as_binding(),
                 elements: gl::Elements::Range(0..3),
-                primitive: gl::PrimitiveType::Triangles,
+                mode: gl::Mode::Triangles,
             },
-            self.texture.attachment(),
+            self.texture.as_color_attachment(),
             gl::DrawParams::default(),
         )?;
 
         self.present_program.draw(
-            PresentUniforms {
-                globals: self.globals.binding(),
-                scene: self.texture.sampler(gl::Sampler2dParams::default()),
+            present_pass::Uniform {
+                state: self.state.as_binding(),
+                scene: self
+                    .texture
+                    .as_color_sampler(gl::Sampler2dParams::default()),
             },
-            gl::VertexStream {
-                vertices: self.quad_vertices.binding(),
-                elements: self.quad_elements.binding(),
-                primitive: gl::PrimitiveType::Triangles,
+            gl::PrimitiveStream {
+                vertices: self.quad_vertices.as_binding(),
+                elements: self.quad_elements.as_binding(),
+                mode: gl::Mode::Triangles,
             },
             gl::DefaultFramebuffer::default(),
             gl::DrawParams::default(),
@@ -151,6 +134,33 @@ impl Demo {
 
         Ok(())
     }
+}
+
+// Scene data
+
+fn triangle_vertices() -> Vec<glam::Vec2> {
+    vec![[0.5f32, 1.0].into(), [0.0, 0.0].into(), [1.0, 0.0].into()]
+}
+
+fn quad_vertices() -> Vec<present_pass::Vertex<Gl>> {
+    vec![
+        present_pass::Vertex {
+            pos: [-1.0, -1.0].into(),
+            tex_coords: [0.0, 0.0].into(),
+        },
+        present_pass::Vertex {
+            pos: [1.0, -1.0].into(),
+            tex_coords: [1.0, 0.0].into(),
+        },
+        present_pass::Vertex {
+            pos: [1.0, 1.0].into(),
+            tex_coords: [1.0, 1.0].into(),
+        },
+        present_pass::Vertex {
+            pos: [-1.0, 1.0].into(),
+            tex_coords: [0.0, 1.0].into(),
+        },
+    ]
 }
 
 // SDL glue
@@ -170,22 +180,21 @@ fn main() {
         .unwrap();
 
     let _gl_context = window.gl_create_context().unwrap();
-    let context = unsafe {
+    let ctx = unsafe {
         glow::Context::from_loader_function(|s| video.gl_get_proc_address(s) as *const _)
     };
-    let context = gl::Context::new(context).unwrap();
-    let demo = Demo::new(context).unwrap();
+    let ctx = gl::Context::new(ctx).unwrap();
+    let demo = Demo::new(ctx).unwrap();
 
     let mut event_loop = sdl.event_pump().unwrap();
-    let mut running = true;
     let mut flip = 0;
 
-    while running {
+    loop {
         for event in event_loop.poll_iter() {
             use sdl2::{event::Event::*, keyboard::Keycode};
 
             match event {
-                Quit { .. } => running = false,
+                Quit { .. } => return,
                 KeyDown {
                     keycode: Some(Keycode::F),
                     ..
@@ -198,7 +207,7 @@ fn main() {
             }
         }
 
-        demo.draw(flip);
+        demo.draw(flip).unwrap();
         window.gl_swap_window();
     }
 }

@@ -66,7 +66,7 @@ impl<E: Element> ElementBuffer<E> {
         self.raw.set(data);
     }
 
-    pub fn binding(&self) -> Elements {
+    pub fn as_binding(&self) -> Elements {
         self.binding_with_range(0..self.len())
     }
 

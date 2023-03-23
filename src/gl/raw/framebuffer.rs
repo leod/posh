@@ -5,7 +5,7 @@ use glow::HasContext;
 use super::{
     context::ContextShared,
     error::{check_framebuffer_completeness, check_gl_error, FramebufferError},
-    Caps, ImageInternalFormat, Sampler2d, Sampler2dParams, Texture2d,
+    Caps, CompareFunction, ImageInternalFormat, Sampler2d, Sampler2dParams, Texture2d,
 };
 
 #[derive(Clone)]
@@ -14,6 +14,14 @@ pub enum Attachment {
 }
 
 impl Attachment {
+    pub fn size(&self) -> glam::UVec2 {
+        use Attachment::*;
+
+        match self {
+            Texture2d { texture, .. } => texture.size(),
+        }
+    }
+
     pub fn internal_format(&self) -> ImageInternalFormat {
         use Attachment::*;
 
@@ -22,13 +30,14 @@ impl Attachment {
         }
     }
 
-    pub fn sampler(&self, params: Sampler2dParams) -> Sampler2d {
+    pub fn sampler(&self, params: Sampler2dParams, compare: Option<CompareFunction>) -> Sampler2d {
         use Attachment::*;
 
         match self {
             Texture2d { texture, .. } => Sampler2d {
                 texture: texture.clone(),
                 params,
+                compare,
             },
         }
     }
@@ -38,6 +47,20 @@ impl Attachment {
 pub enum Framebuffer {
     Default,
     Attachments { attachments: Vec<Attachment> },
+}
+
+impl Framebuffer {
+    pub(super) fn size(&self, ctx: &ContextShared) -> glam::UVec2 {
+        use Framebuffer::*;
+
+        match self {
+            Default => ctx.default_framebuffer_size(),
+            Attachments { attachments } => attachments
+                .iter()
+                .map(|attachment| attachment.size())
+                .fold(glam::UVec2::ZERO, glam::UVec2::max),
+        }
+    }
 }
 
 fn with_locations(attachments: &[Attachment]) -> impl Iterator<Item = (u32, &Attachment)> {
@@ -54,6 +77,9 @@ fn with_locations(attachments: &[Attachment]) -> impl Iterator<Item = (u32, &Att
         } else if format.is_stencil_renderable() {
             glow::STENCIL_ATTACHMENT
         } else {
+            // FIXME: This does not actually hold! Also, `is_color_renderable`
+            // depends on available extensions. All of this needs to be checked
+            // here.
             panic!(
                 "every ImageInternalFormat must satisfy at least one of color renderable, depth \
                  renderable, or stencil renderable"
