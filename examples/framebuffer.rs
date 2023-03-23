@@ -187,15 +187,14 @@ fn main() {
     let demo = Demo::new(ctx).unwrap();
 
     let mut event_loop = sdl.event_pump().unwrap();
-    let mut running = true;
     let mut flip = 0;
 
-    while running {
+    loop {
         for event in event_loop.poll_iter() {
             use sdl2::{event::Event::*, keyboard::Keycode};
 
             match event {
-                Quit { .. } => running = false,
+                Quit { .. } => return,
                 KeyDown {
                     keycode: Some(Keycode::F),
                     ..
