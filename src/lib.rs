@@ -12,6 +12,7 @@ pub use interface::{
 pub use posh_derive::{Block, Uniform, Vertex};
 
 pub use crevice;
+pub use glow;
 
 // Only re-exported for `posh-derive`.
 // FIXME: Use `crevice`'s re-export.
