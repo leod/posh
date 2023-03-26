@@ -59,6 +59,7 @@ pub struct DrawParams {
     pub clear_stencil: Option<u8>,
     pub depth_compare: Option<CompareFunction>,
     pub depth_mask: bool,
+    pub color_mask: glam::BVec4,
     pub viewport: Option<Viewport>,
     pub cull_face: Option<CullFace>,
 }
@@ -71,6 +72,7 @@ impl Default for DrawParams {
             clear_stencil: None,
             depth_compare: None,
             depth_mask: true,
+            color_mask: glam::BVec4::TRUE,
             viewport: None,
             cull_face: None,
         }
@@ -121,6 +123,12 @@ impl DrawParams {
 
         if self.depth_mask != current.depth_mask {
             unsafe { gl.depth_mask(self.depth_mask) };
+        }
+
+        if self.color_mask != current.color_mask {
+            let mask = self.color_mask;
+
+            unsafe { gl.color_mask(mask.x, mask.y, mask.z, mask.w) };
         }
 
         let viewport = self.viewport.unwrap_or(Viewport {
