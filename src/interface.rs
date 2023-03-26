@@ -44,7 +44,9 @@ pub trait BlockDom: Copy {
     ///
     /// Has [`gl::Bool`] as its physical view and [`sl::Bool`] as its logical
     /// view.
-    type Bool: Block<Self> + sl::ToValue<Output = sl::Bool>;
+    ///
+    /// TODO: Bool in `Block`. Need to special case vertex attributes.
+    //type Bool: Block<Self> + sl::ToValue<Output = sl::Bool>;
 
     /// A two-dimensional floating-point vector.
     ///
@@ -63,6 +65,42 @@ pub trait BlockDom: Copy {
     /// Has [`glam::Vec4`] as its physical view and [`sl::Vec4`] as its logical
     /// view.
     type Vec4: Block<Self> + sl::ToValue<Output = sl::Vec4>;
+
+    /// A two-dimensional signed integer vector.
+    ///
+    /// Has [`glam::IVec2`] as its physical view and [`sl::IVec2`] as its
+    /// logical view.
+    type IVec2: Block<Self> + sl::ToValue<Output = sl::IVec2>;
+
+    /// A three-dimensional signed integer vector.
+    ///
+    /// Has [`glam::IVec3`] as its physical view and [`sl::IVec3`] as its
+    /// logical view.
+    type IVec3: Block<Self> + sl::ToValue<Output = sl::IVec3>;
+
+    /// A four-dimensional signed integer vector.
+    ///
+    /// Has [`glam::IVec4`] as its physical view and [`sl::IVec4`] as its
+    /// logical view.
+    type IVec4: Block<Self> + sl::ToValue<Output = sl::IVec4>;
+
+    /// A two-dimensional unsigned integer vector.
+    ///
+    /// Has [`glam::UVec2`] as its physical view and [`sl::UVec2`] as its
+    /// logical view.
+    type UVec2: Block<Self> + sl::ToValue<Output = sl::UVec2>;
+
+    /// A three-dimensional unsigned integer vector.
+    ///
+    /// Has [`glam::UVec3`] as its physical view and [`sl::UVec3`] as its
+    /// logical view.
+    type UVec3: Block<Self> + sl::ToValue<Output = sl::UVec3>;
+
+    /// A four-dimensional unsigned integer vector.
+    ///
+    /// Has [`glam::UVec4`] as its physical view and [`sl::UVec4`] as its
+    /// logical view.
+    type UVec4: Block<Self> + sl::ToValue<Output = sl::UVec4>;
 
     /// A two-by-two floating-point matrix.
     ///

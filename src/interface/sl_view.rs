@@ -20,10 +20,15 @@ impl super::BlockDom for Sl {
     type F32 = sl::F32;
     type I32 = sl::I32;
     type U32 = sl::U32;
-    type Bool = sl::Bool;
     type Vec2 = sl::Vec2;
     type Vec3 = sl::Vec3;
     type Vec4 = sl::Vec4;
+    type IVec2 = sl::IVec2;
+    type IVec3 = sl::IVec3;
+    type IVec4 = sl::IVec4;
+    type UVec2 = sl::UVec2;
+    type UVec3 = sl::UVec3;
+    type UVec4 = sl::UVec4;
     type Mat2 = sl::Mat2;
     type Mat3 = sl::Mat3;
     type Mat4 = sl::Mat4;
