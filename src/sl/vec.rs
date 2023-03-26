@@ -5,7 +5,9 @@ use std::{
 
 use super::{
     dag::{BinaryOp, BuiltInType, Expr, Type, UnaryOp},
-    primitives::{binary, built_in_2, cast, common_field_base, field, unary, value_arg},
+    primitives::{
+        binary, built_in_1, built_in_2, cast, common_field_base, field, unary, value_arg,
+    },
     Bool, Object, ToValue, Value, ValueNonArray, F32, I32, U32,
 };
 
@@ -229,6 +231,29 @@ macro_rules! impl_integral_ops {
     };
 }
 
+// Implements logical ops for a boolean `$vec`.
+macro_rules! impl_boolean_ops {
+    ($vec:ident) => {
+        impl $vec {
+            pub fn any(self) -> Bool {
+                built_in_1("any", self)
+            }
+
+            pub fn all(self) -> Bool {
+                built_in_1("all", self)
+            }
+        }
+
+        impl Not for $vec {
+            type Output = Self;
+
+            fn not(self) -> Self {
+                built_in_1("not", self)
+            }
+        }
+    };
+}
+
 // Implements ops for `$vec`.
 macro_rules! impl_ops {
     ($vec:ident, $bvec:ident, F32) => {
@@ -242,7 +267,9 @@ macro_rules! impl_ops {
         impl_numeric_ops!($vec, $bvec, U32);
         impl_integral_ops!($vec, U32);
     };
-    ($vec:ident, $bvec:ident, Bool) => {};
+    ($vec:ident, $bvec:ident, Bool) => {
+        impl_boolean_ops!($vec);
+    };
 }
 
 // Implements two-dimensional `$vec`.
