@@ -100,19 +100,14 @@ impl ToTokens for SpecializedTypeGenerics {
 }
 
 pub fn associated_type_to_trait(ty: &str) -> Option<Path> {
+    let block_tys = vec![
+        "F32", "I32", "U32", "Vec2", "Vec3", "Vec4", "IVec2", "IVec3", "IVec4", "UVec2", "UVec3",
+        "UVec4", "Mat2", "Mat3", "Mat4",
+    ];
+
     // TODO: Update associated type list, or see if we can do without it by now.
-    if ty == "Scalar"
-        || ty == "Vec2"
-        || ty == "Vec3"
-        || ty == "Vec4"
-        || ty == "Mat2"
-        || ty == "Mat3"
-        || ty == "Mat4"
-        || ty == "Bool"
-        || ty == "F32"
-        || ty == "I32"
-        || ty == "U32"
-    {
+
+    if block_tys.contains(&ty) {
         Some(parse_quote!(::posh::BlockDom))
     } else {
         None

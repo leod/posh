@@ -15,13 +15,18 @@ use super::{Block, Fragment, FragmentVisitor, Gl, Sl, Uniform, Vertex, VertexVis
 
 #[sealed]
 impl super::BlockDom for Gl {
-    type Bool = bool;
     type F32 = f32;
     type I32 = i32;
     type U32 = u32;
     type Vec2 = glam::Vec2;
     type Vec3 = glam::Vec3;
     type Vec4 = glam::Vec4;
+    type IVec2 = glam::IVec2;
+    type IVec3 = glam::IVec3;
+    type IVec4 = glam::IVec4;
+    type UVec2 = glam::UVec2;
+    type UVec3 = glam::UVec3;
+    type UVec4 = glam::UVec4;
     type Mat2 = glam::Mat2;
     type Mat3 = glam::Mat3;
     type Mat4 = glam::Mat4;
