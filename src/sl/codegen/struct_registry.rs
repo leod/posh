@@ -113,6 +113,9 @@ fn collect_structs_in_expr(
                 collect_structs_in_expr(arg, visited, structs);
             }
         }
+        Unary { arg, .. } => {
+            collect_structs_in_expr(arg, visited, structs);
+        }
         Binary { left, right, .. } => {
             collect_structs_in_expr(left, visited, structs);
             collect_structs_in_expr(right, visited, structs);
