@@ -52,14 +52,29 @@ impl CullFace {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Default)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct DrawParams {
     pub clear_color: Option<glam::Vec4>,
     pub clear_depth: Option<f32>,
     pub clear_stencil: Option<u8>,
     pub depth_compare: Option<CompareFunction>,
+    pub depth_mask: bool,
     pub viewport: Option<Viewport>,
     pub cull_face: Option<CullFace>,
+}
+
+impl Default for DrawParams {
+    fn default() -> Self {
+        Self {
+            clear_color: None,
+            clear_depth: None,
+            clear_stencil: None,
+            depth_compare: None,
+            depth_mask: true,
+            viewport: None,
+            cull_face: None,
+        }
+    }
 }
 
 impl DrawParams {
@@ -102,6 +117,10 @@ impl DrawParams {
             } else {
                 unsafe { gl.disable(glow::DEPTH_TEST) };
             }
+        }
+
+        if self.depth_mask != current.depth_mask {
+            unsafe { gl.depth_mask(self.depth_mask) };
         }
 
         let viewport = self.viewport.unwrap_or(Viewport {
