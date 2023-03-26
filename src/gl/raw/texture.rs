@@ -5,7 +5,7 @@ use glow::HasContext;
 use crate::gl::{raw::error::check_gl_error, TextureError};
 
 use super::{
-    context::ContextShared, sampler_params::set_comparison_func, Caps, CompareFunction, Image,
+    context::ContextShared, sampler_params::set_comparison_func, Caps, CompareFunc, Image,
     ImageInternalFormat, Sampler2dParams,
 };
 
@@ -27,7 +27,7 @@ pub enum Sampler {
 pub struct Sampler2d {
     pub texture: Rc<Texture2d>,
     pub params: Sampler2dParams,
-    pub compare: Option<CompareFunction>,
+    pub compare: Option<CompareFunc>,
 }
 
 impl Texture2d {
@@ -155,11 +155,7 @@ impl Texture2d {
         self.internal_format
     }
 
-    pub(super) fn set_sampler_params(
-        &self,
-        new: Sampler2dParams,
-        compare: Option<CompareFunction>,
-    ) {
+    pub(super) fn set_sampler_params(&self, new: Sampler2dParams, compare: Option<CompareFunc>) {
         let gl = &self.ctx.gl();
 
         let current = self.sampler_params.get();

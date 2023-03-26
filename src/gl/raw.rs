@@ -15,7 +15,7 @@ pub use self::image::{Image, ImageComponentType, ImageFormat, ImageInternalForma
 pub use buffer::{Buffer, BufferUsage};
 pub use caps::Caps;
 pub use context::Context;
-pub use draw_params::{CompareFunction, CullFace, DrawParams};
+pub use draw_params::{Blend, BlendEquation, BlendFunc, CompareFunc, CullFace, DrawParams};
 pub use error::{
     BufferError, ContextError, CreateError, DrawError, FramebufferError, ProgramError,
     ProgramValidationError, TextureError, VertexArrayError,

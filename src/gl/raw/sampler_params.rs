@@ -1,6 +1,6 @@
 use glow::HasContext;
 
-use super::CompareFunction;
+use super::CompareFunc;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum SamplerMagFilter {
@@ -118,11 +118,7 @@ impl Sampler2dParams {
     }
 }
 
-pub(super) fn set_comparison_func(
-    gl: &glow::Context,
-    target: u32,
-    compare: Option<CompareFunction>,
-) {
+pub(super) fn set_comparison_func(gl: &glow::Context, target: u32, compare: Option<CompareFunc>) {
     let mode = compare.map_or(glow::NONE, |_| glow::COMPARE_REF_TO_TEXTURE) as i32;
     unsafe { gl.tex_parameter_i32(target, glow::TEXTURE_COMPARE_MODE, mode) };
 
