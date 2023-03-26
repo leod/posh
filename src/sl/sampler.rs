@@ -2,7 +2,7 @@ use std::{marker::PhantomData, rc::Rc};
 
 use sealed::sealed;
 
-use crate::{gl, Block, Sl};
+use crate::{Block, Sl};
 
 use super::{
     dag::{BuiltInType, Expr, SamplerType, Trace, Type},
