@@ -5,7 +5,7 @@ use std::{
 
 use super::{
     dag::{BinaryOp, BuiltInType, Expr, Type},
-    primitives::{binary, common_field_base, field, value_arg},
+    primitives::{binary, cast, common_field_base, field, value_arg},
     Bool, Object, ToValue, Value, ValueNonArray, F32, I32, U32,
 };
 
@@ -328,6 +328,19 @@ macro_rules! impl_vec4 {
     };
 }
 
+// Implements casts for vectors.
+macro_rules! impl_casts {
+    ($vec:ident, $($method:ident, $target:ident),+) => {
+        impl $vec {
+            $(
+                pub fn $method(self) -> $target {
+                    cast(self)
+                }
+            )+
+        }
+    };
+}
+
 impl_vec2!(Vec2, vec2, F32, Vec3);
 impl_vec2!(IVec2, ivec2, I32, IVec3);
 impl_vec2!(UVec2, uvec2, U32, UVec3);
@@ -342,6 +355,22 @@ impl_vec4!(Vec4, vec4, F32, Vec2, Vec3);
 impl_vec4!(IVec4, ivec4, I32, IVec2, IVec3);
 impl_vec4!(UVec4, uvec4, U32, UVec2, UVec3);
 impl_vec4!(BVec4, bvec4, Bool, BVec2, BVec3);
+
+impl_casts!(Vec2, as_ivec2, IVec2, as_uvec2, UVec2);
+impl_casts!(Vec3, as_ivec3, IVec3, as_uvec3, UVec3);
+impl_casts!(Vec4, as_ivec4, IVec4, as_uvec4, UVec4);
+
+impl_casts!(IVec2, as_vec2, Vec2, as_uvec2, UVec2, as_bvec2, BVec2);
+impl_casts!(IVec3, as_vec3, Vec3, as_uvec3, UVec3, as_bvec3, BVec3);
+impl_casts!(IVec4, as_vec4, Vec4, as_uvec4, UVec4, as_bvec4, BVec4);
+
+impl_casts!(UVec2, as_vec2, Vec2, as_ivec2, IVec2, as_bvec2, BVec2);
+impl_casts!(UVec3, as_vec3, Vec3, as_ivec3, IVec3, as_bvec3, BVec3);
+impl_casts!(UVec4, as_vec4, Vec4, as_ivec4, IVec4, as_bvec4, BVec4);
+
+impl_casts!(BVec2, as_ivec2, IVec2, as_uvec2, UVec2);
+impl_casts!(BVec3, as_ivec3, IVec3, as_uvec3, UVec3);
+impl_casts!(BVec4, as_ivec4, IVec4, as_uvec4, UVec4);
 
 impl_gen_type!(Vec2);
 impl_gen_type!(Vec3);
