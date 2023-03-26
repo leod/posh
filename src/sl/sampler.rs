@@ -97,6 +97,8 @@ impl<S: ColorSample> ColorSampler2d<S> {
 
         S::from_vec4(sample)
     }
+
+    // TODO: Various sampling functions.
 }
 
 impl Object for ComparisonSampler2d {

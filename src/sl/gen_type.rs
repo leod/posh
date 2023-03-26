@@ -1,6 +1,14 @@
 macro_rules! impl_gen_type {
     ($ty:ident) => {
         impl $ty {
+            pub fn length(self) -> Self {
+                super::primitives::built_in_1("length", self)
+            }
+
+            pub fn distance(self, y: impl super::ToValue<Output = Self>) -> Self {
+                super::primitives::built_in_2("distance", self, y.to_value())
+            }
+
             pub fn normalize(self) -> Self {
                 super::primitives::built_in_1("normalize", self)
             }
@@ -29,8 +37,52 @@ macro_rules! impl_gen_type {
                 super::primitives::built_in_2("atan", self, x.to_value())
             }
 
-            pub fn pow(self, y: impl super::ToValue<Output = Self>) -> Self {
+            pub fn powf(self, y: impl super::ToValue<Output = Self>) -> Self {
                 super::primitives::built_in_2("pow", self, y.to_value())
+            }
+
+            pub fn exp(self) -> Self {
+                super::primitives::built_in_1("exp", self)
+            }
+
+            pub fn log(self) -> Self {
+                super::primitives::built_in_1("log", self)
+            }
+
+            pub fn exp2(self) -> Self {
+                super::primitives::built_in_1("exp2", self)
+            }
+
+            pub fn log2(self) -> Self {
+                super::primitives::built_in_1("log2", self)
+            }
+
+            pub fn sqrt(self) -> Self {
+                super::primitives::built_in_1("sqrt", self)
+            }
+
+            pub fn abs(self) -> Self {
+                super::primitives::built_in_1("abs", self)
+            }
+
+            pub fn signum(self) -> Self {
+                super::primitives::built_in_1("signum", self)
+            }
+
+            pub fn floor(self) -> Self {
+                super::primitives::built_in_1("floor", self)
+            }
+
+            pub fn round(self) -> Self {
+                super::primitives::built_in_1("round", self)
+            }
+
+            pub fn ceil(self) -> Self {
+                super::primitives::built_in_1("ceil", self)
+            }
+
+            pub fn fract(self) -> Self {
+                super::primitives::built_in_1("fract", self)
             }
 
             pub fn atan(self) -> Self {
@@ -80,6 +132,8 @@ macro_rules! impl_gen_type {
             ) -> Self {
                 super::primitives::built_in_3("clamp", self, min.to_value(), max.to_value())
             }
+
+            // TODO: mod, mix, step, smoothstep?
         }
     };
 }
