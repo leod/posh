@@ -77,6 +77,11 @@ impl VarForm {
                 args: args.into_iter().map(map_succ).collect(),
                 ty: Type::Struct(ty),
             },
+            Expr::Unary { op, arg, ty } => SimplifiedExpr::Unary {
+                op,
+                arg: Box::new(map_succ(arg)),
+                ty,
+            },
             Expr::Binary {
                 left,
                 op,
@@ -127,6 +132,7 @@ impl VarForm {
             Branch { .. } => true,
             Arg { .. } | ScalarLiteral { .. } => false,
             StructLiteral { .. }
+            | Unary { .. }
             | Binary { .. }
             | CallFuncDef { .. }
             | CallBuiltIn { .. }
@@ -149,6 +155,9 @@ fn successors(expr: &Expr, mut f: impl FnMut(&Rc<Expr>)) {
             for arg in args {
                 f(arg);
             }
+        }
+        Unary { arg: expr, .. } => {
+            f(expr);
         }
         Binary { left, right, .. } => {
             f(left);

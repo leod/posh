@@ -8,7 +8,7 @@ mod expr;
 mod trace;
 mod ty;
 
-pub use expr::{BinaryOp, Expr, FuncDef};
+pub use expr::{BinaryOp, Expr, FuncDef, UnaryOp};
 pub use ty::{BuiltInType, SamplerType, StructType, Type};
 
 pub(crate) use trace::Trace;
