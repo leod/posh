@@ -1,12 +1,12 @@
 use std::{
-    ops::{Add, Mul, Neg, Sub},
+    ops::{Add, Div, Mul, Neg, Sub},
     rc::Rc,
 };
 
 use super::{
     dag::{BinaryOp, BuiltInType, Expr, Type, UnaryOp},
     primitives::{binary, built_in_1, common_field_base, field, unary, value_arg},
-    Object, ToValue, Value, ValueNonArray, Vec2, Vec3, Vec4, F32,
+    Bool, Object, ToValue, Value, ValueNonArray, Vec2, Vec3, Vec4, F32,
 };
 
 /// A two-by-two floating-point matrix.
@@ -99,6 +99,16 @@ macro_rules! impl_value {
                 self
             }
         }
+
+        impl $mat {
+            pub fn eq(self, right: impl ToValue<Output = Self>) -> Bool {
+                <Self as Value>::eq(self, right)
+            }
+
+            pub fn ne(self, right: impl ToValue<Output = Self>) -> Bool {
+                <Self as Value>::ne(self, right)
+            }
+        }
     };
 }
 
@@ -158,14 +168,16 @@ macro_rules! impl_mat {
         impl_value!($mat, $($member),+);
 
         impl_binary_op_symmetric!($mat, add, Add);
+        impl_binary_op_symmetric!($mat, div, Div);
         impl_binary_op_symmetric!($mat, mul, Mul);
         impl_binary_op_symmetric!($mat, sub, Sub);
 
-        impl_binary_op_vec_rhs!($mat, $vec_ty, mul, Mul);
-
         impl_binary_op_scalar_rhs!($mat, add, Add);
+        impl_binary_op_scalar_rhs!($mat, div, Div);
         impl_binary_op_scalar_rhs!($mat, mul, Mul);
         impl_binary_op_scalar_rhs!($mat, sub, Sub);
+
+        impl_binary_op_vec_rhs!($mat, $vec_ty, mul, Mul);
 
         impl Neg for $mat {
             type Output = Self;

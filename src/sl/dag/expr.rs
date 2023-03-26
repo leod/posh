@@ -16,12 +16,19 @@ pub enum BinaryOp {
     Ne,
     Ge,
     Gt,
+    Shl,
+    Shr,
+    BitAnd,
+    BitOr,
+    BitXor,
+    Rem,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum UnaryOp {
     Neg,
     Not,
+    BitNot,
 }
 
 #[derive(Debug, Clone)]

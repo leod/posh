@@ -1,5 +1,5 @@
 use std::{
-    ops::{Add, Div, Mul, Neg, Not, Sub},
+    ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Neg, Not, Rem, Shl, Shr, Sub},
     rc::Rc,
 };
 
@@ -143,6 +143,28 @@ macro_rules! impl_numeric_ops {
     };
 }
 
+// Implements integral ops for `$scalar`.
+macro_rules! impl_integral_ops {
+    ($scalar:ident) => {
+        impl_binary_op!($scalar, Shl, shl);
+        impl_binary_op!($scalar, Shr, shr);
+        impl_binary_op!($scalar, BitAnd, bitand);
+        impl_binary_op!($scalar, BitOr, bitor);
+        impl_binary_op!($scalar, BitXor, bitxor);
+        impl_binary_op!($scalar, Rem, rem);
+
+        // Bitwise negation is a special case, since it uses a different
+        // operator in Rust than in GLSL.
+        impl Not for $scalar {
+            type Output = Self;
+
+            fn not(self) -> Self {
+                unary(UnaryOp::BitNot, self)
+            }
+        }
+    };
+}
+
 // Implements a `$scalar` value.
 macro_rules! impl_scalar {
     ($scalar:ident, $physical:ident) => {
@@ -210,8 +232,12 @@ macro_rules! impl_scalar {
                 })
             }
 
-            pub fn eq(&self, right: impl ToValue<Output = Self>) -> Bool {
-                binary(*self, BinaryOp::Eq, right)
+            pub fn eq(self, right: impl ToValue<Output = Self>) -> Bool {
+                <Self as Value>::eq(self, right)
+            }
+
+            pub fn ne(self, right: impl ToValue<Output = Self>) -> Bool {
+                <Self as Value>::ne(self, right)
             }
         }
     };
@@ -225,6 +251,9 @@ impl_scalar!(Bool, bool);
 impl_numeric_ops!(F32);
 impl_numeric_ops!(I32);
 impl_numeric_ops!(U32);
+
+impl_integral_ops!(I32);
+impl_integral_ops!(U32);
 
 impl_gen_type!(F32);
 

@@ -1,6 +1,6 @@
 use glow::HasContext;
 
-use super::{context::ContextShared, CompareFunction};
+use super::CompareFunction;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum SamplerMagFilter {
