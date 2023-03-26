@@ -22,6 +22,12 @@ impl Display for BinaryOp {
             Ne => "!=",
             Ge => ">=",
             Gt => ">",
+            Shl => "<<",
+            Shr => ">>",
+            BitAnd => "&",
+            BitOr => "|",
+            BitXor => "^",
+            Rem => "%",
         };
 
         f.write_str(s)
@@ -35,6 +41,7 @@ impl Display for UnaryOp {
         let s = match self {
             Neg => "-",
             Not => "!",
+            BitNot => "~",
         };
 
         f.write_str(s)
