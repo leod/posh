@@ -113,11 +113,11 @@ impl Context {
         Program::new(self.shared.clone(), def)
     }
 
-    pub(super) fn default_framebuffer_size(&self) -> glam::UVec2 {
+    pub(crate) fn default_framebuffer_size(&self) -> glam::UVec2 {
         self.shared.default_framebuffer_size.get()
     }
 
-    pub(super) fn set_default_framebuffer_size(&mut self, size: glam::UVec2) {
+    pub(crate) fn set_default_framebuffer_size(&self, size: glam::UVec2) {
         self.shared.default_framebuffer_size.set(size);
     }
 }
