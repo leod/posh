@@ -43,6 +43,8 @@ pub use {
 
 pub use posh_derive::{Value, Varying};
 
+use self::dag::BinaryOp;
+
 /// Base trait for types representing objects in the shading language.
 ///
 /// Almost all types that implement [`Object`] also implement [`Value`]. The
@@ -69,9 +71,17 @@ pub trait Object: 'static {
 /// is [`Sampler2d`]. See also [`Object`].
 ///
 /// The interface of this trait is a private implementation detail.
-pub trait Value: Object + Copy {
+pub trait Value: Object + Copy + ToValue<Output = Self> {
     #[doc(hidden)]
     fn from_expr(expr: Expr) -> Self;
+
+    fn eq(self, right: impl ToValue<Output = Self>) -> Bool {
+        primitives::binary(self, BinaryOp::Eq, right)
+    }
+
+    fn ne(self, right: impl ToValue<Output = Self>) -> Bool {
+        primitives::binary(self, BinaryOp::Ne, right)
+    }
 }
 
 /// A transparent non-array value in the shading value.

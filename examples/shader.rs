@@ -1,5 +1,5 @@
 use posh::{
-    sl::{self, ToValue, VaryingOutput},
+    sl::{self, ToValue, Value, VaryingOutput},
     Block, BlockDom, Sl,
 };
 

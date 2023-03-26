@@ -232,8 +232,12 @@ macro_rules! impl_scalar {
                 })
             }
 
-            pub fn eq(&self, right: impl ToValue<Output = Self>) -> Bool {
-                binary(*self, BinaryOp::Eq, right)
+            pub fn eq(self, right: impl ToValue<Output = Self>) -> Bool {
+                <Self as Value>::eq(self, right)
+            }
+
+            pub fn ne(self, right: impl ToValue<Output = Self>) -> Bool {
+                <Self as Value>::ne(self, right)
             }
         }
     };

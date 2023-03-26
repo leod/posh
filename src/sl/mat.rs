@@ -6,7 +6,7 @@ use std::{
 use super::{
     dag::{BinaryOp, BuiltInType, Expr, Type, UnaryOp},
     primitives::{binary, built_in_1, common_field_base, field, unary, value_arg},
-    Object, ToValue, Value, ValueNonArray, Vec2, Vec3, Vec4, F32,
+    Bool, Object, ToValue, Value, ValueNonArray, Vec2, Vec3, Vec4, F32,
 };
 
 /// A two-by-two floating-point matrix.
@@ -97,6 +97,16 @@ macro_rules! impl_value {
 
             fn to_value(self) -> Self::Output {
                 self
+            }
+        }
+
+        impl $mat {
+            pub fn eq(self, right: impl ToValue<Output = Self>) -> Bool {
+                <Self as Value>::eq(self, right)
+            }
+
+            pub fn ne(self, right: impl ToValue<Output = Self>) -> Bool {
+                <Self as Value>::ne(self, right)
             }
         }
     };
