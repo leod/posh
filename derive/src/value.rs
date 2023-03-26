@@ -78,6 +78,15 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         // Implement `ValueNonArray` for the struct.
         impl #impl_generics ::posh::sl::ValueNonArray for #ident #ty_generics #where_clause {}
 
+        // Implement `ToValue` for the struct.
+        impl #impl_generics ::posh::sl::ToValue for #ident #ty_generics #where_clause {
+            type Output = Self;
+
+            fn to_value(self) -> Self {
+                self
+            }
+        }
+
         // Check that all field types implement `Value`.
         const _: fn() = || {
             fn check_field<V: ::posh::sl::Value>() {}

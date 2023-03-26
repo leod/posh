@@ -75,6 +75,16 @@ macro_rules! impl_value {
                 self
             }
         }
+
+        impl $vec {
+            pub fn eq(self, right: impl ToValue<Output = Self>) -> Bool {
+                <Self as Value>::eq(self, right)
+            }
+
+            pub fn ne(self, right: impl ToValue<Output = Self>) -> Bool {
+                <Self as Value>::ne(self, right)
+            }
+        }
     };
 }
 
