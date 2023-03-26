@@ -203,6 +203,7 @@ pub struct DrawParams {
     pub color_mask: glam::BVec4,
     pub cull_face: Option<CullFace>,
     pub blend: Option<Blend>,
+    pub scissor: Option<glam::UVec4>,
     pub viewport: Option<Viewport>,
 }
 
@@ -217,6 +218,7 @@ impl Default for DrawParams {
             color_mask: glam::BVec4::TRUE,
             cull_face: None,
             blend: None,
+            scissor: None,
             viewport: None,
         }
     }
@@ -317,6 +319,20 @@ impl DrawParams {
             }
         }
 
+        if self.scissor != current.scissor {
+            if let Some(scissor) = self.scissor {
+                let x = scissor.x.try_into().unwrap();
+                let y = scissor.y.try_into().unwrap();
+                let width = scissor.z.try_into().unwrap();
+                let height = scissor.w.try_into().unwrap();
+
+                unsafe { gl.enable(glow::SCISSOR_TEST) };
+                unsafe { gl.scissor(x, y, width, height) };
+            } else {
+                unsafe { gl.disable(glow::SCISSOR_TEST) };
+            }
+        }
+
         let viewport = self.viewport.unwrap_or(Viewport {
             lower_left_corner: glam::UVec2::ZERO,
             size: framebuffer_size,
@@ -364,6 +380,11 @@ impl DrawParams {
 
     pub fn with_cull_face(mut self, cull_face: CullFace) -> Self {
         self.cull_face = Some(cull_face);
+        self
+    }
+
+    pub fn with_scissor(mut self, scissor: glam::UVec4) -> Self {
+        self.scissor = Some(scissor);
         self
     }
 
