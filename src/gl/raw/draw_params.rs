@@ -1,7 +1,7 @@
 use glow::HasContext;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum CompareFunction {
+pub enum CompareFunc {
     Always,
     Equal,
     Greater,
@@ -12,9 +12,9 @@ pub enum CompareFunction {
     NotEqual,
 }
 
-impl CompareFunction {
+impl CompareFunc {
     pub const fn to_gl(self) -> u32 {
-        use CompareFunction::*;
+        use CompareFunc::*;
 
         match self {
             Always => glow::ALWAYS,
@@ -52,16 +52,158 @@ impl CullFace {
     }
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum BlendEquation {
+    Add,
+    Subtract,
+    ReverseSubtract,
+    Min,
+    Max,
+}
+
+impl BlendEquation {
+    pub fn to_gl(self) -> u32 {
+        use BlendEquation::*;
+
+        match self {
+            Add => glow::FUNC_ADD,
+            Subtract => glow::FUNC_SUBTRACT,
+            ReverseSubtract => glow::FUNC_REVERSE_SUBTRACT,
+            Min => glow::MIN,
+            Max => glow::MAX,
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum BlendFunc {
+    Zero,
+    One,
+    SrcColor,
+    OneMinusSrcColor,
+    DstColor,
+    OneMinusDstColor,
+    SrcAlpha,
+    OneMinusSrcAlpha,
+    DstAlpha,
+    OneMinusDstAlpha,
+    ConstantColor,
+    OneMinusConstantColor,
+    ConstantAlpha,
+    OneMinusConstantAlpha,
+    SrcAlphaSaturate,
+}
+
+impl BlendFunc {
+    pub fn to_gl(self) -> u32 {
+        use BlendFunc::*;
+
+        match self {
+            Zero => glow::ZERO,
+            One => glow::ONE,
+            SrcColor => glow::SRC_COLOR,
+            OneMinusSrcColor => glow::ONE_MINUS_SRC_COLOR,
+            DstColor => glow::DST_COLOR,
+            OneMinusDstColor => glow::ONE_MINUS_DST_COLOR,
+            SrcAlpha => glow::SRC_ALPHA,
+            OneMinusSrcAlpha => glow::ONE_MINUS_SRC_ALPHA,
+            DstAlpha => glow::DST_ALPHA,
+            OneMinusDstAlpha => glow::ONE_MINUS_DST_ALPHA,
+            ConstantColor => glow::CONSTANT_COLOR,
+            OneMinusConstantColor => glow::ONE_MINUS_CONSTANT_COLOR,
+            ConstantAlpha => glow::CONSTANT_ALPHA,
+            OneMinusConstantAlpha => glow::ONE_MINUS_CONSTANT_ALPHA,
+            SrcAlphaSaturate => glow::SRC_ALPHA_SATURATE,
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct Blend {
+    pub color_equation: BlendEquation,
+    pub alpha_equation: BlendEquation,
+    pub src_color_func: BlendFunc,
+    pub dst_color_func: BlendFunc,
+    pub src_alpha_func: BlendFunc,
+    pub dst_alpha_func: BlendFunc,
+    pub constant_color: glam::Vec4,
+}
+
+impl Default for Blend {
+    fn default() -> Self {
+        Self {
+            color_equation: BlendEquation::Add,
+            alpha_equation: BlendEquation::Add,
+            src_color_func: BlendFunc::One,
+            src_alpha_func: BlendFunc::One,
+            dst_color_func: BlendFunc::Zero,
+            dst_alpha_func: BlendFunc::Zero,
+            constant_color: glam::Vec4::ZERO,
+        }
+    }
+}
+
+impl Blend {
+    pub fn with_color_equation(mut self, equation: BlendEquation) -> Self {
+        self.color_equation = equation;
+        self
+    }
+
+    pub fn with_alpha_equation(mut self, equation: BlendEquation) -> Self {
+        self.alpha_equation = equation;
+        self
+    }
+
+    pub fn with_equation(mut self, equation: BlendEquation) -> Self {
+        self.with_color_equation(equation)
+            .with_alpha_equation(equation)
+    }
+
+    pub fn with_src_color_func(mut self, func: BlendFunc) -> Self {
+        self.src_color_func = func;
+        self
+    }
+
+    pub fn with_src_alpha_func(mut self, func: BlendFunc) -> Self {
+        self.src_alpha_func = func;
+        self
+    }
+
+    pub fn with_src_func(mut self, func: BlendFunc) -> Self {
+        self.with_src_color_func(func).with_src_alpha_func(func)
+    }
+
+    pub fn with_dst_color_func(mut self, func: BlendFunc) -> Self {
+        self.dst_color_func = func;
+        self
+    }
+
+    pub fn with_dst_alpha_func(mut self, func: BlendFunc) -> Self {
+        self.src_alpha_func = func;
+        self
+    }
+
+    pub fn with_dst_func(mut self, func: BlendFunc) -> Self {
+        self.with_dst_color_func(func).with_dst_alpha_func(func)
+    }
+
+    pub fn with_constant_color(mut self, color: glam::Vec4) -> Self {
+        self.constant_color = color;
+        self
+    }
+}
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct DrawParams {
     pub clear_color: Option<glam::Vec4>,
     pub clear_depth: Option<f32>,
     pub clear_stencil: Option<u8>,
-    pub depth_compare: Option<CompareFunction>,
+    pub depth_compare: Option<CompareFunc>,
     pub depth_mask: bool,
     pub color_mask: glam::BVec4,
-    pub viewport: Option<Viewport>,
     pub cull_face: Option<CullFace>,
+    pub blend: Option<Blend>,
+    pub viewport: Option<Viewport>,
 }
 
 impl Default for DrawParams {
@@ -73,8 +215,9 @@ impl Default for DrawParams {
             depth_compare: None,
             depth_mask: true,
             color_mask: glam::BVec4::TRUE,
-            viewport: None,
             cull_face: None,
+            blend: None,
+            viewport: None,
         }
     }
 }
@@ -131,11 +274,6 @@ impl DrawParams {
             unsafe { gl.color_mask(mask.x, mask.y, mask.z, mask.w) };
         }
 
-        let viewport = self.viewport.unwrap_or(Viewport {
-            lower_left_corner: glam::UVec2::ZERO,
-            size: framebuffer_size,
-        });
-
         if self.cull_face != current.cull_face {
             if let Some(cull_face) = self.cull_face {
                 let cull_face = cull_face.to_gl();
@@ -146,6 +284,43 @@ impl DrawParams {
                 unsafe { gl.disable(glow::CULL_FACE) };
             }
         }
+
+        if self.blend != current.blend {
+            if let Some(blend) = self.blend {
+                let color_equation = blend.color_equation.to_gl();
+                let alpha_equation = blend.alpha_equation.to_gl();
+                let src_color_func = blend.src_color_func.to_gl();
+                let src_alpha_func = blend.src_alpha_func.to_gl();
+                let dst_color_func = blend.dst_color_func.to_gl();
+                let dst_alpha_func = blend.dst_alpha_func.to_gl();
+
+                unsafe { gl.enable(glow::BLEND) };
+                unsafe { gl.blend_equation_separate(color_equation, alpha_equation) };
+                unsafe {
+                    gl.blend_func_separate(
+                        src_color_func,
+                        dst_color_func,
+                        src_alpha_func,
+                        dst_alpha_func,
+                    )
+                };
+                unsafe {
+                    gl.blend_color(
+                        blend.constant_color.x,
+                        blend.constant_color.y,
+                        blend.constant_color.z,
+                        blend.constant_color.w,
+                    )
+                };
+            } else {
+                unsafe { gl.disable(glow::BLEND) };
+            }
+        }
+
+        let viewport = self.viewport.unwrap_or(Viewport {
+            lower_left_corner: glam::UVec2::ZERO,
+            size: framebuffer_size,
+        });
 
         unsafe {
             gl.viewport(
@@ -172,7 +347,7 @@ impl DrawParams {
         self
     }
 
-    pub fn with_depth_compare(mut self, depth_compare: CompareFunction) -> Self {
+    pub fn with_depth_compare(mut self, depth_compare: CompareFunc) -> Self {
         self.depth_compare = Some(depth_compare);
         self
     }
@@ -187,13 +362,13 @@ impl DrawParams {
         self
     }
 
-    pub fn with_viewport(mut self, viewport: Viewport) -> Self {
-        self.viewport = Some(viewport);
+    pub fn with_cull_face(mut self, cull_face: CullFace) -> Self {
+        self.cull_face = Some(cull_face);
         self
     }
 
-    pub fn with_cull_face(mut self, cull_face: CullFace) -> Self {
-        self.cull_face = Some(cull_face);
+    pub fn with_viewport(mut self, viewport: Viewport) -> Self {
+        self.viewport = Some(viewport);
         self
     }
 }

@@ -4,7 +4,7 @@ use crate::sl::{self, ColorSample};
 
 use super::{
     raw::{self, Sampler2dParams},
-    ColorAttachment, CompareFunction, DepthAttachment,
+    ColorAttachment, CompareFunc, DepthAttachment,
 };
 
 pub struct ColorTexture2d<S> {
@@ -92,7 +92,7 @@ impl DepthTexture2d {
     pub fn as_comparison_sampler(
         &self,
         params: Sampler2dParams,
-        compare: CompareFunction,
+        compare: CompareFunc,
     ) -> ComparisonSampler2d {
         // FIXME: Check texture completeness.
         ComparisonSampler2d::from_raw(raw::Sampler2d {

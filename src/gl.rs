@@ -18,9 +18,10 @@ pub use framebuffer::{ColorAttachment, DefaultFramebuffer, DepthAttachment, Fram
 pub use primitive_stream::PrimitiveStream;
 pub use program::Program;
 pub use raw::{
-    BufferError, BufferUsage, Caps, CompareFunction, ContextError, CreateError, CullFace,
-    DrawError, DrawParams, ElementType, FramebufferError, ImageFormat, ImageInternalFormat, Mode,
-    ProgramError, ProgramValidationError, Sampler2dParams, TextureError, VertexArrayError,
+    Blend, BlendEquation, BlendFunc, BufferError, BufferUsage, Caps, CompareFunc, ContextError,
+    CreateError, CullFace, DrawError, DrawParams, ElementType, FramebufferError, ImageFormat,
+    ImageInternalFormat, Mode, ProgramError, ProgramValidationError, Sampler2dParams, TextureError,
+    VertexArrayError,
 };
 pub use texture::{ColorSampler2d, ColorTexture2d, ComparisonSampler2d, DepthTexture2d};
 pub use uniform_buffer::{UniformBuffer, UniformBufferBinding};
