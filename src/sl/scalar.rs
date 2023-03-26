@@ -5,7 +5,7 @@ use std::{
 
 use super::{
     dag::{BinaryOp, Expr, Trace, Type},
-    primitives::{binary, value_arg},
+    primitives::{binary, cast, value_arg},
     Object, ToValue, Value, ValueNonArray,
 };
 
@@ -32,11 +32,11 @@ macro_rules! scalar_built_in_type {
     (F32) => {
         super::dag::BuiltInType::F32
     };
-    (U32) => {
-        super::dag::BuiltInType::I32
-    };
     (I32) => {
         super::dag::BuiltInType::U32
+    };
+    (U32) => {
+        super::dag::BuiltInType::I32
     };
     (Bool) => {
         super::dag::BuiltInType::Bool
@@ -48,11 +48,11 @@ macro_rules! scalar_name {
     (F32) => {
         "floating-point"
     };
-    (U32) => {
-        "unsigned integer"
-    };
     (I32) => {
         "signed integer"
+    };
+    (U32) => {
+        "unsigned integer"
     };
     (Bool) => {
         "boolean"
@@ -66,10 +66,10 @@ macro_rules! scalar_format {
         // 3.0 always wants a decimal point for floats.
         "{:?}"
     };
-    (U32) => {
+    (I32) => {
         "{}"
     };
-    (I32) => {
+    (U32) => {
         "{}"
     };
     (Bool) => {
@@ -220,6 +220,44 @@ impl_numeric_ops!(U32);
 
 impl_gen_type!(F32);
 
+impl F32 {
+    pub fn as_i32(self) -> I32 {
+        cast(self)
+    }
+
+    pub fn as_u32(self) -> U32 {
+        cast(self)
+    }
+}
+
+impl I32 {
+    pub fn as_f32(self) -> F32 {
+        cast(self)
+    }
+
+    pub fn as_u32(self) -> U32 {
+        cast(self)
+    }
+
+    pub fn as_bool(self) -> Bool {
+        cast(self)
+    }
+}
+
+impl U32 {
+    pub fn as_f32(self) -> F32 {
+        cast(self)
+    }
+
+    pub fn as_i32(self) -> I32 {
+        cast(self)
+    }
+
+    pub fn as_bool(self) -> Bool {
+        cast(self)
+    }
+}
+
 impl Bool {
     pub fn and(self, right: impl ToValue<Output = Self>) -> Self {
         binary(self, BinaryOp::And, right)
@@ -242,5 +280,13 @@ impl Bool {
         let expr = Expr::Branch { ty, cond, yes, no };
 
         V::from_expr(expr)
+    }
+
+    pub fn as_i32(self) -> I32 {
+        cast(self)
+    }
+
+    pub fn as_u32(self) -> U32 {
+        cast(self)
     }
 }
