@@ -202,7 +202,7 @@ pub struct DrawParams {
     pub depth_mask: bool,
     pub stencil_mask_front: u32,
     pub stencil_mask_back: u32,
-    pub depth_compare: Option<CompareFunc>,
+    pub depth_test: Option<CompareFunc>,
     pub cull_face: Option<CullFace>,
     pub blend: Option<Blend>,
     pub scissor: Option<glam::UVec4>,
@@ -219,7 +219,7 @@ impl Default for DrawParams {
             color_mask: glam::BVec4::TRUE,
             stencil_mask_front: !0,
             stencil_mask_back: !0,
-            depth_compare: None,
+            depth_test: None,
             cull_face: None,
             blend: None,
             scissor: None,
@@ -277,8 +277,8 @@ impl DrawParams {
             unsafe { gl.stencil_mask_separate(glow::BACK, self.stencil_mask_back) };
         }
 
-        if self.depth_compare != current.depth_compare {
-            if let Some(func) = self.depth_compare {
+        if self.depth_test != current.depth_test {
+            if let Some(func) = self.depth_test {
                 let func = func.to_gl();
 
                 unsafe { gl.enable(glow::DEPTH_TEST) };
@@ -375,8 +375,8 @@ impl DrawParams {
         self
     }
 
-    pub fn with_depth_compare(mut self, depth_compare: CompareFunc) -> Self {
-        self.depth_compare = Some(depth_compare);
+    pub fn with_depth_test(mut self, depth_compare: CompareFunc) -> Self {
+        self.depth_test = Some(depth_compare);
         self
     }
 
