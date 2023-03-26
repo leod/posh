@@ -52,7 +52,7 @@ impl CullFace {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Default)]
 pub struct DrawParams {
     pub clear_color: Option<glam::Vec4>,
     pub clear_depth: Option<f32>,
@@ -60,19 +60,6 @@ pub struct DrawParams {
     pub depth_compare: Option<CompareFunction>,
     pub viewport: Option<Viewport>,
     pub cull_face: Option<CullFace>,
-}
-
-impl Default for DrawParams {
-    fn default() -> Self {
-        Self {
-            clear_color: None,
-            clear_depth: None,
-            clear_stencil: None,
-            depth_compare: None,
-            viewport: None,
-            cull_face: None,
-        }
-    }
 }
 
 impl DrawParams {
@@ -117,7 +104,7 @@ impl DrawParams {
             }
         }
 
-        let viewport = self.viewport.unwrap_or_else(|| Viewport {
+        let viewport = self.viewport.unwrap_or(Viewport {
             lower_left_corner: glam::UVec2::ZERO,
             size: framebuffer_size,
         });
