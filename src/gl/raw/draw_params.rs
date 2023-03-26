@@ -157,11 +157,6 @@ impl DrawParams {
         };
     }
 
-    pub fn with_depth_compare(mut self, depth_compare: CompareFunction) -> Self {
-        self.depth_compare = Some(depth_compare);
-        self
-    }
-
     pub fn with_clear_color(mut self, clear_color: glam::Vec4) -> Self {
         self.clear_color = Some(clear_color);
         self
@@ -174,6 +169,31 @@ impl DrawParams {
 
     pub fn with_clear_stencil(mut self, clear_stencil: u8) -> Self {
         self.clear_stencil = Some(clear_stencil);
+        self
+    }
+
+    pub fn with_depth_compare(mut self, depth_compare: CompareFunction) -> Self {
+        self.depth_compare = Some(depth_compare);
+        self
+    }
+
+    pub fn with_depth_mask(mut self, depth_mask: bool) -> Self {
+        self.depth_mask = depth_mask;
+        self
+    }
+
+    pub fn with_color_mask(mut self, color_mask: glam::BVec4) -> Self {
+        self.color_mask = color_mask;
+        self
+    }
+
+    pub fn with_viewport(mut self, viewport: Viewport) -> Self {
+        self.viewport = Some(viewport);
+        self
+    }
+
+    pub fn with_cull_face(mut self, cull_face: CullFace) -> Self {
+        self.cull_face = Some(cull_face);
         self
     }
 }
