@@ -201,6 +201,8 @@ pub struct DrawParams {
     pub depth_compare: Option<CompareFunc>,
     pub depth_mask: bool,
     pub color_mask: glam::BVec4,
+    pub stencil_mask_front: u32,
+    pub stencil_mask_back: u32,
     pub cull_face: Option<CullFace>,
     pub blend: Option<Blend>,
     pub scissor: Option<glam::UVec4>,
@@ -216,6 +218,8 @@ impl Default for DrawParams {
             depth_compare: None,
             depth_mask: true,
             color_mask: glam::BVec4::TRUE,
+            stencil_mask_front: !0,
+            stencil_mask_back: !0,
             cull_face: None,
             blend: None,
             scissor: None,
@@ -274,6 +278,14 @@ impl DrawParams {
             let mask = self.color_mask;
 
             unsafe { gl.color_mask(mask.x, mask.y, mask.z, mask.w) };
+        }
+
+        if self.stencil_mask_front != current.stencil_mask_front {
+            unsafe { gl.stencil_mask_separate(glow::FRONT, self.stencil_mask_front) };
+        }
+
+        if self.stencil_mask_front != current.stencil_mask_back {
+            unsafe { gl.stencil_mask_separate(glow::BACK, self.stencil_mask_back) };
         }
 
         if self.cull_face != current.cull_face {
@@ -368,14 +380,29 @@ impl DrawParams {
         self
     }
 
-    pub fn with_depth_mask(mut self, depth_mask: bool) -> Self {
-        self.depth_mask = depth_mask;
+    pub fn with_color_mask(mut self, mask: glam::BVec4) -> Self {
+        self.color_mask = mask;
         self
     }
 
-    pub fn with_color_mask(mut self, color_mask: glam::BVec4) -> Self {
-        self.color_mask = color_mask;
+    pub fn with_depth_mask(mut self, mask: bool) -> Self {
+        self.depth_mask = mask;
         self
+    }
+
+    pub fn with_stencil_mask_front(mut self, mask: u32) -> Self {
+        self.stencil_mask_front = mask;
+        self
+    }
+
+    pub fn with_stencil_mask_back(mut self, mask: u32) -> Self {
+        self.stencil_mask_back = mask;
+        self
+    }
+
+    pub fn with_stencil_mask(mut self, mask: u32) -> Self {
+        self.with_stencil_mask_front(mask)
+            .with_stencil_mask_back(mask)
     }
 
     pub fn with_cull_face(mut self, cull_face: CullFace) -> Self {
