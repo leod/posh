@@ -1,5 +1,5 @@
 use std::{
-    ops::{Add, Div, Mul, Neg, Sub},
+    ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Neg, Not, Rem, Shl, Shr, Sub},
     rc::Rc,
 };
 
@@ -123,6 +123,35 @@ macro_rules! impl_binary_op {
     };
 }
 
+// Implements `$vec <op> $vec` and `$vec <op> $scalar`.
+macro_rules! impl_asymmetric_binary_op {
+    ($vec:ident, $scalar:ident, $op:ident, $fn:ident) => {
+        impl $op<$vec> for $vec {
+            type Output = Self;
+
+            fn $fn(self, right: Self) -> Self {
+                binary(self, BinaryOp::$op, right)
+            }
+        }
+
+        impl $op<$scalar> for $vec {
+            type Output = Self;
+
+            fn $fn(self, right: $scalar) -> Self {
+                binary(self, BinaryOp::$op, right)
+            }
+        }
+
+        impl $op<scalar_physical!($scalar)> for $vec {
+            type Output = Self;
+
+            fn $fn(self, right: scalar_physical!($scalar)) -> Self {
+                binary(self, BinaryOp::$op, right)
+            }
+        }
+    };
+}
+
 // Implements numeric ops for `$vec`.
 macro_rules! impl_numeric_ops {
     ($vec:ident, $scalar:ident) => {
@@ -141,12 +170,43 @@ macro_rules! impl_numeric_ops {
     };
 }
 
+// Implements integral ops for `$vec`.
+macro_rules! impl_integral_ops {
+    ($vec:ident, $scalar:ident) => {
+        // For shl and shr, if the first operand is a scalar, the second operand
+        // has to be a scalar as well.
+        impl_asymmetric_binary_op!($vec, $scalar, Shl, shl);
+        impl_asymmetric_binary_op!($vec, $scalar, Shr, shr);
+
+        impl_binary_op!($vec, $scalar, BitAnd, bitand);
+        impl_binary_op!($vec, $scalar, BitOr, bitor);
+        impl_binary_op!($vec, $scalar, BitXor, bitxor);
+        impl_binary_op!($vec, $scalar, Rem, rem);
+
+        impl Not for $vec {
+            type Output = Self;
+
+            fn not(self) -> Self {
+                unary(UnaryOp::Not, self)
+            }
+        }
+    };
+}
+
 // Implements ops for `$vec`.
 macro_rules! impl_ops {
-    ($vec:ident, Bool, bool) => {};
-    ($vec:ident, $logical:ident) => {
-        impl_numeric_ops!($vec, $logical);
+    ($vec:ident, F32) => {
+        impl_numeric_ops!($vec, F32);
     };
+    ($vec:ident, I32) => {
+        impl_numeric_ops!($vec, I32);
+        impl_integral_ops!($vec, I32);
+    };
+    ($vec:ident, U32) => {
+        impl_numeric_ops!($vec, U32);
+        impl_integral_ops!($vec, U32);
+    };
+    ($vec:ident, Bool) => {};
 }
 
 // Implements two-dimensional `$vec`.

@@ -34,8 +34,9 @@ fn vertex_shader(globals: Globals, vertex: ColorVertex) -> VaryingOutput<sl::Vec
 
     let shift2 = globals.invert.eq(3).branch(shift, {
         let x = shift * 5.0;
+        let y = !(x.as_ivec2() << 3) & 1 % sl::ivec2(1, 1);
 
-        false.to_value().branch(x * -1.0, x * -2.0)
+        false.to_value().branch(x * -1.0, y.as_vec2() * -2.0)
     });
 
     let position = sl::Mat2::identity() * vertex.position + shift2 + sl::Mat2::diagonal(4.0).x_axis;
