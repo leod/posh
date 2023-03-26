@@ -124,9 +124,9 @@ mod shaded_pass {
         let ndc = light_clip_pos.xyz() / light_clip_pos.w;
         let uvw = ndc * 0.5 + 0.5;
 
-        let is_outside = sl::any([uvw.x.lt(0.0), uvw.x.gt(1.0), uvw.y.lt(0.0), uvw.y.gt(1.0)]);
+        let inside = !sl::any([uvw.x.lt(0.0), uvw.x.gt(1.0), uvw.y.lt(0.0), uvw.y.gt(1.0)]);
 
-        is_outside.branch(0.0, light_depth_map.sample_compare(uvw.xy(), uvw.z))
+        inside.branch(light_depth_map.sample_compare(uvw.xy(), uvw.z), 0.0)
     }
 
     pub fn fragment(

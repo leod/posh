@@ -1,11 +1,11 @@
 use std::{
-    ops::{Add, Mul, Sub},
+    ops::{Add, Mul, Neg, Sub},
     rc::Rc,
 };
 
 use super::{
-    dag::{BinaryOp, BuiltInType, Expr, Type},
-    primitives::{binary, built_in_1, common_field_base, field, value_arg},
+    dag::{BinaryOp, BuiltInType, Expr, Type, UnaryOp},
+    primitives::{binary, built_in_1, common_field_base, field, unary, value_arg},
     Object, ToValue, Value, ValueNonArray, Vec2, Vec3, Vec4, F32,
 };
 
@@ -166,6 +166,14 @@ macro_rules! impl_mat {
         impl_binary_op_scalar_rhs!($mat, add, Add);
         impl_binary_op_scalar_rhs!($mat, mul, Mul);
         impl_binary_op_scalar_rhs!($mat, sub, Sub);
+
+        impl Neg for $mat {
+            type Output = Self;
+
+            fn neg(self) -> Self {
+                unary(UnaryOp::Neg, self)
+            }
+        }
 
         impl Default for $mat {
             fn default() -> Self {

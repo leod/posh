@@ -59,7 +59,7 @@ mod present_pass {
 
     pub fn fragment(uniform: Uniform, tex_coords: sl::Vec2) -> sl::Vec4 {
         let flip = uniform.state.flip;
-        let coords = flip.eq(0u32).branch(tex_coords, tex_coords * -1.0);
+        let coords = flip.eq(0u32).branch(tex_coords, -tex_coords);
 
         uniform.scene.sample(coords)
     }

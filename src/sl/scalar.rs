@@ -1,11 +1,11 @@
 use std::{
-    ops::{Add, Div, Mul, Sub},
+    ops::{Add, Div, Mul, Neg, Not, Sub},
     rc::Rc,
 };
 
 use super::{
-    dag::{BinaryOp, Expr, Trace, Type},
-    primitives::{binary, cast, value_arg},
+    dag::{BinaryOp, Expr, Trace, Type, UnaryOp},
+    primitives::{binary, cast, unary, value_arg},
     Object, ToValue, Value, ValueNonArray,
 };
 
@@ -114,6 +114,14 @@ macro_rules! impl_numeric_ops {
         impl_binary_op!($scalar, Div, div);
         impl_binary_op!($scalar, Mul, mul);
         impl_binary_op!($scalar, Sub, sub);
+
+        impl Neg for $scalar {
+            type Output = Self;
+
+            fn neg(self) -> Self {
+                unary(UnaryOp::Neg, self)
+            }
+        }
 
         impl $scalar {
             pub fn lt(self, rhs: impl ToValue<Output = Self>) -> Bool {
@@ -288,5 +296,13 @@ impl Bool {
 
     pub fn as_u32(self) -> U32 {
         cast(self)
+    }
+}
+
+impl Not for Bool {
+    type Output = Self;
+
+    fn not(self) -> Self {
+        unary(UnaryOp::Not, self)
     }
 }

@@ -3,7 +3,7 @@ use std::{
     rc::Rc,
 };
 
-use super::{BinaryOp, BuiltInType, Expr, SamplerType, Type};
+use super::{BinaryOp, BuiltInType, Expr, SamplerType, Type, UnaryOp};
 
 impl Display for BinaryOp {
     fn fmt(&self, f: &mut Formatter) -> Result {
@@ -22,6 +22,19 @@ impl Display for BinaryOp {
             Ne => "!=",
             Ge => ">=",
             Gt => ">",
+        };
+
+        f.write_str(s)
+    }
+}
+
+impl Display for UnaryOp {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        use UnaryOp::*;
+
+        let s = match self {
+            Neg => "-",
+            Not => "!",
         };
 
         f.write_str(s)
@@ -51,6 +64,7 @@ impl Display for Expr {
             Arg { name, .. } => f.write_str(name),
             ScalarLiteral { value, .. } => f.write_str(value),
             StructLiteral { args, ty } => write_call(f, &ty.name, args),
+            Unary { op, arg, .. } => write!(f, "{op} {arg}"),
             Binary {
                 left, op, right, ..
             } => write!(f, "({left} {op} {right})"),
