@@ -164,13 +164,13 @@ impl Blend {
         self
     }
 
-    pub fn with_src_alpha_func(mut self, func: BlendFunc) -> Self {
+    pub fn with_src_func_alpha(mut self, func: BlendFunc) -> Self {
         self.src_func_alpha = func;
         self
     }
 
     pub fn with_src_func(mut self, func: BlendFunc) -> Self {
-        self.with_src_func_color(func).with_src_alpha_func(func)
+        self.with_src_func_color(func).with_src_func_alpha(func)
     }
 
     pub fn with_dst_func_color(mut self, func: BlendFunc) -> Self {
@@ -178,13 +178,13 @@ impl Blend {
         self
     }
 
-    pub fn with_dst_alpha_func(mut self, func: BlendFunc) -> Self {
+    pub fn with_dst_func_alpha(mut self, func: BlendFunc) -> Self {
         self.src_func_alpha = func;
         self
     }
 
     pub fn with_dst_func(mut self, func: BlendFunc) -> Self {
-        self.with_dst_func_color(func).with_dst_alpha_func(func)
+        self.with_dst_func_color(func).with_dst_func_alpha(func)
     }
 
     pub fn with_constant_color(mut self, color: glam::Vec4) -> Self {
