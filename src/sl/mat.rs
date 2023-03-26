@@ -5,7 +5,7 @@ use std::{
 
 use super::{
     dag::{BinaryOp, BuiltInType, Expr, Type, UnaryOp},
-    primitives::{binary, built_in_1, common_field_base, field, unary, value_arg},
+    primitives::{binary, built_in_1, built_in_2, common_field_base, field, unary, value_arg},
     Bool, Object, ToValue, Value, ValueNonArray, Vec2, Vec3, Vec4, F32,
 };
 
@@ -212,6 +212,10 @@ macro_rules! impl_mat {
 
             pub fn inverse(self) -> Self {
                 built_in_1("inverse", self)
+            }
+
+            pub fn cmpmul(self, y: Self) -> Self {
+                built_in_2("matrixCompMult", self, y)
             }
         }
     };
