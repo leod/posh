@@ -1,5 +1,5 @@
 use std::{
-    ops::{Add, Mul, Neg, Sub},
+    ops::{Add, Div, Mul, Neg, Sub},
     rc::Rc,
 };
 
@@ -158,14 +158,16 @@ macro_rules! impl_mat {
         impl_value!($mat, $($member),+);
 
         impl_binary_op_symmetric!($mat, add, Add);
+        impl_binary_op_symmetric!($mat, div, Div);
         impl_binary_op_symmetric!($mat, mul, Mul);
         impl_binary_op_symmetric!($mat, sub, Sub);
 
-        impl_binary_op_vec_rhs!($mat, $vec_ty, mul, Mul);
-
         impl_binary_op_scalar_rhs!($mat, add, Add);
+        impl_binary_op_scalar_rhs!($mat, div, Div);
         impl_binary_op_scalar_rhs!($mat, mul, Mul);
         impl_binary_op_scalar_rhs!($mat, sub, Sub);
+
+        impl_binary_op_vec_rhs!($mat, $vec_ty, mul, Mul);
 
         impl Neg for $mat {
             type Output = Self;
