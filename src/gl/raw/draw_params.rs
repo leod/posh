@@ -122,9 +122,9 @@ impl BlendFunc {
 pub struct Blend {
     pub color_equation: BlendEquation,
     pub alpha_equation: BlendEquation,
-    pub src_color_func: BlendFunc,
-    pub dst_color_func: BlendFunc,
-    pub src_alpha_func: BlendFunc,
+    pub src_func_color: BlendFunc,
+    pub dst_func_color: BlendFunc,
+    pub src_func_alpha: BlendFunc,
     pub dst_alpha_func: BlendFunc,
     pub constant_color: glam::Vec4,
 }
@@ -134,9 +134,9 @@ impl Default for Blend {
         Self {
             color_equation: BlendEquation::Add,
             alpha_equation: BlendEquation::Add,
-            src_color_func: BlendFunc::One,
-            src_alpha_func: BlendFunc::One,
-            dst_color_func: BlendFunc::Zero,
+            src_func_color: BlendFunc::One,
+            src_func_alpha: BlendFunc::One,
+            dst_func_color: BlendFunc::Zero,
             dst_alpha_func: BlendFunc::Zero,
             constant_color: glam::Vec4::ZERO,
         }
@@ -159,32 +159,32 @@ impl Blend {
             .with_alpha_equation(equation)
     }
 
-    pub fn with_src_color_func(mut self, func: BlendFunc) -> Self {
-        self.src_color_func = func;
+    pub fn with_src_func_color(mut self, func: BlendFunc) -> Self {
+        self.src_func_color = func;
         self
     }
 
     pub fn with_src_alpha_func(mut self, func: BlendFunc) -> Self {
-        self.src_alpha_func = func;
+        self.src_func_alpha = func;
         self
     }
 
     pub fn with_src_func(mut self, func: BlendFunc) -> Self {
-        self.with_src_color_func(func).with_src_alpha_func(func)
+        self.with_src_func_color(func).with_src_alpha_func(func)
     }
 
-    pub fn with_dst_color_func(mut self, func: BlendFunc) -> Self {
-        self.dst_color_func = func;
+    pub fn with_dst_func_color(mut self, func: BlendFunc) -> Self {
+        self.dst_func_color = func;
         self
     }
 
     pub fn with_dst_alpha_func(mut self, func: BlendFunc) -> Self {
-        self.src_alpha_func = func;
+        self.src_func_alpha = func;
         self
     }
 
     pub fn with_dst_func(mut self, func: BlendFunc) -> Self {
-        self.with_dst_color_func(func).with_dst_alpha_func(func)
+        self.with_dst_func_color(func).with_dst_alpha_func(func)
     }
 
     pub fn with_constant_color(mut self, color: glam::Vec4) -> Self {
@@ -291,19 +291,19 @@ impl DrawParams {
             if let Some(blend) = self.blend {
                 let color_equation = blend.color_equation.to_gl();
                 let alpha_equation = blend.alpha_equation.to_gl();
-                let src_color_func = blend.src_color_func.to_gl();
-                let src_alpha_func = blend.src_alpha_func.to_gl();
-                let dst_color_func = blend.dst_color_func.to_gl();
-                let dst_alpha_func = blend.dst_alpha_func.to_gl();
+                let src_func_color = blend.src_func_color.to_gl();
+                let src_func_alpha = blend.src_func_alpha.to_gl();
+                let dst_func_color = blend.dst_func_color.to_gl();
+                let dst_func_alpha = blend.dst_alpha_func.to_gl();
 
                 unsafe { gl.enable(glow::BLEND) };
                 unsafe { gl.blend_equation_separate(color_equation, alpha_equation) };
                 unsafe {
                     gl.blend_func_separate(
-                        src_color_func,
-                        dst_color_func,
-                        src_alpha_func,
-                        dst_alpha_func,
+                        src_func_color,
+                        dst_func_color,
+                        src_func_alpha,
+                        dst_func_alpha,
                     )
                 };
                 unsafe {
