@@ -1,11 +1,11 @@
 use std::{
-    ops::{Add, Div, Mul, Neg, Sub},
+    ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Neg, Not, Rem, Shl, Shr, Sub},
     rc::Rc,
 };
 
 use super::{
     dag::{BinaryOp, BuiltInType, Expr, Type, UnaryOp},
-    primitives::{binary, cast, common_field_base, field, unary, value_arg},
+    primitives::{binary, built_in_2, cast, common_field_base, field, unary, value_arg},
     Bool, Object, ToValue, Value, ValueNonArray, F32, I32, U32,
 };
 
@@ -75,6 +75,16 @@ macro_rules! impl_value {
                 self
             }
         }
+
+        impl $vec {
+            pub fn eq(self, right: impl ToValue<Output = Self>) -> Bool {
+                <Self as Value>::eq(self, right)
+            }
+
+            pub fn ne(self, right: impl ToValue<Output = Self>) -> Bool {
+                <Self as Value>::ne(self, right)
+            }
+        }
     };
 }
 
@@ -123,9 +133,38 @@ macro_rules! impl_binary_op {
     };
 }
 
+// Implements `$vec <op> $vec` and `$vec <op> $scalar`.
+macro_rules! impl_asymmetric_binary_op {
+    ($vec:ident, $scalar:ident, $op:ident, $fn:ident) => {
+        impl $op<$vec> for $vec {
+            type Output = Self;
+
+            fn $fn(self, right: Self) -> Self {
+                binary(self, BinaryOp::$op, right)
+            }
+        }
+
+        impl $op<$scalar> for $vec {
+            type Output = Self;
+
+            fn $fn(self, right: $scalar) -> Self {
+                binary(self, BinaryOp::$op, right)
+            }
+        }
+
+        impl $op<scalar_physical!($scalar)> for $vec {
+            type Output = Self;
+
+            fn $fn(self, right: scalar_physical!($scalar)) -> Self {
+                binary(self, BinaryOp::$op, right)
+            }
+        }
+    };
+}
+
 // Implements numeric ops for `$vec`.
 macro_rules! impl_numeric_ops {
-    ($vec:ident, $scalar:ident) => {
+    ($vec:ident, $bvec:ident, $scalar:ident) => {
         impl_binary_op!($vec, $scalar, Add, add);
         impl_binary_op!($vec, $scalar, Div, div);
         impl_binary_op!($vec, $scalar, Mul, mul);
@@ -138,20 +177,77 @@ macro_rules! impl_numeric_ops {
                 unary(UnaryOp::Neg, self)
             }
         }
+
+        impl $vec {
+            pub fn cmpeq(self, rhs: Self) -> $bvec {
+                built_in_2("equal", self, rhs)
+            }
+
+            pub fn cmpne(self, rhs: Self) -> $bvec {
+                built_in_2("notEqual", self, rhs)
+            }
+
+            pub fn cmplt(self, rhs: Self) -> $bvec {
+                built_in_2("lessThan", self, rhs)
+            }
+
+            pub fn cmple(self, rhs: Self) -> $bvec {
+                built_in_2("lessThanEqual", self, rhs)
+            }
+
+            pub fn cmpge(self, rhs: Self) -> $bvec {
+                built_in_2("greaterThanEqual", self, rhs)
+            }
+
+            pub fn cmpgt(self, rhs: Self) -> $bvec {
+                built_in_2("greaterThan", self, rhs)
+            }
+        }
+    };
+}
+
+// Implements integral ops for `$vec`.
+macro_rules! impl_integral_ops {
+    ($vec:ident, $scalar:ident) => {
+        // For shl and shr, if the first operand is a scalar, the second operand
+        // has to be a scalar as well.
+        impl_asymmetric_binary_op!($vec, $scalar, Shl, shl);
+        impl_asymmetric_binary_op!($vec, $scalar, Shr, shr);
+
+        impl_binary_op!($vec, $scalar, BitAnd, bitand);
+        impl_binary_op!($vec, $scalar, BitOr, bitor);
+        impl_binary_op!($vec, $scalar, BitXor, bitxor);
+        impl_binary_op!($vec, $scalar, Rem, rem);
+
+        impl Not for $vec {
+            type Output = Self;
+
+            fn not(self) -> Self {
+                unary(UnaryOp::Not, self)
+            }
+        }
     };
 }
 
 // Implements ops for `$vec`.
 macro_rules! impl_ops {
-    ($vec:ident, Bool, bool) => {};
-    ($vec:ident, $logical:ident) => {
-        impl_numeric_ops!($vec, $logical);
+    ($vec:ident, $bvec:ident, F32) => {
+        impl_numeric_ops!($vec, $bvec, F32);
     };
+    ($vec:ident, $bvec:ident, I32) => {
+        impl_numeric_ops!($vec, $bvec, I32);
+        impl_integral_ops!($vec, I32);
+    };
+    ($vec:ident, $bvec:ident, U32) => {
+        impl_numeric_ops!($vec, $bvec, U32);
+        impl_integral_ops!($vec, U32);
+    };
+    ($vec:ident, $bvec:ident, Bool) => {};
 }
 
 // Implements two-dimensional `$vec`.
 macro_rules! impl_vec2 {
-    ($vec:ident, $vec_lower:ident, $scalar:ident, $vec3:ident) => {
+    ($vec:ident, $bvec:ident, $vec_lower:ident, $scalar:ident, $vec3:ident) => {
         #[doc = concat!("A two-dimensional ", scalar_name!($scalar), " vector.")]
         #[derive(Debug, Copy, Clone)]
         pub struct $vec {
@@ -197,13 +293,13 @@ macro_rules! impl_vec2 {
         }
 
         impl_value!($vec, $scalar, x, y);
-        impl_ops!($vec, $scalar);
+        impl_ops!($vec, $bvec, $scalar);
     };
 }
 
 // Implements three-dimensional `$vec`.
 macro_rules! impl_vec3 {
-    ($vec:ident, $vec_lower:ident, $scalar:ident, $vec2:ident, $vec4:ident) => {
+    ($vec:ident, $bvec:ident, $vec_lower:ident, $scalar:ident, $vec2:ident, $vec4:ident) => {
         #[doc = concat!("A three-dimensional ", scalar_name!($scalar), " vector.")]
         #[derive(Debug, Copy, Clone)]
         pub struct $vec {
@@ -261,13 +357,13 @@ macro_rules! impl_vec3 {
         }
 
         impl_value!($vec, $scalar, x, y, z);
-        impl_ops!($vec, $scalar);
+        impl_ops!($vec, $bvec, $scalar);
     };
 }
 
 // Implements four-dimensional `$vec`.
 macro_rules! impl_vec4 {
-    ($vec:ident, $vec_lower:ident, $scalar:ident, $vec2:ident, $vec3:ident) => {
+    ($vec:ident, $bvec:ident, $vec_lower:ident, $scalar:ident, $vec2:ident, $vec3:ident) => {
         #[doc = concat!("A four-dimensional ", scalar_name!($scalar), " vector.")]
         #[derive(Debug, Copy, Clone)]
         pub struct $vec {
@@ -332,7 +428,7 @@ macro_rules! impl_vec4 {
         }
 
         impl_value!($vec, $scalar, x, y, z, w);
-        impl_ops!($vec, $scalar);
+        impl_ops!($vec, $bvec, $scalar);
     };
 }
 
@@ -349,20 +445,20 @@ macro_rules! impl_casts {
     };
 }
 
-impl_vec2!(Vec2, vec2, F32, Vec3);
-impl_vec2!(IVec2, ivec2, I32, IVec3);
-impl_vec2!(UVec2, uvec2, U32, UVec3);
-impl_vec2!(BVec2, bvec2, Bool, BVec3);
+impl_vec2!(Vec2, BVec2, vec2, F32, Vec3);
+impl_vec2!(IVec2, BVec2, ivec2, I32, IVec3);
+impl_vec2!(UVec2, BVec2, uvec2, U32, UVec3);
+impl_vec2!(BVec2, BVec2, bvec2, Bool, BVec3);
 
-impl_vec3!(Vec3, vec3, F32, Vec2, Vec4);
-impl_vec3!(IVec3, ivec3, I32, IVec2, IVec4);
-impl_vec3!(UVec3, uvec3, U32, UVec2, UVec4);
-impl_vec3!(BVec3, bvec3, Bool, BVec2, BVec4);
+impl_vec3!(Vec3, BVec3, vec3, F32, Vec2, Vec4);
+impl_vec3!(IVec3, BVec3, ivec3, I32, IVec2, IVec4);
+impl_vec3!(UVec3, BVec3, uvec3, U32, UVec2, UVec4);
+impl_vec3!(BVec3, BVec3, bvec3, Bool, BVec2, BVec4);
 
-impl_vec4!(Vec4, vec4, F32, Vec2, Vec3);
-impl_vec4!(IVec4, ivec4, I32, IVec2, IVec3);
-impl_vec4!(UVec4, uvec4, U32, UVec2, UVec3);
-impl_vec4!(BVec4, bvec4, Bool, BVec2, BVec3);
+impl_vec4!(Vec4, BVec4, vec4, F32, Vec2, Vec3);
+impl_vec4!(IVec4, BVec4, ivec4, I32, IVec2, IVec3);
+impl_vec4!(UVec4, BVec4, uvec4, U32, UVec2, UVec3);
+impl_vec4!(BVec4, BVec4, bvec4, Bool, BVec2, BVec3);
 
 impl_casts!(Vec2, as_ivec2, IVec2, as_uvec2, UVec2);
 impl_casts!(Vec3, as_ivec3, IVec3, as_uvec3, UVec3);

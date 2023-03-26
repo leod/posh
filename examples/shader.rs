@@ -12,7 +12,7 @@ struct Foo<D: BlockDom = Sl> {
 struct Globals<D: BlockDom = Sl> {
     time: D::F32,
     offset: D::Vec2,
-    invert: D::Bool,
+    invert: D::I32,
     foo: Foo<D>,
     camera: D::Mat4,
     projection: D::Mat4,
@@ -22,19 +22,21 @@ struct Globals<D: BlockDom = Sl> {
 struct ColorVertex<D: BlockDom = Sl> {
     position: D::Vec2,
     color: D::Vec2,
-    flag: D::Bool,
+    flag: D::I32,
 }
 
 fn vertex_shader(globals: Globals, vertex: ColorVertex) -> VaryingOutput<sl::Vec4> {
     let shift = globals.offset * globals.time;
     let shift = globals
         .invert
+        .eq(2)
         .branch(shift, false.to_value().branch(shift * -1.0, shift * -2.0));
 
-    let shift2 = globals.invert.branch(shift, {
+    let shift2 = globals.invert.eq(3).branch(shift, {
         let x = shift * 5.0;
+        let y = !(x.as_ivec2() << 3) & 1 % sl::ivec2(1, 1);
 
-        false.to_value().branch(x * -1.0, x * -2.0)
+        false.to_value().branch(x * -1.0, y.as_vec2() * -2.0)
     });
 
     let position = sl::Mat2::identity() * vertex.position + shift2 + sl::Mat2::diagonal(4.0).x_axis;

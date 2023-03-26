@@ -11,7 +11,7 @@ struct Foo {
 #[derive(Clone, Copy, Block)]
 struct MyUniform1<D: BlockDom = Sl> {
     x: D::Vec2,
-    y: D::Bool,
+    y: D::IVec2,
 }
 
 #[derive(Clone, Copy, Block)]
