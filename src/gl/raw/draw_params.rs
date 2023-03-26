@@ -198,11 +198,11 @@ pub struct DrawParams {
     pub clear_color: Option<glam::Vec4>,
     pub clear_depth: Option<f32>,
     pub clear_stencil: Option<u8>,
-    pub depth_compare: Option<CompareFunc>,
-    pub depth_mask: bool,
     pub color_mask: glam::BVec4,
+    pub depth_mask: bool,
     pub stencil_mask_front: u32,
     pub stencil_mask_back: u32,
+    pub depth_compare: Option<CompareFunc>,
     pub cull_face: Option<CullFace>,
     pub blend: Option<Blend>,
     pub scissor: Option<glam::UVec4>,
@@ -215,11 +215,11 @@ impl Default for DrawParams {
             clear_color: None,
             clear_depth: None,
             clear_stencil: None,
-            depth_compare: None,
             depth_mask: true,
             color_mask: glam::BVec4::TRUE,
             stencil_mask_front: !0,
             stencil_mask_back: !0,
+            depth_compare: None,
             cull_face: None,
             blend: None,
             scissor: None,
@@ -259,17 +259,6 @@ impl DrawParams {
             unsafe { gl.clear(clear_mask) };
         }
 
-        if self.depth_compare != current.depth_compare {
-            if let Some(func) = self.depth_compare {
-                let func = func.to_gl();
-
-                unsafe { gl.enable(glow::DEPTH_TEST) };
-                unsafe { gl.depth_func(func) };
-            } else {
-                unsafe { gl.disable(glow::DEPTH_TEST) };
-            }
-        }
-
         if self.depth_mask != current.depth_mask {
             unsafe { gl.depth_mask(self.depth_mask) };
         }
@@ -286,6 +275,17 @@ impl DrawParams {
 
         if self.stencil_mask_front != current.stencil_mask_back {
             unsafe { gl.stencil_mask_separate(glow::BACK, self.stencil_mask_back) };
+        }
+
+        if self.depth_compare != current.depth_compare {
+            if let Some(func) = self.depth_compare {
+                let func = func.to_gl();
+
+                unsafe { gl.enable(glow::DEPTH_TEST) };
+                unsafe { gl.depth_func(func) };
+            } else {
+                unsafe { gl.disable(glow::DEPTH_TEST) };
+            }
         }
 
         if self.cull_face != current.cull_face {
