@@ -5,8 +5,10 @@ use std::{
 
 use super::{
     dag::{BinaryOp, BuiltInType, Expr, Type, UnaryOp},
-    primitives::{binary, built_in_2, cast, common_field_base, field, unary, value_arg},
-    Bool, Object, ToValue, Value, ValueNonArray, F32, I32, U32,
+    primitives::{
+        binary, built_in_1, built_in_2, cast, common_field_base, field, unary, value_arg,
+    },
+    Bool, Mat2, Mat3, Mat4, Object, ToValue, Value, ValueNonArray, F32, I32, U32,
 };
 
 // Implements `Object` and `Value` for `$vec`.
@@ -229,6 +231,29 @@ macro_rules! impl_integral_ops {
     };
 }
 
+// Implements logical ops for a boolean `$vec`.
+macro_rules! impl_boolean_ops {
+    ($vec:ident) => {
+        impl $vec {
+            pub fn any(self) -> Bool {
+                built_in_1("any", self)
+            }
+
+            pub fn all(self) -> Bool {
+                built_in_1("all", self)
+            }
+        }
+
+        impl Not for $vec {
+            type Output = Self;
+
+            fn not(self) -> Self {
+                built_in_1("not", self)
+            }
+        }
+    };
+}
+
 // Implements ops for `$vec`.
 macro_rules! impl_ops {
     ($vec:ident, $bvec:ident, F32) => {
@@ -242,7 +267,9 @@ macro_rules! impl_ops {
         impl_numeric_ops!($vec, $bvec, U32);
         impl_integral_ops!($vec, U32);
     };
-    ($vec:ident, $bvec:ident, Bool) => {};
+    ($vec:ident, $bvec:ident, Bool) => {
+        impl_boolean_ops!($vec);
+    };
 }
 
 // Implements two-dimensional `$vec`.
@@ -479,3 +506,25 @@ impl_casts!(BVec4, as_ivec4, IVec4, as_uvec4, UVec4);
 impl_gen_type!(Vec2);
 impl_gen_type!(Vec3);
 impl_gen_type!(Vec4);
+
+impl Vec2 {
+    pub fn outer_product(self, y: Vec2) -> Mat2 {
+        built_in_2("outerProduct", self, y)
+    }
+}
+
+impl Vec3 {
+    pub fn cross(self, y: Vec3) -> Vec3 {
+        built_in_2("cross", self, y)
+    }
+
+    pub fn outer_product(self, y: Vec3) -> Mat3 {
+        built_in_2("outerProduct", self, y)
+    }
+}
+
+impl Vec4 {
+    pub fn outer_product(self, y: Vec4) -> Mat4 {
+        built_in_2("outerProduct", self, y)
+    }
+}
