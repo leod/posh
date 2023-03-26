@@ -21,7 +21,7 @@ fn vertex_shader(_: (), input: sl::Vec2) -> sl::VaryingOutput<sl::Vec2> {
 }
 
 fn fragment_shader(uniform: Globals, input: sl::Vec2) -> sl::Vec4 {
-    let rg = (input + uniform.time).cos().pow(sl::vec2(2.0, 2.0));
+    let rg = (input + uniform.time).cos().powf(sl::vec2(2.0, 2.0));
 
     sl::vec4(rg.x, rg.y, 0.5, 1.0)
 }
