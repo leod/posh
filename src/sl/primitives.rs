@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use super::{
-    dag::{BinaryOp, Expr, FuncDef, StructType, Type},
+    dag::{BinaryOp, Expr, FuncDef, StructType, Type, UnaryOp},
     Bool, Object, ToValue, Value,
 };
 
@@ -15,6 +15,19 @@ where
     V: Value,
 {
     built_in_1(&format!("{}", V::ty()), u.to_value())
+}
+
+pub(crate) fn unary<U, R>(op: UnaryOp, arg: impl ToValue<Output = U>) -> R
+where
+    U: Value,
+    R: Value,
+{
+    let ty = R::ty();
+    let arg = arg.to_value().expr();
+
+    let expr = Expr::Unary { ty, op, arg };
+
+    R::from_expr(expr)
 }
 
 pub(crate) fn binary<U, V, R>(

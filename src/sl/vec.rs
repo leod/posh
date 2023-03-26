@@ -1,11 +1,11 @@
 use std::{
-    ops::{Add, Div, Mul, Sub},
+    ops::{Add, Div, Mul, Neg, Sub},
     rc::Rc,
 };
 
 use super::{
-    dag::{BinaryOp, BuiltInType, Expr, Type},
-    primitives::{binary, cast, common_field_base, field, value_arg},
+    dag::{BinaryOp, BuiltInType, Expr, Type, UnaryOp},
+    primitives::{binary, cast, common_field_base, field, unary, value_arg},
     Bool, Object, ToValue, Value, ValueNonArray, F32, I32, U32,
 };
 
@@ -130,6 +130,14 @@ macro_rules! impl_numeric_ops {
         impl_binary_op!($vec, $scalar, Div, div);
         impl_binary_op!($vec, $scalar, Mul, mul);
         impl_binary_op!($vec, $scalar, Sub, sub);
+
+        impl Neg for $vec {
+            type Output = Self;
+
+            fn neg(self) -> Self {
+                unary(UnaryOp::Neg, self)
+            }
+        }
     };
 }
 

@@ -3,7 +3,7 @@ use std::{
     rc::Rc,
 };
 
-use crate::sl::dag::{BinaryOp, BuiltInType, Expr, Type};
+use crate::sl::dag::{BinaryOp, BuiltInType, Expr, Type, UnaryOp};
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ExprKey(*const Expr);
@@ -26,6 +26,11 @@ pub enum SimplifiedExpr {
     ScalarLiteral {
         value: String,
         ty: BuiltInType,
+    },
+    Unary {
+        op: UnaryOp,
+        arg: Box<SimplifiedExpr>,
+        ty: Type,
     },
     Binary {
         left: Box<SimplifiedExpr>,
@@ -67,6 +72,7 @@ impl SimplifiedExpr {
         match self {
             Arg { ty, .. } => ty.clone(),
             ScalarLiteral { ty, .. } => Type::BuiltIn(*ty),
+            Unary { ty, .. } => ty.clone(),
             Binary { ty, .. } => ty.clone(),
             CallFunc { ty, .. } => ty.clone(),
             Field { ty, .. } => ty.clone(),
@@ -105,6 +111,7 @@ impl Display for SimplifiedExpr {
         match self {
             Arg { name, .. } => f.write_str(name),
             ScalarLiteral { value, .. } => f.write_str(value),
+            Unary { op, arg, .. } => write!(f, "{op} {arg}"),
             Binary {
                 left, op, right, ..
             } => write!(f, "({left} {op} {right})"),

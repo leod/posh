@@ -32,7 +32,7 @@ struct Uniform<D: UniformDom = Sl> {
 fn rotate(angle: sl::F32) -> sl::Mat2 {
     sl::mat2(
         sl::vec2(angle.cos(), angle.sin()),
-        sl::vec2(angle.sin() * -1.0, angle.cos()),
+        sl::vec2(-angle.sin(), angle.cos()),
     )
 }
 

@@ -18,6 +18,12 @@ pub enum BinaryOp {
     Gt,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum UnaryOp {
+    Neg,
+    Not,
+}
+
 #[derive(Debug, Clone)]
 pub struct FuncDef {
     pub name: &'static str,
@@ -38,6 +44,11 @@ pub enum Expr {
     StructLiteral {
         args: Vec<Rc<Expr>>,
         ty: Rc<StructType>,
+    },
+    Unary {
+        op: UnaryOp,
+        arg: Rc<Expr>,
+        ty: Type,
     },
     Binary {
         left: Rc<Expr>,
@@ -80,6 +91,7 @@ impl Expr {
             Arg { ty, .. } => ty.clone(),
             ScalarLiteral { ty, .. } => Type::BuiltIn(*ty),
             StructLiteral { ty, .. } => Type::Struct(ty.clone()),
+            Unary { ty, .. } => ty.clone(),
             Binary { ty, .. } => ty.clone(),
             CallFuncDef { def, .. } => def.result.ty(),
             CallBuiltIn { ty, .. } => ty.clone(),

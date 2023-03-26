@@ -96,6 +96,7 @@ impl<'a> ScopeForm<'a> {
                 }
                 Arg { .. }
                 | ScalarLiteral { .. }
+                | Unary { .. }
                 | Binary { .. }
                 | CallFunc { .. }
                 | Subscript { .. }
@@ -179,6 +180,9 @@ fn unscoped_successors(expr: &SimplifiedExpr, f: &mut impl FnMut(VarId)) {
         Binary { left, right, .. } => {
             unscoped_successors(left, f);
             unscoped_successors(right, f);
+        }
+        Unary { arg, .. } => {
+            unscoped_successors(arg, f);
         }
         CallFunc { args, .. } => {
             for arg in args {
