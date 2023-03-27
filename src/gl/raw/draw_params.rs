@@ -279,7 +279,7 @@ pub struct DrawParams {
     pub clear_stencil: Option<u8>,
     pub clear_depth: Option<f32>,
     pub clear_color: Option<glam::Vec4>,
-    pub viewport: Option<Viewport>,
+    pub viewport: Option<glam::UVec4>,
     pub cull_face: Option<CullFace>,
     pub scissor: Option<glam::UVec4>,
     pub stencil_test_front: Option<StencilTest>,
@@ -348,19 +348,18 @@ impl DrawParams {
             unsafe { gl.clear(clear_mask) };
         }
 
-        let viewport = self.viewport.unwrap_or(Viewport {
-            lower_left_corner: glam::UVec2::ZERO,
-            size: framebuffer_size,
-        });
+        {
+            let viewport = self
+                .viewport
+                .unwrap_or_else(|| glam::uvec4(0, 0, framebuffer_size.x, framebuffer_size.y));
 
-        unsafe {
-            gl.viewport(
-                viewport.lower_left_corner.x.try_into().unwrap(),
-                viewport.lower_left_corner.y.try_into().unwrap(),
-                viewport.size.x.try_into().unwrap(),
-                viewport.size.y.try_into().unwrap(),
-            )
-        };
+            let x = viewport.x.try_into().unwrap();
+            let y = viewport.y.try_into().unwrap();
+            let width = viewport.z.try_into().unwrap();
+            let height = viewport.w.try_into().unwrap();
+
+            unsafe { gl.viewport(x, y, width, height) };
+        }
 
         if self.cull_face != current.cull_face {
             if let Some(cull_face) = self.cull_face {
@@ -491,7 +490,7 @@ impl DrawParams {
         self
     }
 
-    pub fn with_viewport(mut self, viewport: Viewport) -> Self {
+    pub fn with_viewport(mut self, viewport: glam::UVec4) -> Self {
         self.viewport = Some(viewport);
         self
     }
