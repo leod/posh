@@ -119,7 +119,7 @@ impl BlendFunc {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Blend {
+pub struct Blending {
     pub color_equation: BlendEquation,
     pub alpha_equation: BlendEquation,
     pub src_func_color: BlendFunc,
@@ -129,7 +129,7 @@ pub struct Blend {
     pub constant_color: glam::Vec4,
 }
 
-impl Default for Blend {
+impl Default for Blending {
     fn default() -> Self {
         Self {
             color_equation: BlendEquation::Add,
@@ -143,7 +143,7 @@ impl Default for Blend {
     }
 }
 
-impl Blend {
+impl Blending {
     pub fn with_color_equation(mut self, equation: BlendEquation) -> Self {
         self.color_equation = equation;
         self
@@ -154,7 +154,7 @@ impl Blend {
         self
     }
 
-    pub fn with_equation(mut self, equation: BlendEquation) -> Self {
+    pub fn with_equation(self, equation: BlendEquation) -> Self {
         self.with_color_equation(equation)
             .with_alpha_equation(equation)
     }
@@ -169,7 +169,7 @@ impl Blend {
         self
     }
 
-    pub fn with_src_func(mut self, func: BlendFunc) -> Self {
+    pub fn with_src_func(self, func: BlendFunc) -> Self {
         self.with_src_func_color(func).with_src_func_alpha(func)
     }
 
@@ -183,7 +183,7 @@ impl Blend {
         self
     }
 
-    pub fn with_dst_func(mut self, func: BlendFunc) -> Self {
+    pub fn with_dst_func(self, func: BlendFunc) -> Self {
         self.with_dst_func_color(func).with_dst_func_alpha(func)
     }
 
@@ -287,7 +287,7 @@ pub struct DrawParams {
     pub stencil_ops_front: Option<StencilOps>,
     pub stencil_ops_back: Option<StencilOps>,
     pub depth_test: Option<Comparison>,
-    pub blend: Option<Blend>,
+    pub blending: Option<Blending>,
     pub stencil_mask_front: u32,
     pub stencil_mask_back: u32,
     pub depth_mask: bool,
@@ -308,7 +308,7 @@ impl Default for DrawParams {
             stencil_ops_front: None,
             stencil_ops_back: None,
             depth_test: None,
-            blend: None,
+            blending: None,
             stencil_mask_front: !0,
             stencil_mask_back: !0,
             depth_mask: true,
@@ -425,14 +425,14 @@ impl DrawParams {
             }
         }
 
-        if self.blend != current.blend {
-            if let Some(blend) = self.blend {
-                let color_equation = blend.color_equation.to_gl();
-                let alpha_equation = blend.alpha_equation.to_gl();
-                let src_func_color = blend.src_func_color.to_gl();
-                let src_func_alpha = blend.src_func_alpha.to_gl();
-                let dst_func_color = blend.dst_func_color.to_gl();
-                let dst_func_alpha = blend.dst_alpha_func.to_gl();
+        if self.blending != current.blending {
+            if let Some(blending) = self.blending {
+                let color_equation = blending.color_equation.to_gl();
+                let alpha_equation = blending.alpha_equation.to_gl();
+                let src_func_color = blending.src_func_color.to_gl();
+                let src_func_alpha = blending.src_func_alpha.to_gl();
+                let dst_func_color = blending.dst_func_color.to_gl();
+                let dst_func_alpha = blending.dst_alpha_func.to_gl();
 
                 unsafe { gl.enable(glow::BLEND) };
                 unsafe { gl.blend_equation_separate(color_equation, alpha_equation) };
@@ -446,10 +446,10 @@ impl DrawParams {
                 };
                 unsafe {
                     gl.blend_color(
-                        blend.constant_color.x,
-                        blend.constant_color.y,
-                        blend.constant_color.z,
-                        blend.constant_color.w,
+                        blending.constant_color.x,
+                        blending.constant_color.y,
+                        blending.constant_color.z,
+                        blending.constant_color.w,
                     )
                 };
             } else {
@@ -506,8 +506,42 @@ impl DrawParams {
         self
     }
 
+    pub fn with_stencil_test_front(mut self, test: StencilTest) -> Self {
+        self.stencil_test_front = Some(test);
+        self
+    }
+
+    pub fn with_stencil_test_back(mut self, test: StencilTest) -> Self {
+        self.stencil_test_back = Some(test);
+        self
+    }
+
+    pub fn with_stencil_test(self, test: StencilTest) -> Self {
+        self.with_stencil_test_front(test)
+            .with_stencil_test_back(test)
+    }
+
+    pub fn with_stencil_ops_front(mut self, ops: StencilOps) -> Self {
+        self.stencil_ops_front = Some(ops);
+        self
+    }
+
+    pub fn with_stencil_ops_back(mut self, ops: StencilOps) -> Self {
+        self.stencil_ops_back = Some(ops);
+        self
+    }
+
+    pub fn with_stencil_ops(self, ops: StencilOps) -> Self {
+        self.with_stencil_ops_front(ops).with_stencil_ops_back(ops)
+    }
+
     pub fn with_depth_test(mut self, comparison: Comparison) -> Self {
         self.depth_test = Some(comparison);
+        self
+    }
+
+    pub fn with_blending(mut self, blending: Blending) -> Self {
+        self.blending = Some(blending);
         self
     }
 
@@ -521,7 +555,7 @@ impl DrawParams {
         self
     }
 
-    pub fn with_stencil_mask(mut self, mask: u32) -> Self {
+    pub fn with_stencil_mask(self, mask: u32) -> Self {
         self.with_stencil_mask_front(mask)
             .with_stencil_mask_back(mask)
     }

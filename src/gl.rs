@@ -18,7 +18,7 @@ pub use framebuffer::{ColorAttachment, DefaultFramebuffer, DepthAttachment, Fram
 pub use primitive_stream::PrimitiveStream;
 pub use program::Program;
 pub use raw::{
-    Blend, BlendEquation, BlendFunc, BufferError, BufferUsage, Caps, Comparison, ContextError,
+    BlendEquation, BlendFunc, Blending, BufferError, BufferUsage, Caps, Comparison, ContextError,
     CreateError, CullFace, DrawError, DrawParams, ElementType, FramebufferError, ImageFormat,
     ImageInternalFormat, Mode, ProgramError, ProgramValidationError, Sampler2dParams, TextureError,
     VertexArrayError,
