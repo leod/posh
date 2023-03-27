@@ -476,8 +476,8 @@ impl DrawParams {
         }
     }
 
-    pub fn with_clear_color(mut self, clear_color: glam::Vec4) -> Self {
-        self.clear_color = Some(clear_color);
+    pub fn with_clear_stencil(mut self, clear_stencil: u8) -> Self {
+        self.clear_stencil = Some(clear_stencil);
         self
     }
 
@@ -486,23 +486,28 @@ impl DrawParams {
         self
     }
 
-    pub fn with_clear_stencil(mut self, clear_stencil: u8) -> Self {
-        self.clear_stencil = Some(clear_stencil);
+    pub fn with_clear_color(mut self, clear_color: glam::Vec4) -> Self {
+        self.clear_color = Some(clear_color);
+        self
+    }
+
+    pub fn with_viewport(mut self, viewport: Viewport) -> Self {
+        self.viewport = Some(viewport);
+        self
+    }
+
+    pub fn with_cull_face(mut self, cull_face: CullFace) -> Self {
+        self.cull_face = Some(cull_face);
+        self
+    }
+
+    pub fn with_scissor(mut self, scissor: glam::UVec4) -> Self {
+        self.scissor = Some(scissor);
         self
     }
 
     pub fn with_depth_test(mut self, comparison: Comparison) -> Self {
         self.depth_test = Some(comparison);
-        self
-    }
-
-    pub fn with_color_mask(mut self, mask: glam::BVec4) -> Self {
-        self.color_mask = mask;
-        self
-    }
-
-    pub fn with_depth_mask(mut self, mask: bool) -> Self {
-        self.depth_mask = mask;
         self
     }
 
@@ -521,18 +526,13 @@ impl DrawParams {
             .with_stencil_mask_back(mask)
     }
 
-    pub fn with_cull_face(mut self, cull_face: CullFace) -> Self {
-        self.cull_face = Some(cull_face);
+    pub fn with_color_mask(mut self, mask: glam::BVec4) -> Self {
+        self.color_mask = mask;
         self
     }
 
-    pub fn with_scissor(mut self, scissor: glam::UVec4) -> Self {
-        self.scissor = Some(scissor);
-        self
-    }
-
-    pub fn with_viewport(mut self, viewport: Viewport) -> Self {
-        self.viewport = Some(viewport);
+    pub fn with_depth_mask(mut self, mask: bool) -> Self {
+        self.depth_mask = mask;
         self
     }
 }
