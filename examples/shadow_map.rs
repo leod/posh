@@ -246,7 +246,7 @@ impl Demo {
             self.light_depth_map.as_depth_attachment(),
             gl::DrawParams::default()
                 .with_clear_depth(1.0)
-                .with_depth_test(gl::CompareFunc::Less)
+                .with_depth_test(gl::Comparison::Less)
                 .with_cull_face(gl::CullFace::Back),
         )?;
 
@@ -256,14 +256,14 @@ impl Demo {
                 light: self.light_buffer.as_binding(),
                 light_depth_map: self
                     .light_depth_map
-                    .as_comparison_sampler(gl::Sampler2dParams::default(), gl::CompareFunc::Less),
+                    .as_comparison_sampler(gl::Sampler2dParams::default(), gl::Comparison::Less),
             },
             scene_stream,
             gl::DefaultFramebuffer::default(),
             gl::DrawParams::default()
                 .with_clear_color(glam::Vec4::ONE)
                 .with_clear_depth(1.0)
-                .with_depth_test(gl::CompareFunc::Less)
+                .with_depth_test(gl::Comparison::Less)
                 .with_cull_face(gl::CullFace::Back),
         )?;
 
@@ -276,7 +276,7 @@ impl Demo {
             },
             gl::DefaultFramebuffer::default(),
             gl::DrawParams::default()
-                .with_depth_test(gl::CompareFunc::Less)
+                .with_depth_test(gl::Comparison::Less)
                 .with_cull_face(gl::CullFace::Back),
         )?;
 

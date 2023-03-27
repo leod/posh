@@ -5,7 +5,7 @@ use glow::HasContext;
 use super::{
     context::ContextShared,
     error::{check_framebuffer_completeness, check_gl_error, FramebufferError},
-    Caps, CompareFunc, ImageInternalFormat, Sampler2d, Sampler2dParams, Texture2d,
+    Caps, Comparison, ImageInternalFormat, Sampler2d, Sampler2dParams, Texture2d,
 };
 
 #[derive(Clone)]
@@ -30,14 +30,14 @@ impl Attachment {
         }
     }
 
-    pub fn sampler(&self, params: Sampler2dParams, compare: Option<CompareFunc>) -> Sampler2d {
+    pub fn sampler(&self, params: Sampler2dParams, comparison: Option<Comparison>) -> Sampler2d {
         use Attachment::*;
 
         match self {
             Texture2d { texture, .. } => Sampler2d {
                 texture: texture.clone(),
                 params,
-                compare,
+                comparison,
             },
         }
     }

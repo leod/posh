@@ -5,7 +5,7 @@ use glow::HasContext;
 use crate::gl::{raw::error::check_gl_error, TextureError};
 
 use super::{
-    context::ContextShared, sampler_params::set_comparison_func, Caps, CompareFunc, Image,
+    context::ContextShared, sampler_params::set_comparison, Caps, Comparison, Image,
     ImageInternalFormat, Sampler2dParams,
 };
 
@@ -27,7 +27,7 @@ pub enum Sampler {
 pub struct Sampler2d {
     pub texture: Rc<Texture2d>,
     pub params: Sampler2dParams,
-    pub compare: Option<CompareFunc>,
+    pub comparison: Option<Comparison>,
 }
 
 impl Texture2d {
@@ -155,7 +155,7 @@ impl Texture2d {
         self.internal_format
     }
 
-    pub(super) fn set_sampler_params(&self, new: Sampler2dParams, compare: Option<CompareFunc>) {
+    pub(super) fn set_sampler_params(&self, new: Sampler2dParams, comparison: Option<Comparison>) {
         let gl = &self.ctx.gl();
 
         let current = self.sampler_params.get();
@@ -163,7 +163,7 @@ impl Texture2d {
         self.sampler_params.set(new);
 
         // FIXME: Check that comparison can be applied to the texture.
-        set_comparison_func(gl, glow::TEXTURE_2D, compare);
+        set_comparison(gl, glow::TEXTURE_2D, comparison);
 
         check_gl_error(gl).unwrap();
     }
@@ -193,7 +193,7 @@ impl Sampler {
             Sampler::Sampler2d(Sampler2d {
                 texture,
                 params,
-                compare,
+                comparison,
             }) => {
                 let gl = texture.ctx.gl();
                 let id = texture.id;
@@ -202,7 +202,7 @@ impl Sampler {
                     gl.bind_texture(glow::TEXTURE_2D, Some(id));
                 }
 
-                texture.set_sampler_params(*params, *compare);
+                texture.set_sampler_params(*params, *comparison);
             }
         }
     }

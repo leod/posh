@@ -1,7 +1,7 @@
 use glow::HasContext;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum CompareFunc {
+pub enum Comparison {
     Always,
     Equal,
     Greater,
@@ -12,9 +12,9 @@ pub enum CompareFunc {
     NotEqual,
 }
 
-impl CompareFunc {
+impl Comparison {
     pub const fn to_gl(self) -> u32 {
-        use CompareFunc::*;
+        use Comparison::*;
 
         match self {
             Always => glow::ALWAYS,
@@ -195,35 +195,39 @@ impl Blend {
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct DrawParams {
-    pub clear_color: Option<glam::Vec4>,
-    pub clear_depth: Option<f32>,
     pub clear_stencil: Option<u8>,
-    pub color_mask: glam::BVec4,
-    pub depth_mask: bool,
+    pub clear_depth: Option<f32>,
+    pub clear_color: Option<glam::Vec4>,
+    pub viewport: Option<Viewport>,
+    pub cull_face: Option<CullFace>,
+    pub scissor: Option<glam::UVec4>,
+    pub stencil_test_front: Option<StencilTest>,
+    pub stencil_test_back: Option<StencilTest>,
+    pub depth_test: Option<Comparison>,
+    pub blend: Option<Blend>,
     pub stencil_mask_front: u32,
     pub stencil_mask_back: u32,
-    pub depth_test: Option<CompareFunc>,
-    pub cull_face: Option<CullFace>,
-    pub blend: Option<Blend>,
-    pub scissor: Option<glam::UVec4>,
-    pub viewport: Option<Viewport>,
+    pub depth_mask: bool,
+    pub color_mask: glam::BVec4,
 }
 
 impl Default for DrawParams {
     fn default() -> Self {
         Self {
-            clear_color: None,
-            clear_depth: None,
             clear_stencil: None,
-            depth_mask: true,
-            color_mask: glam::BVec4::TRUE,
+            clear_depth: None,
+            clear_color: None,
+            viewport: None,
+            cull_face: None,
+            scissor: None,
+            stencil_test_front: None,
+            stencil_test_back: None,
+            depth_test: None,
+            blend: None,
             stencil_mask_front: !0,
             stencil_mask_back: !0,
-            depth_test: None,
-            cull_face: None,
-            blend: None,
-            scissor: None,
-            viewport: None,
+            depth_mask: true,
+            color_mask: glam::BVec4::TRUE,
         }
     }
 }
@@ -237,10 +241,10 @@ impl DrawParams {
     ) {
         let mut clear_mask = 0;
 
-        if let Some(c) = self.clear_color {
-            unsafe { gl.clear_color(c.x, c.y, c.z, c.w) };
+        if let Some(c) = self.clear_stencil {
+            unsafe { gl.clear_stencil(c as i32) };
 
-            clear_mask |= glow::COLOR_BUFFER_BIT;
+            clear_mask |= glow::STENCIL_BUFFER_BIT;
         }
 
         if let Some(c) = self.clear_depth {
@@ -249,32 +253,53 @@ impl DrawParams {
             clear_mask |= glow::DEPTH_BUFFER_BIT;
         }
 
-        if let Some(c) = self.clear_stencil {
-            unsafe { gl.clear_stencil(c as i32) };
+        if let Some(c) = self.clear_color {
+            unsafe { gl.clear_color(c.x, c.y, c.z, c.w) };
 
-            clear_mask |= glow::STENCIL_BUFFER_BIT;
+            clear_mask |= glow::COLOR_BUFFER_BIT;
         }
 
         if clear_mask > 0 {
             unsafe { gl.clear(clear_mask) };
         }
 
-        if self.depth_mask != current.depth_mask {
-            unsafe { gl.depth_mask(self.depth_mask) };
+        let viewport = self.viewport.unwrap_or(Viewport {
+            lower_left_corner: glam::UVec2::ZERO,
+            size: framebuffer_size,
+        });
+
+        unsafe {
+            gl.viewport(
+                viewport.lower_left_corner.x.try_into().unwrap(),
+                viewport.lower_left_corner.y.try_into().unwrap(),
+                viewport.size.x.try_into().unwrap(),
+                viewport.size.y.try_into().unwrap(),
+            )
+        };
+
+        if self.cull_face != current.cull_face {
+            if let Some(cull_face) = self.cull_face {
+                let cull_face = cull_face.to_gl();
+
+                unsafe { gl.enable(glow::CULL_FACE) };
+                unsafe { gl.cull_face(cull_face) };
+            } else {
+                unsafe { gl.disable(glow::CULL_FACE) };
+            }
         }
 
-        if self.color_mask != current.color_mask {
-            let mask = self.color_mask;
+        if self.scissor != current.scissor {
+            if let Some(scissor) = self.scissor {
+                let x = scissor.x.try_into().unwrap();
+                let y = scissor.y.try_into().unwrap();
+                let width = scissor.z.try_into().unwrap();
+                let height = scissor.w.try_into().unwrap();
 
-            unsafe { gl.color_mask(mask.x, mask.y, mask.z, mask.w) };
-        }
-
-        if self.stencil_mask_front != current.stencil_mask_front {
-            unsafe { gl.stencil_mask_separate(glow::FRONT, self.stencil_mask_front) };
-        }
-
-        if self.stencil_mask_front != current.stencil_mask_back {
-            unsafe { gl.stencil_mask_separate(glow::BACK, self.stencil_mask_back) };
+                unsafe { gl.enable(glow::SCISSOR_TEST) };
+                unsafe { gl.scissor(x, y, width, height) };
+            } else {
+                unsafe { gl.disable(glow::SCISSOR_TEST) };
+            }
         }
 
         if self.depth_test != current.depth_test {
@@ -285,17 +310,6 @@ impl DrawParams {
                 unsafe { gl.depth_func(func) };
             } else {
                 unsafe { gl.disable(glow::DEPTH_TEST) };
-            }
-        }
-
-        if self.cull_face != current.cull_face {
-            if let Some(cull_face) = self.cull_face {
-                let cull_face = cull_face.to_gl();
-
-                unsafe { gl.enable(glow::CULL_FACE) };
-                unsafe { gl.cull_face(cull_face) };
-            } else {
-                unsafe { gl.disable(glow::CULL_FACE) };
             }
         }
 
@@ -331,33 +345,23 @@ impl DrawParams {
             }
         }
 
-        if self.scissor != current.scissor {
-            if let Some(scissor) = self.scissor {
-                let x = scissor.x.try_into().unwrap();
-                let y = scissor.y.try_into().unwrap();
-                let width = scissor.z.try_into().unwrap();
-                let height = scissor.w.try_into().unwrap();
-
-                unsafe { gl.enable(glow::SCISSOR_TEST) };
-                unsafe { gl.scissor(x, y, width, height) };
-            } else {
-                unsafe { gl.disable(glow::SCISSOR_TEST) };
-            }
+        if self.stencil_mask_front != current.stencil_mask_front {
+            unsafe { gl.stencil_mask_separate(glow::FRONT, self.stencil_mask_front) };
         }
 
-        let viewport = self.viewport.unwrap_or(Viewport {
-            lower_left_corner: glam::UVec2::ZERO,
-            size: framebuffer_size,
-        });
+        if self.stencil_mask_front != current.stencil_mask_back {
+            unsafe { gl.stencil_mask_separate(glow::BACK, self.stencil_mask_back) };
+        }
 
-        unsafe {
-            gl.viewport(
-                viewport.lower_left_corner.x.try_into().unwrap(),
-                viewport.lower_left_corner.y.try_into().unwrap(),
-                viewport.size.x.try_into().unwrap(),
-                viewport.size.y.try_into().unwrap(),
-            )
-        };
+        if self.depth_mask != current.depth_mask {
+            unsafe { gl.depth_mask(self.depth_mask) };
+        }
+
+        if self.color_mask != current.color_mask {
+            let mask = self.color_mask;
+
+            unsafe { gl.color_mask(mask.x, mask.y, mask.z, mask.w) };
+        }
     }
 
     pub fn with_clear_color(mut self, clear_color: glam::Vec4) -> Self {
@@ -375,8 +379,8 @@ impl DrawParams {
         self
     }
 
-    pub fn with_depth_test(mut self, depth_compare: CompareFunc) -> Self {
-        self.depth_test = Some(depth_compare);
+    pub fn with_depth_test(mut self, comparison: Comparison) -> Self {
+        self.depth_test = Some(comparison);
         self
     }
 
