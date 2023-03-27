@@ -244,32 +244,27 @@ impl Demo {
             self.light_buffer.as_binding(),
             scene_stream.clone(),
             self.light_depth_map.as_depth_attachment(),
-            gl::DrawParams {
-                clear_depth: Some(1.0),
-                depth_compare: Some(gl::CompareFunction::Less),
-                cull_face: Some(gl::CullFace::Back),
-                ..Default::default()
-            },
+            gl::DrawParams::default()
+                .with_clear_depth(1.0)
+                .with_depth_test(gl::Comparison::Less)
+                .with_cull_face(gl::CullFace::Back),
         )?;
 
         self.shaded_program.draw(
             shaded_pass::Uniform {
                 camera: self.camera_buffer.as_binding(),
                 light: self.light_buffer.as_binding(),
-                light_depth_map: self.light_depth_map.as_comparison_sampler(
-                    gl::Sampler2dParams::default(),
-                    gl::CompareFunction::Less,
-                ),
+                light_depth_map: self
+                    .light_depth_map
+                    .as_comparison_sampler(gl::Sampler2dParams::default(), gl::Comparison::Less),
             },
             scene_stream,
             gl::DefaultFramebuffer::default(),
-            gl::DrawParams {
-                clear_color: Some(glam::Vec4::ONE),
-                clear_depth: Some(1.0),
-                depth_compare: Some(gl::CompareFunction::Less),
-                cull_face: Some(gl::CullFace::Back),
-                ..Default::default()
-            },
+            gl::DrawParams::default()
+                .with_clear_color(glam::Vec4::ONE)
+                .with_clear_depth(1.0)
+                .with_depth_test(gl::Comparison::Less)
+                .with_cull_face(gl::CullFace::Back),
         )?;
 
         self.flat_program.draw(
@@ -280,11 +275,9 @@ impl Demo {
                 mode: gl::Mode::Triangles,
             },
             gl::DefaultFramebuffer::default(),
-            gl::DrawParams {
-                depth_compare: Some(gl::CompareFunction::Less),
-                cull_face: Some(gl::CullFace::Back),
-                ..Default::default()
-            },
+            gl::DrawParams::default()
+                .with_depth_test(gl::Comparison::Less)
+                .with_cull_face(gl::CullFace::Back),
         )?;
 
         self.debug_program.draw(
