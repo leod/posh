@@ -194,6 +194,87 @@ impl Blend {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
+pub enum StencilOp {
+    Keep,
+    Zero,
+    Replace,
+    Increment,
+    Decrement,
+    Invert,
+    IncrementWrap,
+    DecrementWrap,
+}
+
+impl StencilOp {
+    pub fn to_gl(self) -> u32 {
+        use StencilOp::*;
+
+        match self {
+            Keep => glow::KEEP,
+            Zero => glow::ZERO,
+            Replace => glow::REPLACE,
+            Increment => glow::INCR,
+            Decrement => glow::DECR,
+            Invert => glow::INVERT,
+            IncrementWrap => glow::INCR_WRAP,
+            DecrementWrap => glow::DECR_WRAP,
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct StencilTest {
+    pub comparison: Comparison,
+    pub reference: i32,
+    pub mask: u32,
+}
+
+impl Default for StencilTest {
+    fn default() -> Self {
+        Self {
+            comparison: Comparison::Always,
+            reference: 0,
+            mask: !0,
+        }
+    }
+}
+
+impl StencilTest {
+    fn set(&self, gl: &glow::Context, face: u32) {
+        let comparison = self.comparison.to_gl();
+
+        unsafe { gl.stencil_func_separate(face, comparison, self.reference, self.mask) };
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct StencilOps {
+    pub stencil_fail: StencilOp,
+    pub depth_fail: StencilOp,
+    pub depth_pass: StencilOp,
+}
+
+impl Default for StencilOps {
+    fn default() -> Self {
+        Self {
+            stencil_fail: StencilOp::Keep,
+            depth_fail: StencilOp::Keep,
+            depth_pass: StencilOp::Keep,
+        }
+    }
+}
+
+impl StencilOps {
+    fn set(&self, gl: &glow::Context, face: u32) {
+        let stencil_fail = self.stencil_fail.to_gl();
+        let depth_fail = self.depth_fail.to_gl();
+        let depth_pass = self.depth_pass.to_gl();
+
+        unsafe { gl.stencil_op_separate(face, stencil_fail, depth_fail, depth_pass) };
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct DrawParams {
     pub clear_stencil: Option<u8>,
     pub clear_depth: Option<f32>,
@@ -203,6 +284,8 @@ pub struct DrawParams {
     pub scissor: Option<glam::UVec4>,
     pub stencil_test_front: Option<StencilTest>,
     pub stencil_test_back: Option<StencilTest>,
+    pub stencil_ops_front: Option<StencilOps>,
+    pub stencil_ops_back: Option<StencilOps>,
     pub depth_test: Option<Comparison>,
     pub blend: Option<Blend>,
     pub stencil_mask_front: u32,
@@ -222,6 +305,8 @@ impl Default for DrawParams {
             scissor: None,
             stencil_test_front: None,
             stencil_test_back: None,
+            stencil_ops_front: None,
+            stencil_ops_back: None,
             depth_test: None,
             blend: None,
             stencil_mask_front: !0,
@@ -302,12 +387,39 @@ impl DrawParams {
             }
         }
 
+        if (self.stencil_test_front, self.stencil_test_back)
+            != (current.stencil_test_front, current.stencil_test_back)
+        {
+            if self.stencil_test_front.is_some() || self.stencil_test_back.is_some() {
+                unsafe { gl.enable(glow::STENCIL_TEST) };
+                self.stencil_test_front
+                    .unwrap_or_default()
+                    .set(gl, glow::FRONT);
+                self.stencil_test_front
+                    .unwrap_or_default()
+                    .set(gl, glow::BACK);
+            } else {
+                unsafe { gl.disable(glow::STENCIL_TEST) };
+            }
+        }
+
+        if (self.stencil_ops_front, self.stencil_ops_back)
+            != (current.stencil_ops_front, current.stencil_ops_back)
+        {
+            self.stencil_ops_front
+                .unwrap_or_default()
+                .set(gl, glow::FRONT);
+            self.stencil_ops_back
+                .unwrap_or_default()
+                .set(gl, glow::BACK);
+        }
+
         if self.depth_test != current.depth_test {
-            if let Some(func) = self.depth_test {
-                let func = func.to_gl();
+            if let Some(comparison) = self.depth_test {
+                let comparison = comparison.to_gl();
 
                 unsafe { gl.enable(glow::DEPTH_TEST) };
-                unsafe { gl.depth_func(func) };
+                unsafe { gl.depth_func(comparison) };
             } else {
                 unsafe { gl.disable(glow::DEPTH_TEST) };
             }
