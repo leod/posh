@@ -4,8 +4,8 @@ use syn::{
     parse_quote,
     spanned::Spanned,
     visit_mut::{visit_type_mut, VisitMut},
-    Data, Error, Field, Fields, GenericParam, Generics, Ident, Path, QSelf, Result, Token, Type,
-    TypePath,
+    Attribute, Data, Error, Field, Fields, GenericParam, Generics, Ident, Path, QSelf, Result,
+    Token, Type, TypePath,
 };
 
 #[derive(Clone)]
@@ -50,6 +50,13 @@ impl StructFields {
         self.fields
             .iter()
             .map(|field| field.ident.as_ref().unwrap().to_string())
+            .collect()
+    }
+
+    pub fn attrs(&self) -> Vec<&[Attribute]> {
+        self.fields
+            .iter()
+            .map(|field| field.attrs.as_slice())
             .collect()
     }
 }

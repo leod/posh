@@ -20,6 +20,22 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let field_idents = fields.idents();
     let field_types = fields.types();
     let field_strings = fields.strings();
+    let field_input_rates: Vec<_> = fields
+        .attrs()
+        .iter()
+        .map(|attrs| {
+            let per_instance = attrs
+                .iter()
+                .map(|attr| attr.path.is_ident("per_instance"))
+                .any(|per_instance| per_instance);
+
+            if per_instance {
+                quote!(Instance)
+            } else {
+                quote!(Vertex)
+            }
+        })
+        .collect();
 
     Ok(quote! {
         // Implement `Vertex<D>` for the struct.
@@ -38,7 +54,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                 #(
                     visitor.accept(
                         &::posh::internal::join_ident_path(path, #field_strings),
-                        ::posh::sl::program_def::VertexInputRate::Vertex,
+                        ::posh::sl::program_def::VertexInputRate::#field_input_rates,
                         &self.#field_idents,
                     );
                 )*
