@@ -142,7 +142,7 @@ unsafe impl<B: Block<Sl>> Vertex<Sl> for B {
     type Sl = B::Sl;
 
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl VertexVisitor<'a, Sl>) {
-        visitor.accept(path, VertexInputRate::Vertex, self);
+        visitor.accept(path, self);
     }
 
     fn shader_input(path: &str) -> Self {
