@@ -53,7 +53,7 @@ pub fn derive_varying(input: TokenStream) -> TokenStream {
 }
 
 /// Derives `Vertex` for a struct that is generic in `VertexDom`.
-#[proc_macro_derive(Vertex)]
+#[proc_macro_derive(Vertex, attributes(vertex))]
 pub fn derive_vertex_data(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match vertex::derive(input) {

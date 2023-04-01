@@ -3,9 +3,7 @@
 //! This is exposed only in order to make the internally generated source code
 //! more transparent. It is typically not necessary to use this module.
 
-use std::{iter::once, mem::size_of, rc::Rc};
-
-use crevice::std140::AsStd140;
+use std::{iter::once, rc::Rc};
 
 use crate::{
     interface::{FragmentVisitor, UniformUnion, UniformVisitor, VertexVisitor},
@@ -16,9 +14,7 @@ use super::{
     codegen,
     dag::{Expr, SamplerType, Type},
     primitives::value_arg,
-    program_def::{
-        ProgramDef, UniformBlockDef, UniformSamplerDef, VertexBlockDef, VertexInputRate,
-    },
+    program_def::{ProgramDef, UniformBlockDef, UniformSamplerDef, VertexBlockDef},
     ColorSample, ColorSampler2d, ComparisonSampler2d, ConstParams, FragmentInput, FragmentOutput,
     Object, Varying, VaryingOutput, Vec4, VertexInput, VertexOutput,
 };
@@ -67,7 +63,7 @@ impl<V: Varying> IntoVertexOutput for VaryingOutput<V> {
     fn into(self) -> VertexOutput<V> {
         VertexOutput {
             position: self.position,
-            output: self.output,
+            varying: self.varying,
             point_size: None,
         }
     }
@@ -78,7 +74,7 @@ impl IntoVertexOutput for Vec4 {
 
     fn into(self) -> VertexOutput<()> {
         VertexOutput {
-            output: (),
+            varying: (),
             position: self,
             point_size: None,
         }
@@ -227,7 +223,7 @@ where
         };
         let output = vertex_shader(consts, uniforms, InV::from(input())).into();
 
-        let varying_outputs = output.output.shader_outputs("vertex_output");
+        let varying_outputs = output.varying.shader_outputs("vertex_output");
         let vertex_block_defs = {
             // TODO: Remove hardcoded path names.
             let mut visitor = CollectVertexBlocks::default();
@@ -388,10 +384,8 @@ struct CollectVertexBlocks {
 }
 
 impl<'a> VertexVisitor<'a, Sl> for CollectVertexBlocks {
-    fn accept<B: Block<Sl>>(&mut self, path: &str, input_rate: VertexInputRate, _: &B) {
+    fn accept<B: Block<Sl>>(&mut self, path: &str, _: &B) {
         let block_def = VertexBlockDef {
-            input_rate,
-            stride: size_of::<<B::Gl as AsStd140>::Output>(),
             attributes: B::vertex_attribute_defs(path),
         };
 

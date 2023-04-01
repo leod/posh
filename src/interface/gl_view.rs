@@ -6,7 +6,7 @@ use crate::{
         VertexBufferBinding,
     },
     internal::join_ident_path,
-    sl::{self, program_def::VertexInputRate, ColorSample},
+    sl::{self, ColorSample},
 };
 
 use super::{Block, Fragment, FragmentVisitor, Gl, Sl, Uniform, Vertex, VertexVisitor};
@@ -90,8 +90,15 @@ unsafe impl<B: Block<Sl>> Vertex<Gl> for VertexBufferBinding<B> {
     type Sl = B::Sl;
 
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl VertexVisitor<'a, Gl>) {
-        visitor.accept(path, VertexInputRate::Vertex, self)
+        visitor.accept(path, self)
     }
+}
+
+unsafe impl Vertex<Gl> for () {
+    type Gl = ();
+    type Sl = ();
+
+    fn visit<'a>(&'a self, _: &str, _: &mut impl VertexVisitor<'a, Gl>) {}
 }
 
 #[sealed]

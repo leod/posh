@@ -21,7 +21,7 @@ mod scene_pass {
         let vertex = input - sl::vec2(0.5, 0.5);
 
         sl::VaryingOutput {
-            output: vertex,
+            varying: vertex,
             position: vertex.extend(0.0).extend(1.0),
         }
     }
@@ -52,7 +52,7 @@ mod present_pass {
 
     pub fn vertex(_: (), vertex: Vertex) -> sl::VaryingOutput<sl::Vec2> {
         sl::VaryingOutput {
-            output: vertex.tex_coords,
+            varying: vertex.tex_coords,
             position: vertex.pos.extend(0.0).extend(1.0),
         }
     }
@@ -107,11 +107,7 @@ impl Demo {
 
         self.scene_program.draw(
             self.state.as_binding(),
-            gl::PrimitiveStream {
-                vertices: self.triangle_vertices.as_binding(),
-                elements: gl::Elements::Range(0..3),
-                mode: gl::Mode::Triangles,
-            },
+            gl::VertexSpec::new(gl::Mode::Triangles, self.triangle_vertices.as_binding()),
             self.texture.as_color_attachment(),
             gl::DrawParams::default(),
         )?;
@@ -123,11 +119,8 @@ impl Demo {
                     .texture
                     .as_color_sampler(gl::Sampler2dParams::default()),
             },
-            gl::PrimitiveStream {
-                vertices: self.quad_vertices.as_binding(),
-                elements: self.quad_elements.as_binding(),
-                mode: gl::Mode::Triangles,
-            },
+            gl::VertexSpec::new(gl::Mode::Triangles, self.quad_vertices.as_binding())
+                .with_elements(self.quad_elements.as_binding()),
             gl::DefaultFramebuffer::default(),
             gl::DrawParams::default(),
         )?;

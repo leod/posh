@@ -48,7 +48,7 @@ fn vertex_shader(uniforms: Uniform, input: Vertex) -> sl::VaryingOutput<sl::Vec2
     let position = camera.view_to_screen * camera.world_to_view * zxy(vertex_pos).extend(1.0);
 
     sl::VaryingOutput {
-        output: input.tex_coords,
+        varying: input.tex_coords,
         position,
     }
 }
@@ -104,11 +104,8 @@ impl Demo {
 
         self.program.draw(
             (uniform, sampler),
-            gl::PrimitiveStream {
-                vertices: self.vertices.as_binding(),
-                elements: self.elements.as_binding(),
-                mode: gl::Mode::Triangles,
-            },
+            gl::VertexSpec::new(gl::Mode::Triangles, self.vertices.as_binding())
+                .with_elements(self.elements.as_binding()),
             gl::DefaultFramebuffer::default(),
             gl::DrawParams::default()
                 .with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0))
