@@ -84,7 +84,7 @@ pub struct VertexSpec {
     pub elements: Option<(Rc<Buffer>, ElementType)>,
     pub mode: Mode,
     pub index_range: Range<usize>,
-    pub instance_range: Range<usize>,
+    pub num_instances: usize,
 }
 
 impl VertexSpec {
@@ -201,7 +201,7 @@ impl VertexSpec {
             return;
         }
 
-        if self.instance_range.start >= self.instance_range.end {
+        if self.num_instances == 0 {
             return;
         }
 
@@ -228,27 +228,64 @@ impl VertexSpec {
 
             let count = count.try_into().expect("count is out of i32 range");
             let offset = offset.try_into().expect("offset is out of i32 range");
+            let num_instances = self
+                .num_instances
+                .try_into()
+                .expect("num_instance is out of i32 range");
 
-            // Safety: this is only safe if the element buffer does not have any
-            // elements which are out of bound for one of the vertex buffers.
-            // Here, we assume that this is checked by the caller.
+            for VertexBufferBinding {
+                stride,
+                buffer,
+                input_rate,
+                ..
+            } in &self.vertices
+            {
+                let num = buffer.len() / stride;
+                match input_rate {
+                    VertexInputRate::Vertex => {
+                        // Safety: this is only safe if the element buffer does not have any
+                        // elements which are out of bound for one of the vertex buffers.
+                        // Here, we assume that this is checked by the caller.
+                    }
+                    VertexInputRate::Instance => {
+                        assert!(num >= self.num_instances);
+                    }
+                }
+            }
+
             unsafe {
-                gl.draw_elements(mode, count, element_type, offset);
+                gl.draw_elements_instanced(mode, count, element_type, offset, num_instances);
             }
         } else {
             // Safety: check vertex buffer sizes.
             let end = first.checked_add(count).unwrap();
 
-            for VertexBufferBinding { stride, buffer, .. } in &self.vertices {
-                let num_vertices = buffer.len() / stride;
-                assert!(num_vertices >= end);
+            for VertexBufferBinding {
+                stride,
+                buffer,
+                input_rate,
+                ..
+            } in &self.vertices
+            {
+                let num = buffer.len() / stride;
+                match input_rate {
+                    VertexInputRate::Vertex => {
+                        assert!(num >= end);
+                    }
+                    VertexInputRate::Instance => {
+                        assert!(num >= self.num_instances);
+                    }
+                }
             }
 
             let first = first.try_into().expect("first is out of i32 range");
             let count = count.try_into().expect("count is out of i32 range");
-
+            let num_instances = self
+                .num_instances
+                .try_into()
+                .expect("num_instance is out of i32 range");
             unsafe {
-                gl.draw_arrays(mode, first, count);
+                gl.draw_arrays_instanced(mode, first, count, num_instances);
             }
         }
 

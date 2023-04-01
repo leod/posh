@@ -4,11 +4,7 @@ mod sl_view;
 use crevice::std140::AsStd140;
 use sealed::sealed;
 
-use crate::sl::{
-    self,
-    program_def::{VertexAttributeDef, VertexInputRate},
-    ColorSample,
-};
+use crate::sl::{self, program_def::VertexAttributeDef, ColorSample};
 
 /// The graphics library's view of shader inputs and outputs.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

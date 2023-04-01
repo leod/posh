@@ -50,8 +50,6 @@ struct Demo {
 
     instances: gl::VertexBuffer<Instance>,
     teapot: gl::VertexBuffer<sl::Vec3>,
-
-    start_time: Instant,
 }
 
 impl Demo {
@@ -63,7 +61,6 @@ impl Demo {
             camera: ctx.create_uniform_buffer(Camera::default(), StaticDraw)?,
             instances: ctx.create_vertex_buffer(&instances(0.0), StaticDraw)?,
             teapot: ctx.create_vertex_buffer(&TEAPOT_POSITIONS, StaticDraw)?,
-            start_time: Instant::now(),
         })
     }
 
@@ -130,12 +127,16 @@ fn main() {
 impl Default for Camera<Gl> {
     fn default() -> Self {
         Self {
-            world_to_view: glam::Mat4::from_translation(glam::Vec3::new(0.0, 0.0, -3.0)),
+            world_to_view: glam::Mat4::look_at_rh(
+                glam::Vec3::new(-20.0, -20.0, -20.0),
+                glam::Vec3::ZERO,
+                glam::Vec3::NEG_Y,
+            ),
             view_to_screen: glam::Mat4::perspective_rh_gl(
                 std::f32::consts::PI / 2.0,
                 WIDTH as f32 / HEIGHT as f32,
                 1.0,
-                10.0,
+                500.0,
             ),
         }
     }
@@ -146,7 +147,7 @@ fn instances(_time: f32) -> Vec<Instance<Gl>> {
         .flat_map(|x| {
             (0..10).flat_map(move |y| {
                 (0..10).map(move |z| {
-                    let world_pos = glam::uvec3(x, y, z).as_vec3();
+                    let world_pos = glam::uvec3(x, y, z).as_vec3() * 10.;
                     let model_to_view = glam::Mat4::from_translation(world_pos);
                     let color = glam::uvec3(x, 10 - y, z).as_vec3() / 10.0;
 
