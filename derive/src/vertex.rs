@@ -38,7 +38,6 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                 #(
                     visitor.accept(
                         &::posh::internal::join_ident_path(path, #field_strings),
-                        ::posh::sl::program_def::VertexInputRate::Vertex,
                         &self.#field_idents,
                     );
                 )*

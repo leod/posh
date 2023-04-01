@@ -7,8 +7,8 @@ use crate::{
 };
 
 use super::{
-    raw, ColorSampler2d, ComparisonSampler2d, DrawError, DrawParams, Framebuffer, PrimitiveStream,
-    UniformBufferBinding,
+    raw, ColorSampler2d, ComparisonSampler2d, DrawError, DrawParams, Framebuffer,
+    UniformBufferBinding, VertexSpec,
 };
 
 pub struct Program<U, V, F = sl::Vec4> {
@@ -31,15 +31,15 @@ where
 
     pub fn draw(
         &self,
-        uniforms: U::Gl,
-        primitives: PrimitiveStream<V::Gl>,
+        uniform: U::Gl,
+        vertex_spec: VertexSpec<V::Gl>,
         framebuffer: impl Framebuffer<F::Gl>,
         draw_params: DrawParams,
     ) -> Result<(), DrawError> {
         // TODO: These allocations can be avoided once stable has allocators.
         // TODO: Remove hardcoded path names.
         let mut uniform_visitor = CollectUniforms::default();
-        uniforms.visit("", &mut uniform_visitor);
+        uniform.visit("", &mut uniform_visitor);
 
         // FIXME: Safety: check that all vertex buffers are large enough for the
         // values in the element buffer (if we have one).
@@ -48,7 +48,7 @@ where
             self.raw.draw(
                 &uniform_visitor.raw_uniform_buffers,
                 &uniform_visitor.raw_samplers,
-                &primitives.raw(),
+                &vertex_spec.raw(),
                 &framebuffer.raw(),
                 &draw_params,
             )

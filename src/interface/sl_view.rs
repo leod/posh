@@ -3,12 +3,7 @@ use sealed::sealed;
 use crate::{
     gl,
     internal::join_ident_path,
-    sl::{
-        self,
-        dag::BuiltInType,
-        program_def::{VertexAttributeDef, VertexInputRate},
-        ColorSample, Object,
-    },
+    sl::{self, dag::BuiltInType, program_def::VertexAttributeDef, ColorSample, Object},
 };
 
 use super::{Block, Fragment, FragmentVisitor, Sl, Uniform, UniformNonUnit, Vertex, VertexVisitor};
@@ -142,12 +137,19 @@ unsafe impl<B: Block<Sl>> Vertex<Sl> for B {
     type Sl = B::Sl;
 
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl VertexVisitor<'a, Sl>) {
-        visitor.accept(path, VertexInputRate::Vertex, self);
+        visitor.accept(path, self);
     }
 
     fn shader_input(path: &str) -> Self {
         B::vertex_input(path)
     }
+}
+
+unsafe impl Vertex<Sl> for () {
+    type Gl = ();
+    type Sl = ();
+
+    fn visit<'a>(&'a self, _: &str, _: &mut impl VertexVisitor<'a, Sl>) {}
 }
 
 #[sealed]

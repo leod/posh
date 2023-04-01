@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, mem::size_of, ops::Range, rc::Rc};
+use std::{marker::PhantomData, mem::size_of, rc::Rc};
 
 use bytemuck::Pod;
 use sealed::sealed;
@@ -20,12 +20,6 @@ impl Element for u32 {
     const TYPE: ElementType = ElementType::U32;
 }
 
-#[derive(Clone)]
-pub enum Elements {
-    BufferBinding(ElementBufferBinding),
-    Range(Range<usize>),
-}
-
 /// Stores element data in a buffer on the GPU.
 ///
 /// Instances of `ElementBuffer` can be created with
@@ -39,7 +33,7 @@ pub struct ElementBuffer<E = u32> {
 pub struct ElementBufferBinding {
     raw: Rc<raw::Buffer>,
     ty: ElementType,
-    range: Range<usize>,
+    len: usize,
 }
 
 impl<E: Element> ElementBuffer<E> {
@@ -66,18 +60,12 @@ impl<E: Element> ElementBuffer<E> {
         self.raw.set(data);
     }
 
-    pub fn as_binding(&self) -> Elements {
-        self.binding_with_range(0..self.len())
-    }
-
-    pub fn binding_with_range(&self, range: Range<usize>) -> Elements {
-        assert!(range.start <= range.end);
-
-        Elements::BufferBinding(ElementBufferBinding {
+    pub fn as_binding(&self) -> ElementBufferBinding {
+        ElementBufferBinding {
             raw: self.raw.clone(),
             ty: E::TYPE,
-            range,
-        })
+            len: self.len(),
+        }
     }
 }
 
@@ -90,7 +78,7 @@ impl ElementBufferBinding {
         self.ty
     }
 
-    pub fn range(&self) -> Range<usize> {
-        self.range.clone()
+    pub(crate) fn len(&self) -> usize {
+        self.len
     }
 }

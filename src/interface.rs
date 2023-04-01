@@ -4,11 +4,7 @@ mod sl_view;
 use crevice::std140::AsStd140;
 use sealed::sealed;
 
-use crate::sl::{
-    self,
-    program_def::{VertexAttributeDef, VertexInputRate},
-    ColorSample,
-};
+use crate::sl::{self, program_def::VertexAttributeDef, ColorSample};
 
 /// The graphics library's view of shader inputs and outputs.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -203,7 +199,7 @@ pub unsafe trait Block<D: BlockDom>: sl::ToValue {
 ///
 /// See [`Vertex`] for more details.
 #[sealed]
-pub trait VertexDom: Copy {
+pub trait VertexDom: BlockDom {
     /// A vertex block field.
     type Block<B: Block<Sl>>: VertexField<Self>;
 }
@@ -266,7 +262,7 @@ pub trait VertexField<D: VertexDom>: Sized {
 ///     vertex: MyVertex,
 /// ) -> sl::VaryingOutput<sl::Vec4> {
 ///     sl::VaryingOutput {
-///         output: vertex.material.color,
+///         varying: vertex.material.color,
 ///         position: (vertex.position + vertex.material.normal * 1.3).extend(1.0),
 ///     }
 /// }
@@ -297,12 +293,7 @@ pub unsafe trait Vertex<D: VertexDom>: Sized {
 }
 
 pub trait VertexVisitor<'a, D: VertexDom> {
-    fn accept<B: Block<Sl>>(
-        &mut self,
-        path: &str,
-        input_rate: VertexInputRate,
-        vertex: &'a D::Block<B>,
-    );
+    fn accept<B: Block<Sl>>(&mut self, path: &str, vertex: &'a D::Block<B>);
 }
 
 // Uniform

@@ -47,8 +47,6 @@ pub enum VertexInputRate {
 /// Vertex input definition.
 #[derive(Debug, Clone)]
 pub struct VertexBlockDef {
-    pub input_rate: VertexInputRate,
-    pub stride: usize,
     pub attributes: Vec<VertexAttributeDef>,
 }
 
