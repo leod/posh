@@ -388,10 +388,8 @@ struct CollectVertexBlocks {
 }
 
 impl<'a> VertexVisitor<'a, Sl> for CollectVertexBlocks {
-    fn accept<B: Block<Sl>>(&mut self, path: &str, input_rate: VertexInputRate, _: &B) {
+    fn accept<B: Block<Sl>>(&mut self, path: &str, _: &B) {
         let block_def = VertexBlockDef {
-            input_rate,
-            stride: size_of::<<B::Gl as AsStd140>::Output>(),
             attributes: B::vertex_attribute_defs(path),
         };
 

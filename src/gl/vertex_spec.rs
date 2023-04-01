@@ -9,58 +9,57 @@ use crate::{
     Block, Gl, Sl, Vertex,
 };
 
-use super::{raw, ElementBufferBinding, Mode};
+use super::{raw, ElementBufferBinding, Mode, VertexBuffer};
 
 #[derive(Clone)]
 pub struct VertexSpec<V> {
-    vertices: V,
-    elements: Option<ElementBufferBinding>,
     mode: Mode,
-    element_range: Range<usize>,
+    vertices: V,
+
+    vertex_range: Range<usize>,
     instance_range: Range<usize>,
+
+    // for indexed drawing
+    elements: Option<(ElementBufferBinding, Range<usize>)>,
 }
 
 impl<V: Vertex<Gl>> VertexSpec<V> {
-    pub fn vertices(vertices: V, mode: Mode) -> Self {
-        let element_range = 0..min_num_vertices(&vertices).0;
+    pub fn new(mode: Mode, vertices: V) -> Self {
+        let Counts {
+            num_vertices,
+            num_instances,
+        } = get_counts(&vertices);
 
         Self {
+            mode,
             vertices,
+            vertex_range: 0..num_vertices.unwrap_or(0),
+            instance_range: 0..num_instances.unwrap_or(1),
             elements: None,
-            mode,
-            element_range,
-            instance_range: 0..1,
         }
     }
 
-    pub fn indexed(vertices: V, elements: ElementBufferBinding, mode: Mode) -> Self {
-        let element_range = 0..elements.len();
-
-        Self {
-            vertices,
-            elements: Some(elements),
-            mode,
-            element_range,
-            instance_range: 0..1,
-        }
+    pub fn with_vertex_range(mut self, vertex_range: Range<usize>) -> Self {
+        self.vertex_range = vertex_range;
+        self
     }
 
-    pub fn with_element_range(mut self, element_range: Range<usize>) -> Self {
-        assert!(
-            element_range.end
-                <= self.elements.as_ref().map_or_else(
-                    || min_num_vertices(&self.vertices).0,
-                    |elements| elements.len()
-                )
-        );
+    pub fn with_elements(mut self, elements: ElementBufferBinding) -> Self {
+        let len = elements.len();
+        self.elements = Some((elements, 0..len));
+        self
+    }
 
-        self.element_range = element_range;
+    pub fn with_elements_and_range(
+        mut self,
+        elements: ElementBufferBinding,
+        element_range: Range<usize>,
+    ) -> Self {
+        self.elements = Some((elements, element_range));
         self
     }
 
     pub fn with_instance_range(mut self, instance_range: Range<usize>) -> Self {
-        assert!(instance_range.end <= min_num_vertices(&self.vertices).1);
-
         self.instance_range = instance_range;
         self
     }
@@ -71,32 +70,30 @@ impl<V: Vertex<Gl>> VertexSpec<V> {
             elements: self
                 .elements
                 .as_ref()
-                .map(|elements| (elements.raw().clone(), elements.ty())),
+                .map(|elements| (elements.0.raw().clone(), elements.0.ty())),
             mode: self.mode,
-            element_range: self.element_range.clone(),
+            index_range: self
+                .elements
+                .map_or(self.vertex_range, |(_, element_range)| element_range),
             instance_range: self.instance_range.clone(),
         }
     }
 }
 
-fn raw_vertices<V: Vertex<Gl>>(vertices: &V) -> Vec<(Rc<raw::Buffer>, VertexBlockDef)> {
+fn raw_vertices<V: Vertex<Gl>>(vertices: &V) -> Vec<raw::VertexBufferBinding> {
     // TODO: Reduce per-draw-call allocations.
-    struct Visitor(Vec<(Rc<raw::Buffer>, VertexBlockDef)>);
+    struct Visitor(Vec<raw::VertexBufferBinding>);
 
     impl<'a> VertexVisitor<'a, Gl> for Visitor {
-        fn accept<B: Block<Sl>>(
-            &mut self,
-            path: &str,
-            input_rate: VertexInputRate,
-            buffer: &'a VertexBufferBinding<B>,
-        ) {
-            let block_def = VertexBlockDef {
-                input_rate,
+        fn accept<B: Block<Sl>>(&mut self, path: &str, binding: &'a VertexBufferBinding<B>) {
+            self.0.push(raw::VertexBufferBinding {
+                buffer: binding.raw().clone(),
+                block_def: VertexBlockDef {
+                    attributes: B::vertex_attribute_defs(path),
+                },
+                input_rate: binding.input_rate(),
                 stride: size_of::<<B::Gl as AsStd140>::Output>(),
-                attributes: B::vertex_attribute_defs(path),
-            };
-
-            self.0.push((buffer.raw().clone(), block_def));
+            });
         }
     }
 
@@ -107,28 +104,40 @@ fn raw_vertices<V: Vertex<Gl>>(vertices: &V) -> Vec<(Rc<raw::Buffer>, VertexBloc
     visitor.0
 }
 
-fn min_num_vertices<V: Vertex<Gl>>(vertices: &V) -> (usize, usize) {
-    struct Visitor(Option<usize>, Option<usize>);
+#[derive(Clone)]
+struct Counts {
+    num_vertices: Option<usize>,
+    num_instances: Option<usize>,
+}
 
-    impl<'a> VertexVisitor<'a, Gl> for Visitor {
-        fn accept<B: Block<Sl>>(
-            &mut self,
-            _: &str,
-            input_rate: VertexInputRate,
-            buffer: &'a VertexBufferBinding<B>,
-        ) {
-            let len = buffer.len();
+impl<'a> VertexVisitor<'a, Gl> for Counts {
+    fn accept<B: Block<Sl>>(&mut self, _: &str, binding: &'a VertexBufferBinding<B>) {
+        let len = binding.len();
 
-            match input_rate {
-                VertexInputRate::Vertex => self.0 = Some(self.0.map_or(len, |min| min.min(len))),
-                VertexInputRate::Instance => self.1 = Some(self.0.map_or(len, |min| min.min(len))),
+        match binding.input_rate() {
+            VertexInputRate::Vertex => {
+                if let Some(num_vertices) = self.num_vertices {
+                    assert!(num_vertices == len);
+                }
+                self.num_vertices = Some(len);
+            }
+            VertexInputRate::Instance => {
+                if let Some(num_instances) = self.num_instances {
+                    assert!(num_instances == len);
+                }
+                self.num_instances = Some(len);
             }
         }
     }
+}
 
+fn get_counts<V: Vertex<Gl>>(vertices: &V) -> Counts {
     // TODO: Remove hardcoded path names.
-    let mut visitor = Visitor(None, None);
-    vertices.visit("vertex_input", &mut visitor);
+    let mut counts = Counts {
+        num_vertices: None,
+        num_instances: None,
+    };
+    vertices.visit("vertex_input", &mut counts);
 
-    (visitor.0.unwrap_or(0), visitor.1.unwrap_or(1))
+    counts
 }

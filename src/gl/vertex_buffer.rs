@@ -2,7 +2,7 @@ use std::{marker::PhantomData, rc::Rc};
 
 use crevice::std140::AsStd140;
 
-use crate::{Block, Sl};
+use crate::{sl::program_def::VertexInputRate, Block, Sl};
 
 use super::{raw, BufferUsage};
 
@@ -18,6 +18,7 @@ pub struct VertexBuffer<B> {
 #[derive(Clone)]
 pub struct VertexBufferBinding<B> {
     raw: Rc<raw::Buffer>,
+    input_rate: VertexInputRate,
     _phantom: PhantomData<B>,
 }
 
@@ -56,6 +57,7 @@ impl<B: Block<Sl>> VertexBuffer<B> {
     pub fn as_binding(&self) -> VertexBufferBinding<B> {
         VertexBufferBinding {
             raw: self.raw.clone(),
+            input_rate: VertexInputRate::Vertex,
             _phantom: PhantomData,
         }
     }
@@ -74,6 +76,15 @@ impl<B: Block<Sl>> VertexBufferBinding<B> {
 
     pub fn is_empty(&self) -> bool {
         self.len() == 0
+    }
+
+    pub fn instanced(mut self) -> Self {
+        self.input_rate = VertexInputRate::Instance;
+        self
+    }
+
+    pub(crate) fn input_rate(&self) -> VertexInputRate {
+        self.input_rate
     }
 }
 

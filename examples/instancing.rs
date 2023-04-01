@@ -70,12 +70,12 @@ impl Demo {
     pub fn draw(&self) -> Result<(), gl::DrawError> {
         self.program.draw(
             self.camera.as_binding(),
-            gl::VertexSpec::vertices(
+            gl::VertexSpec::new(
+                gl::Mode::Triangles,
                 Vertex {
-                    instance: self.instances.as_binding(),
+                    instance: self.instances.as_binding().instanced(),
                     model_pos: self.teapot.as_binding(),
                 },
-                gl::Mode::Triangles,
             ),
             gl::DefaultFramebuffer::default(),
             gl::DrawParams::default()

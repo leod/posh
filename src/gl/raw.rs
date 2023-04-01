@@ -27,4 +27,4 @@ pub use framebuffer::{Attachment, Framebuffer};
 pub use program::Program;
 pub use sampler_params::{Sampler2dParams, SamplerMagFilter, SamplerMinFilter};
 pub use texture::{Sampler, Sampler2d, Texture2d};
-pub use vertex_spec::{ElementType, Mode, VertexSpec};
+pub use vertex_spec::{ElementType, Mode, VertexBufferBinding, VertexSpec};

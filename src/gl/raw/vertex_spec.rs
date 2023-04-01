@@ -71,11 +71,19 @@ impl Mode {
 // TODO: Instancing.
 
 #[derive(Clone)]
+pub struct VertexBufferBinding {
+    pub buffer: Rc<Buffer>,
+    pub block_def: VertexBlockDef,
+    pub input_rate: VertexInputRate,
+    pub stride: usize,
+}
+
+#[derive(Clone)]
 pub struct VertexSpec {
-    pub vertices: Vec<(Rc<Buffer>, VertexBlockDef)>,
+    pub vertices: Vec<VertexBufferBinding>,
     pub elements: Option<(Rc<Buffer>, ElementType)>,
     pub mode: Mode,
-    pub element_range: Range<usize>,
+    pub index_range: Range<usize>,
     pub instance_range: Range<usize>,
 }
 
@@ -92,29 +100,35 @@ impl VertexSpec {
 
         let gl = ctx.gl();
 
-        for (buffer, vertex_def) in &self.vertices {
-            assert!(vertex_def.stride > 0);
-            assert_eq!(buffer.len() % vertex_def.stride, 0);
+        for VertexBufferBinding {
+            buffer,
+            block_def,
+            input_rate,
+            stride,
+        } in &self.vertices
+        {
+            assert!(*stride > 0);
+            assert_eq!(buffer.len() % stride, 0);
             assert!(buffer.context().ref_eq(ctx));
 
             unsafe {
                 gl.bind_buffer(glow::ARRAY_BUFFER, Some(buffer.id()));
             }
 
-            for attribute in &vertex_def.attributes {
+            for attribute in &block_def.attributes {
                 let attribute_info =
                     VertexAttributeLayout::new(attribute.ty).expect("invalid vertex attribute");
 
                 for i in 0..attribute_info.locations {
                     let offset = attribute.offset + i * attribute_info.location_size();
 
-                    assert!(offset + attribute_info.location_size() <= vertex_def.stride);
+                    assert!(offset + attribute_info.location_size() <= *stride);
 
                     unsafe {
                         gl.enable_vertex_attrib_array(index);
                     }
 
-                    match vertex_def.input_rate {
+                    match input_rate {
                         VertexInputRate::Vertex => (),
                         VertexInputRate::Instance => unsafe {
                             gl.vertex_attrib_divisor(index, 1);
@@ -123,7 +137,7 @@ impl VertexSpec {
 
                     let size = i32::try_from(attribute_info.components).unwrap();
                     let data_type = attribute_info.ty.to_gl();
-                    let stride = i32::try_from(vertex_def.stride).unwrap();
+                    let stride = i32::try_from(*stride).unwrap();
                     let offset = i32::try_from(offset).unwrap();
 
                     match attribute_info.ty {
@@ -158,8 +172,8 @@ impl VertexSpec {
 
         let mut index = 0;
 
-        for (_, vertex_def) in &self.vertices {
-            for attribute in &vertex_def.attributes {
+        for VertexBufferBinding { block_def, .. } in &self.vertices {
+            for attribute in &block_def.attributes {
                 let attribute_info =
                     VertexAttributeLayout::new(attribute.ty).expect("invalid vertex attribute");
 
@@ -183,7 +197,7 @@ impl VertexSpec {
     }
 
     pub(super) fn draw(&self, ctx: &ContextShared) {
-        if self.element_range.start >= self.element_range.end {
+        if self.index_range.start >= self.index_range.end {
             return;
         }
 
@@ -196,8 +210,8 @@ impl VertexSpec {
         self.bind(ctx);
 
         let mode = self.mode.to_gl();
-        let first = self.element_range.start;
-        let count = self.element_range.end - self.element_range.start;
+        let first = self.index_range.start;
+        let count = self.index_range.end - self.index_range.start;
 
         if let Some((buffer, element_type)) = &self.elements {
             let element_size = element_type.size();
@@ -225,8 +239,8 @@ impl VertexSpec {
             // Safety: check vertex buffer sizes.
             let end = first.checked_add(count).unwrap();
 
-            for (buffer, vertex_def) in &self.vertices {
-                let num_vertices = buffer.len() / vertex_def.stride;
+            for VertexBufferBinding { stride, buffer, .. } in &self.vertices {
+                let num_vertices = buffer.len() / stride;
                 assert!(num_vertices >= end);
             }
 

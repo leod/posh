@@ -90,7 +90,7 @@ unsafe impl<B: Block<Sl>> Vertex<Gl> for VertexBufferBinding<B> {
     type Sl = B::Sl;
 
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl VertexVisitor<'a, Gl>) {
-        visitor.accept(path, VertexInputRate::Vertex, self)
+        visitor.accept(path, self)
     }
 }
 

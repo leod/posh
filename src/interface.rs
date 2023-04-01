@@ -297,12 +297,7 @@ pub unsafe trait Vertex<D: VertexDom>: Sized {
 }
 
 pub trait VertexVisitor<'a, D: VertexDom> {
-    fn accept<B: Block<Sl>>(
-        &mut self,
-        path: &str,
-        input_rate: VertexInputRate,
-        vertex: &'a D::Block<B>,
-    );
+    fn accept<B: Block<Sl>>(&mut self, path: &str, vertex: &'a D::Block<B>);
 }
 
 // Uniform

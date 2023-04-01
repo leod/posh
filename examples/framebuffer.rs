@@ -107,7 +107,7 @@ impl Demo {
 
         self.scene_program.draw(
             self.state.as_binding(),
-            gl::VertexSpec::vertices(self.triangle_vertices.as_binding(), gl::Mode::Triangles),
+            gl::VertexSpec::new(gl::Mode::Triangles, self.triangle_vertices.as_binding()),
             self.texture.as_color_attachment(),
             gl::DrawParams::default(),
         )?;
@@ -119,11 +119,8 @@ impl Demo {
                     .texture
                     .as_color_sampler(gl::Sampler2dParams::default()),
             },
-            gl::VertexSpec::indexed(
-                self.quad_vertices.as_binding(),
-                self.quad_elements.as_binding(),
-                gl::Mode::Triangles,
-            ),
+            gl::VertexSpec::new(gl::Mode::Triangles, self.quad_vertices.as_binding())
+                .with_elements(self.quad_elements.as_binding()),
             gl::DefaultFramebuffer::default(),
             gl::DrawParams::default(),
         )?;
