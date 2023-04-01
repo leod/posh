@@ -104,11 +104,11 @@ impl Demo {
 
         self.program.draw(
             (uniform, sampler),
-            gl::VertexSpec {
-                vertices: self.vertices.as_binding(),
-                elements: self.elements.as_binding(),
-                mode: gl::Mode::Triangles,
-            },
+            gl::VertexSpec::indexed(
+                self.vertices.as_binding(),
+                self.elements.as_binding(),
+                gl::Mode::Triangles,
+            ),
             gl::DefaultFramebuffer::default(),
             gl::DrawParams::default()
                 .with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0))

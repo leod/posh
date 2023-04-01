@@ -74,9 +74,9 @@ impl Mode {
 pub struct VertexSpec {
     pub vertices: Vec<(Rc<Buffer>, VertexBlockDef)>,
     pub elements: Option<(Rc<Buffer>, ElementType)>,
-    pub primitive: Mode,
-    pub range: Range<usize>,
-    pub num_instances: usize,
+    pub mode: Mode,
+    pub element_range: Range<usize>,
+    pub instance_range: Range<usize>,
 }
 
 impl VertexSpec {
@@ -183,15 +183,21 @@ impl VertexSpec {
     }
 
     pub(super) fn draw(&self, ctx: &ContextShared) {
-        assert!(self.range.start <= self.range.end);
+        if self.element_range.start >= self.element_range.end {
+            return;
+        }
+
+        if self.instance_range.start >= self.instance_range.end {
+            return;
+        }
 
         let gl = ctx.gl();
 
         self.bind(ctx);
 
-        let mode = self.primitive.to_gl();
-        let first = self.range.start;
-        let count = self.range.end - self.range.start;
+        let mode = self.mode.to_gl();
+        let first = self.element_range.start;
+        let count = self.element_range.end - self.element_range.start;
 
         if let Some((buffer, element_type)) = &self.elements {
             let element_size = element_type.size();
