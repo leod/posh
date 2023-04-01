@@ -1,4 +1,4 @@
-use std::{mem::size_of, ops::Range, rc::Rc};
+use std::{mem::size_of, ops::Range};
 
 use crevice::std140::AsStd140;
 
@@ -9,7 +9,7 @@ use crate::{
     Block, Gl, Sl, Vertex,
 };
 
-use super::{raw, ElementBufferBinding, Mode, VertexBuffer};
+use super::{raw, ElementBufferBinding, Mode};
 
 #[derive(Clone)]
 pub struct VertexSpec<V> {
@@ -17,7 +17,7 @@ pub struct VertexSpec<V> {
     vertices: V,
 
     vertex_range: Range<usize>,
-    instance_range: Range<usize>,
+    num_instances: usize,
 
     // for indexed drawing
     elements: Option<(ElementBufferBinding, Range<usize>)>,
@@ -34,7 +34,7 @@ impl<V: Vertex<Gl>> VertexSpec<V> {
             mode,
             vertices,
             vertex_range: 0..num_vertices.unwrap_or(0),
-            instance_range: 0..num_instances.unwrap_or(1),
+            num_instances: num_instances.unwrap_or(1),
             elements: None,
         }
     }
@@ -59,8 +59,8 @@ impl<V: Vertex<Gl>> VertexSpec<V> {
         self
     }
 
-    pub fn with_instance_range(mut self, instance_range: Range<usize>) -> Self {
-        self.instance_range = instance_range;
+    pub fn with_num_instances(mut self, num_instances: usize) -> Self {
+        self.num_instances = num_instances;
         self
     }
 
@@ -75,7 +75,7 @@ impl<V: Vertex<Gl>> VertexSpec<V> {
             index_range: self
                 .elements
                 .map_or(self.vertex_range, |(_, element_range)| element_range),
-            instance_range: self.instance_range.clone(),
+            num_instances: self.num_instances,
         }
     }
 }

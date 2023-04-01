@@ -6,7 +6,7 @@ use crate::{
         VertexBufferBinding,
     },
     internal::join_ident_path,
-    sl::{self, program_def::VertexInputRate, ColorSample},
+    sl::{self, ColorSample},
 };
 
 use super::{Block, Fragment, FragmentVisitor, Gl, Sl, Uniform, Vertex, VertexVisitor};

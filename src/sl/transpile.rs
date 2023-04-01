@@ -3,9 +3,7 @@
 //! This is exposed only in order to make the internally generated source code
 //! more transparent. It is typically not necessary to use this module.
 
-use std::{iter::once, mem::size_of, rc::Rc};
-
-use crevice::std140::AsStd140;
+use std::{iter::once, rc::Rc};
 
 use crate::{
     interface::{FragmentVisitor, UniformUnion, UniformVisitor, VertexVisitor},
@@ -16,9 +14,7 @@ use super::{
     codegen,
     dag::{Expr, SamplerType, Type},
     primitives::value_arg,
-    program_def::{
-        ProgramDef, UniformBlockDef, UniformSamplerDef, VertexBlockDef, VertexInputRate,
-    },
+    program_def::{ProgramDef, UniformBlockDef, UniformSamplerDef, VertexBlockDef},
     ColorSample, ColorSampler2d, ComparisonSampler2d, ConstParams, FragmentInput, FragmentOutput,
     Object, Varying, VaryingOutput, Vec4, VertexInput, VertexOutput,
 };

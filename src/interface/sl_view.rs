@@ -3,12 +3,7 @@ use sealed::sealed;
 use crate::{
     gl,
     internal::join_ident_path,
-    sl::{
-        self,
-        dag::BuiltInType,
-        program_def::{VertexAttributeDef, VertexInputRate},
-        ColorSample, Object,
-    },
+    sl::{self, dag::BuiltInType, program_def::VertexAttributeDef, ColorSample, Object},
 };
 
 use super::{Block, Fragment, FragmentVisitor, Sl, Uniform, UniformNonUnit, Vertex, VertexVisitor};
