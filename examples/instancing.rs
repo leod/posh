@@ -29,7 +29,7 @@ struct Vertex<D: VertexDom = Sl> {
 
 fn vertex_shader(camera: Camera, input: Vertex) -> sl::VaryingOutput<sl::Vec3> {
     sl::VaryingOutput {
-        output: input.instance.color,
+        varying: input.instance.color,
         position: camera.view_to_screen
             * camera.world_to_view
             * input.instance.model_to_view
@@ -70,7 +70,7 @@ impl Demo {
             gl::VertexSpec::new(
                 gl::Mode::Triangles,
                 Vertex {
-                    instance: self.instances.as_binding().instanced(),
+                    instance: self.instances.as_binding().with_instancing(),
                     model_pos: self.teapot.as_binding(),
                 },
             ),
