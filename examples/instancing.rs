@@ -1,7 +1,5 @@
 use std::time::Instant;
 
-use image::{io::Reader as ImageReader, EncodableLayout};
-
 use posh::{gl, sl, Block, BlockDom, Gl, Sl, VertexDom};
 
 const WIDTH: u32 = 1024;
@@ -72,14 +70,13 @@ impl Demo {
     pub fn draw(&self) -> Result<(), gl::DrawError> {
         self.program.draw(
             self.camera.as_binding(),
-            gl::VertexSpec {
-                vertices: Vertex {
+            gl::VertexSpec::vertices(
+                Vertex {
                     instance: self.instances.as_binding(),
                     model_pos: self.teapot.as_binding(),
                 },
-                elements: gl::Elements::Range(0..self.teapot.len()),
-                mode: gl::Mode::Triangles,
-            },
+                gl::Mode::Triangles,
+            ),
             gl::DefaultFramebuffer::default(),
             gl::DrawParams::default()
                 .with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0))
