@@ -1,7 +1,7 @@
 use std::{marker::PhantomData, rc::Rc};
 
 use super::{
-    dag::{Expr, Trace, Type},
+    dag::{ArrayType, Expr, Trace, Type},
     primitives::value_arg,
     Object, ToValue, Value, ValueNonArray, U32,
 };
@@ -15,7 +15,10 @@ pub struct Array<V, const N: usize> {
 
 impl<V: ValueNonArray, const N: usize> Object for Array<V, N> {
     fn ty() -> Type {
-        Type::Array(Box::new(V::ty()), N)
+        Type::Array(ArrayType {
+            ty: Box::new(V::ty()),
+            len: N,
+        })
     }
 
     fn expr(&self) -> Rc<Expr> {

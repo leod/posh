@@ -8,6 +8,8 @@ use std::{
     rc::Rc,
 };
 
+use crate::sl::dag::ArrayType;
+
 use self::{
     scope_form::{Scope, ScopeForm, VarInit},
     simplified_expr::VarId,
@@ -204,6 +206,6 @@ fn type_name(struct_reg: &StructRegistry, ty: &Type) -> String {
     match ty {
         BuiltIn(ty) => format!("{ty}"),
         Struct(ty) => struct_reg.name(ty),
-        Array(ty, size) => format!("{}[{}]", type_name(struct_reg, ty), size),
+        Array(ArrayType { ty, len }) => format!("{}[{}]", type_name(struct_reg, ty), len),
     }
 }
