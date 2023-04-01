@@ -12,25 +12,25 @@ use crate::{
 use super::{raw, Elements, Mode};
 
 #[derive(Clone)]
-pub struct PrimitiveStream<V> {
+pub struct VertexSpec<V> {
     pub vertices: V,
     pub elements: Elements,
     pub mode: Mode,
 }
 
-impl<V: Vertex<Gl>> PrimitiveStream<V> {
-    pub(super) fn raw(&self) -> raw::PrimitiveStream {
+impl<V: Vertex<Gl>> VertexSpec<V> {
+    pub(super) fn raw(&self) -> raw::VertexSpec {
         use Elements::*;
 
         match &self.elements {
-            BufferBinding(elements) => raw::PrimitiveStream {
+            BufferBinding(elements) => raw::VertexSpec {
                 vertices: raw_vertices(&self.vertices),
                 elements: Some((elements.raw().clone(), elements.ty())),
                 primitive: self.mode,
                 range: elements.range(),
                 num_instances: 1,
             },
-            Range(range) => raw::PrimitiveStream {
+            Range(range) => raw::VertexSpec {
                 vertices: raw_vertices(&self.vertices),
                 elements: None,
                 primitive: self.mode,

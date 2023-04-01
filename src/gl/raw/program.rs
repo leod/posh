@@ -6,8 +6,7 @@ use crate::sl::program_def::{ProgramDef, UniformSamplerDef};
 
 use super::{
     context::ContextShared, error::check_gl_error, vertex_layout::VertexAttributeLayout, Buffer,
-    DrawError, DrawParams, Framebuffer, PrimitiveStream, ProgramError, ProgramValidationError,
-    Sampler,
+    DrawError, DrawParams, Framebuffer, ProgramError, ProgramValidationError, Sampler, VertexSpec,
 };
 
 pub struct Program {
@@ -151,7 +150,7 @@ impl Program {
         &self,
         uniform_buffers: &[&Buffer],
         samplers: &[Sampler],
-        primitives: &PrimitiveStream,
+        vertex_spec: &VertexSpec,
         framebuffer: &Framebuffer,
         draw_params: &DrawParams,
     ) -> Result<(), DrawError> {
@@ -161,7 +160,7 @@ impl Program {
 
         assert_eq!(uniform_buffers.len(), def.uniform_block_defs.len());
         assert_eq!(samplers.len(), def.uniform_sampler_defs.len());
-        assert!(primitives.is_compatible(&self.def.vertex_block_defs));
+        assert!(vertex_spec.is_compatible(&self.def.vertex_block_defs));
 
         framebuffer.bind(&self.ctx)?;
 
@@ -194,7 +193,7 @@ impl Program {
             sampler.bind();
         }
 
-        primitives.draw(ctx);
+        vertex_spec.draw(ctx);
 
         // TODO: Remove overly conservative unbinding.
         for (sampler, sampler_def) in samplers.iter().zip(&def.uniform_sampler_defs) {
