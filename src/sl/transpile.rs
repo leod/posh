@@ -63,7 +63,7 @@ impl<V: Varying> IntoVertexOutput for VaryingOutput<V> {
     fn into(self) -> VertexOutput<V> {
         VertexOutput {
             position: self.position,
-            output: self.output,
+            varying: self.varying,
             point_size: None,
         }
     }
@@ -74,7 +74,7 @@ impl IntoVertexOutput for Vec4 {
 
     fn into(self) -> VertexOutput<()> {
         VertexOutput {
-            output: (),
+            varying: (),
             position: self,
             point_size: None,
         }
@@ -223,7 +223,7 @@ where
         };
         let output = vertex_shader(consts, uniforms, InV::from(input())).into();
 
-        let varying_outputs = output.output.shader_outputs("vertex_output");
+        let varying_outputs = output.varying.shader_outputs("vertex_output");
         let vertex_block_defs = {
             // TODO: Remove hardcoded path names.
             let mut visitor = CollectVertexBlocks::default();

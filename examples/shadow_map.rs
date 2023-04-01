@@ -47,7 +47,7 @@ mod flat_pass {
 
     pub fn vertex(camera: Camera, vertex: SceneVertex) -> sl::VaryingOutput<sl::Vec3> {
         sl::VaryingOutput {
-            output: vertex.color,
+            varying: vertex.color,
             position: camera.world_to_clip(vertex.world_pos),
         }
     }
@@ -112,7 +112,7 @@ mod shaded_pass {
         };
 
         sl::VaryingOutput {
-            output,
+            varying: output,
             position: camera.world_to_clip(vertex.world_pos),
         }
     }
@@ -159,7 +159,7 @@ mod debug_pass {
 
     pub fn vertex(_: (), vertex: Vertex) -> sl::VaryingOutput<sl::Vec2> {
         sl::VaryingOutput {
-            output: vertex.tex_coords,
+            varying: vertex.tex_coords,
             position: vertex.pos.extend(0.0).extend(1.0),
         }
     }

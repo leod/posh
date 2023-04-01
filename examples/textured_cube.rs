@@ -48,7 +48,7 @@ fn vertex_shader(uniforms: Uniform, input: Vertex) -> sl::VaryingOutput<sl::Vec2
     let position = camera.view_to_screen * camera.world_to_view * zxy(vertex_pos).extend(1.0);
 
     sl::VaryingOutput {
-        output: input.tex_coords,
+        varying: input.tex_coords,
         position,
     }
 }

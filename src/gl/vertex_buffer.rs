@@ -78,7 +78,7 @@ impl<B: Block<Sl>> VertexBufferBinding<B> {
         self.len() == 0
     }
 
-    pub fn instanced(mut self) -> Self {
+    pub fn with_instancing(mut self) -> Self {
         self.input_rate = VertexInputRate::Instance;
         self
     }
