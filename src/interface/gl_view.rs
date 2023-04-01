@@ -94,6 +94,13 @@ unsafe impl<B: Block<Sl>> Vertex<Gl> for VertexBufferBinding<B> {
     }
 }
 
+unsafe impl Vertex<Gl> for () {
+    type Gl = ();
+    type Sl = ();
+
+    fn visit<'a>(&'a self, _: &str, _: &mut impl VertexVisitor<'a, Gl>) {}
+}
+
 #[sealed]
 impl<B: Block<Sl>> super::VertexField<Gl> for VertexBufferBinding<B> {}
 

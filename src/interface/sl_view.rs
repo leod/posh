@@ -145,6 +145,13 @@ unsafe impl<B: Block<Sl>> Vertex<Sl> for B {
     }
 }
 
+unsafe impl Vertex<Sl> for () {
+    type Gl = ();
+    type Sl = ();
+
+    fn visit<'a>(&'a self, _: &str, _: &mut impl VertexVisitor<'a, Sl>) {}
+}
+
 #[sealed]
 impl<B: Block<Sl>> super::VertexField<Sl> for B {
     fn shader_input(path: &str) -> Self {
