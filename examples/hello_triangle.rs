@@ -59,7 +59,7 @@ impl Demo {
 
         self.program.draw(
             self.globals.as_binding(),
-            gl::PrimitiveStream {
+            gl::VertexSpec {
                 vertices: self.vertices.as_binding(),
                 elements: gl::Elements::Range(0..3),
                 mode: gl::Mode::Triangles,

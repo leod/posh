@@ -107,7 +107,7 @@ impl Demo {
 
         self.scene_program.draw(
             self.state.as_binding(),
-            gl::PrimitiveStream {
+            gl::VertexSpec {
                 vertices: self.triangle_vertices.as_binding(),
                 elements: gl::Elements::Range(0..3),
                 mode: gl::Mode::Triangles,
@@ -123,7 +123,7 @@ impl Demo {
                     .texture
                     .as_color_sampler(gl::Sampler2dParams::default()),
             },
-            gl::PrimitiveStream {
+            gl::VertexSpec {
                 vertices: self.quad_vertices.as_binding(),
                 elements: self.quad_elements.as_binding(),
                 mode: gl::Mode::Triangles,

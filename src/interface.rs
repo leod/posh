@@ -203,7 +203,7 @@ pub unsafe trait Block<D: BlockDom>: sl::ToValue {
 ///
 /// See [`Vertex`] for more details.
 #[sealed]
-pub trait VertexDom: Copy {
+pub trait VertexDom: BlockDom {
     /// A vertex block field.
     type Block<B: Block<Sl>>: VertexField<Self>;
 }

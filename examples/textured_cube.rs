@@ -104,7 +104,7 @@ impl Demo {
 
         self.program.draw(
             (uniform, sampler),
-            gl::PrimitiveStream {
+            gl::VertexSpec {
                 vertices: self.vertices.as_binding(),
                 elements: self.elements.as_binding(),
                 mode: gl::Mode::Triangles,
