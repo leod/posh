@@ -3,7 +3,7 @@ use std::{
     rc::Rc,
 };
 
-use crate::sl::dag::{Expr, StructType, Type};
+use crate::sl::dag::{ArrayType, Expr, StructType, Type};
 
 use super::simplified_expr::ExprKey;
 
@@ -71,7 +71,7 @@ fn get_struct_type(ty: &Type) -> Option<&Rc<StructType>> {
 
     match ty {
         BuiltIn(_) => None,
-        Array(ty, _) => {
+        Array(ArrayType { ty, .. }) => {
             // This recursion is fine since arrays cannot be nested.
             get_struct_type(ty)
         }

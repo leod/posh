@@ -3,6 +3,8 @@ use std::{
     rc::Rc,
 };
 
+use crate::sl::dag::ArrayType;
+
 use super::{BinaryOp, BuiltInType, Expr, SamplerType, Type, UnaryOp};
 
 impl Display for BinaryOp {
@@ -137,7 +139,7 @@ impl Display for Type {
         match self {
             BuiltIn(ty) => write!(f, "{ty}"),
             Struct(ty) => write!(f, "{}", ty.name),
-            Array(ty, size) => write!(f, "{ty}[{size}]"),
+            Array(ArrayType { ty, len }) => write!(f, "{ty}[{len}]"),
         }
     }
 }

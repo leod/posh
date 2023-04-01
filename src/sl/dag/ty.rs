@@ -54,11 +54,17 @@ pub struct StructType {
     pub fields: Vec<(String, Type)>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ArrayType {
+    pub ty: Box<Type>,
+    pub len: usize,
+}
+
 #[derive(Debug, Clone, Eq)]
 pub enum Type {
     BuiltIn(BuiltInType),
     Struct(Rc<StructType>),
-    Array(Box<Type>, usize),
+    Array(ArrayType),
 }
 
 impl Type {
@@ -68,7 +74,7 @@ impl Type {
         match self {
             BuiltIn(ty) => ty.is_transparent(),
             Struct(_) => true,
-            Array(ty, _) => ty.is_transparent(),
+            Array(ArrayType { ty, .. }) => ty.is_transparent(),
         }
     }
 
@@ -89,7 +95,7 @@ impl PartialEq for Type {
         match (self, other) {
             (BuiltIn(a), BuiltIn(b)) => a == b,
             (Struct(a), Struct(b)) => Rc::ptr_eq(a, b),
-            (Array(a, n), Array(b, m)) => a == b && n == m,
+            (Array(a), Array(b)) => a.ty == b.ty && a.len == b.len,
             _ => false,
         }
     }
