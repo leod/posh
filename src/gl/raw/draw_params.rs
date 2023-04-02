@@ -355,7 +355,7 @@ impl DrawParams {
         }
 
         {
-            let viewport = self.viewport.unwrap_or_else(|| Rect {
+            let viewport = self.viewport.unwrap_or(Rect {
                 lower_left_corner: glam::UVec2::ZERO,
                 size: framebuffer_size,
             });

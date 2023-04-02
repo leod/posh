@@ -179,12 +179,6 @@ impl Program {
 
             let location = u32::try_from(block_def.location).unwrap();
 
-            let x = gl.get_active_uniform_block_parameter_i32(
-                self.id,
-                location,
-                glow::UNIFORM_BLOCK_DATA_SIZE,
-            );
-
             unsafe {
                 gl.bind_buffer_base(glow::UNIFORM_BUFFER, location, Some(buffer.id()));
             }

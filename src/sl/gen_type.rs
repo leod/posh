@@ -125,11 +125,11 @@ macro_rules! impl_gen_type {
                 super::primitives::built_in_2("max", self, y.to_value())
             }
 
-            pub fn rem(self, y: impl super::ToValue<Output = Self>) -> Self {
+            pub fn modulus(self, y: impl super::ToValue<Output = Self>) -> Self {
                 super::primitives::built_in_2("mod", self, y.to_value())
             }
 
-            pub fn rem_with_f32(self, y: impl super::ToValue<Output = F32>) -> Self {
+            pub fn modulus_with_f32(self, y: impl super::ToValue<Output = F32>) -> Self {
                 super::primitives::built_in_2("mod", self, y.to_value())
             }
 
