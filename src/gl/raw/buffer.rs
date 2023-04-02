@@ -33,6 +33,7 @@ impl BufferUsage {
 pub struct Buffer {
     ctx: Rc<ContextShared>,
     id: glow::Buffer,
+    target: u32,
     usage: BufferUsage,
     len: Cell<usize>,
 }
@@ -41,6 +42,7 @@ impl Buffer {
     pub(super) fn new<T: Pod>(
         ctx: Rc<ContextShared>,
         data: &[T],
+        target: u32,
         usage: BufferUsage,
     ) -> Result<Self, BufferError> {
         let gl = ctx.gl();
@@ -49,6 +51,7 @@ impl Buffer {
         let buffer = Buffer {
             ctx: ctx.clone(),
             id,
+            target,
             usage,
             len: Cell::new(0),
         };
@@ -84,17 +87,12 @@ impl Buffer {
         let gl = self.ctx.gl();
         let raw_data = bytemuck::cast_slice(data);
 
-        // We can get away with always using `ARRAY_BUFFER` as the target here,
-        // since the target does not carry any meaning for setting data. It is
-        // just a binding point.
-        let target = glow::ARRAY_BUFFER;
-
         unsafe {
-            gl.bind_buffer(target, Some(self.id));
-            gl.buffer_data_u8_slice(target, raw_data, self.usage.to_gl());
+            gl.bind_buffer(self.target, Some(self.id));
+            gl.buffer_data_u8_slice(self.target, raw_data, self.usage.to_gl());
 
             // TODO: Could avoid unbinding here by using `ContextShared`.
-            gl.bind_buffer(target, None);
+            gl.bind_buffer(self.target, None);
         }
 
         self.len.set(raw_data.len());
