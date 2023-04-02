@@ -4,10 +4,10 @@ use crate::sl::{self, ColorSample};
 
 use super::{
     raw::{self, Sampler2dParams},
-    ColorAttachment, Comparison, DepthAttachment,
+    ColorAttachment, ColorImage, Comparison, DepthAttachment, DepthImage, TextureError,
 };
 
-pub struct ColorTexture2d<S> {
+pub struct ColorTexture2d<S = sl::Vec4> {
     raw: Rc<raw::Texture2d>,
     _phantom: PhantomData<S>,
 }
@@ -17,7 +17,7 @@ pub struct DepthTexture2d {
 }
 
 #[derive(Clone)]
-pub struct ColorSampler2d<S> {
+pub struct ColorSampler2d<S = sl::Vec4> {
     raw: raw::Sampler2d,
     _phantom: PhantomData<S>,
 }
@@ -57,6 +57,15 @@ impl<S: ColorSample> ColorTexture2d<S> {
             params,
             comparison: None,
         })
+    }
+
+    pub fn set(
+        &self,
+        level: usize,
+        lower_left_corner: glam::UVec2,
+        image: ColorImage<S>,
+    ) -> Result<(), TextureError> {
+        self.raw.set(level, lower_left_corner, image.raw())
     }
 }
 
@@ -100,6 +109,15 @@ impl DepthTexture2d {
             params,
             comparison: Some(comparison),
         })
+    }
+
+    pub fn set(
+        &self,
+        level: usize,
+        lower_left_corner: glam::UVec2,
+        image: DepthImage,
+    ) -> Result<(), TextureError> {
+        self.raw.set(level, lower_left_corner, image.raw())
     }
 }
 

@@ -42,10 +42,10 @@ impl Context {
     where
         B: Block<Sl>,
     {
-        // TODO
+        // FIXME
         let data: Vec<_> = data.iter().map(AsStd140::as_std140).collect();
 
-        let raw = self.raw.create_buffer(&data, usage)?;
+        let raw = self.raw.create_buffer(&data, glow::ARRAY_BUFFER, usage)?;
 
         Ok(VertexBuffer::from_raw(raw))
     }
@@ -58,7 +58,9 @@ impl Context {
     where
         E: Element,
     {
-        let raw = self.raw.create_buffer(data, usage)?;
+        let raw = self
+            .raw
+            .create_buffer(data, glow::ELEMENT_ARRAY_BUFFER, usage)?;
 
         Ok(ElementBuffer::from_raw(raw))
     }
@@ -71,7 +73,9 @@ impl Context {
     where
         B: Block<Sl>,
     {
-        let raw = self.raw.create_buffer(&[data.as_std140()], usage)?;
+        let raw = self
+            .raw
+            .create_buffer(&[data.as_std140()], glow::UNIFORM_BUFFER, usage)?;
 
         Ok(UniformBuffer::from_raw(raw))
     }
@@ -127,10 +131,8 @@ impl Context {
             fragment_shader,
         );
 
-        println!(
-            "{}\n==================={}",
-            program_def.vertex_shader_source, program_def.fragment_shader_source
-        );
+        log::info!("Vertex shader:\n{}", program_def.vertex_shader_source);
+        log::info!("Fragment shader:\n{}", program_def.fragment_shader_source);
 
         let raw = self.raw.create_program(program_def)?;
 

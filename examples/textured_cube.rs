@@ -56,7 +56,7 @@ fn vertex_shader(uniforms: Uniform, input: Vertex) -> sl::VaryingOutput<sl::Vec2
 // Host code
 
 struct Demo {
-    program: gl::Program<(Uniform, sl::ColorSampler2d<sl::Vec4>), Vertex>,
+    program: gl::Program<(Uniform, sl::ColorSampler2d), Vertex>,
 
     camera: gl::UniformBuffer<Camera>,
     time: gl::UniformBuffer<sl::F32>,
@@ -69,7 +69,7 @@ struct Demo {
 }
 
 impl Demo {
-    pub fn new(ctx: gl::Context) -> Result<Self, gl::CreateError> {
+    pub fn new(gl: gl::Context) -> Result<Self, gl::CreateError> {
         use gl::BufferUsage::*;
 
         let image = ImageReader::open("examples/resources/smile.png")
@@ -80,12 +80,12 @@ impl Demo {
         let image = gl::ColorImage::slice_u8(image.dimensions().into(), image.as_bytes());
 
         Ok(Self {
-            program: ctx.create_program(vertex_shader, sl::ColorSampler2d::sample)?,
-            camera: ctx.create_uniform_buffer(Camera::default(), StaticDraw)?,
-            time: ctx.create_uniform_buffer(0.0, StreamDraw)?,
-            texture: ctx.create_color_texture_2d_with_mipmap(image)?,
-            vertices: ctx.create_vertex_buffer(&cube_vertices(), StaticDraw)?,
-            elements: ctx.create_element_buffer(&cube_elements(), StaticDraw)?,
+            program: gl.create_program(vertex_shader, sl::ColorSampler2d::sample)?,
+            camera: gl.create_uniform_buffer(Camera::default(), StaticDraw)?,
+            time: gl.create_uniform_buffer(0.0, StreamDraw)?,
+            texture: gl.create_color_texture_2d_with_mipmap(image)?,
+            vertices: gl.create_vertex_buffer(&cube_vertices(), StaticDraw)?,
+            elements: gl.create_element_buffer(&cube_elements(), StaticDraw)?,
             start_time: Instant::now(),
         })
     }
@@ -103,11 +103,11 @@ impl Demo {
             .as_color_sampler(gl::Sampler2dParams::default());
 
         self.program.draw(
-            (uniform, sampler),
-            gl::VertexSpec::new(gl::Mode::Triangles, self.vertices.as_binding())
+            &(uniform, sampler),
+            &gl::VertexSpec::new(gl::Mode::Triangles, self.vertices.as_binding())
                 .with_elements(self.elements.as_binding()),
-            gl::DefaultFramebuffer::default(),
-            gl::DrawParams::default()
+            &gl::DefaultFramebuffer::default(),
+            &gl::DrawParams::default()
                 .with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0))
                 .with_clear_depth(1.0)
                 .with_depth_test(gl::Comparison::Less),
@@ -190,11 +190,11 @@ fn main() {
         .unwrap();
 
     let _gl_context = window.gl_create_context().unwrap();
-    let ctx = unsafe {
+    let gl = unsafe {
         glow::Context::from_loader_function(|s| video.gl_get_proc_address(s) as *const _)
     };
-    let ctx = gl::Context::new(ctx).unwrap();
-    let demo = Demo::new(ctx).unwrap();
+    let gl = gl::Context::new(gl).unwrap();
+    let demo = Demo::new(gl).unwrap();
 
     let mut event_loop = sdl.event_pump().unwrap();
 

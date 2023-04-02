@@ -196,30 +196,30 @@ struct Demo {
 }
 
 impl Demo {
-    pub fn new(ctx: gl::Context) -> Result<Self, gl::CreateError> {
+    pub fn new(gl: gl::Context) -> Result<Self, gl::CreateError> {
         use gl::BufferUsage::{StaticDraw, StreamDraw};
 
         let depth_map_size = glam::uvec2(DEPTH_MAP_SIZE, DEPTH_MAP_SIZE);
         let light_depth_image = gl::DepthImage::zero_f32(depth_map_size);
 
         Ok(Demo {
-            flat_program: ctx.create_program(flat_pass::vertex, flat_pass::fragment)?,
-            depth_program: ctx.create_program(depth_pass::vertex, depth_pass::fragment)?,
-            shaded_program: ctx.create_program(shaded_pass::vertex, shaded_pass::fragment)?,
-            debug_program: ctx.create_program(debug_pass::vertex, debug_pass::fragment)?,
+            flat_program: gl.create_program(flat_pass::vertex, flat_pass::fragment)?,
+            depth_program: gl.create_program(depth_pass::vertex, depth_pass::fragment)?,
+            shaded_program: gl.create_program(shaded_pass::vertex, shaded_pass::fragment)?,
+            debug_program: gl.create_program(debug_pass::vertex, debug_pass::fragment)?,
 
-            camera_buffer: ctx.create_uniform_buffer(Camera::default(), StaticDraw)?,
-            light_buffer: ctx.create_uniform_buffer(Light::new(0.0, 0.0), StreamDraw)?,
-            light_depth_map: ctx.create_depth_texture_2d(light_depth_image)?,
+            camera_buffer: gl.create_uniform_buffer(Camera::default(), StaticDraw)?,
+            light_buffer: gl.create_uniform_buffer(Light::new(0.0, 0.0), StreamDraw)?,
+            light_depth_map: gl.create_depth_texture_2d(light_depth_image)?,
 
-            scene_vertices: ctx.create_vertex_buffer(&scene_vertices(), StaticDraw)?,
-            scene_elements: ctx.create_element_buffer(&scene_elements(), StaticDraw)?,
+            scene_vertices: gl.create_vertex_buffer(&scene_vertices(), StaticDraw)?,
+            scene_elements: gl.create_element_buffer(&scene_elements(), StaticDraw)?,
 
-            light_vertices: ctx.create_vertex_buffer(&Vec::new(), StreamDraw)?,
-            light_elements: ctx.create_element_buffer(&light_elements(), StaticDraw)?,
+            light_vertices: gl.create_vertex_buffer(&Vec::new(), StreamDraw)?,
+            light_elements: gl.create_element_buffer(&light_elements(), StaticDraw)?,
 
-            debug_vertices: ctx.create_vertex_buffer(&debug_vertices(), StaticDraw)?,
-            debug_elements: ctx.create_element_buffer(&debug_elements(), StaticDraw)?,
+            debug_vertices: gl.create_vertex_buffer(&debug_vertices(), StaticDraw)?,
+            debug_elements: gl.create_element_buffer(&debug_elements(), StaticDraw)?,
 
             start_time: Instant::now(),
         })
@@ -238,26 +238,26 @@ impl Demo {
             .with_elements(self.scene_elements.as_binding());
 
         self.depth_program.draw(
-            self.light_buffer.as_binding(),
-            scene_spec.clone(),
-            self.light_depth_map.as_depth_attachment(),
-            gl::DrawParams::default()
+            &self.light_buffer.as_binding(),
+            &scene_spec,
+            &self.light_depth_map.as_depth_attachment(),
+            &gl::DrawParams::default()
                 .with_clear_depth(1.0)
                 .with_depth_test(gl::Comparison::Less)
                 .with_cull_face(gl::CullFace::Back),
         )?;
 
         self.shaded_program.draw(
-            shaded_pass::Uniform {
+            &shaded_pass::Uniform {
                 camera: self.camera_buffer.as_binding(),
                 light: self.light_buffer.as_binding(),
                 light_depth_map: self
                     .light_depth_map
                     .as_comparison_sampler(gl::Sampler2dParams::default(), gl::Comparison::Less),
             },
-            scene_spec,
-            gl::DefaultFramebuffer::default(),
-            gl::DrawParams::default()
+            &scene_spec,
+            &gl::DefaultFramebuffer::default(),
+            &gl::DrawParams::default()
                 .with_clear_color(glam::Vec4::ONE)
                 .with_clear_depth(1.0)
                 .with_depth_test(gl::Comparison::Less)
@@ -265,22 +265,23 @@ impl Demo {
         )?;
 
         self.flat_program.draw(
-            self.camera_buffer.as_binding(),
-            gl::VertexSpec::new(gl::Mode::Triangles, self.light_vertices.as_binding())
+            &self.camera_buffer.as_binding(),
+            &gl::VertexSpec::new(gl::Mode::Triangles, self.light_vertices.as_binding())
                 .with_elements(self.light_elements.as_binding()),
-            gl::DefaultFramebuffer::default(),
-            gl::DrawParams::default()
+            &gl::DefaultFramebuffer::default(),
+            &gl::DrawParams::default()
                 .with_depth_test(gl::Comparison::Less)
                 .with_cull_face(gl::CullFace::Back),
         )?;
 
         self.debug_program.draw(
-            self.light_depth_map
+            &self
+                .light_depth_map
                 .as_color_sampler(gl::Sampler2dParams::default()),
-            gl::VertexSpec::new(gl::Mode::Triangles, self.debug_vertices.as_binding())
+            &gl::VertexSpec::new(gl::Mode::Triangles, self.debug_vertices.as_binding())
                 .with_elements(self.debug_elements.as_binding()),
-            gl::DefaultFramebuffer::default(),
-            gl::DrawParams::default(),
+            &gl::DefaultFramebuffer::default(),
+            &gl::DrawParams::default(),
         )?;
 
         Ok(())
@@ -473,11 +474,11 @@ fn main() {
         .unwrap();
 
     let _gl_context = window.gl_create_context().unwrap();
-    let ctx = unsafe {
+    let gl = unsafe {
         glow::Context::from_loader_function(|s| video.gl_get_proc_address(s) as *const _)
     };
-    let ctx = gl::Context::new(ctx).unwrap();
-    let mut demo = Demo::new(ctx).unwrap();
+    let gl = gl::Context::new(gl).unwrap();
+    let mut demo = Demo::new(gl).unwrap();
 
     let mut event_loop = sdl.event_pump().unwrap();
 

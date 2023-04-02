@@ -19,8 +19,9 @@ pub use program::Program;
 pub use raw::{
     BlendEquation, BlendFunc, Blending, BufferError, BufferUsage, Caps, Comparison, ContextError,
     CreateError, CullFace, DrawError, DrawParams, ElementType, FramebufferError, ImageFormat,
-    ImageInternalFormat, Mode, ProgramError, ProgramValidationError, Sampler2dParams, StencilOp,
-    StencilOps, StencilTest, TextureError, VertexArrayError,
+    ImageInternalFormat, Mode, ProgramError, ProgramValidationError, Rect, Sampler2dParams,
+    SamplerMagFilter, SamplerMinFilter, SamplerWrap, StencilOp, StencilOps, StencilTest,
+    TextureError, VertexArrayError,
 };
 pub use texture::{ColorSampler2d, ColorTexture2d, ComparisonSampler2d, DepthTexture2d};
 pub use uniform_buffer::{UniformBuffer, UniformBufferBinding};

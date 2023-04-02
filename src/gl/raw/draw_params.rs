@@ -1,6 +1,12 @@
 use glow::HasContext;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct Rect {
+    pub lower_left_corner: glam::UVec2,
+    pub size: glam::UVec2,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Comparison {
     Always,
     Equal,
@@ -279,9 +285,9 @@ pub struct DrawParams {
     pub clear_stencil: Option<u8>,
     pub clear_depth: Option<f32>,
     pub clear_color: Option<glam::Vec4>,
-    pub viewport: Option<glam::UVec4>,
+    pub viewport: Option<Rect>,
     pub cull_face: Option<CullFace>,
-    pub scissor: Option<glam::UVec4>,
+    pub scissor: Option<Rect>,
     pub stencil_test_front: Option<StencilTest>,
     pub stencil_test_back: Option<StencilTest>,
     pub stencil_ops_front: Option<StencilOps>,
@@ -349,14 +355,15 @@ impl DrawParams {
         }
 
         {
-            let viewport = self
-                .viewport
-                .unwrap_or_else(|| glam::uvec4(0, 0, framebuffer_size.x, framebuffer_size.y));
+            let viewport = self.viewport.unwrap_or(Rect {
+                lower_left_corner: glam::UVec2::ZERO,
+                size: framebuffer_size,
+            });
 
-            let x = viewport.x.try_into().unwrap();
-            let y = viewport.y.try_into().unwrap();
-            let width = viewport.z.try_into().unwrap();
-            let height = viewport.w.try_into().unwrap();
+            let x = viewport.lower_left_corner.x.try_into().unwrap();
+            let y = viewport.lower_left_corner.y.try_into().unwrap();
+            let width = viewport.size.x.try_into().unwrap();
+            let height = viewport.size.y.try_into().unwrap();
 
             unsafe { gl.viewport(x, y, width, height) };
         }
@@ -374,10 +381,10 @@ impl DrawParams {
 
         if self.scissor != current.scissor {
             if let Some(scissor) = self.scissor {
-                let x = scissor.x.try_into().unwrap();
-                let y = scissor.y.try_into().unwrap();
-                let width = scissor.z.try_into().unwrap();
-                let height = scissor.w.try_into().unwrap();
+                let x = scissor.lower_left_corner.x.try_into().unwrap();
+                let y = scissor.lower_left_corner.y.try_into().unwrap();
+                let width = scissor.size.x.try_into().unwrap();
+                let height = scissor.size.y.try_into().unwrap();
 
                 unsafe { gl.enable(glow::SCISSOR_TEST) };
                 unsafe { gl.scissor(x, y, width, height) };
@@ -429,8 +436,8 @@ impl DrawParams {
                 let color_equation = blending.color_equation.to_gl();
                 let alpha_equation = blending.alpha_equation.to_gl();
                 let src_func_color = blending.src_func_color.to_gl();
-                let src_func_alpha = blending.src_func_alpha.to_gl();
                 let dst_func_color = blending.dst_func_color.to_gl();
+                let src_func_alpha = blending.src_func_alpha.to_gl();
                 let dst_func_alpha = blending.dst_alpha_func.to_gl();
 
                 unsafe { gl.enable(glow::BLEND) };
@@ -490,7 +497,7 @@ impl DrawParams {
         self
     }
 
-    pub fn with_viewport(mut self, viewport: glam::UVec4) -> Self {
+    pub fn with_viewport(mut self, viewport: Rect) -> Self {
         self.viewport = Some(viewport);
         self
     }
@@ -500,7 +507,7 @@ impl DrawParams {
         self
     }
 
-    pub fn with_scissor(mut self, scissor: glam::UVec4) -> Self {
+    pub fn with_scissor(mut self, scissor: Rect) -> Self {
         self.scissor = Some(scissor);
         self
     }
