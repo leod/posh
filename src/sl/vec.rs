@@ -503,9 +503,9 @@ impl_casts!(BVec2, as_ivec2, IVec2, as_uvec2, UVec2);
 impl_casts!(BVec3, as_ivec3, IVec3, as_uvec3, UVec3);
 impl_casts!(BVec4, as_ivec4, IVec4, as_uvec4, UVec4);
 
-impl_gen_type!(Vec2);
-impl_gen_type!(Vec3);
-impl_gen_type!(Vec4);
+impl_gen_type!(Vec2, BVec2);
+impl_gen_type!(Vec3, BVec3);
+impl_gen_type!(Vec4, BVec4);
 
 impl Vec2 {
     pub fn outer_product(self, y: Vec2) -> Mat2 {

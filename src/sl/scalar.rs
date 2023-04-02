@@ -255,7 +255,7 @@ impl_numeric_ops!(U32);
 impl_integral_ops!(I32);
 impl_integral_ops!(U32);
 
-impl_gen_type!(F32);
+impl_gen_type!(F32, Bool);
 
 impl F32 {
     pub fn as_i32(self) -> I32 {
