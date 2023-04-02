@@ -158,11 +158,11 @@ macro_rules! impl_gen_type {
             }
 
             pub fn select(
-                self,
-                y: impl super::ToValue<Output = Self>,
                 a: impl super::ToValue<Output = $tyb>,
+                x: impl super::ToValue<Output = Self>,
+                y: impl super::ToValue<Output = Self>,
             ) {
-                super::primitives::built_in_3("mix", self, y.to_value(), a.to_value())
+                super::primitives::built_in_3("mix", x.to_value(), y.to_value(), a.to_value())
             }
 
             pub fn step(self, edge: impl super::ToValue<Output = Self>) {
