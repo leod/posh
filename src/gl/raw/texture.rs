@@ -155,6 +155,8 @@ impl Texture2d {
         self.internal_format
     }
 
+    //pub fn set(&self, level: usize, )c
+
     pub(super) fn set_sampler_params(&self, new: Sampler2dParams, comparison: Option<Comparison>) {
         let gl = &self.ctx.gl();
 
