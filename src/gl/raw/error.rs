@@ -217,9 +217,12 @@ pub enum CreateError {
 /// An error that occurred while drawing.
 #[derive(Debug, Clone, Error)]
 pub enum DrawError {
-    #[error("#{0}")]
+    #[error("framebuffer error: {0}")]
     Framebuffer(#[from] FramebufferError),
 
-    #[error("general OpenGL error")]
+    #[error("texture error: {0}")]
+    Texture(#[from] TextureError),
+
+    #[error("general OpenGL error: {0}")]
     Error(String),
 }
