@@ -4,7 +4,7 @@ use crate::sl::{self, ColorSample};
 
 use super::{
     raw::{self, Sampler2dParams},
-    ColorAttachment, Comparison, DepthAttachment,
+    ColorAttachment, ColorImage, Comparison, DepthAttachment, DepthImage, Rect, TextureError,
 };
 
 pub struct ColorTexture2d<S> {
@@ -58,6 +58,10 @@ impl<S: ColorSample> ColorTexture2d<S> {
             comparison: None,
         })
     }
+
+    pub fn set(&self, level: usize, rect: Rect, image: ColorImage<S>) -> Result<(), TextureError> {
+        self.raw.set(level, rect, image.raw())
+    }
 }
 
 impl DepthTexture2d {
@@ -100,6 +104,10 @@ impl DepthTexture2d {
             params,
             comparison: Some(comparison),
         })
+    }
+
+    pub fn set(&self, level: usize, rect: Rect, image: DepthImage) -> Result<(), TextureError> {
+        self.raw.set(level, rect, image.raw())
     }
 }
 
