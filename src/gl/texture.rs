@@ -4,7 +4,7 @@ use crate::sl::{self, ColorSample};
 
 use super::{
     raw::{self, Sampler2dParams},
-    ColorAttachment, ColorImage, Comparison, DepthAttachment, DepthImage, Rect, TextureError,
+    ColorAttachment, ColorImage, Comparison, DepthAttachment, DepthImage, TextureError,
 };
 
 pub struct ColorTexture2d<S = sl::Vec4> {

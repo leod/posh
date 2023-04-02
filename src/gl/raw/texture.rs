@@ -6,7 +6,7 @@ use crate::gl::{raw::error::check_gl_error, TextureError};
 
 use super::{
     context::ContextShared, sampler_params::set_comparison, Caps, Comparison, Image,
-    ImageInternalFormat, Rect, Sampler2dParams,
+    ImageInternalFormat, Sampler2dParams,
 };
 
 pub struct Texture2d {

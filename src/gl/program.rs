@@ -50,7 +50,7 @@ where
                 &uniform_visitor.raw_samplers,
                 &vertex_spec.raw(),
                 &framebuffer.raw(),
-                &draw_params,
+                draw_params,
             )
         }?;
 
