@@ -56,7 +56,7 @@ fn vertex_shader(uniforms: Uniform, input: Vertex) -> sl::VaryingOutput<sl::Vec2
 // Host code
 
 struct Demo {
-    program: gl::Program<(Uniform, sl::ColorSampler2d<sl::Vec4>), Vertex>,
+    program: gl::Program<(Uniform, sl::ColorSampler2d), Vertex>,
 
     camera: gl::UniformBuffer<Camera>,
     time: gl::UniformBuffer<sl::F32>,

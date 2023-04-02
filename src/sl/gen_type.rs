@@ -153,7 +153,7 @@ macro_rules! impl_gen_type {
                 self,
                 y: impl super::ToValue<Output = Self>,
                 a: impl super::ToValue<Output = Self>,
-            ) {
+            ) -> Self {
                 super::primitives::built_in_3("mix", self, y.to_value(), a.to_value())
             }
 
@@ -161,15 +161,15 @@ macro_rules! impl_gen_type {
                 a: impl super::ToValue<Output = $tyb>,
                 x: impl super::ToValue<Output = Self>,
                 y: impl super::ToValue<Output = Self>,
-            ) {
+            ) -> Self {
                 super::primitives::built_in_3("mix", x.to_value(), y.to_value(), a.to_value())
             }
 
-            pub fn step(self, edge: impl super::ToValue<Output = Self>) {
+            pub fn step(self, edge: impl super::ToValue<Output = Self>) -> Self {
                 super::primitives::built_in_2("step", edge.to_value(), self)
             }
 
-            pub fn step_with_f32(self, edge: impl super::ToValue<Output = F32>) {
+            pub fn step_with_f32(self, edge: impl super::ToValue<Output = F32>) -> Self {
                 super::primitives::built_in_2("step", edge.to_value(), self)
             }
 
@@ -177,7 +177,7 @@ macro_rules! impl_gen_type {
                 self,
                 edge1: impl super::ToValue<Output = Self>,
                 edge2: impl super::ToValue<Output = Self>,
-            ) {
+            ) -> Self {
                 super::primitives::built_in_3(
                     "smoothstep",
                     edge1.to_value(),
@@ -190,7 +190,7 @@ macro_rules! impl_gen_type {
                 self,
                 edge1: impl super::ToValue<Output = F32>,
                 edge2: impl super::ToValue<Output = F32>,
-            ) {
+            ) -> Self {
                 super::primitives::built_in_3(
                     "smoothstep",
                     edge1.to_value(),
