@@ -436,8 +436,8 @@ impl DrawParams {
                 let color_equation = blending.color_equation.to_gl();
                 let alpha_equation = blending.alpha_equation.to_gl();
                 let src_func_color = blending.src_func_color.to_gl();
-                let src_func_alpha = blending.src_func_alpha.to_gl();
                 let dst_func_color = blending.dst_func_color.to_gl();
+                let src_func_alpha = blending.src_func_alpha.to_gl();
                 let dst_func_alpha = blending.dst_alpha_func.to_gl();
 
                 unsafe { gl.enable(glow::BLEND) };
