@@ -77,6 +77,11 @@ impl VarForm {
                 args: args.into_iter().map(map_succ).collect(),
                 ty: Type::Struct(ty),
             },
+            Expr::ArrayLiteral { args, ty } => SimplifiedExpr::CallFunc {
+                name: format!("{}", ty),
+                args: args.into_iter().map(map_succ).collect(),
+                ty: Type::Array(ty),
+            },
             Expr::Unary { op, arg, ty } => SimplifiedExpr::Unary {
                 op,
                 arg: Box::new(map_succ(arg)),
@@ -131,6 +136,7 @@ impl VarForm {
         match expr {
             Branch { .. } => true,
             Arg { .. } | ScalarLiteral { .. } => false,
+            ArrayLiteral { .. } => true,
             StructLiteral { .. }
             | Unary { .. }
             | Binary { .. }
@@ -143,48 +149,6 @@ impl VarForm {
 
     fn can_have_var(expr: &Expr) -> bool {
         expr.ty().is_transparent()
-    }
-}
-
-fn successors(expr: &Expr, mut f: impl FnMut(&Rc<Expr>)) {
-    use Expr::*;
-
-    match expr {
-        Arg { .. } | ScalarLiteral { .. } => (),
-        StructLiteral { args, .. } => {
-            for arg in args {
-                f(arg);
-            }
-        }
-        Unary { arg: expr, .. } => {
-            f(expr);
-        }
-        Binary { left, right, .. } => {
-            f(left);
-            f(right);
-        }
-        CallFuncDef { args, .. } => {
-            for arg in args {
-                f(arg);
-            }
-        }
-        CallBuiltIn { args, .. } => {
-            for arg in args {
-                f(arg);
-            }
-        }
-        Field { base, .. } => {
-            f(base);
-        }
-        Subscript { base, index, .. } => {
-            f(base);
-            f(index);
-        }
-        Branch { cond, yes, no, .. } => {
-            f(cond);
-            f(yes);
-            f(no);
-        }
     }
 }
 
@@ -206,9 +170,7 @@ fn visit(
 
     temporary_mark.insert(key);
 
-    successors(node, |succ| {
-        visit(succ, permanent_mark, temporary_mark, output)
-    });
+    node.successors(|succ| visit(succ, permanent_mark, temporary_mark, output));
 
     temporary_mark.remove(&key);
     permanent_mark.insert(key);
@@ -231,7 +193,7 @@ fn count_usages(exprs: &[Rc<Expr>]) -> HashMap<ExprKey, usize> {
     let mut usages = HashMap::new();
 
     for expr in exprs {
-        successors(expr, |succ| {
+        expr.successors(|succ| {
             *usages.entry(succ.into()).or_insert(0) += 1;
         })
     }

@@ -1,5 +1,3 @@
-use std::time::Instant;
-
 use posh::{gl, sl, Block, BlockDom, Gl, Sl, VertexDom};
 
 const WIDTH: u32 = 1024;

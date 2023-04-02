@@ -3,6 +3,8 @@ use std::{
     rc::Rc,
 };
 
+use crate::sl::dag::ArrayType;
+
 use super::{BinaryOp, BuiltInType, Expr, SamplerType, Type, UnaryOp};
 
 impl Display for BinaryOp {
@@ -71,6 +73,7 @@ impl Display for Expr {
             Arg { name, .. } => f.write_str(name),
             ScalarLiteral { value, .. } => f.write_str(value),
             StructLiteral { args, ty } => write_call(f, &ty.name, args),
+            ArrayLiteral { args, ty } => write_call(f, &format!("{ty}"), args),
             Unary { op, arg, .. } => write!(f, "{op} {arg}"),
             Binary {
                 left, op, right, ..
@@ -130,6 +133,12 @@ impl Display for BuiltInType {
     }
 }
 
+impl Display for ArrayType {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        write!(f, "{}[{}]", self.ty, self.len)
+    }
+}
+
 impl Display for Type {
     fn fmt(&self, f: &mut Formatter) -> Result {
         use Type::*;
@@ -137,7 +146,7 @@ impl Display for Type {
         match self {
             BuiltIn(ty) => write!(f, "{ty}"),
             Struct(ty) => write!(f, "{}", ty.name),
-            Array(ty, size) => write!(f, "{ty}[{size}]"),
+            Array(ArrayType { ty, len }) => write!(f, "{ty}[{len}]"),
         }
     }
 }

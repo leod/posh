@@ -3,7 +3,7 @@ use std::{
     rc::Rc,
 };
 
-use crate::sl::dag::{Expr, StructType, Type};
+use crate::sl::dag::{ArrayType, Expr, StructType, Type};
 
 use super::simplified_expr::ExprKey;
 
@@ -71,7 +71,7 @@ fn get_struct_type(ty: &Type) -> Option<&Rc<StructType>> {
 
     match ty {
         BuiltIn(_) => None,
-        Array(ty, _) => {
+        Array(ArrayType { ty, .. }) => {
             // This recursion is fine since arrays cannot be nested.
             get_struct_type(ty)
         }
@@ -96,8 +96,6 @@ fn collect_structs_in_expr(
     visited: &mut HashSet<ExprKey>,
     structs: &mut HashMap<StructKey, Rc<StructType>>,
 ) {
-    use Expr::*;
-
     if visited.contains(&expr.into()) {
         return;
     }
@@ -106,45 +104,9 @@ fn collect_structs_in_expr(
 
     collect_structs_in_type(&expr.ty(), structs);
 
-    match &**expr {
-        Arg { .. } | ScalarLiteral { .. } => (),
-        StructLiteral { args, .. } => {
-            for arg in args {
-                collect_structs_in_expr(arg, visited, structs);
-            }
-        }
-        Unary { arg, .. } => {
-            collect_structs_in_expr(arg, visited, structs);
-        }
-        Binary { left, right, .. } => {
-            collect_structs_in_expr(left, visited, structs);
-            collect_structs_in_expr(right, visited, structs);
-        }
-        CallFuncDef { def, args, .. } => {
-            collect_structs_in_expr(&def.result, visited, structs);
-
-            for arg in args {
-                collect_structs_in_expr(arg, visited, structs);
-            }
-        }
-        CallBuiltIn { args, .. } => {
-            for arg in args {
-                collect_structs_in_expr(arg, visited, structs);
-            }
-        }
-        Subscript { base, index, .. } => {
-            collect_structs_in_expr(base, visited, structs);
-            collect_structs_in_expr(index, visited, structs);
-        }
-        Field { base, .. } => {
-            collect_structs_in_expr(base, visited, structs);
-        }
-        Branch { cond, yes, no, .. } => {
-            collect_structs_in_expr(cond, visited, structs);
-            collect_structs_in_expr(yes, visited, structs);
-            collect_structs_in_expr(no, visited, structs);
-        }
-    }
+    expr.successors(|succ| {
+        collect_structs_in_expr(succ, visited, structs);
+    });
 }
 
 fn visit(
