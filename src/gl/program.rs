@@ -31,10 +31,10 @@ where
 
     pub fn draw(
         &self,
-        uniform: U::Gl,
-        vertex_spec: VertexSpec<V::Gl>,
-        framebuffer: impl Framebuffer<F::Gl>,
-        draw_params: DrawParams,
+        uniform: &U::Gl,
+        vertex_spec: &VertexSpec<V::Gl>,
+        framebuffer: &impl Framebuffer<F::Gl>,
+        draw_params: &DrawParams,
     ) -> Result<(), DrawError> {
         // TODO: These allocations can be avoided once stable has allocators.
         // TODO: Remove hardcoded path names.

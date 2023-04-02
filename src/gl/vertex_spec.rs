@@ -64,7 +64,7 @@ impl<V: Vertex<Gl>> VertexSpec<V> {
         self
     }
 
-    pub(super) fn raw(self) -> raw::VertexSpec {
+    pub(super) fn raw(&self) -> raw::VertexSpec {
         raw::VertexSpec {
             vertices: raw_vertices(&self.vertices),
             elements: self
@@ -72,9 +72,10 @@ impl<V: Vertex<Gl>> VertexSpec<V> {
                 .as_ref()
                 .map(|elements| (elements.0.raw().clone(), elements.0.ty())),
             mode: self.mode,
-            index_range: self
-                .elements
-                .map_or(self.vertex_range, |(_, element_range)| element_range),
+            index_range: self.elements.as_ref().map_or_else(
+                || self.vertex_range.clone(),
+                |(_, element_range)| element_range.clone(),
+            ),
             num_instances: self.num_instances,
         }
     }

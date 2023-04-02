@@ -238,26 +238,26 @@ impl Demo {
             .with_elements(self.scene_elements.as_binding());
 
         self.depth_program.draw(
-            self.light_buffer.as_binding(),
-            scene_spec.clone(),
-            self.light_depth_map.as_depth_attachment(),
-            gl::DrawParams::default()
+            &self.light_buffer.as_binding(),
+            &scene_spec,
+            &self.light_depth_map.as_depth_attachment(),
+            &gl::DrawParams::default()
                 .with_clear_depth(1.0)
                 .with_depth_test(gl::Comparison::Less)
                 .with_cull_face(gl::CullFace::Back),
         )?;
 
         self.shaded_program.draw(
-            shaded_pass::Uniform {
+            &shaded_pass::Uniform {
                 camera: self.camera_buffer.as_binding(),
                 light: self.light_buffer.as_binding(),
                 light_depth_map: self
                     .light_depth_map
                     .as_comparison_sampler(gl::Sampler2dParams::default(), gl::Comparison::Less),
             },
-            scene_spec,
-            gl::DefaultFramebuffer::default(),
-            gl::DrawParams::default()
+            &scene_spec,
+            &gl::DefaultFramebuffer::default(),
+            &gl::DrawParams::default()
                 .with_clear_color(glam::Vec4::ONE)
                 .with_clear_depth(1.0)
                 .with_depth_test(gl::Comparison::Less)
@@ -265,22 +265,23 @@ impl Demo {
         )?;
 
         self.flat_program.draw(
-            self.camera_buffer.as_binding(),
-            gl::VertexSpec::new(gl::Mode::Triangles, self.light_vertices.as_binding())
+            &self.camera_buffer.as_binding(),
+            &gl::VertexSpec::new(gl::Mode::Triangles, self.light_vertices.as_binding())
                 .with_elements(self.light_elements.as_binding()),
-            gl::DefaultFramebuffer::default(),
-            gl::DrawParams::default()
+            &gl::DefaultFramebuffer::default(),
+            &gl::DrawParams::default()
                 .with_depth_test(gl::Comparison::Less)
                 .with_cull_face(gl::CullFace::Back),
         )?;
 
         self.debug_program.draw(
-            self.light_depth_map
+            &self
+                .light_depth_map
                 .as_color_sampler(gl::Sampler2dParams::default()),
-            gl::VertexSpec::new(gl::Mode::Triangles, self.debug_vertices.as_binding())
+            &gl::VertexSpec::new(gl::Mode::Triangles, self.debug_vertices.as_binding())
                 .with_elements(self.debug_elements.as_binding()),
-            gl::DefaultFramebuffer::default(),
-            gl::DrawParams::default(),
+            &gl::DefaultFramebuffer::default(),
+            &gl::DrawParams::default(),
         )?;
 
         Ok(())

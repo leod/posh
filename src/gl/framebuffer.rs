@@ -11,7 +11,7 @@ use super::{
     ColorSampler2d, Sampler2dParams,
 };
 
-pub trait Framebuffer<F: Fragment<Gl>> {
+pub trait Framebuffer<F: Fragment<Gl> = ColorAttachment<sl::Vec4>> {
     fn raw(&self) -> raw::Framebuffer;
 }
 
