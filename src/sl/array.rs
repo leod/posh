@@ -58,11 +58,25 @@ impl<V: ValueNonArray, const N: usize> ToValue for Array<V, N> {
 }
 
 impl<V: ValueNonArray, const N: usize> Array<V, N> {
-    fn get(&self, index: U32) -> V {
-        V::from_expr(Expr::Subscript {
-            base: self.trace.expr(),
-            index: index.expr(),
-            ty: V::ty(),
-        })
+    pub fn index(&self, index: impl ToValue<Output = U32>) -> V {
+        let base = self.trace.expr();
+        let index = index.to_value().expr();
+        let ty = V::ty();
+
+        let expr = Expr::Subscript { base, index, ty };
+
+        V::from_expr(expr)
     }
+}
+
+pub fn array<V: ValueNonArray, const N: usize>(args: [V; N]) -> Array<V, N> {
+    let args = args.iter().map(|arg| arg.expr()).collect();
+    let ty = ArrayType {
+        ty: Box::new(V::ty()),
+        len: N,
+    };
+
+    let expr = Expr::ArrayLiteral { args, ty };
+
+    Array::from_expr(expr)
 }

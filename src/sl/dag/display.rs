@@ -73,6 +73,7 @@ impl Display for Expr {
             Arg { name, .. } => f.write_str(name),
             ScalarLiteral { value, .. } => f.write_str(value),
             StructLiteral { args, ty } => write_call(f, &ty.name, args),
+            ArrayLiteral { args, ty } => write_call(f, &format!("{ty}"), args),
             Unary { op, arg, .. } => write!(f, "{op} {arg}"),
             Binary {
                 left, op, right, ..
@@ -129,6 +130,12 @@ impl Display for BuiltInType {
         };
 
         f.write_str(s)
+    }
+}
+
+impl Display for ArrayType {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        write!(f, "{}[{}]", self.ty, self.len)
     }
 }
 

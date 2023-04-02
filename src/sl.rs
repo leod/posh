@@ -28,7 +28,7 @@ use dag::{Expr, StructType, Type};
 pub(crate) use scalar::scalar_physical;
 
 pub use {
-    array::Array,
+    array::{array, Array},
     mat::{mat2, mat3, mat4, Mat2, Mat3, Mat4},
     primitives::any,
     sampler::{ColorSample, ColorSampler2d, ComparisonSampler2d, Sample},
