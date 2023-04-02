@@ -176,7 +176,12 @@ impl Texture2d {
         self.internal_format
     }
 
-    pub fn set(&self, level: usize, rect: Rect, image: Image) -> Result<(), TextureError> {
+    pub fn set(
+        &self,
+        level: usize,
+        lower_left_corner: glam::UVec2,
+        image: Image,
+    ) -> Result<(), TextureError> {
         assert!(level <= self.levels);
         assert_eq!(self.internal_format, image.internal_format);
 
@@ -186,10 +191,10 @@ impl Texture2d {
         let gl = self.ctx.gl();
 
         let level = level.try_into().unwrap();
-        let x = rect.lower_left_corner.x.try_into().unwrap();
-        let y = rect.lower_left_corner.y.try_into().unwrap();
-        let width = rect.size.x.try_into().unwrap();
-        let height = rect.size.y.try_into().unwrap();
+        let x = lower_left_corner.x.try_into().unwrap();
+        let y = lower_left_corner.y.try_into().unwrap();
+        let width = image.size.x.try_into().unwrap();
+        let height = image.size.y.try_into().unwrap();
 
         unsafe { gl.bind_texture(glow::TEXTURE_2D, Some(self.id)) };
         unsafe {
@@ -207,7 +212,8 @@ impl Texture2d {
         };
         unsafe { gl.bind_texture(glow::TEXTURE_2D, None) };
 
-        // This might be triggered if `rect` is outside of the texture image bounds.
+        // This might be triggered if `rect` is outside of the texture image
+        // bounds.
         check_gl_error(gl).map_err(TextureError::Unexpected)?;
 
         Ok(())
