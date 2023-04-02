@@ -103,11 +103,11 @@ impl Demo {
             .as_color_sampler(gl::Sampler2dParams::default());
 
         self.program.draw(
-            (uniform, sampler),
-            gl::VertexSpec::new(gl::Mode::Triangles, self.vertices.as_binding())
+            &(uniform, sampler),
+            &gl::VertexSpec::new(gl::Mode::Triangles, self.vertices.as_binding())
                 .with_elements(self.elements.as_binding()),
-            gl::DefaultFramebuffer::default(),
-            gl::DrawParams::default()
+            &gl::DefaultFramebuffer::default(),
+            &gl::DrawParams::default()
                 .with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0))
                 .with_clear_depth(1.0)
                 .with_depth_test(gl::Comparison::Less),
