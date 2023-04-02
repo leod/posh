@@ -4,7 +4,7 @@ use crate::sl::{self, ColorSample};
 
 use super::raw::{self, ImageComponentType, ImageInternalFormat};
 
-pub struct ColorImage<'a, S> {
+pub struct ColorImage<'a, S = sl::Vec4> {
     raw: raw::Image<'a>,
     _phantom: PhantomData<S>,
 }

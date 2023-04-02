@@ -96,9 +96,10 @@ impl Context {
     pub fn create_buffer<T: Pod>(
         &self,
         data: &[T],
+        target: u32,
         usage: BufferUsage,
     ) -> Result<Buffer, BufferError> {
-        Buffer::new(self.shared.clone(), data, usage)
+        Buffer::new(self.shared.clone(), data, target, usage)
     }
 
     pub fn create_texture_2d(&self, image: Image) -> Result<Texture2d, TextureError> {

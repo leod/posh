@@ -178,6 +178,7 @@ impl Program {
             assert!(buffer.context().ref_eq(ctx));
 
             let location = u32::try_from(block_def.location).unwrap();
+
             unsafe {
                 gl.bind_buffer_base(glow::UNIFORM_BUFFER, location, Some(buffer.id()));
             }

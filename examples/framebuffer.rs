@@ -27,7 +27,7 @@ mod scene_pass {
     }
 
     pub fn fragment(state: State, input: sl::Vec2) -> sl::Vec4 {
-        let rg = (input + state.time).cos().powf(sl::vec2(2.0, 2.0));
+        let rg = (input + state.time).cos().pow(sl::vec2(2.0, 2.0));
 
         sl::vec4(rg.x, rg.y, 0.5, 1.0)
     }
@@ -82,19 +82,19 @@ struct Demo {
 }
 
 impl Demo {
-    pub fn new(ctx: gl::Context) -> Result<Self, gl::CreateError> {
+    pub fn new(gl: gl::Context) -> Result<Self, gl::CreateError> {
         use gl::BufferUsage::*;
 
         let image = gl::ColorImage::zero_u8(glam::uvec2(1024, 768));
 
         Ok(Self {
-            scene_program: ctx.create_program(scene_pass::vertex, scene_pass::fragment)?,
-            present_program: ctx.create_program(present_pass::vertex, present_pass::fragment)?,
-            state: ctx.create_uniform_buffer(State { time: 0.0, flip: 0 }, StreamDraw)?,
-            texture: ctx.create_color_texture_2d(image)?,
-            triangle_vertices: ctx.create_vertex_buffer(&triangle_vertices(), StaticDraw)?,
-            quad_vertices: ctx.create_vertex_buffer(&quad_vertices(), StaticDraw)?,
-            quad_elements: ctx.create_element_buffer(&[0, 1, 2, 0, 2, 3], StaticDraw)?,
+            scene_program: gl.create_program(scene_pass::vertex, scene_pass::fragment)?,
+            present_program: gl.create_program(present_pass::vertex, present_pass::fragment)?,
+            state: gl.create_uniform_buffer(State { time: 0.0, flip: 0 }, StreamDraw)?,
+            texture: gl.create_color_texture_2d(image)?,
+            triangle_vertices: gl.create_vertex_buffer(&triangle_vertices(), StaticDraw)?,
+            quad_vertices: gl.create_vertex_buffer(&quad_vertices(), StaticDraw)?,
+            quad_elements: gl.create_element_buffer(&[0, 1, 2, 0, 2, 3], StaticDraw)?,
             start_time: Instant::now(),
         })
     }
@@ -106,23 +106,23 @@ impl Demo {
         });
 
         self.scene_program.draw(
-            self.state.as_binding(),
-            gl::VertexSpec::new(gl::Mode::Triangles, self.triangle_vertices.as_binding()),
-            self.texture.as_color_attachment(),
-            gl::DrawParams::default(),
+            &self.state.as_binding(),
+            &gl::VertexSpec::new(gl::Mode::Triangles, self.triangle_vertices.as_binding()),
+            &self.texture.as_color_attachment(),
+            &gl::DrawParams::default(),
         )?;
 
         self.present_program.draw(
-            present_pass::Uniform {
+            &present_pass::Uniform {
                 state: self.state.as_binding(),
                 scene: self
                     .texture
                     .as_color_sampler(gl::Sampler2dParams::default()),
             },
-            gl::VertexSpec::new(gl::Mode::Triangles, self.quad_vertices.as_binding())
+            &gl::VertexSpec::new(gl::Mode::Triangles, self.quad_vertices.as_binding())
                 .with_elements(self.quad_elements.as_binding()),
-            gl::DefaultFramebuffer::default(),
-            gl::DrawParams::default(),
+            &gl::DefaultFramebuffer::default(),
+            &gl::DrawParams::default(),
         )?;
 
         Ok(())
@@ -173,11 +173,11 @@ fn main() {
         .unwrap();
 
     let _gl_context = window.gl_create_context().unwrap();
-    let ctx = unsafe {
+    let gl = unsafe {
         glow::Context::from_loader_function(|s| video.gl_get_proc_address(s) as *const _)
     };
-    let ctx = gl::Context::new(ctx).unwrap();
-    let demo = Demo::new(ctx).unwrap();
+    let gl = gl::Context::new(gl).unwrap();
+    let demo = Demo::new(gl).unwrap();
 
     let mut event_loop = sdl.event_pump().unwrap();
     let mut flip = 0;

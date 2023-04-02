@@ -51,29 +51,29 @@ struct Demo {
 }
 
 impl Demo {
-    pub fn new(ctx: gl::Context) -> Result<Self, gl::CreateError> {
+    pub fn new(gl: gl::Context) -> Result<Self, gl::CreateError> {
         use gl::BufferUsage::*;
 
         Ok(Self {
-            program: ctx.create_program(vertex_shader, fragment_shader)?,
-            camera: ctx.create_uniform_buffer(Camera::default(), StaticDraw)?,
-            instances: ctx.create_vertex_buffer(&instances(0.0), StaticDraw)?,
-            teapot: ctx.create_vertex_buffer(&TEAPOT_POSITIONS, StaticDraw)?,
+            program: gl.create_program(vertex_shader, fragment_shader)?,
+            camera: gl.create_uniform_buffer(Camera::default(), StaticDraw)?,
+            instances: gl.create_vertex_buffer(&instances(0.0), StaticDraw)?,
+            teapot: gl.create_vertex_buffer(&TEAPOT_POSITIONS, StaticDraw)?,
         })
     }
 
     pub fn draw(&self) -> Result<(), gl::DrawError> {
         self.program.draw(
-            self.camera.as_binding(),
-            gl::VertexSpec::new(
+            &self.camera.as_binding(),
+            &gl::VertexSpec::new(
                 gl::Mode::Triangles,
                 Vertex {
                     instance: self.instances.as_binding().with_instancing(),
                     model_pos: self.teapot.as_binding(),
                 },
             ),
-            gl::DefaultFramebuffer::default(),
-            gl::DrawParams::default()
+            &gl::DefaultFramebuffer::default(),
+            &gl::DrawParams::default()
                 .with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0))
                 .with_clear_depth(1.0)
                 .with_depth_test(gl::Comparison::Less),
@@ -98,11 +98,11 @@ fn main() {
         .unwrap();
 
     let _gl_context = window.gl_create_context().unwrap();
-    let ctx = unsafe {
+    let gl = unsafe {
         glow::Context::from_loader_function(|s| video.gl_get_proc_address(s) as *const _)
     };
-    let ctx = gl::Context::new(ctx).unwrap();
-    let demo = Demo::new(ctx).unwrap();
+    let gl = gl::Context::new(gl).unwrap();
+    let demo = Demo::new(gl).unwrap();
 
     let mut event_loop = sdl.event_pump().unwrap();
 
