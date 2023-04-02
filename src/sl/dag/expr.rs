@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use super::{BuiltInType, StructType, Type};
+use super::{ArrayType, BuiltInType, StructType, Type};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum BinaryOp {
@@ -52,6 +52,10 @@ pub enum Expr {
         args: Vec<Rc<Expr>>,
         ty: Rc<StructType>,
     },
+    ArrayLiteral {
+        args: Vec<Rc<Expr>>,
+        ty: ArrayType,
+    },
     Unary {
         op: UnaryOp,
         arg: Rc<Expr>,
@@ -98,6 +102,7 @@ impl Expr {
             Arg { ty, .. } => ty.clone(),
             ScalarLiteral { ty, .. } => Type::BuiltIn(*ty),
             StructLiteral { ty, .. } => Type::Struct(ty.clone()),
+            ArrayLiteral { ty, .. } => Type::Array(ty.clone()),
             Unary { ty, .. } => ty.clone(),
             Binary { ty, .. } => ty.clone(),
             CallFuncDef { def, .. } => def.result.ty(),
@@ -105,6 +110,55 @@ impl Expr {
             Field { ty, .. } => ty.clone(),
             Subscript { ty, .. } => ty.clone(),
             Branch { ty, .. } => ty.clone(),
+        }
+    }
+
+    pub fn successors(&self, mut f: impl FnMut(&Rc<Expr>)) {
+        use Expr::*;
+
+        match self {
+            Arg { .. } | ScalarLiteral { .. } => (),
+            StructLiteral { args, .. } => {
+                for arg in args {
+                    f(arg);
+                }
+            }
+            ArrayLiteral { args, .. } => {
+                for arg in args {
+                    f(arg);
+                }
+            }
+            Unary { arg: expr, .. } => {
+                f(expr);
+            }
+            Binary { left, right, .. } => {
+                f(left);
+                f(right);
+            }
+            CallFuncDef { def, args, .. } => {
+                f(&def.result);
+
+                for arg in args {
+                    f(arg);
+                }
+            }
+            CallBuiltIn { args, .. } => {
+                for arg in args {
+                    f(arg);
+                }
+            }
+            Field { base, .. } => {
+                f(base);
+            }
+            Subscript { base, index, .. } => {
+                f(base);
+                f(index);
+            }
+            Branch { cond, yes, no, .. } => {
+                f(cond);
+                f(yes);
+                f(no);
+            }
         }
     }
 }
