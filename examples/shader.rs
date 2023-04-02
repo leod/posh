@@ -41,8 +41,14 @@ fn vertex_shader(globals: Globals, vertex: ColorVertex) -> VaryingOutput<sl::Vec
 
     let position = sl::Mat2::identity() * vertex.position + shift2 + sl::Mat2::diagonal(4.0).x_axis;
 
+    let offsets = sl::array([position, position, sl::vec2(0.3, 0.4), sl::vec2(0.5, 0.6)]);
+
     VaryingOutput {
-        varying: sl::Vec4::splat(0.0),
+        varying: sl::Vec4::splat(0.0)
+            + offsets
+                .index(globals.invert.as_u32() + 3)
+                .extend(1.0)
+                .extend(2.0),
         position: globals.projection * globals.camera * position.extend(1.0).extend(1.0),
     }
 }

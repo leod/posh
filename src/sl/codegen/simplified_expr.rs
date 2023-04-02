@@ -131,7 +131,7 @@ impl Display for SimplifiedExpr {
                 _ => write!(f, "{base}.{name}"),
             },
             Branch { cond, yes, no, .. } => write!(f, "({cond} ? {yes} : {no})"),
-            Subscript { base, index, .. } => write!(f, "{base}[{index}"),
+            Subscript { base, index, .. } => write!(f, "{base}[{index}]"),
             Var { id, .. } => write!(f, "{id}"),
         }
     }
