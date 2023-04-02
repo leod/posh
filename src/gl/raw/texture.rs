@@ -6,7 +6,7 @@ use crate::gl::{raw::error::check_gl_error, TextureError};
 
 use super::{
     context::ContextShared, sampler_params::set_comparison, Caps, Comparison, Image,
-    ImageInternalFormat, Sampler2dParams,
+    ImageInternalFormat, Rect, Sampler2dParams,
 };
 
 pub struct Texture2d {
@@ -28,6 +28,39 @@ pub struct Sampler2d {
     pub texture: Rc<Texture2d>,
     pub params: Sampler2dParams,
     pub comparison: Option<Comparison>,
+}
+
+struct ImageData<'a> {
+    image: &'a Image<'a>,
+    buffer: Vec<u8>,
+}
+
+impl<'a> ImageData<'a> {
+    fn new(image: &'a Image<'a>) -> Self {
+        Self {
+            image,
+            buffer: Vec::new(),
+        }
+    }
+
+    fn as_slice(&mut self) -> Result<&[u8], TextureError> {
+        let len = self.image.required_data_len();
+
+        if let Some(slice) = self.image.data {
+            // Safety: check that `slice` has the correct size.
+            if slice.len() != len {
+                return Err(TextureError::DataSizeMismatch {
+                    expected: len,
+                    got: slice.len(),
+                });
+            }
+
+            Ok(slice)
+        } else {
+            self.buffer.resize(len, 0);
+            Ok(self.buffer.as_slice())
+        }
+    }
 }
 
 impl Texture2d {
@@ -53,35 +86,23 @@ impl Texture2d {
             .try_into()
             .expect("max_texture_size is out of i32 range");
 
-        let mut buffer = Vec::new();
-        let data_len = image.required_data_len();
-        let slice = if let Some(slice) = image.data {
-            // Safety: check that `slice` has the correct size.
-            if slice.len() != data_len {
-                return Err(TextureError::DataSizeMismatch {
-                    expected: data_len,
-                    got: slice.len(),
-                });
-            }
-
-            slice
-        } else {
-            buffer.resize(data_len, 0);
-            buffer.as_slice()
-        };
+        let mut data = ImageData::new(&image);
+        let slice = data.as_slice()?;
 
         let gl = ctx.gl();
         let id = unsafe { gl.create_texture() }.map_err(TextureError::ObjectCreation)?;
 
+        unsafe { gl.bind_texture(glow::TEXTURE_2D, Some(id)) };
         unsafe {
-            gl.bind_texture(glow::TEXTURE_2D, Some(id));
             gl.tex_storage_2d(
                 glow::TEXTURE_2D,
                 levels,
                 image.internal_format.to_gl(),
                 width,
                 height,
-            );
+            )
+        };
+        unsafe {
             gl.tex_sub_image_2d(
                 glow::TEXTURE_2D,
                 0,
@@ -92,9 +113,9 @@ impl Texture2d {
                 image.internal_format.to_format().to_gl(),
                 image.ty.to_gl(),
                 glow::PixelUnpackData::Slice(slice),
-            );
-            gl.bind_texture(glow::TEXTURE_2D, None);
-        }
+            )
+        };
+        unsafe { gl.bind_texture(glow::TEXTURE_2D, None) };
 
         let texture = Texture2d {
             ctx: ctx.clone(),
@@ -155,7 +176,42 @@ impl Texture2d {
         self.internal_format
     }
 
-    //pub fn set(&self, level: usize, )c
+    pub fn set(&self, level: usize, rect: Rect, image: Image) -> Result<(), TextureError> {
+        assert!(level <= self.levels);
+        assert_eq!(self.internal_format, image.internal_format);
+
+        let mut data = ImageData::new(&image);
+        let slice = data.as_slice()?;
+
+        let gl = self.ctx.gl();
+
+        let level = level.try_into().unwrap();
+        let x = rect.lower_left_corner.x.try_into().unwrap();
+        let y = rect.lower_left_corner.y.try_into().unwrap();
+        let width = rect.size.x.try_into().unwrap();
+        let height = rect.size.y.try_into().unwrap();
+
+        unsafe { gl.bind_texture(glow::TEXTURE_2D, Some(self.id)) };
+        unsafe {
+            gl.tex_sub_image_2d(
+                glow::TEXTURE_2D,
+                level,
+                x,
+                y,
+                width,
+                height,
+                image.internal_format.to_format().to_gl(),
+                image.ty.to_gl(),
+                glow::PixelUnpackData::Slice(slice),
+            )
+        };
+        unsafe { gl.bind_texture(glow::TEXTURE_2D, None) };
+
+        // This might be triggered if `rect` is outside of the texture image bounds.
+        check_gl_error(gl).map_err(TextureError::Unexpected)?;
+
+        Ok(())
+    }
 
     pub(super) fn set_sampler_params(&self, new: Sampler2dParams, comparison: Option<Comparison>) {
         let gl = &self.ctx.gl();
