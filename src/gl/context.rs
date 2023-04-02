@@ -127,10 +127,8 @@ impl Context {
             fragment_shader,
         );
 
-        println!(
-            "{}\n==================={}",
-            program_def.vertex_shader_source, program_def.fragment_shader_source
-        );
+        log::info!("Vertex shader:\n{}", program_def.vertex_shader_source);
+        log::info!("Fragment shader:\n{}", program_def.fragment_shader_source);
 
         let raw = self.raw.create_program(program_def)?;
 

@@ -12,6 +12,7 @@ posh-derive = { path = "derive" }
 glow = "0.11.2"
 thiserror = "1.0.38"
 glam = "0.22.0"
+log = "0.4.17"
 
 [workspace]
 members = ["derive"]
