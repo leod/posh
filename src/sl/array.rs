@@ -59,6 +59,7 @@ impl<V: ValueNonArray, const N: usize> ToValue for Array<V, N> {
 
 impl<V: ValueNonArray, const N: usize> Array<V, N> {
     pub fn index(&self, index: impl ToValue<Output = U32>) -> V {
+        // FIXME: Prevent out-of-bounds access.
         let base = self.trace.expr();
         let index = index.to_value().expr();
         let ty = V::ty();
