@@ -74,7 +74,7 @@ enum FramebufferInternal<F: Fragment<Sl>> {
 }
 
 #[derive(Clone)]
-pub struct Framebuffer<F: Fragment<Sl>>(FramebufferInternal<F>);
+pub struct Framebuffer<F: Fragment<Sl> = sl::Vec4>(FramebufferInternal<F>);
 
 impl<F: Fragment<Sl>> Framebuffer<F> {
     pub fn raw(&self) -> raw::Framebuffer {
