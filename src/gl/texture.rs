@@ -59,6 +59,10 @@ impl<S: ColorSample> ColorTexture2d<S> {
         })
     }
 
+    pub fn size(&self) -> glam::UVec2 {
+        self.raw.size()
+    }
+
     pub fn set(
         &self,
         level: usize,
@@ -109,6 +113,10 @@ impl DepthTexture2d {
             settings,
             comparison: Some(comparison),
         })
+    }
+
+    pub fn size(&self) -> glam::UVec2 {
+        self.raw.size()
     }
 
     pub fn set(
