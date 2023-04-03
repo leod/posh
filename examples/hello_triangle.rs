@@ -59,7 +59,8 @@ impl Demo {
 
         self.program.draw(gl::DrawInput {
             uniform: &self.globals.as_binding(),
-            vertex_spec: &gl::VertexSpec::new(gl::Mode::Triangles, self.vertices.as_binding()),
+            vertex_spec: &gl::VertexSpec::new(gl::PrimitiveMode::Triangles)
+                .with_vertices(self.vertices.as_binding()),
             framebuffer: &gl::DefaultFramebuffer::default(),
             settings: &gl::DrawSettings::default().with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0)),
         })
