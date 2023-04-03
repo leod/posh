@@ -15,13 +15,13 @@ pub use self::image::{ColorImage, DepthImage};
 pub use context::Context;
 pub use element_buffer::{Element, ElementBuffer, ElementBufferBinding};
 pub use framebuffer::{ColorAttachment, DefaultFramebuffer, DepthAttachment, Framebuffer};
-pub use program::Program;
+pub use program::{DrawInput, Program};
 pub use raw::{
     BlendEquation, BlendFunc, Blending, BufferError, BufferUsage, Caps, Comparison, ContextError,
-    CreateError, CullFace, DrawError, DrawParams, ElementType, FramebufferError, ImageFormat,
-    ImageInternalFormat, Mode, ProgramError, ProgramValidationError, Rect, Sampler2dParams,
-    SamplerMagFilter, SamplerMinFilter, SamplerWrap, StencilOp, StencilOps, StencilTest,
-    TextureError, VertexArrayError,
+    CreateError, CullFace, DrawError, DrawSettings, ElementType, FramebufferError, ImageFormat,
+    ImageInternalFormat, PrimitiveMode, ProgramError, ProgramValidationError, Rect,
+    Sampler2dSettings, SamplerMagFilter, SamplerMinFilter, SamplerWrap, StencilOp, StencilOps,
+    StencilTest, TextureError, VertexArrayError,
 };
 pub use texture::{ColorSampler2d, ColorTexture2d, ComparisonSampler2d, DepthTexture2d};
 pub use uniform_buffer::{UniformBuffer, UniformBufferBinding};

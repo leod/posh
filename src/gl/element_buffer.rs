@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, mem::size_of, rc::Rc};
+use std::{marker::PhantomData, mem::size_of, ops::Range, rc::Rc};
 
 use bytemuck::Pod;
 use sealed::sealed;
@@ -34,6 +34,7 @@ pub struct ElementBufferBinding {
     raw: Rc<raw::Buffer>,
     ty: ElementType,
     len: usize,
+    range: Range<usize>,
 }
 
 impl<E: Element> ElementBuffer<E> {
@@ -65,6 +66,7 @@ impl<E: Element> ElementBuffer<E> {
             raw: self.raw.clone(),
             ty: E::TYPE,
             len: self.len(),
+            range: 0..self.len(),
         }
     }
 }
@@ -80,5 +82,14 @@ impl ElementBufferBinding {
 
     pub(crate) fn len(&self) -> usize {
         self.len
+    }
+
+    pub(crate) fn range(&self) -> Range<usize> {
+        self.range.clone()
+    }
+
+    pub fn with_range(mut self, range: Range<usize>) -> Self {
+        self.range = range;
+        self
     }
 }

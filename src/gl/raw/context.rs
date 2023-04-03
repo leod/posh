@@ -8,12 +8,12 @@ use crate::{
     sl::program_def::ProgramDef,
 };
 
-use super::{Buffer, Caps, ContextError, DrawParams, Image, Program, Texture2d, TextureError};
+use super::{Buffer, Caps, ContextError, DrawSettings, Image, Program, Texture2d, TextureError};
 
 pub(super) struct ContextShared {
     gl: glow::Context,
     caps: Caps,
-    draw_params: Cell<DrawParams>,
+    draw_settings: Cell<DrawSettings>,
     draw_fbo: glow::Framebuffer,
     default_framebuffer_size: Cell<glam::UVec2>,
 }
@@ -35,12 +35,12 @@ impl ContextShared {
         &self.caps
     }
 
-    pub(super) fn set_draw_params(&self, new: &DrawParams, framebuffer_size: glam::UVec2) {
+    pub(super) fn set_draw_settings(&self, new: &DrawSettings, framebuffer_size: glam::UVec2) {
         let gl = &self.gl;
 
-        let current = self.draw_params.get();
+        let current = self.draw_settings.get();
         new.set_delta(gl, &current, framebuffer_size);
-        self.draw_params.set(*new);
+        self.draw_settings.set(*new);
     }
 
     pub(super) fn draw_fbo(&self) -> glow::Framebuffer {
@@ -81,7 +81,7 @@ impl Context {
         let shared = Rc::new(ContextShared {
             gl,
             caps,
-            draw_params: Cell::new(DrawParams::default()),
+            draw_settings: Cell::new(DrawSettings::default()),
             draw_fbo,
             default_framebuffer_size: Cell::new(default_framebuffer_size),
         });
