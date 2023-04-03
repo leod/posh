@@ -104,7 +104,8 @@ impl Demo {
 
         self.program.draw(gl::DrawInput {
             uniform: &(uniform, sampler),
-            vertex_spec: &gl::VertexSpec::new(gl::Mode::Triangles, self.vertices.as_binding())
+            vertex_spec: &gl::VertexSpec::new(gl::PrimitiveMode::Triangles)
+                .with_vertices(self.vertices.as_binding())
                 .with_elements(self.elements.as_binding()),
             framebuffer: &gl::DefaultFramebuffer::default(),
             settings: &gl::DrawSettings::default()
