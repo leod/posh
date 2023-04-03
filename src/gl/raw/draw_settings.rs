@@ -281,7 +281,7 @@ impl StencilOps {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct DrawParams {
+pub struct DrawSettings {
     pub clear_stencil: Option<u8>,
     pub clear_depth: Option<f32>,
     pub clear_color: Option<glam::Vec4>,
@@ -300,7 +300,7 @@ pub struct DrawParams {
     pub color_mask: glam::BVec4,
 }
 
-impl Default for DrawParams {
+impl Default for DrawSettings {
     fn default() -> Self {
         Self {
             clear_stencil: None,
@@ -323,11 +323,11 @@ impl Default for DrawParams {
     }
 }
 
-impl DrawParams {
+impl DrawSettings {
     pub(super) fn set_delta(
         &self,
         gl: &glow::Context,
-        current: &DrawParams,
+        current: &DrawSettings,
         framebuffer_size: glam::UVec2,
     ) {
         let mut clear_mask = 0;
