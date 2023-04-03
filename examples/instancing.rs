@@ -65,10 +65,12 @@ impl Demo {
     pub fn draw(&self) -> Result<(), gl::DrawError> {
         self.program.draw(gl::DrawInput {
             uniform: &self.camera.as_binding(),
-            vertex_spec: &gl::VertexSpec::new(gl::PrimitiveMode::Triangles).with_vertices(Vertex {
-                instance: self.instances.as_binding().with_instancing(),
-                model_pos: self.teapot.as_binding(),
-            }),
+            vertex_spec: &gl::VertexSpec::new(gl::PrimitiveMode::Triangles).with_vertex_data(
+                Vertex {
+                    instance: self.instances.as_binding().with_instancing(),
+                    model_pos: self.teapot.as_binding(),
+                },
+            ),
             framebuffer: &gl::DefaultFramebuffer::default(),
             settings: &gl::DrawSettings::default()
                 .with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0))

@@ -14,24 +14,24 @@ use super::{raw, ElementBufferBinding, PrimitiveMode};
 #[derive(Clone)]
 pub struct VertexSpec<V: Vertex<Sl>> {
     pub mode: PrimitiveMode,
-    pub vertices: V::Gl,
+    pub vertex_data: V::Gl,
     pub vertex_range: Range<usize>,
     pub num_instances: usize,
-    pub elements: Option<ElementBufferBinding>,
+    pub element_data: Option<ElementBufferBinding>,
 }
 
 impl VertexSpec<()> {
     pub fn new(mode: PrimitiveMode) -> Self {
         Self {
             mode,
-            vertices: (),
+            vertex_data: (),
             vertex_range: 0..0,
             num_instances: 0,
-            elements: None,
+            element_data: None,
         }
     }
 
-    pub fn with_vertices<V>(self, vertices: V) -> VertexSpec<V::Sl>
+    pub fn with_vertex_data<V>(self, vertices: V) -> VertexSpec<V::Sl>
     where
         V: Vertex<Gl>,
         V::Sl: Vertex<Sl, Gl = V>,
@@ -43,10 +43,10 @@ impl VertexSpec<()> {
 
         VertexSpec {
             mode: self.mode,
-            vertices,
+            vertex_data: vertices,
             vertex_range: 0..num_vertices.unwrap_or(0),
             num_instances: num_instances.unwrap_or(1),
-            elements: self.elements,
+            element_data: self.element_data,
         }
     }
 }
@@ -64,21 +64,21 @@ impl<V: Vertex<Sl>> VertexSpec<V> {
         self
     }
 
-    pub fn with_elements(mut self, elements: ElementBufferBinding) -> Self {
-        self.elements = Some(elements);
+    pub fn with_element_data(mut self, elements: ElementBufferBinding) -> Self {
+        self.element_data = Some(elements);
         self
     }
 
     pub(super) fn raw(&self) -> raw::VertexSpec {
         raw::VertexSpec {
-            vertices: raw_vertices(&self.vertices),
-            elements: self
-                .elements
+            vertex_data: raw_vertices(&self.vertex_data),
+            element_data: self
+                .element_data
                 .as_ref()
                 .map(|elements| (elements.raw().clone(), elements.ty())),
             mode: self.mode,
             index_range: self
-                .elements
+                .element_data
                 .as_ref()
                 .map_or_else(|| self.vertex_range.clone(), |binding| binding.range()),
             num_instances: self.num_instances,

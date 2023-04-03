@@ -80,8 +80,8 @@ pub struct VertexBufferBinding {
 
 #[derive(Clone)]
 pub struct VertexSpec {
-    pub vertices: Vec<VertexBufferBinding>,
-    pub elements: Option<(Rc<Buffer>, ElementType)>,
+    pub vertex_data: Vec<VertexBufferBinding>,
+    pub element_data: Option<(Rc<Buffer>, ElementType)>,
     pub mode: PrimitiveMode,
     pub index_range: Range<usize>,
     pub num_instances: usize,
@@ -105,7 +105,7 @@ impl VertexSpec {
             block_def,
             input_rate,
             stride,
-        } in &self.vertices
+        } in &self.vertex_data
         {
             assert!(*stride > 0);
             assert_eq!(buffer.len() % stride, 0);
@@ -156,7 +156,7 @@ impl VertexSpec {
             }
         }
 
-        if let Some((buffer, _)) = self.elements.as_ref() {
+        if let Some((buffer, _)) = self.element_data.as_ref() {
             assert!(buffer.context().ref_eq(ctx));
 
             unsafe {
@@ -172,7 +172,7 @@ impl VertexSpec {
 
         let mut index = 0;
 
-        for VertexBufferBinding { block_def, .. } in &self.vertices {
+        for VertexBufferBinding { block_def, .. } in &self.vertex_data {
             for attribute in &block_def.attributes {
                 let attribute_info =
                     VertexAttributeLayout::new(attribute.ty).expect("invalid vertex attribute");
@@ -187,7 +187,7 @@ impl VertexSpec {
             }
         }
 
-        if self.elements.is_some() {
+        if self.element_data.is_some() {
             unsafe {
                 gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, None);
             }
@@ -213,7 +213,7 @@ impl VertexSpec {
         let first = self.index_range.start;
         let count = self.index_range.end - self.index_range.start;
 
-        if let Some((buffer, element_type)) = &self.elements {
+        if let Some((buffer, element_type)) = &self.element_data {
             let element_size = element_type.size();
             let element_type = element_type.to_gl();
 
@@ -238,7 +238,7 @@ impl VertexSpec {
                 buffer,
                 input_rate,
                 ..
-            } in &self.vertices
+            } in &self.vertex_data
             {
                 let num = buffer.len() / stride;
                 match input_rate {
@@ -265,7 +265,7 @@ impl VertexSpec {
                 buffer,
                 input_rate,
                 ..
-            } in &self.vertices
+            } in &self.vertex_data
             {
                 let num = buffer.len() / stride;
                 match input_rate {
