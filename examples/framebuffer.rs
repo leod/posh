@@ -123,7 +123,7 @@ impl Demo {
             vertex_spec: &gl::VertexSpec::new(gl::PrimitiveMode::Triangles)
                 .with_vertex_data(self.quad_vertices.as_binding())
                 .with_element_data(self.quad_elements.as_binding()),
-            framebuffer: &gl::DefaultFramebuffer::default(),
+            framebuffer: &gl::Framebuffer::default(),
             settings: &gl::DrawSettings::default(),
         })?;
 

@@ -257,7 +257,7 @@ impl Demo {
                     .as_comparison_sampler(gl::Sampler2dSettings::default(), gl::Comparison::Less),
             },
             vertex_spec: &scene_spec,
-            framebuffer: &gl::DefaultFramebuffer::default(),
+            framebuffer: &gl::Framebuffer::default(),
             settings: &gl::DrawSettings::default()
                 .with_clear_color(glam::Vec4::ONE)
                 .with_clear_depth(1.0)
@@ -270,7 +270,7 @@ impl Demo {
             vertex_spec: &gl::VertexSpec::new(gl::PrimitiveMode::Triangles)
                 .with_vertex_data(self.light_vertices.as_binding())
                 .with_element_data(self.light_elements.as_binding()),
-            framebuffer: &gl::DefaultFramebuffer::default(),
+            framebuffer: &gl::Framebuffer::default(),
             settings: &gl::DrawSettings::default()
                 .with_depth_test(gl::Comparison::Less)
                 .with_cull_face(gl::CullFace::Back),
@@ -283,7 +283,7 @@ impl Demo {
             vertex_spec: &gl::VertexSpec::new(gl::PrimitiveMode::Triangles)
                 .with_vertex_data(self.debug_vertices.as_binding())
                 .with_element_data(self.debug_elements.as_binding()),
-            framebuffer: &gl::DefaultFramebuffer::default(),
+            framebuffer: &gl::Framebuffer::default(),
             settings: &gl::DrawSettings::default(),
         })?;
 
