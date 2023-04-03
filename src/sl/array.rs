@@ -41,18 +41,29 @@ impl<V: ValueNonArray, const N: usize> Value for Array<V, N> {
     }
 }
 
-impl<V: ValueNonArray, const N: usize> ToSl for [V; N] {
-    type Output = Array<V, N>;
+impl<V: ToSl, const N: usize> ToSl for [V; N]
+where
+    V::Output: ValueNonArray,
+{
+    type Output = Array<V::Output, N>;
 
     fn to_sl(self) -> Self::Output {
-        todo!()
+        let args = self.iter().map(|arg| arg.to_sl().expr()).collect();
+        let ty = ArrayType {
+            ty: Box::new(V::Output::ty()),
+            len: N,
+        };
+
+        let expr = Expr::ArrayLiteral { args, ty };
+
+        Array::from_expr(expr)
     }
 }
 
 impl<V: ValueNonArray, const N: usize> ToSl for Array<V, N> {
     type Output = Self;
 
-    fn to_sl(self) -> Self::Output {
+    fn to_sl(self) -> Self {
         self
     }
 }
