@@ -61,7 +61,7 @@ impl Demo {
             uniform: &self.globals.as_binding(),
             vertex_spec: &gl::VertexSpec::new(gl::Mode::Triangles, self.vertices.as_binding()),
             framebuffer: &gl::DefaultFramebuffer::default(),
-            params: &gl::DrawParams::default().with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0)),
+            settings: &gl::DrawSettings::default().with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0)),
         })
     }
 }

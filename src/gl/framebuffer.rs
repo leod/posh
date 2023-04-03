@@ -8,7 +8,7 @@ use crate::{
 
 use super::{
     raw::{self},
-    ColorSampler2d, Sampler2dParams,
+    ColorSampler2d, Sampler2dSettings,
 };
 
 pub trait Framebuffer<F: Fragment<Gl> = ColorAttachment<sl::Vec4>> {
@@ -43,8 +43,8 @@ impl<S> ColorAttachment<S> {
         }
     }
 
-    pub fn color_sampler(&self, params: Sampler2dParams) -> ColorSampler2d<S> {
-        ColorSampler2d::from_raw(self.raw.sampler(params, None))
+    pub fn color_sampler(&self, settings: Sampler2dSettings) -> ColorSampler2d<S> {
+        ColorSampler2d::from_raw(self.raw.sampler(settings, None))
     }
 }
 

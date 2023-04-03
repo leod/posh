@@ -100,14 +100,14 @@ impl Demo {
         };
         let sampler = self
             .texture
-            .as_color_sampler(gl::Sampler2dParams::default());
+            .as_color_sampler(gl::Sampler2dSettings::default());
 
         self.program.draw(gl::DrawInput {
             uniform: &(uniform, sampler),
             vertex_spec: &gl::VertexSpec::new(gl::Mode::Triangles, self.vertices.as_binding())
                 .with_elements(self.elements.as_binding()),
             framebuffer: &gl::DefaultFramebuffer::default(),
-            params: &gl::DrawParams::default()
+            settings: &gl::DrawSettings::default()
                 .with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0))
                 .with_clear_depth(1.0)
                 .with_depth_test(gl::Comparison::Less),

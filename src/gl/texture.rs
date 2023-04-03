@@ -3,7 +3,7 @@ use std::{marker::PhantomData, rc::Rc};
 use crate::sl::{self, ColorSample};
 
 use super::{
-    raw::{self, Sampler2dParams},
+    raw::{self, Sampler2dSettings},
     ColorAttachment, ColorImage, Comparison, DepthAttachment, DepthImage, TextureError,
 };
 
@@ -50,11 +50,11 @@ impl<S: ColorSample> ColorTexture2d<S> {
         })
     }
 
-    pub fn as_color_sampler(&self, params: Sampler2dParams) -> ColorSampler2d<S> {
+    pub fn as_color_sampler(&self, settings: Sampler2dSettings) -> ColorSampler2d<S> {
         // FIXME: Check texture completeness.
         ColorSampler2d::from_raw(raw::Sampler2d {
             texture: self.raw.clone(),
-            params,
+            settings,
             comparison: None,
         })
     }
@@ -89,24 +89,24 @@ impl DepthTexture2d {
         })
     }
 
-    pub fn as_color_sampler(&self, params: Sampler2dParams) -> ColorSampler2d<sl::F32> {
+    pub fn as_color_sampler(&self, settings: Sampler2dSettings) -> ColorSampler2d<sl::F32> {
         // FIXME: Check texture completeness.
         ColorSampler2d::from_raw(raw::Sampler2d {
             texture: self.raw.clone(),
-            params,
+            settings,
             comparison: None,
         })
     }
 
     pub fn as_comparison_sampler(
         &self,
-        params: Sampler2dParams,
+        settings: Sampler2dSettings,
         comparison: Comparison,
     ) -> ComparisonSampler2d {
         // FIXME: Check texture completeness.
         ComparisonSampler2d::from_raw(raw::Sampler2d {
             texture: self.raw.clone(),
-            params,
+            settings,
             comparison: Some(comparison),
         })
     }

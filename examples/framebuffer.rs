@@ -112,7 +112,7 @@ impl Demo {
                 self.triangle_vertices.as_binding(),
             ),
             framebuffer: &self.texture.as_color_attachment(),
-            params: &gl::DrawParams::default(),
+            settings: &gl::DrawSettings::default(),
         })?;
 
         self.present_program.draw(gl::DrawInput {
@@ -120,12 +120,12 @@ impl Demo {
                 state: self.state.as_binding(),
                 scene: self
                     .texture
-                    .as_color_sampler(gl::Sampler2dParams::default()),
+                    .as_color_sampler(gl::Sampler2dSettings::default()),
             },
             vertex_spec: &gl::VertexSpec::new(gl::Mode::Triangles, self.quad_vertices.as_binding())
                 .with_elements(self.quad_elements.as_binding()),
             framebuffer: &gl::DefaultFramebuffer::default(),
-            params: &gl::DrawParams::default(),
+            settings: &gl::DrawSettings::default(),
         })?;
 
         Ok(())

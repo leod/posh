@@ -7,7 +7,7 @@ use crate::{
 };
 
 use super::{
-    raw, ColorSampler2d, ComparisonSampler2d, DrawError, DrawParams, Framebuffer,
+    raw, ColorSampler2d, ComparisonSampler2d, DrawError, DrawSettings, Framebuffer,
     UniformBufferBinding, VertexSpec,
 };
 
@@ -15,7 +15,7 @@ pub struct DrawInput<'a, U, V, F = sl::Vec4> {
     pub uniform: &'a U,
     pub vertex_spec: &'a VertexSpec<V>,
     pub framebuffer: &'a F,
-    pub params: &'a DrawParams,
+    pub settings: &'a DrawSettings,
 }
 
 pub struct Program<U, V, F = sl::Vec4> {
@@ -54,7 +54,7 @@ where
                 &uniform_visitor.raw_samplers,
                 &input.vertex_spec.raw(),
                 &input.framebuffer.raw(),
-                input.params,
+                input.settings,
             )
         }?;
 

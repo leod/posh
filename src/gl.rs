@@ -18,8 +18,8 @@ pub use framebuffer::{ColorAttachment, DefaultFramebuffer, DepthAttachment, Fram
 pub use program::{DrawInput, Program};
 pub use raw::{
     BlendEquation, BlendFunc, Blending, BufferError, BufferUsage, Caps, Comparison, ContextError,
-    CreateError, CullFace, DrawError, DrawParams, ElementType, FramebufferError, ImageFormat,
-    ImageInternalFormat, Mode, ProgramError, ProgramValidationError, Rect, Sampler2dParams,
+    CreateError, CullFace, DrawError, DrawSettings, ElementType, FramebufferError, ImageFormat,
+    ImageInternalFormat, Mode, ProgramError, ProgramValidationError, Rect, Sampler2dSettings,
     SamplerMagFilter, SamplerMinFilter, SamplerWrap, StencilOp, StencilOps, StencilTest,
     TextureError, VertexArrayError,
 };
