@@ -3,7 +3,7 @@ use std::{marker::PhantomData, rc::Rc};
 use super::{
     dag::{ArrayType, Expr, Trace, Type},
     primitives::value_arg,
-    Object, ToValue, Value, ValueNonArray, U32,
+    Object, ToSl, Value, ValueNonArray, U32,
 };
 
 /// An array value in the shading language.
@@ -41,27 +41,27 @@ impl<V: ValueNonArray, const N: usize> Value for Array<V, N> {
     }
 }
 
-impl<V: ValueNonArray, const N: usize> ToValue for [V; N] {
+impl<V: ValueNonArray, const N: usize> ToSl for [V; N] {
     type Output = Array<V, N>;
 
-    fn to_value(self) -> Self::Output {
+    fn to_sl(self) -> Self::Output {
         todo!()
     }
 }
 
-impl<V: ValueNonArray, const N: usize> ToValue for Array<V, N> {
+impl<V: ValueNonArray, const N: usize> ToSl for Array<V, N> {
     type Output = Self;
 
-    fn to_value(self) -> Self::Output {
+    fn to_sl(self) -> Self::Output {
         self
     }
 }
 
 impl<V: ValueNonArray, const N: usize> Array<V, N> {
-    pub fn index(&self, index: impl ToValue<Output = U32>) -> V {
+    pub fn index(&self, index: impl ToSl<Output = U32>) -> V {
         // FIXME: Prevent out-of-bounds access.
         let base = self.trace.expr();
-        let index = index.to_value().expr();
+        let index = index.to_sl().expr();
         let ty = V::ty();
 
         let expr = Expr::Subscript { base, index, ty };

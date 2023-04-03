@@ -71,15 +71,15 @@ pub trait Object: 'static {
 /// is [`ColorSampler2d`]. See also [`Object`].
 ///
 /// The interface of this trait is a private implementation detail.
-pub trait Value: Object + Copy + ToValue<Output = Self> {
+pub trait Value: Object + Copy + ToSl<Output = Self> {
     #[doc(hidden)]
     fn from_expr(expr: Expr) -> Self;
 
-    fn eq(self, right: impl ToValue<Output = Self>) -> Bool {
+    fn eq(self, right: impl ToSl<Output = Self>) -> Bool {
         primitives::binary(self, BinaryOp::Eq, right)
     }
 
-    fn ne(self, right: impl ToValue<Output = Self>) -> Bool {
+    fn ne(self, right: impl ToSl<Output = Self>) -> Bool {
         primitives::binary(self, BinaryOp::Ne, right)
     }
 }
@@ -123,8 +123,8 @@ pub fn unique_struct_type<T: Struct>(ty: fn() -> StructType) -> Rc<StructType> {
 /// A conversion to a [`Value`] in the shading language.
 ///
 /// This is useful for converting literals to the shading language.
-pub trait ToValue: Copy {
+pub trait ToSl: Copy {
     type Output: Value;
 
-    fn to_value(self) -> Self::Output;
+    fn to_sl(self) -> Self::Output;
 }

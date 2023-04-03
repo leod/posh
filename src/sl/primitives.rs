@@ -2,28 +2,28 @@ use std::rc::Rc;
 
 use super::{
     dag::{BinaryOp, Expr, FuncDef, StructType, Type, UnaryOp},
-    Bool, Object, ToValue, Value,
+    Bool, Object, ToSl, Value,
 };
 
 pub fn any(vs: impl IntoIterator<Item = Bool>) -> Bool {
-    vs.into_iter().fold(false.to_value(), |x, v| x.or(v))
+    vs.into_iter().fold(false.to_sl(), |x, v| x.or(v))
 }
 
-pub(crate) fn cast<U, V>(u: impl ToValue<Output = U>) -> V
+pub(crate) fn cast<U, V>(u: impl ToSl<Output = U>) -> V
 where
     U: Value,
     V: Value,
 {
-    built_in_1(&format!("{}", V::ty()), u.to_value())
+    built_in_1(&format!("{}", V::ty()), u.to_sl())
 }
 
-pub(crate) fn unary<U, R>(op: UnaryOp, arg: impl ToValue<Output = U>) -> R
+pub(crate) fn unary<U, R>(op: UnaryOp, arg: impl ToSl<Output = U>) -> R
 where
     U: Value,
     R: Value,
 {
     let ty = R::ty();
-    let arg = arg.to_value().expr();
+    let arg = arg.to_sl().expr();
 
     let expr = Expr::Unary { ty, op, arg };
 
@@ -31,9 +31,9 @@ where
 }
 
 pub(crate) fn binary<U, V, R>(
-    left: impl ToValue<Output = U>,
+    left: impl ToSl<Output = U>,
     op: BinaryOp,
-    right: impl ToValue<Output = V>,
+    right: impl ToSl<Output = V>,
 ) -> R
 where
     U: Value,
@@ -41,8 +41,8 @@ where
     R: Value,
 {
     let ty = R::ty();
-    let left = left.to_value().expr();
-    let right = right.to_value().expr();
+    let left = left.to_sl().expr();
+    let right = right.to_sl().expr();
 
     let expr = Expr::Binary {
         ty,
@@ -101,10 +101,10 @@ where
 
 pub(crate) fn built_in_4<U, V, W, X, R>(
     name: &str,
-    u: impl ToValue<Output = U>,
-    v: impl ToValue<Output = V>,
-    w: impl ToValue<Output = W>,
-    x: impl ToValue<Output = X>,
+    u: impl ToSl<Output = U>,
+    v: impl ToSl<Output = V>,
+    w: impl ToSl<Output = W>,
+    x: impl ToSl<Output = X>,
 ) -> R
 where
     U: Object,
@@ -116,10 +116,10 @@ where
     let ty = R::ty();
     let name = name.to_string();
     let args = vec![
-        u.to_value().expr(),
-        v.to_value().expr(),
-        w.to_value().expr(),
-        x.to_value().expr(),
+        u.to_sl().expr(),
+        v.to_sl().expr(),
+        w.to_sl().expr(),
+        x.to_sl().expr(),
     ];
 
     let expr = Expr::CallBuiltIn { ty, name, args };

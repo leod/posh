@@ -5,8 +5,8 @@ macro_rules! impl_gen_type {
                 super::primitives::built_in_1("length", self)
             }
 
-            pub fn distance(self, y: impl super::ToValue<Output = Self>) -> Self {
-                super::primitives::built_in_2("distance", self, y.to_value())
+            pub fn distance(self, y: impl super::ToSl<Output = Self>) -> Self {
+                super::primitives::built_in_2("distance", self, y.to_sl())
             }
 
             pub fn normalize(self) -> Self {
@@ -33,12 +33,12 @@ macro_rules! impl_gen_type {
                 super::primitives::built_in_1("acos", self)
             }
 
-            pub fn atan2(self, x: impl super::ToValue<Output = Self>) -> Self {
-                super::primitives::built_in_2("atan", self, x.to_value())
+            pub fn atan2(self, x: impl super::ToSl<Output = Self>) -> Self {
+                super::primitives::built_in_2("atan", self, x.to_sl())
             }
 
-            pub fn pow(self, y: impl super::ToValue<Output = Self>) -> Self {
-                super::primitives::built_in_2("pow", self, y.to_value())
+            pub fn pow(self, y: impl super::ToSl<Output = Self>) -> Self {
+                super::primitives::built_in_2("pow", self, y.to_sl())
             }
 
             pub fn exp(self) -> Self {
@@ -113,90 +113,80 @@ macro_rules! impl_gen_type {
                 super::primitives::built_in_1("atanh", self)
             }
 
-            pub fn dot(self, y: impl super::ToValue<Output = Self>) -> super::F32 {
-                super::primitives::built_in_2("dot", self, y.to_value())
+            pub fn dot(self, y: impl super::ToSl<Output = Self>) -> super::F32 {
+                super::primitives::built_in_2("dot", self, y.to_sl())
             }
 
-            pub fn min(self, y: impl super::ToValue<Output = Self>) -> Self {
-                super::primitives::built_in_2("min", self, y.to_value())
+            pub fn min(self, y: impl super::ToSl<Output = Self>) -> Self {
+                super::primitives::built_in_2("min", self, y.to_sl())
             }
 
-            pub fn max(self, y: impl super::ToValue<Output = Self>) -> Self {
-                super::primitives::built_in_2("max", self, y.to_value())
+            pub fn max(self, y: impl super::ToSl<Output = Self>) -> Self {
+                super::primitives::built_in_2("max", self, y.to_sl())
             }
 
-            pub fn modulus(self, y: impl super::ToValue<Output = Self>) -> Self {
-                super::primitives::built_in_2("mod", self, y.to_value())
+            pub fn modulus(self, y: impl super::ToSl<Output = Self>) -> Self {
+                super::primitives::built_in_2("mod", self, y.to_sl())
             }
 
-            pub fn modulus_with_f32(self, y: impl super::ToValue<Output = F32>) -> Self {
-                super::primitives::built_in_2("mod", self, y.to_value())
+            pub fn modulus_with_f32(self, y: impl super::ToSl<Output = F32>) -> Self {
+                super::primitives::built_in_2("mod", self, y.to_sl())
             }
 
             pub fn clamp(
                 self,
-                min: impl super::ToValue<Output = Self>,
-                max: impl super::ToValue<Output = Self>,
+                min: impl super::ToSl<Output = Self>,
+                max: impl super::ToSl<Output = Self>,
             ) -> Self {
-                super::primitives::built_in_3("clamp", self, min.to_value(), max.to_value())
+                super::primitives::built_in_3("clamp", self, min.to_sl(), max.to_sl())
             }
 
             pub fn clamp_with_f32(
                 self,
-                min: impl super::ToValue<Output = F32>,
-                max: impl super::ToValue<Output = F32>,
+                min: impl super::ToSl<Output = F32>,
+                max: impl super::ToSl<Output = F32>,
             ) -> Self {
-                super::primitives::built_in_3("clamp", self, min.to_value(), max.to_value())
+                super::primitives::built_in_3("clamp", self, min.to_sl(), max.to_sl())
             }
 
             pub fn mix(
                 self,
-                y: impl super::ToValue<Output = Self>,
-                a: impl super::ToValue<Output = Self>,
+                y: impl super::ToSl<Output = Self>,
+                a: impl super::ToSl<Output = Self>,
             ) -> Self {
-                super::primitives::built_in_3("mix", self, y.to_value(), a.to_value())
+                super::primitives::built_in_3("mix", self, y.to_sl(), a.to_sl())
             }
 
             pub fn select(
-                a: impl super::ToValue<Output = $tyb>,
-                x: impl super::ToValue<Output = Self>,
-                y: impl super::ToValue<Output = Self>,
+                a: impl super::ToSl<Output = $tyb>,
+                x: impl super::ToSl<Output = Self>,
+                y: impl super::ToSl<Output = Self>,
             ) -> Self {
-                super::primitives::built_in_3("mix", x.to_value(), y.to_value(), a.to_value())
+                super::primitives::built_in_3("mix", x.to_sl(), y.to_sl(), a.to_sl())
             }
 
-            pub fn step(self, edge: impl super::ToValue<Output = Self>) -> Self {
-                super::primitives::built_in_2("step", edge.to_value(), self)
+            pub fn step(self, edge: impl super::ToSl<Output = Self>) -> Self {
+                super::primitives::built_in_2("step", edge.to_sl(), self)
             }
 
-            pub fn step_with_f32(self, edge: impl super::ToValue<Output = F32>) -> Self {
-                super::primitives::built_in_2("step", edge.to_value(), self)
+            pub fn step_with_f32(self, edge: impl super::ToSl<Output = F32>) -> Self {
+                super::primitives::built_in_2("step", edge.to_sl(), self)
             }
 
             pub fn smoothstep(
                 self,
-                edge1: impl super::ToValue<Output = Self>,
-                edge2: impl super::ToValue<Output = Self>,
+                edge1: impl super::ToSl<Output = Self>,
+                edge2: impl super::ToSl<Output = Self>,
             ) -> Self {
-                super::primitives::built_in_3(
-                    "smoothstep",
-                    edge1.to_value(),
-                    edge2.to_value(),
-                    self,
-                )
+                super::primitives::built_in_3("smoothstep", edge1.to_sl(), edge2.to_sl(), self)
             }
 
             pub fn smoothstep_with_f32(
                 self,
-                edge1: impl super::ToValue<Output = F32>,
-                edge2: impl super::ToValue<Output = F32>,
+                edge1: impl super::ToSl<Output = F32>,
+                edge2: impl super::ToSl<Output = F32>,
             ) -> Self {
-                super::primitives::built_in_3(
-                    "smoothstep",
-                    edge1.to_value(),
-                    edge2.to_value(),
-                    self,
-                )
+                super::primitives::built_in_3("smoothstep", edge1.to_sl(), edge2.to_sl(), self)
             }
 
             // TODO: mod, mix, step, smoothstep?

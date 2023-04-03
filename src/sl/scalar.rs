@@ -6,7 +6,7 @@ use std::{
 use super::{
     dag::{BinaryOp, Expr, Trace, Type, UnaryOp},
     primitives::{binary, cast, unary, value_arg},
-    Object, ToValue, Value, ValueNonArray,
+    Object, ToSl, Value, ValueNonArray,
 };
 
 // Maps from logical scalar type to physical scalar type.
@@ -124,19 +124,19 @@ macro_rules! impl_numeric_ops {
         }
 
         impl $scalar {
-            pub fn lt(self, rhs: impl ToValue<Output = Self>) -> Bool {
+            pub fn lt(self, rhs: impl ToSl<Output = Self>) -> Bool {
                 binary(self, BinaryOp::Lt, rhs)
             }
 
-            pub fn le(self, rhs: impl ToValue<Output = Self>) -> Bool {
+            pub fn le(self, rhs: impl ToSl<Output = Self>) -> Bool {
                 binary(self, BinaryOp::Le, rhs)
             }
 
-            pub fn ge(self, rhs: impl ToValue<Output = Self>) -> Bool {
+            pub fn ge(self, rhs: impl ToSl<Output = Self>) -> Bool {
                 binary(self, BinaryOp::Ge, rhs)
             }
 
-            pub fn gt(self, rhs: impl ToValue<Output = Self>) -> Bool {
+            pub fn gt(self, rhs: impl ToSl<Output = Self>) -> Bool {
                 binary(self, BinaryOp::Gt, rhs)
             }
         }
@@ -174,7 +174,7 @@ macro_rules! impl_scalar {
 
         impl Default for $scalar {
             fn default() -> Self {
-                $physical::default().to_value()
+                $physical::default().to_sl()
             }
         }
 
@@ -202,25 +202,25 @@ macro_rules! impl_scalar {
 
         impl ValueNonArray for $scalar {}
 
-        impl ToValue for $physical {
+        impl ToSl for $physical {
             type Output = $scalar;
 
-            fn to_value(self) -> Self::Output {
+            fn to_sl(self) -> Self::Output {
                 $scalar::new(self)
             }
         }
 
-        impl ToValue for $scalar {
+        impl ToSl for $scalar {
             type Output = Self;
 
-            fn to_value(self) -> Self::Output {
+            fn to_sl(self) -> Self::Output {
                 self
             }
         }
 
         impl From<$physical> for $scalar {
             fn from(x: $physical) -> Self {
-                x.to_value()
+                x.to_sl()
             }
         }
 
@@ -232,11 +232,11 @@ macro_rules! impl_scalar {
                 })
             }
 
-            pub fn eq(self, right: impl ToValue<Output = Self>) -> Bool {
+            pub fn eq(self, right: impl ToSl<Output = Self>) -> Bool {
                 <Self as Value>::eq(self, right)
             }
 
-            pub fn ne(self, right: impl ToValue<Output = Self>) -> Bool {
+            pub fn ne(self, right: impl ToSl<Output = Self>) -> Bool {
                 <Self as Value>::ne(self, right)
             }
         }
@@ -296,23 +296,19 @@ impl U32 {
 }
 
 impl Bool {
-    pub fn and(self, right: impl ToValue<Output = Self>) -> Self {
+    pub fn and(self, right: impl ToSl<Output = Self>) -> Self {
         binary(self, BinaryOp::And, right)
     }
 
-    pub fn or(self, right: impl ToValue<Output = Self>) -> Self {
+    pub fn or(self, right: impl ToSl<Output = Self>) -> Self {
         binary(self, BinaryOp::Or, right)
     }
 
-    pub fn branch<V: Value>(
-        self,
-        yes: impl ToValue<Output = V>,
-        no: impl ToValue<Output = V>,
-    ) -> V {
+    pub fn branch<V: Value>(self, yes: impl ToSl<Output = V>, no: impl ToSl<Output = V>) -> V {
         let ty = V::ty();
         let cond = self.expr();
-        let yes = yes.to_value().expr();
-        let no = no.to_value().expr();
+        let yes = yes.to_sl().expr();
+        let no = no.to_sl().expr();
 
         let expr = Expr::Branch { ty, cond, yes, no };
 

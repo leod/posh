@@ -3,7 +3,7 @@ use std::rc::Rc;
 use super::{
     dag::{Expr, StructType, Type},
     primitives::{field, simplify_struct_literal, value_arg},
-    unique_struct_type, Object, Struct, ToValue, Value, ValueNonArray,
+    unique_struct_type, Object, Struct, ToSl, Value, ValueNonArray,
 };
 
 macro_rules! impl_value {
@@ -62,21 +62,21 @@ macro_rules! impl_value {
             }
         }
 
-        impl<$($name: ToValue),*> ToValue for ($($name),*) {
+        impl<$($name: ToSl),*> ToSl for ($($name),*) {
             type Output = (
                 $(
-                    <$name as ToValue>::Output
+                    <$name as ToSl>::Output
                 ),*
             );
 
             #[allow(clippy::unused_unit)]
-            fn to_value(self) -> Self::Output {
+            fn to_sl(self) -> Self::Output {
                 #[allow(non_snake_case)]
                 let ($($name),*) = self;
 
                 (
                     $(
-                        $name.to_value()
+                        $name.to_sl()
                     ),*
                 )
             }
