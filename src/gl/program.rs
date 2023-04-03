@@ -39,9 +39,9 @@ where
         }
     }
 
-    pub fn draw<FBuf>(&self, input: DrawInput<U::Gl, V, FBuf>) -> Result<(), DrawError>
+    pub fn draw<'a, IntoF>(&'a self, input: DrawInput<'a, U::Gl, V, IntoF>) -> Result<(), DrawError>
     where
-        FBuf: Framebuffer<F>,
+        &'a IntoF: Into<Framebuffer<F>>,
     {
         // TODO: These allocations can be avoided once stable has allocators.
         // TODO: Remove hardcoded path names.
@@ -56,7 +56,7 @@ where
                 &uniform_visitor.raw_uniform_buffers,
                 &uniform_visitor.raw_samplers,
                 &input.vertex_spec.raw(),
-                &input.framebuffer.raw(),
+                &input.framebuffer.into().raw(),
                 input.settings,
             )
         }?;
