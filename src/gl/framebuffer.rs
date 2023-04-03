@@ -3,15 +3,15 @@ use std::marker::PhantomData;
 use crate::{
     interface::FragmentVisitor,
     sl::{self, ColorSample},
-    Fragment, Gl,
+    Fragment, Gl, Sl,
 };
 
 use super::{
     raw::{self},
-    ColorSampler2d, Sampler2dParams,
+    ColorSampler2d, Sampler2dSettings,
 };
 
-pub trait Framebuffer<F: Fragment<Gl> = ColorAttachment<sl::Vec4>> {
+pub trait Framebuffer<F: Fragment<Sl> = sl::Vec4> {
     fn raw(&self) -> raw::Framebuffer;
 }
 
@@ -30,8 +30,8 @@ pub struct DepthAttachment {
 }
 
 #[derive(Clone)]
-pub struct ColorDepthFramebuffer<F: Fragment<Gl>> {
-    pub color: F,
+pub struct ColorDepthFramebuffer<F: Fragment<Sl>> {
+    pub color: F::Gl,
     pub depth: DepthAttachment,
 }
 
@@ -43,8 +43,8 @@ impl<S> ColorAttachment<S> {
         }
     }
 
-    pub fn color_sampler(&self, params: Sampler2dParams) -> ColorSampler2d<S> {
-        ColorSampler2d::from_raw(self.raw.sampler(params, None))
+    pub fn color_sampler(&self, settings: Sampler2dSettings) -> ColorSampler2d<S> {
+        ColorSampler2d::from_raw(self.raw.sampler(settings, None))
     }
 }
 
@@ -54,13 +54,13 @@ impl DepthAttachment {
     }
 }
 
-impl Framebuffer<ColorAttachment<sl::Vec4>> for DefaultFramebuffer {
+impl Framebuffer<sl::Vec4> for DefaultFramebuffer {
     fn raw(&self) -> raw::Framebuffer {
         raw::Framebuffer::Default
     }
 }
 
-impl<F: Fragment<Gl>> Framebuffer<F> for F {
+impl<F: Fragment<Gl>> Framebuffer<F::Sl> for F {
     fn raw(&self) -> raw::Framebuffer {
         raw::Framebuffer::Attachments {
             attachments: raw_color_attachments(self),
@@ -76,7 +76,7 @@ impl Framebuffer<()> for DepthAttachment {
     }
 }
 
-impl<F: Fragment<Gl>> Framebuffer<F> for ColorDepthFramebuffer<F> {
+impl<F: Fragment<Sl>> Framebuffer<F> for ColorDepthFramebuffer<F> {
     fn raw(&self) -> raw::Framebuffer {
         let mut attachments = raw_color_attachments(&self.color);
         attachments.push(self.depth.raw.clone());

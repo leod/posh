@@ -105,25 +105,27 @@ impl Demo {
             flip,
         });
 
-        self.scene_program.draw(
-            &self.state.as_binding(),
-            &gl::VertexSpec::new(gl::Mode::Triangles, self.triangle_vertices.as_binding()),
-            &self.texture.as_color_attachment(),
-            &gl::DrawParams::default(),
-        )?;
+        self.scene_program.draw(gl::DrawInput {
+            uniform: &self.state.as_binding(),
+            vertex_spec: &gl::VertexSpec::new(gl::PrimitiveMode::Triangles)
+                .with_vertices(self.triangle_vertices.as_binding()),
+            framebuffer: &self.texture.as_color_attachment(),
+            settings: &gl::DrawSettings::default(),
+        })?;
 
-        self.present_program.draw(
-            &present_pass::Uniform {
+        self.present_program.draw(gl::DrawInput {
+            uniform: &present_pass::Uniform {
                 state: self.state.as_binding(),
                 scene: self
                     .texture
-                    .as_color_sampler(gl::Sampler2dParams::default()),
+                    .as_color_sampler(gl::Sampler2dSettings::default()),
             },
-            &gl::VertexSpec::new(gl::Mode::Triangles, self.quad_vertices.as_binding())
+            vertex_spec: &gl::VertexSpec::new(gl::PrimitiveMode::Triangles)
+                .with_vertices(self.quad_vertices.as_binding())
                 .with_elements(self.quad_elements.as_binding()),
-            &gl::DefaultFramebuffer::default(),
-            &gl::DrawParams::default(),
-        )?;
+            framebuffer: &gl::DefaultFramebuffer::default(),
+            settings: &gl::DrawSettings::default(),
+        })?;
 
         Ok(())
     }

@@ -7,9 +7,19 @@ use crate::{
 };
 
 use super::{
-    raw, ColorSampler2d, ComparisonSampler2d, DrawError, DrawParams, Framebuffer,
+    raw, ColorSampler2d, ComparisonSampler2d, DrawError, DrawSettings, Framebuffer,
     UniformBufferBinding, VertexSpec,
 };
+
+pub struct DrawInput<'a, U, V, F = sl::Vec4>
+where
+    V: Vertex<Sl>,
+{
+    pub uniform: &'a U,
+    pub vertex_spec: &'a VertexSpec<V>,
+    pub framebuffer: &'a F,
+    pub settings: &'a DrawSettings,
+}
 
 pub struct Program<U, V, F = sl::Vec4> {
     raw: Rc<raw::Program>,
@@ -29,17 +39,14 @@ where
         }
     }
 
-    pub fn draw(
-        &self,
-        uniform: &U::Gl,
-        vertex_spec: &VertexSpec<V::Gl>,
-        framebuffer: &impl Framebuffer<F::Gl>,
-        draw_params: &DrawParams,
-    ) -> Result<(), DrawError> {
+    pub fn draw<FBuf>(&self, input: DrawInput<U::Gl, V, FBuf>) -> Result<(), DrawError>
+    where
+        FBuf: Framebuffer<F>,
+    {
         // TODO: These allocations can be avoided once stable has allocators.
         // TODO: Remove hardcoded path names.
         let mut uniform_visitor = CollectUniforms::default();
-        uniform.visit("", &mut uniform_visitor);
+        input.uniform.visit("", &mut uniform_visitor);
 
         // FIXME: Safety: check that all vertex buffers are large enough for the
         // values in the element buffer (if we have one).
@@ -48,9 +55,9 @@ where
             self.raw.draw(
                 &uniform_visitor.raw_uniform_buffers,
                 &uniform_visitor.raw_samplers,
-                &vertex_spec.raw(),
-                &framebuffer.raw(),
-                draw_params,
+                &input.vertex_spec.raw(),
+                &input.framebuffer.raw(),
+                input.settings,
             )
         }?;
 
