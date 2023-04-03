@@ -36,10 +36,10 @@ where
         }
     }
 
-    pub fn draw(
-        &self,
-        input: DrawInput<U::Gl, V::Gl, impl Framebuffer<F::Gl>>,
-    ) -> Result<(), DrawError> {
+    pub fn draw<FBuf>(&self, input: DrawInput<U::Gl, V::Gl, FBuf>) -> Result<(), DrawError>
+    where
+        FBuf: Framebuffer<F>,
+    {
         // TODO: These allocations can be avoided once stable has allocators.
         // TODO: Remove hardcoded path names.
         let mut uniform_visitor = CollectUniforms::default();
