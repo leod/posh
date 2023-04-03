@@ -8,7 +8,7 @@ use super::{
     primitives::{
         binary, built_in_1, built_in_2, cast, common_field_base, field, unary, value_arg,
     },
-    Bool, Mat2, Mat3, Mat4, Object, ToValue, Value, ValueNonArray, F32, I32, U32,
+    Bool, Mat2, Mat3, Mat4, Object, ToSl, Value, ValueNonArray, F32, I32, U32,
 };
 
 // Implements `Object` and `Value` for `$vec`.
@@ -58,32 +58,32 @@ macro_rules! impl_value {
 
         impl ValueNonArray for $vec {}
 
-        impl ToValue for glam::$vec {
+        impl ToSl for glam::$vec {
             type Output = $vec;
 
-            fn to_value(self) -> Self::Output {
+            fn to_sl(self) -> Self::Output {
                 Self::Output {
                     $(
-                        $member: self.$member.to_value()
+                        $member: self.$member.to_sl()
                     ),+
                 }
             }
         }
 
-        impl ToValue for $vec {
+        impl ToSl for $vec {
             type Output = Self;
 
-            fn to_value(self) -> Self::Output {
+            fn to_sl(self) -> Self::Output {
                 self
             }
         }
 
         impl $vec {
-            pub fn eq(self, right: impl ToValue<Output = Self>) -> Bool {
+            pub fn eq(self, right: impl ToSl<Output = Self>) -> Bool {
                 <Self as Value>::eq(self, right)
             }
 
-            pub fn ne(self, right: impl ToValue<Output = Self>) -> Bool {
+            pub fn ne(self, right: impl ToSl<Output = Self>) -> Bool {
                 <Self as Value>::ne(self, right)
             }
         }
@@ -284,38 +284,32 @@ macro_rules! impl_vec2 {
 
         impl $vec {
             /// Creates a new vector.
-            pub fn new(
-                x: impl ToValue<Output = $scalar>,
-                y: impl ToValue<Output = $scalar>,
-            ) -> Self {
+            pub fn new(x: impl ToSl<Output = $scalar>, y: impl ToSl<Output = $scalar>) -> Self {
                 Self {
-                    x: x.to_value(),
-                    y: y.to_value(),
+                    x: x.to_sl(),
+                    y: y.to_sl(),
                 }
             }
 
             /// Creates a vector with all elements set to `v`.
-            pub fn splat(v: impl ToValue<Output = $scalar>) -> Self {
-                let v = v.to_value();
+            pub fn splat(v: impl ToSl<Output = $scalar>) -> Self {
+                let v = v.to_sl();
 
                 Self { x: v, y: v }
             }
 
             /// Creates a three-dimensional vector from `self` and the given `z` value.
-            pub fn extend(self, z: impl ToValue<Output = $scalar>) -> $vec3 {
+            pub fn extend(self, z: impl ToSl<Output = $scalar>) -> $vec3 {
                 $vec3 {
                     x: self.x,
                     y: self.y,
-                    z: z.to_value(),
+                    z: z.to_sl(),
                 }
             }
         }
 
         #[doc = concat!("Creates a two-dimensional ", scalar_name!($scalar), " vector.")]
-        pub fn $vec_lower(
-            x: impl ToValue<Output = $scalar>,
-            y: impl ToValue<Output = $scalar>,
-        ) -> $vec {
+        pub fn $vec_lower(x: impl ToSl<Output = $scalar>, y: impl ToSl<Output = $scalar>) -> $vec {
             $vec::new(x, y)
         }
 
@@ -338,31 +332,31 @@ macro_rules! impl_vec3 {
         impl $vec {
             /// Creates a new vector.
             pub fn new(
-                x: impl ToValue<Output = $scalar>,
-                y: impl ToValue<Output = $scalar>,
-                z: impl ToValue<Output = $scalar>,
+                x: impl ToSl<Output = $scalar>,
+                y: impl ToSl<Output = $scalar>,
+                z: impl ToSl<Output = $scalar>,
             ) -> Self {
                 Self {
-                    x: x.to_value(),
-                    y: y.to_value(),
-                    z: z.to_value(),
+                    x: x.to_sl(),
+                    y: y.to_sl(),
+                    z: z.to_sl(),
                 }
             }
 
             /// Creates a vector with all elements set to `v`.
-            pub fn splat(v: impl ToValue<Output = $scalar>) -> Self {
-                let v = v.to_value();
+            pub fn splat(v: impl ToSl<Output = $scalar>) -> Self {
+                let v = v.to_sl();
 
                 Self { x: v, y: v, z: v }
             }
 
             /// Creates a four-dimensional vector from `self` and the given `w` value.
-            pub fn extend(self, w: impl ToValue<Output = $scalar>) -> $vec4 {
+            pub fn extend(self, w: impl ToSl<Output = $scalar>) -> $vec4 {
                 $vec4 {
                     x: self.x,
                     y: self.y,
                     z: self.z,
-                    w: w.to_value(),
+                    w: w.to_sl(),
                 }
             }
 
@@ -376,9 +370,9 @@ macro_rules! impl_vec3 {
 
         #[doc = concat!("Creates a three-dimensional ", scalar_name!($scalar), " vector.")]
         pub fn $vec_lower(
-            x: impl ToValue<Output = $scalar>,
-            y: impl ToValue<Output = $scalar>,
-            z: impl ToValue<Output = $scalar>,
+            x: impl ToSl<Output = $scalar>,
+            y: impl ToSl<Output = $scalar>,
+            z: impl ToSl<Output = $scalar>,
         ) -> $vec {
             $vec::new(x, y, z)
         }
@@ -403,22 +397,22 @@ macro_rules! impl_vec4 {
         impl $vec {
             /// Creates a new vector.
             pub fn new(
-                x: impl ToValue<Output = $scalar>,
-                y: impl ToValue<Output = $scalar>,
-                z: impl ToValue<Output = $scalar>,
-                w: impl ToValue<Output = $scalar>,
+                x: impl ToSl<Output = $scalar>,
+                y: impl ToSl<Output = $scalar>,
+                z: impl ToSl<Output = $scalar>,
+                w: impl ToSl<Output = $scalar>,
             ) -> Self {
                 Self {
-                    x: x.to_value(),
-                    y: y.to_value(),
-                    z: z.to_value(),
-                    w: w.to_value(),
+                    x: x.to_sl(),
+                    y: y.to_sl(),
+                    z: z.to_sl(),
+                    w: w.to_sl(),
                 }
             }
 
             /// Creates a vector with all elements set to `v`.
-            pub fn splat(v: impl ToValue<Output = $scalar>) -> Self {
-                let v = v.to_value();
+            pub fn splat(v: impl ToSl<Output = $scalar>) -> Self {
+                let v = v.to_sl();
 
                 Self {
                     x: v,
@@ -446,10 +440,10 @@ macro_rules! impl_vec4 {
 
         #[doc = concat!("Creates a four-dimensional ", scalar_name!($scalar), " vector.")]
         pub fn $vec_lower(
-            x: impl ToValue<Output = $scalar>,
-            y: impl ToValue<Output = $scalar>,
-            z: impl ToValue<Output = $scalar>,
-            w: impl ToValue<Output = $scalar>,
+            x: impl ToSl<Output = $scalar>,
+            y: impl ToSl<Output = $scalar>,
+            z: impl ToSl<Output = $scalar>,
+            w: impl ToSl<Output = $scalar>,
         ) -> $vec {
             $vec::new(x, y, z, w)
         }

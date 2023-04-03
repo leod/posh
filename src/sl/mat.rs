@@ -6,7 +6,7 @@ use std::{
 use super::{
     dag::{BinaryOp, BuiltInType, Expr, Type, UnaryOp},
     primitives::{binary, built_in_1, built_in_2, common_field_base, field, unary, value_arg},
-    Bool, Object, ToValue, Value, ValueNonArray, Vec2, Vec3, Vec4, F32,
+    Bool, Object, ToSl, Value, ValueNonArray, Vec2, Vec3, Vec4, F32,
 };
 
 /// A two-by-two floating-point matrix.
@@ -80,32 +80,32 @@ macro_rules! impl_value {
 
         impl ValueNonArray for $mat {}
 
-        impl ToValue for glam::$mat {
+        impl ToSl for glam::$mat {
             type Output = $mat;
 
-            fn to_value(self) -> Self::Output {
+            fn to_sl(self) -> Self::Output {
                 Self::Output {
                     $(
-                        $member: self.$member.to_value()
+                        $member: self.$member.to_sl()
                     ),+
                 }
             }
         }
 
-        impl ToValue for $mat {
+        impl ToSl for $mat {
             type Output = Self;
 
-            fn to_value(self) -> Self::Output {
+            fn to_sl(self) -> Self::Output {
                 self
             }
         }
 
         impl $mat {
-            pub fn eq(self, right: impl ToValue<Output = Self>) -> Bool {
+            pub fn eq(self, right: impl ToSl<Output = Self>) -> Bool {
                 <Self as Value>::eq(self, right)
             }
 
-            pub fn ne(self, right: impl ToValue<Output = Self>) -> Bool {
+            pub fn ne(self, right: impl ToSl<Output = Self>) -> Bool {
                 <Self as Value>::ne(self, right)
             }
         }
@@ -130,7 +130,7 @@ macro_rules! impl_binary_op_vec_rhs {
     ($mat:ident, $vec:ident, $fn:ident, $op:ident) => {
         impl<Rhs> $op<Rhs> for $mat
         where
-            Rhs: ToValue<Output = $vec>,
+            Rhs: ToSl<Output = $vec>,
         {
             type Output = $vec;
 
@@ -194,8 +194,8 @@ macro_rules! impl_mat {
         }
 
         impl $mat {
-            pub fn diagonal(value: impl ToValue<Output = F32>) -> Self {
-                built_in_1(&format!("{}", Self::ty()), value.to_value())
+            pub fn diagonal(value: impl ToSl<Output = F32>) -> Self {
+                built_in_1(&format!("{}", Self::ty()), value.to_sl())
             }
 
             pub fn identity() -> Self {
@@ -226,37 +226,37 @@ impl_mat!(Mat3, Vec3, x_axis, y_axis, z_axis);
 impl_mat!(Mat4, Vec4, x_axis, y_axis, z_axis, w_axis);
 
 /// Creates a two-by-two floating-point matrix from column vectors.
-pub fn mat2(x: impl ToValue<Output = Vec2>, y: impl ToValue<Output = Vec2>) -> Mat2 {
+pub fn mat2(x: impl ToSl<Output = Vec2>, y: impl ToSl<Output = Vec2>) -> Mat2 {
     Mat2 {
-        x_axis: x.to_value(),
-        y_axis: y.to_value(),
+        x_axis: x.to_sl(),
+        y_axis: y.to_sl(),
     }
 }
 
 /// Creates a three-by-three floating-point matrix from column vectors.
 pub fn mat3(
-    x: impl ToValue<Output = Vec3>,
-    y: impl ToValue<Output = Vec3>,
-    z: impl ToValue<Output = Vec3>,
+    x: impl ToSl<Output = Vec3>,
+    y: impl ToSl<Output = Vec3>,
+    z: impl ToSl<Output = Vec3>,
 ) -> Mat3 {
     Mat3 {
-        x_axis: x.to_value(),
-        y_axis: y.to_value(),
-        z_axis: z.to_value(),
+        x_axis: x.to_sl(),
+        y_axis: y.to_sl(),
+        z_axis: z.to_sl(),
     }
 }
 
 /// Creates a four-by-four floating-point matrix from column vectors.
 pub fn mat4(
-    x: impl ToValue<Output = Vec4>,
-    y: impl ToValue<Output = Vec4>,
-    z: impl ToValue<Output = Vec4>,
-    w: impl ToValue<Output = Vec4>,
+    x: impl ToSl<Output = Vec4>,
+    y: impl ToSl<Output = Vec4>,
+    z: impl ToSl<Output = Vec4>,
+    w: impl ToSl<Output = Vec4>,
 ) -> Mat4 {
     Mat4 {
-        x_axis: x.to_value(),
-        y_axis: y.to_value(),
-        z_axis: z.to_value(),
-        w_axis: w.to_value(),
+        x_axis: x.to_sl(),
+        y_axis: y.to_sl(),
+        z_axis: z.to_sl(),
+        w_axis: w.to_sl(),
     }
 }

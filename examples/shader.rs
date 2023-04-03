@@ -1,5 +1,5 @@
 use posh::{
-    sl::{self, ToValue, VaryingOutput},
+    sl::{self, ToSl, VaryingOutput},
     Block, BlockDom, Sl,
 };
 
@@ -30,13 +30,13 @@ fn vertex_shader(globals: Globals, vertex: ColorVertex) -> VaryingOutput<sl::Vec
     let shift = globals
         .invert
         .eq(2)
-        .branch(shift, false.to_value().branch(shift * -1.0, shift * -2.0));
+        .branch(shift, false.to_sl().branch(shift * -1.0, shift * -2.0));
 
     let shift2 = globals.invert.eq(3).branch(shift, {
         let x = shift * 5.0;
         let y = !(x.as_ivec2() << 3) & 1 % sl::ivec2(1, 1);
 
-        false.to_value().branch(x * -1.0, y.as_vec2() * -2.0)
+        false.to_sl().branch(x * -1.0, y.as_vec2() * -2.0)
     });
 
     let position = sl::Mat2::identity() * vertex.position + shift2 + sl::Mat2::diagonal(4.0).x_axis;

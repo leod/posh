@@ -78,11 +78,11 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         // Implement `ValueNonArray` for the struct.
         impl #impl_generics ::posh::sl::ValueNonArray for #ident #ty_generics #where_clause {}
 
-        // Implement `ToValue` for the struct.
-        impl #impl_generics ::posh::sl::ToValue for #ident #ty_generics #where_clause {
+        // Implement `ToSl` for the struct.
+        impl #impl_generics ::posh::sl::ToSl for #ident #ty_generics #where_clause {
             type Output = Self;
 
-            fn to_value(self) -> Self {
+            fn to_sl(self) -> Self {
                 self
             }
         }
