@@ -16,8 +16,8 @@ pub struct VertexSpec<V: Vertex<Sl>> {
     pub mode: PrimitiveMode,
     pub vertex_data: V::Gl,
     pub vertex_range: Range<usize>,
-    pub num_instances: usize,
     pub element_data: Option<ElementBufferBinding>,
+    pub num_instances: usize,
 }
 
 impl VertexSpec<()> {
@@ -26,8 +26,8 @@ impl VertexSpec<()> {
             mode,
             vertex_data: (),
             vertex_range: 0..0,
-            num_instances: 0,
             element_data: None,
+            num_instances: 0,
         }
     }
 
@@ -45,8 +45,8 @@ impl VertexSpec<()> {
             mode: self.mode,
             vertex_data: vertices,
             vertex_range: 0..num_vertices.unwrap_or(0),
-            num_instances: num_instances.unwrap_or(1),
             element_data: self.element_data,
+            num_instances: num_instances.unwrap_or(1),
         }
     }
 }
@@ -59,13 +59,13 @@ impl<V: Vertex<Sl>> VertexSpec<V> {
         self
     }
 
-    pub fn with_num_instances(mut self, num_instances: usize) -> Self {
-        self.num_instances = num_instances;
+    pub fn with_element_data(mut self, elements: ElementBufferBinding) -> Self {
+        self.element_data = Some(elements);
         self
     }
 
-    pub fn with_element_data(mut self, elements: ElementBufferBinding) -> Self {
-        self.element_data = Some(elements);
+    pub fn with_num_instances(mut self, num_instances: usize) -> Self {
+        self.num_instances = num_instances;
         self
     }
 
