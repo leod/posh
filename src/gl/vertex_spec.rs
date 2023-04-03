@@ -12,9 +12,9 @@ use crate::{
 use super::{raw, ElementBufferBinding, PrimitiveMode};
 
 #[derive(Clone)]
-pub struct VertexSpec<V> {
+pub struct VertexSpec<V: Vertex<Sl>> {
     pub mode: PrimitiveMode,
-    pub vertices: V,
+    pub vertices: V::Gl,
     pub vertex_range: Range<usize>,
     pub num_instances: usize,
     pub elements: Option<ElementBufferBinding>,
@@ -31,9 +31,10 @@ impl VertexSpec<()> {
         }
     }
 
-    pub fn with_vertices<V>(self, vertices: V) -> VertexSpec<V>
+    pub fn with_vertices<V>(self, vertices: V) -> VertexSpec<V::Sl>
     where
         V: Vertex<Gl>,
+        V::Sl: Vertex<Sl, Gl = V>,
     {
         let Counts {
             num_vertices,
@@ -50,7 +51,7 @@ impl VertexSpec<()> {
     }
 }
 
-impl<V: Vertex<Gl>> VertexSpec<V> {
+impl<V: Vertex<Sl>> VertexSpec<V> {
     pub fn with_vertex_range(mut self, vertex_range: Range<usize>) -> Self {
         // NOTE: The stored `vertex_range` is ignored if an element buffer is
         // passed as well.
