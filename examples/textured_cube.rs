@@ -94,20 +94,19 @@ impl Demo {
         let time = Instant::now().duration_since(self.start_time).as_secs_f32();
         self.time.set(time);
 
-        let uniform = Uniform {
-            camera: self.camera.as_binding(),
-            time: self.time.as_binding(),
-        };
-        let sampler = self
-            .texture
-            .as_color_sampler(gl::Sampler2dSettings::default());
-
         self.program.draw(gl::DrawInput {
-            uniform: &(uniform, sampler),
+            uniform: &(
+                Uniform {
+                    camera: self.camera.as_binding(),
+                    time: self.time.as_binding(),
+                },
+                self.texture
+                    .as_color_sampler(gl::Sampler2dSettings::default()),
+            ),
             vertex_spec: &gl::VertexSpec::new(gl::PrimitiveMode::Triangles)
                 .with_vertex_data(self.vertices.as_binding())
                 .with_element_data(self.elements.as_binding()),
-            framebuffer: &gl::DefaultFramebuffer::default(),
+            framebuffer: &gl::Framebuffer::default(),
             settings: &gl::DrawSettings::default()
                 .with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0))
                 .with_clear_depth(1.0)

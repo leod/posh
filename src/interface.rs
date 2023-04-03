@@ -474,7 +474,7 @@ pub trait FragmentDom: Copy {
 /// # Safety
 ///
 /// TODO
-pub unsafe trait Fragment<D: FragmentDom> {
+pub unsafe trait Fragment<D: FragmentDom>: Clone {
     /// The logical view of `Self`.
     ///
     /// This is the type through which fragment shaders output fragment data.

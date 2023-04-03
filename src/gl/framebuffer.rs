@@ -11,28 +11,10 @@ use super::{
     ColorSampler2d, Sampler2dSettings,
 };
 
-pub trait Framebuffer<F: Fragment<Sl> = sl::Vec4> {
-    fn raw(&self) -> raw::Framebuffer;
-}
-
-#[derive(Debug, Clone, Default)]
-pub struct DefaultFramebuffer {}
-
 #[derive(Clone)]
 pub struct ColorAttachment<S> {
     raw: raw::Attachment,
     _phantom: PhantomData<S>,
-}
-
-#[derive(Clone)]
-pub struct DepthAttachment {
-    raw: raw::Attachment,
-}
-
-#[derive(Clone)]
-pub struct ColorDepthFramebuffer<F: Fragment<Sl>> {
-    pub color: F::Gl,
-    pub depth: DepthAttachment,
 }
 
 impl<S> ColorAttachment<S> {
@@ -43,9 +25,20 @@ impl<S> ColorAttachment<S> {
         }
     }
 
-    pub fn color_sampler(&self, settings: Sampler2dSettings) -> ColorSampler2d<S> {
+    pub fn as_color_sampler(&self, settings: Sampler2dSettings) -> ColorSampler2d<S> {
         ColorSampler2d::from_raw(self.raw.sampler(settings, None))
     }
+}
+
+impl<'a, S: ColorSample> Into<Framebuffer<S>> for &'a ColorAttachment<S> {
+    fn into(self) -> Framebuffer<S> {
+        Framebuffer(FramebufferInternal::Color(self.clone()))
+    }
+}
+
+#[derive(Clone)]
+pub struct DepthAttachment {
+    raw: raw::Attachment,
 }
 
 impl DepthAttachment {
@@ -54,34 +47,65 @@ impl DepthAttachment {
     }
 }
 
-impl Framebuffer<sl::Vec4> for DefaultFramebuffer {
-    fn raw(&self) -> raw::Framebuffer {
-        raw::Framebuffer::Default
+impl<'a> Into<Framebuffer<()>> for &'a DepthAttachment {
+    fn into(self) -> Framebuffer<()> {
+        Framebuffer(FramebufferInternal::Depth(self.clone()))
     }
 }
 
-impl<F: Fragment<Gl>> Framebuffer<F::Sl> for F {
-    fn raw(&self) -> raw::Framebuffer {
-        raw::Framebuffer::Attachments {
-            attachments: raw_color_attachments(self),
+#[derive(Clone)]
+pub struct ColorDepthFramebuffer<F: Fragment<Sl>> {
+    pub color: F::Gl,
+    pub depth: DepthAttachment,
+}
+
+impl<'a, F: Fragment<Sl>> Into<Framebuffer<F>> for &'a ColorDepthFramebuffer<F> {
+    fn into(self) -> Framebuffer<F> {
+        Framebuffer(FramebufferInternal::ColorDepth(self.clone()))
+    }
+}
+
+#[derive(Clone)]
+enum FramebufferInternal<F: Fragment<Sl>> {
+    Default,
+    Depth(DepthAttachment),
+    Color(F::Gl),
+    ColorDepth(ColorDepthFramebuffer<F>),
+}
+
+#[derive(Clone)]
+pub struct Framebuffer<F: Fragment<Sl>>(FramebufferInternal<F>);
+
+impl<F: Fragment<Sl>> Framebuffer<F> {
+    pub fn raw(&self) -> raw::Framebuffer {
+        use FramebufferInternal::*;
+
+        match &self.0 {
+            Default => raw::Framebuffer::Default,
+            Depth(depth) => raw::Framebuffer::Attachments {
+                attachments: vec![depth.raw.clone()],
+            },
+            Color(color) => raw::Framebuffer::Attachments {
+                attachments: raw_color_attachments(color),
+            },
+            ColorDepth(color_depth) => {
+                let mut attachments = raw_color_attachments(&color_depth.color);
+                attachments.push(color_depth.depth.raw.clone());
+                raw::Framebuffer::Attachments { attachments }
+            }
         }
     }
 }
 
-impl Framebuffer<()> for DepthAttachment {
-    fn raw(&self) -> raw::Framebuffer {
-        raw::Framebuffer::Attachments {
-            attachments: vec![self.raw.clone()],
-        }
+impl Default for Framebuffer<sl::Vec4> {
+    fn default() -> Self {
+        Framebuffer(FramebufferInternal::Default)
     }
 }
 
-impl<F: Fragment<Sl>> Framebuffer<F> for ColorDepthFramebuffer<F> {
-    fn raw(&self) -> raw::Framebuffer {
-        let mut attachments = raw_color_attachments(&self.color);
-        attachments.push(self.depth.raw.clone());
-
-        raw::Framebuffer::Attachments { attachments }
+impl<'a, F: Fragment<Sl>> Into<Framebuffer<F>> for &'a Framebuffer<F> {
+    fn into(self) -> Framebuffer<F> {
+        self.clone()
     }
 }
 

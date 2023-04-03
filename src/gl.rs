@@ -14,7 +14,7 @@ mod vertex_spec;
 pub use self::image::{ColorImage, DepthImage};
 pub use context::Context;
 pub use element_buffer::{Element, ElementBuffer, ElementBufferBinding};
-pub use framebuffer::{ColorAttachment, DefaultFramebuffer, DepthAttachment, Framebuffer};
+pub use framebuffer::{ColorAttachment, DepthAttachment, Framebuffer};
 pub use program::{DrawInput, Program};
 pub use raw::{
     BlendEquation, BlendFunc, Blending, BufferError, BufferUsage, Caps, Comparison, ContextError,
