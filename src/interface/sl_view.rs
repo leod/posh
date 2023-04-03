@@ -150,6 +150,10 @@ unsafe impl Vertex<Sl> for () {
     type Sl = ();
 
     fn visit<'a>(&'a self, _: &str, _: &mut impl VertexVisitor<'a, Sl>) {}
+
+    fn shader_input(_: &str) -> () {
+        ()
+    }
 }
 
 #[sealed]
