@@ -69,7 +69,7 @@ impl<V: ValueNonArray, const N: usize> ToSl for Array<V, N> {
 }
 
 impl<V: ValueNonArray, const N: usize> Array<V, N> {
-    pub fn index(&self, index: impl ToSl<Output = U32>) -> V {
+    pub fn get(&self, index: impl ToSl<Output = U32>) -> V {
         // FIXME: Prevent out-of-bounds access.
         let base = self.trace.expr();
         let index = index.to_sl().expr();
