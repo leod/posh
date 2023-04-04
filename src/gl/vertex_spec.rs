@@ -27,7 +27,7 @@ impl VertexSpec<()> {
             vertex_data: (),
             vertex_range: 0..0,
             element_data: None,
-            num_instances: 0,
+            num_instances: 1,
         }
     }
 
