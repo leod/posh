@@ -46,7 +46,7 @@ fn vertex_shader(globals: Globals, vertex: ColorVertex) -> VaryingOutput<sl::Vec
     VaryingOutput {
         varying: sl::Vec4::splat(0.0)
             + offsets
-                .index(globals.invert.as_u32() + 3)
+                .get(globals.invert.as_u32() + 3)
                 .extend(1.0)
                 .extend(2.0),
         position: globals.projection * globals.camera * position.extend(1.0).extend(1.0),
