@@ -7,11 +7,11 @@ use sealed::sealed;
 use crate::sl::{self, program_def::VertexAttributeDef, ColorSample};
 
 /// The graphics library's view of shader inputs and outputs.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Gl;
 
 /// The shading language's view of shader inputs and outputs.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Sl;
 
 // Block
