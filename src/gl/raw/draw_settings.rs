@@ -330,6 +330,20 @@ impl DrawSettings {
         current: &DrawSettings,
         framebuffer_size: glam::UVec2,
     ) {
+        if self.scissor != current.scissor {
+            if let Some(scissor) = self.scissor {
+                let x = scissor.lower_left_corner.x.try_into().unwrap();
+                let y = scissor.lower_left_corner.y.try_into().unwrap();
+                let width = scissor.size.x.try_into().unwrap();
+                let height = scissor.size.y.try_into().unwrap();
+
+                unsafe { gl.enable(glow::SCISSOR_TEST) };
+                unsafe { gl.scissor(x, y, width, height) };
+            } else {
+                unsafe { gl.disable(glow::SCISSOR_TEST) };
+            }
+        }
+
         let mut clear_mask = 0;
 
         if let Some(c) = self.clear_stencil {
@@ -376,20 +390,6 @@ impl DrawSettings {
                 unsafe { gl.cull_face(cull_face) };
             } else {
                 unsafe { gl.disable(glow::CULL_FACE) };
-            }
-        }
-
-        if self.scissor != current.scissor {
-            if let Some(scissor) = self.scissor {
-                let x = scissor.lower_left_corner.x.try_into().unwrap();
-                let y = scissor.lower_left_corner.y.try_into().unwrap();
-                let width = scissor.size.x.try_into().unwrap();
-                let height = scissor.size.y.try_into().unwrap();
-
-                unsafe { gl.enable(glow::SCISSOR_TEST) };
-                unsafe { gl.scissor(x, y, width, height) };
-            } else {
-                unsafe { gl.disable(glow::SCISSOR_TEST) };
             }
         }
 
