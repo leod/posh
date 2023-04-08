@@ -164,6 +164,7 @@ impl VertexSpec {
             }
         }
 
+        #[cfg(debug_assertions)]
         check_gl_error(gl).expect("OpenGL error after VertexSpec::bind()");
     }
 
@@ -193,6 +194,7 @@ impl VertexSpec {
             }
         }
 
+        #[cfg(debug_assertions)]
         check_gl_error(gl).expect("OpenGL error after VertexSpec::unbind()");
     }
 
@@ -292,6 +294,7 @@ impl VertexSpec {
         // TODO: Remove overly conservative unbinding.
         self.unbind(ctx);
 
+        #[cfg(debug_assertions)]
         check_gl_error(gl).expect("OpenGL error in VertexStream::draw()");
     }
 }

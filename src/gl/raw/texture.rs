@@ -229,6 +229,7 @@ impl Texture2d {
         // FIXME: Check that comparison can be applied to the texture.
         set_comparison(gl, glow::TEXTURE_2D, comparison);
 
+        #[cfg(debug_assertions)]
         check_gl_error(gl).unwrap();
     }
 }
