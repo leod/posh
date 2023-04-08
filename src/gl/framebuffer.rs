@@ -30,9 +30,9 @@ impl<S> ColorAttachment<S> {
     }
 }
 
-impl<'a, S: ColorSample> Into<Framebuffer<S>> for &'a ColorAttachment<S> {
-    fn into(self) -> Framebuffer<S> {
-        Framebuffer(FramebufferInternal::Color(self.clone()))
+impl<'a, S: ColorSample> From<&'a ColorAttachment<S>> for Framebuffer<S> {
+    fn from(value: &'a ColorAttachment<S>) -> Self {
+        Framebuffer(FramebufferInternal::Color(value.clone()))
     }
 }
 
@@ -47,9 +47,9 @@ impl DepthAttachment {
     }
 }
 
-impl<'a> Into<Framebuffer<()>> for &'a DepthAttachment {
-    fn into(self) -> Framebuffer<()> {
-        Framebuffer(FramebufferInternal::Depth(self.clone()))
+impl<'a> From<&'a DepthAttachment> for Framebuffer<()> {
+    fn from(value: &'a DepthAttachment) -> Self {
+        Framebuffer(FramebufferInternal::Depth(value.clone()))
     }
 }
 
@@ -59,9 +59,9 @@ pub struct ColorDepthFramebuffer<F: Fragment<Sl>> {
     pub depth: DepthAttachment,
 }
 
-impl<'a, F: Fragment<Sl>> Into<Framebuffer<F>> for &'a ColorDepthFramebuffer<F> {
-    fn into(self) -> Framebuffer<F> {
-        Framebuffer(FramebufferInternal::ColorDepth(self.clone()))
+impl<'a, F: Fragment<Sl>> From<&'a ColorDepthFramebuffer<F>> for Framebuffer<F> {
+    fn from(value: &'a ColorDepthFramebuffer<F>) -> Self {
+        Framebuffer(FramebufferInternal::ColorDepth(value.clone()))
     }
 }
 
@@ -103,9 +103,9 @@ impl Default for Framebuffer<sl::Vec4> {
     }
 }
 
-impl<'a, F: Fragment<Sl>> Into<Framebuffer<F>> for &'a Framebuffer<F> {
-    fn into(self) -> Framebuffer<F> {
-        self.clone()
+impl<'a, F: Fragment<Sl>> From<&'a Framebuffer<F>> for Framebuffer<F> {
+    fn from(value: &'a Framebuffer<F>) -> Self {
+        value.clone()
     }
 }
 

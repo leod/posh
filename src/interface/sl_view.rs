@@ -151,9 +151,7 @@ unsafe impl Vertex<Sl> for () {
 
     fn visit<'a>(&'a self, _: &str, _: &mut impl VertexVisitor<'a, Sl>) {}
 
-    fn shader_input(_: &str) -> () {
-        ()
-    }
+    fn shader_input(_: &str) {}
 }
 
 #[sealed]
