@@ -220,8 +220,8 @@ pub enum DrawError {
     #[error("framebuffer error: {0}")]
     Framebuffer(#[from] FramebufferError),
 
-    #[error("texture error: {0}")]
-    Texture(#[from] TextureError),
+    #[error("create error: {0}")]
+    Create(#[from] CreateError),
 
     #[error("general OpenGL error: {0}")]
     Error(String),
