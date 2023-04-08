@@ -228,6 +228,7 @@ impl Program {
         // TODO: Remove overly conservative unbinding.
         framebuffer.unbind(&self.ctx);
 
+        #[cfg(debug_assertions)]
         check_gl_error(gl).map_err(DrawError::Error)?;
 
         Ok(())
