@@ -445,6 +445,34 @@ where
     }
 }
 
+unsafe impl<U1, U2> UniformUnion<U1, (U1, U2)> for (U1, U2)
+where
+    U1: UniformNonUnit,
+    U2: Uniform<Sl>,
+{
+    fn lhs(self) -> U1 {
+        self.0
+    }
+
+    fn rhs(self) -> (U1, U2) {
+        (self.0, self.1)
+    }
+}
+
+unsafe impl<U1, U2> UniformUnion<(U1, U2), U1> for (U1, U2)
+where
+    U1: UniformNonUnit,
+    U2: Uniform<Sl>,
+{
+    fn lhs(self) -> (U1, U2) {
+        (self.0, self.1)
+    }
+
+    fn rhs(self) -> U1 {
+        self.0
+    }
+}
+
 #[doc(hidden)]
 pub trait UniformVisitor<'a, D: UniformDom> {
     fn accept_block<B: Block<Sl, Sl = B>>(&mut self, path: &str, block: &'a D::Block<B>);
