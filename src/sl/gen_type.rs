@@ -5,6 +5,10 @@ macro_rules! impl_gen_type {
                 super::primitives::built_in_1("length", self)
             }
 
+            pub fn length_squared(self) -> super::F32 {
+                self.dot(self)
+            }
+
             pub fn distance(self, y: impl super::ToSl<Output = Self>) -> Self {
                 super::primitives::built_in_2("distance", self, y.to_sl())
             }
@@ -19,6 +23,10 @@ macro_rules! impl_gen_type {
 
             pub fn cos(self) -> Self {
                 super::primitives::built_in_1("cos", self)
+            }
+
+            pub fn sin_cos(self) -> (Self, Self) {
+                (self.sin(), self.cos())
             }
 
             pub fn tan(self) -> Self {
