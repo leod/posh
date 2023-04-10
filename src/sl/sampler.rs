@@ -7,7 +7,7 @@ use crate::{Block, Sl};
 use super::{
     dag::{BuiltInType, Expr, SamplerType, Trace, Type},
     primitives::built_in_2,
-    IVec2, IVec3, IVec4, Object, UVec2, UVec3, UVec4, Value, Vec2, Vec3, Vec4, F32, I32, U32,
+    IVec2, IVec3, IVec4, Object, ToSl, UVec2, UVec3, UVec4, Value, Vec2, Vec3, Vec4, F32, I32, U32,
 };
 
 // FIXME: These traits desperately need to move to `interface`.
@@ -98,6 +98,12 @@ impl<S: ColorSample> ColorSampler2d<S> {
         S::from_vec4(sample)
     }
 
+    pub fn size(self, level: impl ToSl<Output = U32>) -> UVec2 {
+        let size: IVec2 = built_in_2("textureSize", self, level.to_sl());
+
+        size.as_uvec2()
+    }
+
     // TODO: Various sampling functions.
 }
 
@@ -123,5 +129,11 @@ impl Object for ComparisonSampler2d {
 impl ComparisonSampler2d {
     pub fn sample_compare(self, tex_coords: Vec2, reference_depth: F32) -> F32 {
         built_in_2("texture", self, tex_coords.extend(reference_depth))
+    }
+
+    pub fn size(self, level: impl ToSl<Output = U32>) -> UVec2 {
+        let size: IVec2 = built_in_2("textureSize", self, level.to_sl());
+
+        size.as_uvec2()
     }
 }
