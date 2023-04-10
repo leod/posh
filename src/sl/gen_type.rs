@@ -1,7 +1,7 @@
 macro_rules! impl_gen_type {
     ($ty:ident, $tyb:ident) => {
         impl $ty {
-            pub fn length(self) -> Self {
+            pub fn length(self) -> super::F32 {
                 super::primitives::built_in_1("length", self)
             }
 
