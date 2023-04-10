@@ -128,11 +128,13 @@ impl VertexSpec {
                         gl.enable_vertex_attrib_array(index);
                     }
 
-                    match input_rate {
-                        VertexInputRate::Vertex => (),
-                        VertexInputRate::Instance => unsafe {
-                            gl.vertex_attrib_divisor(index, 1);
-                        },
+                    let divisor = match input_rate {
+                        VertexInputRate::Vertex => 0,
+                        VertexInputRate::Instance => 1,
+                    };
+
+                    unsafe {
+                        gl.vertex_attrib_divisor(index, divisor);
                     }
 
                     let size = i32::try_from(attribute_info.components).unwrap();
