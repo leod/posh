@@ -502,13 +502,33 @@ impl_gen_type!(Vec3, BVec3);
 impl_gen_type!(Vec4, BVec4);
 
 impl Vec2 {
+    pub fn from_angle(angle: F32) -> Self {
+        let (sin, cos) = angle.sin_cos();
+        Self { x: cos, y: sin }
+    }
+
     pub fn outer_product(self, y: Vec2) -> Mat2 {
         built_in_2("outerProduct", self, y)
+    }
+
+    pub fn perp(self) -> Self {
+        vec2(-self.y, self.x)
+    }
+
+    pub fn perp_dot(self, rhs: Self) -> F32 {
+        (self.x * rhs.y) - (self.y * rhs.x)
+    }
+
+    pub fn rotate(self, rhs: Self) -> Self {
+        vec2(
+            self.x * rhs.x - self.y * rhs.y,
+            self.y * rhs.x + self.x * rhs.y,
+        )
     }
 }
 
 impl Vec3 {
-    pub fn cross(self, y: Vec3) -> Vec3 {
+    pub fn cross(self, y: Vec3) -> Self {
         built_in_2("cross", self, y)
     }
 
