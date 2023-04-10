@@ -131,7 +131,7 @@ pub struct Blending {
     pub src_func_color: BlendFunc,
     pub dst_func_color: BlendFunc,
     pub src_func_alpha: BlendFunc,
-    pub dst_alpha_func: BlendFunc,
+    pub dst_func_alpha: BlendFunc,
     pub constant_color: glam::Vec4,
 }
 
@@ -143,7 +143,7 @@ impl Default for Blending {
             src_func_color: BlendFunc::One,
             src_func_alpha: BlendFunc::One,
             dst_func_color: BlendFunc::Zero,
-            dst_alpha_func: BlendFunc::Zero,
+            dst_func_alpha: BlendFunc::Zero,
             constant_color: glam::Vec4::ZERO,
         }
     }
@@ -185,7 +185,7 @@ impl Blending {
     }
 
     pub fn with_dst_func_alpha(mut self, func: BlendFunc) -> Self {
-        self.src_func_alpha = func;
+        self.dst_func_alpha = func;
         self
     }
 
@@ -438,7 +438,7 @@ impl DrawSettings {
                 let src_func_color = blending.src_func_color.to_gl();
                 let dst_func_color = blending.dst_func_color.to_gl();
                 let src_func_alpha = blending.src_func_alpha.to_gl();
-                let dst_func_alpha = blending.dst_alpha_func.to_gl();
+                let dst_func_alpha = blending.dst_func_alpha.to_gl();
 
                 unsafe { gl.enable(glow::BLEND) };
                 unsafe { gl.blend_equation_separate(color_equation, alpha_equation) };
