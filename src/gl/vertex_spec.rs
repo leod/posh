@@ -13,11 +13,11 @@ use super::{raw, ElementBufferBinding, PrimitiveMode};
 
 #[derive(Clone)]
 pub struct VertexSpec<V: Vertex<Sl>> {
-    pub mode: PrimitiveMode,
-    pub vertex_data: V::Gl,
-    pub vertex_range: Range<usize>,
-    pub element_data: Option<ElementBufferBinding>,
-    pub num_instances: usize,
+    mode: PrimitiveMode,
+    vertex_data: V::Gl,
+    vertex_range: Option<Range<usize>>,
+    element_data: Option<ElementBufferBinding>,
+    num_instances: Option<usize>,
 }
 
 impl VertexSpec<()> {
@@ -25,9 +25,9 @@ impl VertexSpec<()> {
         Self {
             mode,
             vertex_data: (),
-            vertex_range: 0..0,
+            vertex_range: None,
             element_data: None,
-            num_instances: 1,
+            num_instances: None,
         }
     }
 
@@ -41,14 +41,20 @@ impl VertexSpec<()> {
             num_instances,
         } = get_counts(&vertices);
 
-        // FIXME: `vertex_range` and `num_instances` should not be overwritten
-        // here if they already have been provided by the user.
         VertexSpec {
             mode: self.mode,
             vertex_data: vertices,
-            vertex_range: 0..num_vertices.unwrap_or(0),
+            vertex_range: if self.vertex_range.is_some() {
+                self.vertex_range
+            } else {
+                num_vertices.map(|num_vertices| 0..num_vertices)
+            },
             element_data: self.element_data,
-            num_instances: num_instances.unwrap_or(1),
+            num_instances: if self.num_instances.is_some() {
+                self.num_instances
+            } else {
+                num_instances
+            },
         }
     }
 }
@@ -57,7 +63,7 @@ impl<V: Vertex<Sl>> VertexSpec<V> {
     pub fn with_vertex_range(mut self, vertex_range: Range<usize>) -> Self {
         // NOTE: The stored `vertex_range` is ignored if an element buffer is
         // passed as well.
-        self.vertex_range = vertex_range;
+        self.vertex_range = Some(vertex_range);
         self
     }
 
@@ -67,7 +73,7 @@ impl<V: Vertex<Sl>> VertexSpec<V> {
     }
 
     pub fn with_num_instances(mut self, num_instances: usize) -> Self {
-        self.num_instances = num_instances;
+        self.num_instances = Some(num_instances);
         self
     }
 
@@ -79,11 +85,11 @@ impl<V: Vertex<Sl>> VertexSpec<V> {
                 .as_ref()
                 .map(|elements| (elements.raw().clone(), elements.ty())),
             mode: self.mode,
-            index_range: self
-                .element_data
-                .as_ref()
-                .map_or_else(|| self.vertex_range.clone(), |binding| binding.range()),
-            num_instances: self.num_instances,
+            index_range: self.element_data.as_ref().map_or_else(
+                || self.vertex_range.clone().unwrap_or(0..0),
+                |binding| binding.range(),
+            ),
+            num_instances: self.num_instances.unwrap_or(1),
         }
     }
 }
