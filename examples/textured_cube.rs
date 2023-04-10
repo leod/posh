@@ -29,13 +29,6 @@ struct Uniform<D: UniformDom = Sl> {
 
 // Shader code
 
-fn rotate(angle: sl::F32) -> sl::Mat2 {
-    sl::mat2(
-        sl::vec2(angle.cos(), angle.sin()),
-        sl::vec2(-angle.sin(), angle.cos()),
-    )
-}
-
 fn zxy(v: sl::Vec3) -> sl::Vec3 {
     sl::vec3(v.z, v.x, v.y)
 }
@@ -44,7 +37,9 @@ fn vertex_shader(uniforms: Uniform, input: Vertex) -> sl::VaryingOutput<sl::Vec2
     let camera = uniforms.camera;
     let time = uniforms.time / 3.0;
 
-    let vertex_pos = (rotate(time) * sl::vec2(input.pos.x, input.pos.y)).extend(input.pos.z);
+    let vertex_pos = sl::vec2(input.pos.x, input.pos.y)
+        .rotate(sl::Vec2::from_angle(uniforms.time))
+        .extend(input.pos.z);
     let position = camera.view_to_screen * camera.world_to_view * zxy(vertex_pos).extend(1.0);
 
     sl::VaryingOutput {
