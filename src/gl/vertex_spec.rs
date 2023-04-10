@@ -41,6 +41,8 @@ impl VertexSpec<()> {
             num_instances,
         } = get_counts(&vertices);
 
+        // FIXME: `vertex_range` and `num_instances` should not be overwritten
+        // here if they already have been provided by the user.
         VertexSpec {
             mode: self.mode,
             vertex_data: vertices,
