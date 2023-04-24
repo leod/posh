@@ -99,7 +99,7 @@ impl<S: ColorSample> ColorSampler2d<S> {
     }
 
     pub fn size(self, level: impl ToSl<Output = U32>) -> UVec2 {
-        let size: IVec2 = built_in_2("textureSize", self, level.to_sl());
+        let size: IVec2 = built_in_2("textureSize", self, level.to_sl().as_i32());
 
         size.as_uvec2()
     }
@@ -132,7 +132,7 @@ impl ComparisonSampler2d {
     }
 
     pub fn size(self, level: impl ToSl<Output = U32>) -> UVec2 {
-        let size: IVec2 = built_in_2("textureSize", self, level.to_sl());
+        let size: IVec2 = built_in_2("textureSize", self, level.to_sl().as_i32());
 
         size.as_uvec2()
     }

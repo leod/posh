@@ -33,10 +33,10 @@ macro_rules! scalar_built_in_type {
         super::dag::BuiltInType::F32
     };
     (I32) => {
-        super::dag::BuiltInType::U32
+        super::dag::BuiltInType::I32
     };
     (U32) => {
-        super::dag::BuiltInType::I32
+        super::dag::BuiltInType::U32
     };
     (Bool) => {
         super::dag::BuiltInType::Bool
@@ -70,7 +70,7 @@ macro_rules! scalar_format {
         "{}"
     };
     (U32) => {
-        "{}"
+        "{}u"
     };
     (Bool) => {
         "{:?}"
