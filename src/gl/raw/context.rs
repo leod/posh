@@ -114,11 +114,15 @@ impl Context {
         Program::new(self.shared.clone(), def)
     }
 
-    pub(crate) fn default_framebuffer_size(&self) -> glam::UVec2 {
+    pub fn finish(&self) {
+        unsafe { self.shared.gl.finish() };
+    }
+
+    pub fn default_framebuffer_size(&self) -> glam::UVec2 {
         self.shared.default_framebuffer_size.get()
     }
 
-    pub(crate) fn set_default_framebuffer_size(&self, size: glam::UVec2) {
+    pub fn set_default_framebuffer_size(&self, size: glam::UVec2) {
         self.shared.default_framebuffer_size.set(size);
     }
 }
