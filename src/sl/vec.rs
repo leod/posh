@@ -465,6 +465,15 @@ macro_rules! impl_vec4 {
                     y: self.w,
                 }
             }
+
+            pub fn zwxy(&self) -> Self {
+                Self {
+                    x: self.z,
+                    y: self.w,
+                    z: self.x,
+                    w: self.y,
+                }
+            }
         }
 
         #[doc = concat!("Creates a four-dimensional ", scalar_name!($scalar), " vector.")]
