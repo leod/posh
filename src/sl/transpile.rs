@@ -16,7 +16,7 @@ use super::{
     primitives::value_arg,
     program_def::{ProgramDef, UniformBlockDef, UniformSamplerDef, VertexBlockDef},
     ColorSample, ColorSampler2d, ComparisonSampler2d, ConstParams, FragmentInput, FragmentOutput,
-    Object, Varying, VaryingOutput, Vec4, VertexInput, VertexOutput,
+    Object, Varying, VaryingOutput, Vec4, VertexInput, VertexOutput, I32,
 };
 
 /// Types that can be used as vertex input for a vertex shader.
@@ -217,8 +217,8 @@ where
     let (vertex_block_defs, varying_outputs, vertex_shader_source) = {
         let input = || VertexInput {
             vertex: V::shader_input("vertex_input"),
-            vertex_id: value_arg("gl_VertexID"),
-            instance_id: value_arg("gl_InstanceID"),
+            vertex_id: value_arg::<I32>("gl_VertexID").as_u32(),
+            instance_id: value_arg::<I32>("gl_InstanceID").as_u32(),
             _private: (),
         };
         let output = vertex_shader(consts, uniforms, InV::from(input())).into();
