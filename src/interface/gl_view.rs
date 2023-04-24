@@ -101,6 +101,20 @@ unsafe impl Vertex<Gl> for () {
     fn visit<'a>(&'a self, _: &str, _: &mut impl VertexVisitor<'a, Gl>) {}
 }
 
+unsafe impl<U, V> Vertex<Gl> for (U, V)
+where
+    U: Vertex<Gl>,
+    V: Vertex<Gl>,
+{
+    type Sl = (U::Sl, V::Sl);
+    type Gl = Self;
+
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::VertexVisitor<'a, Gl>) {
+        self.0.visit(&join_ident_path(path, "a"), visitor);
+        self.1.visit(&join_ident_path(path, "b"), visitor);
+    }
+}
+
 #[sealed]
 impl<B: Block<Sl>> super::VertexField<Gl> for VertexBufferBinding<B> {}
 
