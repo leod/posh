@@ -141,7 +141,7 @@ macro_rules! impl_gen_type {
                 super::primitives::built_in_2("mod", self, y.to_sl())
             }
 
-            pub fn clamp(
+            pub fn cmpclamp(
                 self,
                 min: impl super::ToSl<Output = Self>,
                 max: impl super::ToSl<Output = Self>,
@@ -149,7 +149,7 @@ macro_rules! impl_gen_type {
                 super::primitives::built_in_3("clamp", self, min.to_sl(), max.to_sl())
             }
 
-            pub fn clamp_with_f32(
+            pub fn clamp(
                 self,
                 min: impl super::ToSl<Output = F32>,
                 max: impl super::ToSl<Output = F32>,
@@ -157,7 +157,7 @@ macro_rules! impl_gen_type {
                 super::primitives::built_in_3("clamp", self, min.to_sl(), max.to_sl())
             }
 
-            pub fn mix(
+            pub fn cmpmix(
                 x: impl super::ToSl<Output = Self>,
                 y: impl super::ToSl<Output = Self>,
                 a: impl super::ToSl<Output = Self>,
@@ -165,7 +165,7 @@ macro_rules! impl_gen_type {
                 super::primitives::built_in_3("mix", x.to_sl(), y.to_sl(), a.to_sl())
             }
 
-            pub fn mix_with_f32(
+            pub fn mix(
                 x: impl super::ToSl<Output = Self>,
                 y: impl super::ToSl<Output = Self>,
                 a: impl super::ToSl<Output = F32>,
@@ -181,21 +181,21 @@ macro_rules! impl_gen_type {
                 super::primitives::built_in_3("mix", x.to_sl(), y.to_sl(), a.to_sl())
             }
 
-            pub fn step(
+            pub fn cmpstep(
                 edge: impl super::ToSl<Output = Self>,
                 x: impl super::ToSl<Output = Self>,
             ) -> Self {
                 super::primitives::built_in_2("step", edge.to_sl(), x.to_sl())
             }
 
-            pub fn step_with_f32(
+            pub fn step(
                 edge: impl super::ToSl<Output = F32>,
                 x: impl super::ToSl<Output = Self>,
             ) -> Self {
                 super::primitives::built_in_2("step", edge.to_sl(), x.to_sl())
             }
 
-            pub fn smoothstep(
+            pub fn cmpsmoothstep(
                 edge1: impl super::ToSl<Output = Self>,
                 edge2: impl super::ToSl<Output = Self>,
                 x: impl super::ToSl<Output = Self>,
@@ -203,7 +203,7 @@ macro_rules! impl_gen_type {
                 super::primitives::built_in_3("smoothstep", edge1.to_sl(), edge2.to_sl(), x.to_sl())
             }
 
-            pub fn smoothstep_with_f32(
+            pub fn smoothstep(
                 self,
                 edge1: impl super::ToSl<Output = F32>,
                 edge2: impl super::ToSl<Output = F32>,
