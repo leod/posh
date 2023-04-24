@@ -154,6 +154,27 @@ unsafe impl Vertex<Sl> for () {
     fn shader_input(_: &str) {}
 }
 
+unsafe impl<U, V> Vertex<Sl> for (U, V)
+where
+    U: Vertex<Sl>,
+    V: Vertex<Sl>,
+{
+    type Sl = Self;
+    type Gl = (U::Gl, V::Gl);
+
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl super::VertexVisitor<'a, Sl>) {
+        self.0.visit(&join_ident_path(path, "a"), visitor);
+        self.1.visit(&join_ident_path(path, "b"), visitor);
+    }
+
+    fn shader_input(path: &str) -> Self {
+        (
+            U::shader_input(&join_ident_path(path, "a")),
+            V::shader_input(&join_ident_path(path, "b")),
+        )
+    }
+}
+
 #[sealed]
 impl<B: Block<Sl>> super::VertexField<Sl> for B {
     fn shader_input(path: &str) -> Self {
