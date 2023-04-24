@@ -9,6 +9,10 @@ pub fn any(vs: impl IntoIterator<Item = Bool>) -> Bool {
     vs.into_iter().fold(false.to_sl(), |x, v| x.or(v))
 }
 
+pub fn all(vs: impl IntoIterator<Item = Bool>) -> Bool {
+    vs.into_iter().fold(true.to_sl(), |x, v| x.and(v))
+}
+
 pub(crate) fn cast<U, V>(u: impl ToSl<Output = U>) -> V
 where
     U: Value,
