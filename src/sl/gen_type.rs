@@ -165,6 +165,14 @@ macro_rules! impl_gen_type {
                 super::primitives::built_in_3("mix", x.to_sl(), y.to_sl(), a.to_sl())
             }
 
+            pub fn mix_with_f32(
+                x: impl super::ToSl<Output = Self>,
+                y: impl super::ToSl<Output = Self>,
+                a: impl super::ToSl<Output = F32>,
+            ) -> Self {
+                super::primitives::built_in_3("mix", x.to_sl(), y.to_sl(), a.to_sl())
+            }
+
             pub fn select(
                 x: impl super::ToSl<Output = Self>,
                 y: impl super::ToSl<Output = Self>,
