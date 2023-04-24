@@ -366,6 +366,13 @@ macro_rules! impl_vec3 {
                     y: self.y,
                 }
             }
+
+            pub fn yz(&self) -> $vec2 {
+                $vec2 {
+                    x: self.y,
+                    y: self.z,
+                }
+            }
         }
 
         #[doc = concat!("Creates a three-dimensional ", scalar_name!($scalar), " vector.")]
@@ -430,10 +437,32 @@ macro_rules! impl_vec4 {
                 }
             }
 
+            pub fn yzw(&self) -> $vec3 {
+                $vec3 {
+                    x: self.y,
+                    y: self.z,
+                    z: self.w,
+                }
+            }
+
             pub fn xy(&self) -> $vec2 {
                 $vec2 {
                     x: self.x,
                     y: self.y,
+                }
+            }
+
+            pub fn yz(&self) -> $vec2 {
+                $vec2 {
+                    x: self.y,
+                    y: self.z,
+                }
+            }
+
+            pub fn zw(&self) -> $vec2 {
+                $vec2 {
+                    x: self.z,
+                    y: self.w,
                 }
             }
         }
