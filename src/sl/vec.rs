@@ -276,7 +276,7 @@ macro_rules! impl_ops {
 macro_rules! impl_vec2 {
     ($vec:ident, $bvec:ident, $vec_lower:ident, $scalar:ident, $vec3:ident) => {
         #[doc = concat!("A two-dimensional ", scalar_name!($scalar), " vector.")]
-        #[derive(Debug, Copy, Clone)]
+        #[derive(Debug, Copy, Clone, Default)]
         pub struct $vec {
             pub x: $scalar,
             pub y: $scalar,
@@ -322,7 +322,7 @@ macro_rules! impl_vec2 {
 macro_rules! impl_vec3 {
     ($vec:ident, $bvec:ident, $vec_lower:ident, $scalar:ident, $vec2:ident, $vec4:ident) => {
         #[doc = concat!("A three-dimensional ", scalar_name!($scalar), " vector.")]
-        #[derive(Debug, Copy, Clone)]
+        #[derive(Debug, Copy, Clone, Default)]
         pub struct $vec {
             pub x: $scalar,
             pub y: $scalar,
@@ -393,7 +393,7 @@ macro_rules! impl_vec3 {
 macro_rules! impl_vec4 {
     ($vec:ident, $bvec:ident, $vec_lower:ident, $scalar:ident, $vec2:ident, $vec3:ident) => {
         #[doc = concat!("A four-dimensional ", scalar_name!($scalar), " vector.")]
-        #[derive(Debug, Copy, Clone)]
+        #[derive(Debug, Copy, Clone, Default)]
         pub struct $vec {
             pub x: $scalar,
             pub y: $scalar,
