@@ -33,7 +33,7 @@ impl VarForm {
 
             let simplified_expr = var_form.map_expr(struct_registry, (**expr).clone());
 
-            if Self::should_have_var(count, expr) && Self::can_have_var(expr) {
+            if var_form.should_have_var(count, expr) && Self::can_have_var(expr) {
                 let var_id = VarId(var_form.var_exprs.len());
 
                 var_form.var_exprs.push(simplified_expr);
@@ -130,20 +130,27 @@ impl VarForm {
         }
     }
 
-    fn should_have_var(count: usize, expr: &Expr) -> bool {
+    fn should_have_var(&self, count: usize, expr: &Expr) -> bool {
         use Expr::*;
 
         match expr {
             Branch { .. } => true,
             Arg { .. } | ScalarLiteral { .. } => false,
             ArrayLiteral { .. } => true,
+            Field { base, .. } => {
+                let base = &self.simplified_exprs[&ExprKey::from(base)];
+
+                !matches!(
+                    base,
+                    SimplifiedExpr::Arg { .. } | SimplifiedExpr::Var { .. }
+                ) && count > 1
+            }
             StructLiteral { .. }
             | Unary { .. }
             | Binary { .. }
             | CallFuncDef { .. }
             | CallBuiltIn { .. }
-            | Subscript { .. }
-            | Field { .. } => count > 1,
+            | Subscript { .. } => count > 1,
         }
     }
 
