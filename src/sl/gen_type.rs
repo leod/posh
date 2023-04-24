@@ -158,46 +158,51 @@ macro_rules! impl_gen_type {
             }
 
             pub fn mix(
-                self,
-                y: impl super::ToSl<Output = Self>,
-                a: impl super::ToSl<Output = Self>,
-            ) -> Self {
-                super::primitives::built_in_3("mix", self, y.to_sl(), a.to_sl())
-            }
-
-            pub fn select(
-                a: impl super::ToSl<Output = $tyb>,
                 x: impl super::ToSl<Output = Self>,
                 y: impl super::ToSl<Output = Self>,
+                a: impl super::ToSl<Output = Self>,
             ) -> Self {
                 super::primitives::built_in_3("mix", x.to_sl(), y.to_sl(), a.to_sl())
             }
 
-            pub fn step(self, edge: impl super::ToSl<Output = Self>) -> Self {
-                super::primitives::built_in_2("step", edge.to_sl(), self)
+            pub fn select(
+                x: impl super::ToSl<Output = Self>,
+                y: impl super::ToSl<Output = Self>,
+                a: impl super::ToSl<Output = $tyb>,
+            ) -> Self {
+                super::primitives::built_in_3("mix", x.to_sl(), y.to_sl(), a.to_sl())
             }
 
-            pub fn step_with_f32(self, edge: impl super::ToSl<Output = F32>) -> Self {
-                super::primitives::built_in_2("step", edge.to_sl(), self)
+            pub fn step(
+                edge: impl super::ToSl<Output = Self>,
+                x: impl super::ToSl<Output = Self>,
+            ) -> Self {
+                super::primitives::built_in_2("step", edge.to_sl(), x.to_sl())
+            }
+
+            pub fn step_with_f32(
+                edge: impl super::ToSl<Output = F32>,
+                x: impl super::ToSl<Output = Self>,
+            ) -> Self {
+                super::primitives::built_in_2("step", edge.to_sl(), x.to_sl())
             }
 
             pub fn smoothstep(
-                self,
                 edge1: impl super::ToSl<Output = Self>,
                 edge2: impl super::ToSl<Output = Self>,
+                x: impl super::ToSl<Output = Self>,
             ) -> Self {
-                super::primitives::built_in_3("smoothstep", edge1.to_sl(), edge2.to_sl(), self)
+                super::primitives::built_in_3("smoothstep", edge1.to_sl(), edge2.to_sl(), x.to_sl())
             }
 
             pub fn smoothstep_with_f32(
                 self,
                 edge1: impl super::ToSl<Output = F32>,
                 edge2: impl super::ToSl<Output = F32>,
+                x: impl super::ToSl<Output = F32>,
             ) -> Self {
-                super::primitives::built_in_3("smoothstep", edge1.to_sl(), edge2.to_sl(), self)
+                super::primitives::built_in_3("smoothstep", edge1.to_sl(), edge2.to_sl(), x.to_sl())
             }
-
-            // TODO: mod, mix, step, smoothstep?
         }
     };
 }
