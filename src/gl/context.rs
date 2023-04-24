@@ -185,4 +185,8 @@ impl Context {
     pub fn set_default_framebuffer_size(&self, size: glam::UVec2) {
         self.raw.set_default_framebuffer_size(size);
     }
+
+    pub fn finish(&self) {
+        self.raw.finish();
+    }
 }
