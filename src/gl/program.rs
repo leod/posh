@@ -7,18 +7,17 @@ use crate::{
 };
 
 use super::{
-    raw, ColorSampler2d, ComparisonSampler2d, DrawError, DrawSettings, Framebuffer,
+    raw, ColorSampler2d, ComparisonSampler2d, DrawError, Framebuffer, Settings,
     UniformBufferBinding, VertexSpec,
 };
 
-pub struct DrawInput<'a, U, V, F = sl::Vec4>
+pub struct Input<'a, U, V>
 where
     V: Vertex<Sl>,
 {
     pub uniform: &'a U,
-    pub vertex_spec: &'a VertexSpec<V>,
-    pub framebuffer: &'a F,
-    pub settings: &'a DrawSettings,
+    pub vertex: &'a VertexSpec<V>,
+    pub settings: &'a Settings,
 }
 
 pub struct Program<U, V, F = sl::Vec4> {
@@ -39,10 +38,11 @@ where
         }
     }
 
-    pub fn draw<'a, IntoF>(&'a self, input: DrawInput<'a, U::Gl, V, IntoF>) -> Result<(), DrawError>
-    where
-        &'a IntoF: Into<Framebuffer<F>>,
-    {
+    pub fn draw(
+        &self,
+        input: Input<U::Gl, V>,
+        framebuffer: impl Into<Framebuffer<F>>,
+    ) -> Result<(), DrawError> {
         // TODO: These allocations can be avoided once stable has allocators.
         // TODO: Remove hardcoded path names.
         let mut uniform_visitor = CollectUniforms::default();
@@ -55,8 +55,8 @@ where
             self.raw.draw(
                 &uniform_visitor.raw_uniform_buffers,
                 &uniform_visitor.raw_samplers,
-                &input.vertex_spec.raw(),
-                &input.framebuffer.into().raw(),
+                &input.vertex.raw(),
+                &framebuffer.into().raw(),
                 input.settings,
             )
         }?;

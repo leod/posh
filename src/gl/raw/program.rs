@@ -6,8 +6,7 @@ use crate::sl::program_def::{ProgramDef, UniformSamplerDef};
 
 use super::{
     context::ContextShared, error::check_gl_error, vertex_layout::VertexAttributeLayout, Buffer,
-    DrawError, DrawSettings, Framebuffer, ProgramError, ProgramValidationError, Sampler,
-    VertexSpec,
+    DrawError, Framebuffer, ProgramError, ProgramValidationError, Sampler, Settings, VertexSpec,
 };
 
 pub struct Program {
@@ -153,7 +152,7 @@ impl Program {
         samplers: &[Sampler],
         vertex_spec: &VertexSpec,
         framebuffer: &Framebuffer,
-        settings: &DrawSettings,
+        settings: &Settings,
     ) -> Result<(), DrawError> {
         let ctx = &self.ctx;
         let gl = ctx.gl();

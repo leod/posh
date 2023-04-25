@@ -105,27 +105,31 @@ impl Demo {
             flip,
         });
 
-        self.scene_program.draw(gl::DrawInput {
-            uniform: &self.state.as_binding(),
-            vertex_spec: &gl::VertexSpec::new(gl::PrimitiveMode::Triangles)
-                .with_vertex_data(self.triangle_vertices.as_binding()),
-            framebuffer: &self.texture.as_color_attachment(),
-            settings: &gl::DrawSettings::default(),
-        })?;
-
-        self.present_program.draw(gl::DrawInput {
-            uniform: &present_pass::Uniform {
-                state: self.state.as_binding(),
-                scene: self
-                    .texture
-                    .as_color_sampler(gl::Sampler2dSettings::default()),
+        self.scene_program.draw(
+            gl::Input {
+                uniform: &self.state.as_binding(),
+                vertex: &self.triangle_vertices.as_vertex_spec(gl::Mode::Triangles),
+                settings: &gl::Settings::default(),
             },
-            vertex_spec: &gl::VertexSpec::new(gl::PrimitiveMode::Triangles)
-                .with_vertex_data(self.quad_vertices.as_binding())
-                .with_element_data(self.quad_elements.as_binding()),
-            framebuffer: &gl::Framebuffer::default(),
-            settings: &gl::DrawSettings::default(),
-        })?;
+            &self.texture.as_color_attachment(),
+        )?;
+
+        self.present_program.draw(
+            gl::Input {
+                uniform: &present_pass::Uniform {
+                    state: self.state.as_binding(),
+                    scene: self
+                        .texture
+                        .as_color_sampler(gl::Sampler2dSettings::linear()),
+                },
+                vertex: &self
+                    .quad_vertices
+                    .as_vertex_spec(gl::Mode::Triangles)
+                    .with_element_data(self.quad_elements.as_binding()),
+                settings: &gl::Settings::default(),
+            },
+            &gl::Framebuffer::default(),
+        )?;
 
         Ok(())
     }

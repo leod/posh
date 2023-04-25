@@ -150,6 +150,32 @@ impl Default for Blending {
 }
 
 impl Blending {
+    pub fn add() -> Self {
+        Self::default().with_equation(BlendEquation::Add)
+    }
+
+    pub fn subtract() -> Self {
+        Self::default().with_equation(BlendEquation::Subtract)
+    }
+
+    pub fn reverse_subtract() -> Self {
+        Self::default().with_equation(BlendEquation::ReverseSubtract)
+    }
+
+    pub fn min() -> Self {
+        Self::default().with_equation(BlendEquation::Min)
+    }
+
+    pub fn max() -> Self {
+        Self::default().with_equation(BlendEquation::Max)
+    }
+
+    pub fn alpha() -> Self {
+        Self::default()
+            .with_src_func(BlendFunc::SrcAlpha)
+            .with_dst_func(BlendFunc::OneMinusSrcAlpha)
+    }
+
     pub fn with_color_equation(mut self, equation: BlendEquation) -> Self {
         self.color_equation = equation;
         self
@@ -191,6 +217,10 @@ impl Blending {
 
     pub fn with_dst_func(self, func: BlendFunc) -> Self {
         self.with_dst_func_color(func).with_dst_func_alpha(func)
+    }
+
+    pub fn with_func(self, func: BlendFunc) -> Self {
+        self.with_src_func(func).with_dst_func(func)
     }
 
     pub fn with_constant_color(mut self, color: glam::Vec4) -> Self {
@@ -281,7 +311,7 @@ impl StencilOps {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct DrawSettings {
+pub struct Settings {
     pub clear_stencil: Option<u8>,
     pub clear_depth: Option<f32>,
     pub clear_color: Option<glam::Vec4>,
@@ -300,7 +330,7 @@ pub struct DrawSettings {
     pub color_mask: glam::BVec4,
 }
 
-impl Default for DrawSettings {
+impl Default for Settings {
     fn default() -> Self {
         Self {
             clear_stencil: None,
@@ -323,11 +353,11 @@ impl Default for DrawSettings {
     }
 }
 
-impl DrawSettings {
+impl Settings {
     pub(super) fn set_delta(
         &self,
         gl: &glow::Context,
-        current: &DrawSettings,
+        current: &Settings,
         framebuffer_size: glam::UVec2,
     ) {
         if self.scissor != current.scissor {
