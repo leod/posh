@@ -38,14 +38,11 @@ where
         }
     }
 
-    pub fn draw<'a, IntoF>(
-        &'a self,
-        input: Input<'a, U::Gl, V>,
-        framebuffer: &'a IntoF,
-    ) -> Result<(), DrawError>
-    where
-        &'a IntoF: Into<Framebuffer<F>>,
-    {
+    pub fn draw(
+        &self,
+        input: Input<U::Gl, V>,
+        framebuffer: impl Into<Framebuffer<F>>,
+    ) -> Result<(), DrawError> {
         // TODO: These allocations can be avoided once stable has allocators.
         // TODO: Remove hardcoded path names.
         let mut uniform_visitor = CollectUniforms::default();
