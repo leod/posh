@@ -4,7 +4,7 @@ use crevice::std140::AsStd140;
 
 use crate::{sl::program_def::VertexInputRate, Block, Sl};
 
-use super::{raw, BufferUsage};
+use super::{raw, BufferUsage, Mode, VertexSpec};
 
 /// Stores vertex blocks in a buffer on the GPU.
 ///
@@ -22,7 +22,10 @@ pub struct VertexBufferBinding<B> {
     _phantom: PhantomData<B>,
 }
 
-impl<B: Block<Sl>> VertexBuffer<B> {
+impl<B> VertexBuffer<B>
+where
+    B: Block<Sl, Sl = B>,
+{
     pub(super) fn from_raw(raw: raw::Buffer) -> Self {
         assert!(vertex_size::<B>() > 0);
         assert_eq!(raw.len() % vertex_size::<B>(), 0);
@@ -60,6 +63,10 @@ impl<B: Block<Sl>> VertexBuffer<B> {
             input_rate: VertexInputRate::Vertex,
             _phantom: PhantomData,
         }
+    }
+
+    pub fn as_vertex_spec(&self, mode: Mode) -> VertexSpec<B> {
+        VertexSpec::new(mode).with_vertex_data(self.as_binding())
     }
 }
 
