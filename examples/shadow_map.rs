@@ -459,6 +459,8 @@ fn debug_elements() -> Vec<u32> {
 // SDL glue
 
 fn main() {
+    simple_logger::init().unwrap();
+
     let sdl = sdl2::init().unwrap();
     let video = sdl.video().unwrap();
 

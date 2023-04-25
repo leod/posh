@@ -7,7 +7,6 @@ use std::{iter::once, rc::Rc};
 
 use crate::{
     interface::{FragmentVisitor, UniformUnion, UniformVisitor, VertexVisitor},
-    sl::program_def::InterpolationQualifier,
     Block, Fragment, Sl, Uniform, Vertex,
 };
 
