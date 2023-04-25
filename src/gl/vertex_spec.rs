@@ -9,11 +9,11 @@ use crate::{
     Block, Gl, Sl, Vertex,
 };
 
-use super::{raw, ElementBufferBinding, PrimitiveMode};
+use super::{raw, ElementBufferBinding, Mode};
 
 #[derive(Clone)]
 pub struct VertexSpec<V: Vertex<Sl>> {
-    mode: PrimitiveMode,
+    mode: Mode,
     vertex_data: V::Gl,
     vertex_range: Option<Range<usize>>,
     element_data: Option<ElementBufferBinding>,
@@ -21,7 +21,7 @@ pub struct VertexSpec<V: Vertex<Sl>> {
 }
 
 impl VertexSpec<()> {
-    pub fn new(mode: PrimitiveMode) -> Self {
+    pub fn new(mode: Mode) -> Self {
         Self {
             mode,
             vertex_data: (),

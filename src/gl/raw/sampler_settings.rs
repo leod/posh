@@ -33,6 +33,15 @@ pub struct Sampler2dSettings {
     pub wrap_t: SamplerWrap,
 }
 
+impl Sampler2dSettings {
+    pub fn wrap(mut self, wrap: SamplerWrap) -> Self {
+        self.wrap_s = wrap;
+        self.wrap_t = wrap;
+
+        self
+    }
+}
+
 impl SamplerMagFilter {
     pub const fn to_gl(self) -> u32 {
         use SamplerMagFilter::*;
