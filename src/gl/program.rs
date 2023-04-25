@@ -11,13 +11,12 @@ use super::{
     UniformBufferBinding, VertexSpec,
 };
 
-pub struct Input<'a, U, V, F = sl::Vec4>
+pub struct Input<'a, U, V>
 where
     V: Vertex<Sl>,
 {
     pub uniform: &'a U,
-    pub vertex_spec: &'a VertexSpec<V>,
-    pub framebuffer: &'a F,
+    pub vertex: &'a VertexSpec<V>,
     pub settings: &'a Settings,
 }
 
@@ -39,7 +38,11 @@ where
         }
     }
 
-    pub fn draw<'a, IntoF>(&'a self, input: Input<'a, U::Gl, V, IntoF>) -> Result<(), DrawError>
+    pub fn draw<'a, IntoF>(
+        &'a self,
+        input: Input<'a, U::Gl, V>,
+        framebuffer: &'a IntoF,
+    ) -> Result<(), DrawError>
     where
         &'a IntoF: Into<Framebuffer<F>>,
     {
@@ -55,8 +58,8 @@ where
             self.raw.draw(
                 &uniform_visitor.raw_uniform_buffers,
                 &uniform_visitor.raw_samplers,
-                &input.vertex_spec.raw(),
-                &input.framebuffer.into().raw(),
+                &input.vertex.raw(),
+                &framebuffer.into().raw(),
                 input.settings,
             )
         }?;
