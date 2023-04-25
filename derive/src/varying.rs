@@ -16,10 +16,13 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let field_types = fields.types();
     let field_strings = fields.strings();
 
+    // TODO: Allow specifying interpolation qualifiers.
+
     Ok(quote! {
-        impl #impl_generics ::posh::sl::Varying for #ident #ty_generics #where_clause {
+        unsafe impl #impl_generics ::posh::sl::Varying for #ident #ty_generics #where_clause {
             fn shader_outputs(&self, path: &str) -> Vec<(
                 ::std::string::String,
+                ::posh::sl::program_def::InterpolationQualifier,
                 ::std::rc::Rc<::posh::internal::Expr>,
             )> {
                 let mut result = Vec::new();

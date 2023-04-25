@@ -33,7 +33,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         specialize_field_types(parse_quote!(::posh::Gl), ident, &input.generics, &fields)?;
 
     Ok(quote! {
-        // Implement `Object` for the `Sl` of the struct.
+        // Implement `Object` for the `Sl` view of the struct.
         impl #impl_generics_init ::posh::sl::Object for #ident #ty_generics_sl
         #where_clause_init
         {
@@ -57,7 +57,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             }
         }
 
-        // Implement `Value` for the `Sl` of the struct.
+        // Implement `Value` for the `Sl` view of the struct.
         impl #impl_generics_init ::posh::sl::Value for #ident #ty_generics_sl
         #where_clause_init
         {
@@ -75,12 +75,12 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             }
         }
 
-        // Implement `ValueNonArray` for the `Sl` of the struct.
+        // Implement `ValueNonArray` for the `Sl` view of the struct.
         impl #impl_generics_init ::posh::sl::ValueNonArray for #ident #ty_generics_sl
         #where_clause
         {}
 
-        // Implement `Struct` for the `Sl` of the struct.
+        // Implement `Struct` for the `Sl` view of the struct.
         impl #impl_generics_init ::posh::sl::Struct for #ident #ty_generics_sl
         #where_clause
         {
@@ -126,7 +126,8 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             ),*
         }
 
-        // Implement `AsStd140` for the `Gl` of the struct via the helper type above.
+        // Implement `AsStd140` for the `Gl` view of the struct via the helper
+        // type above.
         impl #impl_generics_init ::posh::crevice::std140::AsStd140 for #ident #ty_generics_gl
         #where_clause
         {
@@ -154,7 +155,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             }
         }
 
-        // Implement `Block<Gl>` for the `Gl` of the struct.
+        // Implement `Block<Gl>` for the `Gl` view of the struct.
         unsafe impl #impl_generics_init ::posh::Block<::posh::Gl>
         for #ident #ty_generics_gl
         #where_clause_init
@@ -171,7 +172,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             }
         }
 
-        // Implement `Block<Sl>` for the `Sl` of the struct.
+        // Implement `Block<Sl>` for the `Sl` view of the struct.
         unsafe impl #impl_generics_init ::posh::Block<::posh::Sl>
         for #ident #ty_generics_sl
         #where_clause_init
@@ -226,7 +227,40 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
                 result
             }
+        }
 
+        // Implement `Varying` for the `Sl` view of the struct.
+        unsafe impl #impl_generics_init ::posh::sl::Varying
+        for #ident #ty_generics_sl
+        #where_clause_init
+        {
+            fn shader_outputs(&self, path: &str) -> Vec<(
+                ::std::string::String,
+                ::posh::sl::program_def::InterpolationQualifier,
+                ::std::rc::Rc<::posh::internal::Expr>,
+            )> {
+                let mut result = Vec::new();
+
+                #(
+                    result.extend(
+                        <#field_types_sl as ::posh::sl::Varying>::shader_outputs(
+                            &self.#field_idents,
+                            &::posh::internal::join_ident_path(path, #field_strings)
+                        )
+                    );
+                )*
+
+                result
+            }
+
+            fn shader_input(path: &str) -> Self {
+                Self {
+                    #(
+                        #field_idents: <#field_types_sl as ::posh::sl::Varying>::
+                            shader_input(&::posh::internal::join_ident_path(path, #field_strings)),
+                    )*
+                }
+            }
         }
 
         // Check that all field types in `Sl` implement `Block<Sl>`.
