@@ -102,7 +102,7 @@ impl Demo {
                 .with_vertex_data(self.vertices.as_binding())
                 .with_element_data(self.elements.as_binding()),
             framebuffer: &gl::Framebuffer::default(),
-            settings: &gl::DrawSettings::default()
+            settings: &gl::Settings::default()
                 .with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0))
                 .with_clear_depth(1.0)
                 .with_depth_test(gl::Comparison::Less),

@@ -16,7 +16,7 @@ pub use buffer::{Buffer, BufferUsage};
 pub use caps::Caps;
 pub use context::Context;
 pub use draw_settings::{
-    BlendEquation, BlendFunc, Blending, Comparison, CullFace, DrawSettings, Rect, StencilOp,
+    BlendEquation, BlendFunc, Blending, Comparison, CullFace, Rect, Settings, StencilOp,
     StencilOps, StencilTest,
 };
 pub use error::{

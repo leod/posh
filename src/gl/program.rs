@@ -7,7 +7,7 @@ use crate::{
 };
 
 use super::{
-    raw, ColorSampler2d, ComparisonSampler2d, DrawError, DrawSettings, Framebuffer,
+    raw, ColorSampler2d, ComparisonSampler2d, DrawError, Framebuffer, Settings,
     UniformBufferBinding, VertexSpec,
 };
 
@@ -18,7 +18,7 @@ where
     pub uniform: &'a U,
     pub vertex_spec: &'a VertexSpec<V>,
     pub framebuffer: &'a F,
-    pub settings: &'a DrawSettings,
+    pub settings: &'a Settings,
 }
 
 pub struct Program<U, V, F = sl::Vec4> {

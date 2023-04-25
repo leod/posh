@@ -238,7 +238,7 @@ impl Demo {
             uniform: &self.light_buffer.as_binding(),
             vertex_spec: &scene_spec,
             framebuffer: &self.light_depth_map.as_depth_attachment(),
-            settings: &gl::DrawSettings::default()
+            settings: &gl::Settings::default()
                 .with_clear_depth(1.0)
                 .with_depth_test(gl::Comparison::Less)
                 .with_cull_face(gl::CullFace::Back),
@@ -254,7 +254,7 @@ impl Demo {
             },
             vertex_spec: &scene_spec,
             framebuffer: &gl::Framebuffer::default(),
-            settings: &gl::DrawSettings::default()
+            settings: &gl::Settings::default()
                 .with_clear_color(glam::Vec4::ONE)
                 .with_clear_depth(1.0)
                 .with_depth_test(gl::Comparison::Less)
@@ -267,7 +267,7 @@ impl Demo {
                 .with_vertex_data(self.light_vertices.as_binding())
                 .with_element_data(self.light_elements.as_binding()),
             framebuffer: &gl::Framebuffer::default(),
-            settings: &gl::DrawSettings::default()
+            settings: &gl::Settings::default()
                 .with_depth_test(gl::Comparison::Less)
                 .with_cull_face(gl::CullFace::Back),
         })?;
@@ -280,7 +280,7 @@ impl Demo {
                 .with_vertex_data(self.debug_vertices.as_binding())
                 .with_element_data(self.debug_elements.as_binding()),
             framebuffer: &gl::Framebuffer::default(),
-            settings: &gl::DrawSettings::default(),
+            settings: &gl::Settings::default(),
         })?;
 
         Ok(())
