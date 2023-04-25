@@ -296,14 +296,6 @@ impl U32 {
 }
 
 impl Bool {
-    pub fn and(self, right: impl ToSl<Output = Self>) -> Self {
-        binary(self, BinaryOp::And, right)
-    }
-
-    pub fn or(self, right: impl ToSl<Output = Self>) -> Self {
-        binary(self, BinaryOp::Or, right)
-    }
-
     pub fn as_i32(self) -> I32 {
         cast(self)
     }
