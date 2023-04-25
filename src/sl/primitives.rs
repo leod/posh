@@ -5,12 +5,20 @@ use super::{
     Bool, Object, ToSl, Value,
 };
 
+pub fn and(left: impl ToSl<Output = Bool>, right: impl ToSl<Output = Bool>) -> Bool {
+    binary(left, BinaryOp::And, right)
+}
+
+pub fn or(left: impl ToSl<Output = Bool>, right: impl ToSl<Output = Bool>) -> Bool {
+    binary(left, BinaryOp::Or, right)
+}
+
 pub fn any(vs: impl IntoIterator<Item = Bool>) -> Bool {
-    vs.into_iter().fold(false.to_sl(), |x, v| x.or(v))
+    vs.into_iter().fold(false.to_sl(), |x, v| or(x, v))
 }
 
 pub fn all(vs: impl IntoIterator<Item = Bool>) -> Bool {
-    vs.into_iter().fold(true.to_sl(), |x, v| x.and(v))
+    vs.into_iter().fold(true.to_sl(), |x, v| and(x, v))
 }
 
 pub fn branch<V: Value>(
