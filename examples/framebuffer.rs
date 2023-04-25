@@ -120,13 +120,12 @@ impl Demo {
                     state: self.state.as_binding(),
                     scene: self
                         .texture
-                        .as_color_sampler(gl::Sampler2dSettings::default()),
+                        .as_color_sampler(gl::Sampler2dSettings::linear()),
                 },
                 vertex: &self
                     .quad_vertices
                     .as_vertex_spec(gl::Mode::Triangles)
                     .with_element_data(self.quad_elements.as_binding()),
-
                 settings: &gl::Settings::default(),
             },
             &gl::Framebuffer::default(),

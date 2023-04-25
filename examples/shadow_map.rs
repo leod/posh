@@ -253,7 +253,7 @@ impl Demo {
                     camera: self.camera_buffer.as_binding(),
                     light: self.light_buffer.as_binding(),
                     light_depth_map: self.light_depth_map.as_comparison_sampler(
-                        gl::Sampler2dSettings::default(),
+                        gl::Sampler2dSettings::linear(),
                         gl::Comparison::Less,
                     ),
                 },

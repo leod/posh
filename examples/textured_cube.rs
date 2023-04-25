@@ -97,7 +97,7 @@ impl Demo {
                         time: self.time.as_binding(),
                     },
                     self.texture
-                        .as_color_sampler(gl::Sampler2dSettings::default()),
+                        .as_color_sampler(gl::Sampler2dSettings::linear()),
                 ),
                 vertex: &self
                     .vertices
