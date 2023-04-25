@@ -230,8 +230,9 @@ impl Demo {
         self.light_buffer.set(Light::new(light_x, light_y));
         self.light_vertices.set(&light_vertices(light_x, light_y));
 
-        let scene_spec = gl::VertexSpec::new(gl::Mode::Triangles)
-            .with_vertex_data(self.scene_vertices.as_binding())
+        let scene_spec = self
+            .scene_vertices
+            .as_vertex_spec(gl::Mode::Triangles)
             .with_element_data(self.scene_elements.as_binding());
 
         self.depth_program.draw(gl::Input {
@@ -263,8 +264,9 @@ impl Demo {
 
         self.flat_program.draw(gl::Input {
             uniform: &self.camera_buffer.as_binding(),
-            vertex_spec: &gl::VertexSpec::new(gl::Mode::Triangles)
-                .with_vertex_data(self.light_vertices.as_binding())
+            vertex_spec: &self
+                .light_vertices
+                .as_vertex_spec(gl::Mode::Triangles)
                 .with_element_data(self.light_elements.as_binding()),
             framebuffer: &gl::Framebuffer::default(),
             settings: &gl::Settings::default()
@@ -276,8 +278,9 @@ impl Demo {
             uniform: &self
                 .light_depth_map
                 .as_color_sampler(gl::Sampler2dSettings::default()),
-            vertex_spec: &gl::VertexSpec::new(gl::Mode::Triangles)
-                .with_vertex_data(self.debug_vertices.as_binding())
+            vertex_spec: &self
+                .debug_vertices
+                .as_vertex_spec(gl::Mode::Triangles)
                 .with_element_data(self.debug_elements.as_binding()),
             framebuffer: &gl::Framebuffer::default(),
             settings: &gl::Settings::default(),
