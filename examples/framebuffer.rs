@@ -85,7 +85,7 @@ impl Demo {
     pub fn new(gl: gl::Context) -> Result<Self, gl::CreateError> {
         use gl::BufferUsage::*;
 
-        let image = gl::ColorImage::zero_u8(glam::uvec2(1024, 768));
+        let image = gl::ColorImage::rgba_u8_zero(glam::uvec2(1024, 768));
 
         Ok(Self {
             scene_program: gl.create_program(scene_pass::vertex, scene_pass::fragment)?,

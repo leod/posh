@@ -16,7 +16,7 @@ impl<'a, S: ColorSample> ColorImage<'a, S> {
 }
 
 impl<'a> ColorImage<'a, sl::Vec4> {
-    pub fn slice_u8(size: glam::UVec2, data: &'a [u8]) -> Self {
+    pub fn rgba_u8_slice(size: glam::UVec2, data: &'a [u8]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -28,19 +28,19 @@ impl<'a> ColorImage<'a, sl::Vec4> {
         }
     }
 
-    pub fn slice_u8_gamma(size: glam::UVec2, data: &'a [u8]) -> Self {
+    pub fn rgba_u8_gamma_slice(size: glam::UVec2, data: &'a [u8]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
                 ty: ImageComponentType::U8,
-                internal_format: ImageInternalFormat::SrgbU8AlphaU8,
+                internal_format: ImageInternalFormat::RgbaU8Gamma,
                 data: Some(data),
             },
             _phantom: PhantomData,
         }
     }
 
-    pub fn slice_i8_snorm(size: glam::UVec2, data: &'a [i8]) -> Self {
+    pub fn rgba_i8_snorm_slice(size: glam::UVec2, data: &'a [i8]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -52,7 +52,7 @@ impl<'a> ColorImage<'a, sl::Vec4> {
         }
     }
 
-    pub fn slice_f32(size: glam::UVec2, data: &'a [f32]) -> Self {
+    pub fn rgba_f32_slice(size: glam::UVec2, data: &'a [f32]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -64,7 +64,7 @@ impl<'a> ColorImage<'a, sl::Vec4> {
         }
     }
 
-    pub fn zero_u8(size: glam::UVec2) -> Self {
+    pub fn rgba_u8_zero(size: glam::UVec2) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -76,19 +76,19 @@ impl<'a> ColorImage<'a, sl::Vec4> {
         }
     }
 
-    pub fn zero_u8_gamma(size: glam::UVec2) -> Self {
+    pub fn rgba_u8_gamma_zero(size: glam::UVec2) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
                 ty: ImageComponentType::U8,
-                internal_format: ImageInternalFormat::SrgbU8AlphaU8,
+                internal_format: ImageInternalFormat::RgbaU8Gamma,
                 data: None,
             },
             _phantom: PhantomData,
         }
     }
 
-    pub fn zero_i8_snorm(size: glam::UVec2) -> Self {
+    pub fn rgba_i8_snorm_zero(size: glam::UVec2) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -100,12 +100,258 @@ impl<'a> ColorImage<'a, sl::Vec4> {
         }
     }
 
-    pub fn zero_f32(size: glam::UVec2) -> Self {
+    pub fn rgba_f32_zero(size: glam::UVec2) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
                 ty: ImageComponentType::F32,
                 internal_format: ImageInternalFormat::RgbaF32,
+                data: None,
+            },
+            _phantom: PhantomData,
+        }
+    }
+}
+
+impl<'a> ColorImage<'a, sl::Vec3> {
+    pub fn rgb_u8_slice(size: glam::UVec2, data: &'a [u8]) -> Self {
+        ColorImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::U8,
+                internal_format: ImageInternalFormat::RgbU8,
+                data: Some(data),
+            },
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn rgb_u8_gamma_slice(size: glam::UVec2, data: &'a [u8]) -> Self {
+        ColorImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::U8,
+                internal_format: ImageInternalFormat::RgbU8Gamma,
+                data: Some(data),
+            },
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn rgb_i8_snorm_slice(size: glam::UVec2, data: &'a [i8]) -> Self {
+        ColorImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::I8,
+                internal_format: ImageInternalFormat::RgbI8Snorm,
+                data: Some(bytemuck::cast_slice(data)),
+            },
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn rgb_f32_slice(size: glam::UVec2, data: &'a [f32]) -> Self {
+        ColorImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::F32,
+                internal_format: ImageInternalFormat::RgbF32,
+                data: Some(bytemuck::cast_slice(data)),
+            },
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn rgb_u8_zero(size: glam::UVec2) -> Self {
+        ColorImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::U8,
+                internal_format: ImageInternalFormat::RgbU8,
+                data: None,
+            },
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn rgb_u8_gamma_zero(size: glam::UVec2) -> Self {
+        ColorImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::U8,
+                internal_format: ImageInternalFormat::RgbU8Gamma,
+                data: None,
+            },
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn rgb_i8_snorm_zero(size: glam::UVec2) -> Self {
+        ColorImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::I8,
+                internal_format: ImageInternalFormat::RgbI8Snorm,
+                data: None,
+            },
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn rgb_f32_zero(size: glam::UVec2) -> Self {
+        ColorImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::F32,
+                internal_format: ImageInternalFormat::RgbF32,
+                data: None,
+            },
+            _phantom: PhantomData,
+        }
+    }
+}
+
+impl<'a> ColorImage<'a, sl::Vec2> {
+    pub fn rg_u8_slice(size: glam::UVec2, data: &'a [u8]) -> Self {
+        ColorImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::U8,
+                internal_format: ImageInternalFormat::RgU8,
+                data: Some(data),
+            },
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn rg_i8_snorm_slice(size: glam::UVec2, data: &'a [i8]) -> Self {
+        ColorImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::I8,
+                internal_format: ImageInternalFormat::RgI8Snorm,
+                data: Some(bytemuck::cast_slice(data)),
+            },
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn rg_f32_slice(size: glam::UVec2, data: &'a [f32]) -> Self {
+        ColorImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::F32,
+                internal_format: ImageInternalFormat::RgF32,
+                data: Some(bytemuck::cast_slice(data)),
+            },
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn rg_u8_zero(size: glam::UVec2) -> Self {
+        ColorImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::U8,
+                internal_format: ImageInternalFormat::RgU8,
+                data: None,
+            },
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn rg_i8_snorm_zero(size: glam::UVec2) -> Self {
+        ColorImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::I8,
+                internal_format: ImageInternalFormat::RgI8Snorm,
+                data: None,
+            },
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn rg_f32_zero(size: glam::UVec2) -> Self {
+        ColorImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::F32,
+                internal_format: ImageInternalFormat::RgF32,
+                data: None,
+            },
+            _phantom: PhantomData,
+        }
+    }
+}
+
+impl<'a> ColorImage<'a, sl::F32> {
+    pub fn r_u8_slice(size: glam::UVec2, data: &'a [u8]) -> Self {
+        ColorImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::U8,
+                internal_format: ImageInternalFormat::RU8,
+                data: Some(data),
+            },
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn r_i8_snorm_slice(size: glam::UVec2, data: &'a [i8]) -> Self {
+        ColorImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::I8,
+                internal_format: ImageInternalFormat::RI8Snorm,
+                data: Some(bytemuck::cast_slice(data)),
+            },
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn r_f32_slice(size: glam::UVec2, data: &'a [f32]) -> Self {
+        ColorImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::F32,
+                internal_format: ImageInternalFormat::RF32,
+                data: Some(bytemuck::cast_slice(data)),
+            },
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn r_u8_zero(size: glam::UVec2) -> Self {
+        ColorImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::U8,
+                internal_format: ImageInternalFormat::RU8,
+                data: None,
+            },
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn r_i8_snorm_zero(size: glam::UVec2) -> Self {
+        ColorImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::I8,
+                internal_format: ImageInternalFormat::RI8Snorm,
+                data: None,
+            },
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn r_f32_zero(size: glam::UVec2) -> Self {
+        ColorImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::F32,
+                internal_format: ImageInternalFormat::RF32,
                 data: None,
             },
             _phantom: PhantomData,
@@ -124,7 +370,7 @@ impl<'a> DepthImage<'a> {
 }
 
 impl<'a> DepthImage<'a> {
-    pub fn slice_f32(size: glam::UVec2, data: &'a [f32]) -> Self {
+    pub fn f32_slice(size: glam::UVec2, data: &'a [f32]) -> Self {
         DepthImage {
             raw: raw::Image {
                 size,
@@ -135,7 +381,7 @@ impl<'a> DepthImage<'a> {
         }
     }
 
-    pub fn zero_f32(size: glam::UVec2) -> Self {
+    pub fn f32_zero(size: glam::UVec2) -> Self {
         DepthImage {
             raw: raw::Image {
                 size,
@@ -150,13 +396,10 @@ impl<'a> DepthImage<'a> {
 // TODO:
 // - RgbaIntFormat
 // - RgbaUnsignedIntFormat
-// - RgbFormat
 // - RgbIntFormat
 // - RgbUnsignedIntFormat
-// - RgFormat
 // - RgIntFormat
 // - RgUnsignedIntFormat
-// - RedFormat
 // - RedIntFormat
 // - RedUnsignedIntFormat
 // - DepthStencilFormat
