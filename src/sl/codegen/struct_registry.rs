@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{BTreeMap, BTreeSet},
     rc::Rc,
 };
 
@@ -21,26 +21,35 @@ impl<'a> From<&'a Rc<StructType>> for StructKey {
 #[derive(Debug, Clone)]
 pub struct StructRegistry {
     defs: Vec<Rc<StructType>>,
-    ids: HashMap<StructKey, StructId>,
+    ids: BTreeMap<StructKey, StructId>,
 }
 
 impl StructRegistry {
     pub fn new<'a>(roots: &[Rc<Expr>], extra_types: impl Iterator<Item = &'a Type>) -> Self {
-        let mut structs = HashMap::new();
+        let mut structs = BTreeMap::new();
+        let mut structs_insertion_order = Vec::new();
+
+        // The names of structs that occur in uniform block declarations must
+        // match between shader stages. Thus, we need to process `extra_types`
+        // first, so that their structs get the same names in all shader stages.
+        for ty in extra_types {
+            collect_structs_in_type(ty, &mut structs, &mut structs_insertion_order);
+        }
 
         {
-            let mut visited = HashSet::new();
+            let mut visited = BTreeSet::new();
 
             for expr in roots {
-                collect_structs_in_expr(expr, &mut visited, &mut structs);
+                collect_structs_in_expr(
+                    expr,
+                    &mut visited,
+                    &mut structs,
+                    &mut structs_insertion_order,
+                );
             }
         }
 
-        for ty in extra_types {
-            collect_structs_in_type(ty, &mut structs);
-        }
-
-        let defs = topological_ordering(structs);
+        let defs = topological_ordering(&structs_insertion_order);
         let ids = defs
             .iter()
             .enumerate()
@@ -79,22 +88,31 @@ fn get_struct_type(ty: &Type) -> Option<&Rc<StructType>> {
     }
 }
 
-fn collect_structs_in_type(ty: &Type, structs: &mut HashMap<StructKey, Rc<StructType>>) {
+fn collect_structs_in_type(
+    ty: &Type,
+    structs: &mut BTreeMap<StructKey, Rc<StructType>>,
+    structs_insertion_order: &mut Vec<Rc<StructType>>,
+) {
     if let Some(ty) = get_struct_type(ty) {
         if structs.insert(ty.into(), ty.clone()).is_some() {
             return;
         }
 
+        log::info!("adding {}", ty.name);
+
+        structs_insertion_order.push(ty.clone());
+
         for (_, field_ty) in &ty.fields {
-            collect_structs_in_type(field_ty, structs);
+            collect_structs_in_type(field_ty, structs, structs_insertion_order);
         }
     }
 }
 
 fn collect_structs_in_expr(
     expr: &Rc<Expr>,
-    visited: &mut HashSet<ExprKey>,
-    structs: &mut HashMap<StructKey, Rc<StructType>>,
+    visited: &mut BTreeSet<ExprKey>,
+    structs: &mut BTreeMap<StructKey, Rc<StructType>>,
+    structs_insertion_order: &mut Vec<Rc<StructType>>,
 ) {
     if visited.contains(&expr.into()) {
         return;
@@ -102,17 +120,17 @@ fn collect_structs_in_expr(
 
     visited.insert(expr.into());
 
-    collect_structs_in_type(&expr.ty(), structs);
+    collect_structs_in_type(&expr.ty(), structs, structs_insertion_order);
 
     expr.successors(|succ| {
-        collect_structs_in_expr(succ, visited, structs);
+        collect_structs_in_expr(succ, visited, structs, structs_insertion_order)
     });
 }
 
 fn visit(
     ty: &Rc<StructType>,
-    permanent_mark: &mut HashSet<StructKey>,
-    temporary_mark: &mut HashSet<StructKey>,
+    permanent_mark: &mut BTreeSet<StructKey>,
+    temporary_mark: &mut BTreeSet<StructKey>,
     output: &mut Vec<Rc<StructType>>,
 ) {
     let key: StructKey = ty.into();
@@ -138,12 +156,12 @@ fn visit(
     output.push(ty.clone());
 }
 
-fn topological_ordering(structs: HashMap<StructKey, Rc<StructType>>) -> Vec<Rc<StructType>> {
-    let mut permanent_mark = HashSet::new();
-    let mut temporary_mark = HashSet::new();
+fn topological_ordering(structs: &[Rc<StructType>]) -> Vec<Rc<StructType>> {
+    let mut permanent_mark = BTreeSet::new();
+    let mut temporary_mark = BTreeSet::new();
     let mut output = Vec::new();
 
-    for ty in structs.values() {
+    for ty in structs {
         visit(ty, &mut permanent_mark, &mut temporary_mark, &mut output);
     }
 
