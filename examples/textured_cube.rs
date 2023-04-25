@@ -98,7 +98,7 @@ impl Demo {
                 self.texture
                     .as_color_sampler(gl::Sampler2dSettings::default()),
             ),
-            vertex_spec: &gl::VertexSpec::new(gl::PrimitiveMode::Triangles)
+            vertex_spec: &gl::VertexSpec::new(gl::Mode::Triangles)
                 .with_vertex_data(self.vertices.as_binding())
                 .with_element_data(self.elements.as_binding()),
             framebuffer: &gl::Framebuffer::default(),
