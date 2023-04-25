@@ -122,7 +122,7 @@ mod shaded_pass {
 
         let inside = !sl::any([uvw.x.lt(0.0), uvw.x.gt(1.0), uvw.y.lt(0.0), uvw.y.gt(1.0)]);
 
-        inside.branch(light_depth_map.sample_compare(uvw.xy(), uvw.z), 0.0)
+        sl::branch(inside, light_depth_map.sample_compare(uvw.xy(), uvw.z), 0.0)
     }
 
     pub fn fragment(
