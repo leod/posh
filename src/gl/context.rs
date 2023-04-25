@@ -40,7 +40,7 @@ impl Context {
         usage: BufferUsage,
     ) -> Result<VertexBuffer<B>, BufferError>
     where
-        B: Block<Sl>,
+        B: Block<Sl, Sl = B>,
     {
         // FIXME
         let data: Vec<_> = data.iter().map(AsStd140::as_std140).collect();
