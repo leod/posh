@@ -13,6 +13,21 @@ pub fn all(vs: impl IntoIterator<Item = Bool>) -> Bool {
     vs.into_iter().fold(true.to_sl(), |x, v| x.and(v))
 }
 
+pub fn branch<V: Value>(
+    cond: impl ToSl<Output = Bool>,
+    yes: impl ToSl<Output = V>,
+    no: impl ToSl<Output = V>,
+) -> V {
+    let ty = V::ty();
+    let cond = cond.to_sl().expr();
+    let yes = yes.to_sl().expr();
+    let no = no.to_sl().expr();
+
+    let expr = Expr::Branch { ty, cond, yes, no };
+
+    V::from_expr(expr)
+}
+
 pub(crate) fn cast<U, V>(u: impl ToSl<Output = U>) -> V
 where
     U: Value,
