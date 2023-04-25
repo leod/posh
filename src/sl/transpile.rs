@@ -7,6 +7,7 @@ use std::{iter::once, rc::Rc};
 
 use crate::{
     interface::{FragmentVisitor, UniformUnion, UniformVisitor, VertexVisitor},
+    sl::program_def::InterpolationQualifier,
     Block, Fragment, Sl, Uniform, Vertex,
 };
 
@@ -244,15 +245,17 @@ where
             })
             .chain(
                 // TODO: Interpolation type.
-                varying_outputs
-                    .iter()
-                    .map(|(name, expr)| ("out".to_string(), name.clone(), expr.ty())),
+                varying_outputs.iter().map(|(name, interp, expr)| {
+                    let kind = format!("{} out", interp.to_glsl());
+
+                    (kind, name.clone(), expr.ty())
+                }),
             );
         let exprs = once(("gl_Position", output.position.expr()))
             .chain(
                 varying_outputs
                     .iter()
-                    .map(|(name, expr)| (name.as_str(), expr.clone())),
+                    .map(|(name, _, expr)| (name.as_str(), expr.clone())),
             )
             .chain(
                 output
@@ -292,9 +295,10 @@ where
 
         let attributes = varying_outputs
             .iter()
-            .map(|(name, expr)| {
-                // TODO: Interpolation type.
-                ("in".to_string(), name.clone(), expr.ty())
+            .map(|(name, interp, expr)| {
+                let kind = format!("{} in", interp.to_glsl());
+
+                (kind, name.clone(), expr.ty())
             })
             .chain(visitor.outputs.iter().enumerate().map(|(i, (name, expr))| {
                 (
