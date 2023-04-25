@@ -21,3 +21,4 @@ glam = { version = "0.22.0" }
 image = "0.24.5"
 nanorand = "0.7.0"
 sdl2 = "0.35.2"
+simple_logger = "4.1.0"
