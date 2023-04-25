@@ -68,7 +68,7 @@ impl Demo {
     }
 
     pub fn draw(&self) -> Result<(), gl::DrawError> {
-        self.program.draw(gl::DrawInput {
+        self.program.draw(gl::Input {
             uniform: &self.camera.as_binding(),
             vertex_spec: &gl::VertexSpec::new(gl::Mode::Triangles).with_vertex_data(Vertex {
                 instance: self.instances.as_binding().with_instancing(),

@@ -57,7 +57,7 @@ impl Demo {
             time: Instant::now().duration_since(self.start_time).as_secs_f32(),
         });
 
-        self.program.draw(gl::DrawInput {
+        self.program.draw(gl::Input {
             uniform: &self.globals.as_binding(),
             vertex_spec: &gl::VertexSpec::new(gl::Mode::Triangles)
                 .with_vertex_data(self.vertices.as_binding()),

@@ -234,7 +234,7 @@ impl Demo {
             .with_vertex_data(self.scene_vertices.as_binding())
             .with_element_data(self.scene_elements.as_binding());
 
-        self.depth_program.draw(gl::DrawInput {
+        self.depth_program.draw(gl::Input {
             uniform: &self.light_buffer.as_binding(),
             vertex_spec: &scene_spec,
             framebuffer: &self.light_depth_map.as_depth_attachment(),
@@ -244,7 +244,7 @@ impl Demo {
                 .with_cull_face(gl::CullFace::Back),
         })?;
 
-        self.shaded_program.draw(gl::DrawInput {
+        self.shaded_program.draw(gl::Input {
             uniform: &shaded_pass::Uniform {
                 camera: self.camera_buffer.as_binding(),
                 light: self.light_buffer.as_binding(),
@@ -261,7 +261,7 @@ impl Demo {
                 .with_cull_face(gl::CullFace::Back),
         })?;
 
-        self.flat_program.draw(gl::DrawInput {
+        self.flat_program.draw(gl::Input {
             uniform: &self.camera_buffer.as_binding(),
             vertex_spec: &gl::VertexSpec::new(gl::Mode::Triangles)
                 .with_vertex_data(self.light_vertices.as_binding())
@@ -272,7 +272,7 @@ impl Demo {
                 .with_cull_face(gl::CullFace::Back),
         })?;
 
-        self.debug_program.draw(gl::DrawInput {
+        self.debug_program.draw(gl::Input {
             uniform: &self
                 .light_depth_map
                 .as_color_sampler(gl::Sampler2dSettings::default()),

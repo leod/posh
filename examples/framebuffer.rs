@@ -105,7 +105,7 @@ impl Demo {
             flip,
         });
 
-        self.scene_program.draw(gl::DrawInput {
+        self.scene_program.draw(gl::Input {
             uniform: &self.state.as_binding(),
             vertex_spec: &gl::VertexSpec::new(gl::Mode::Triangles)
                 .with_vertex_data(self.triangle_vertices.as_binding()),
@@ -113,7 +113,7 @@ impl Demo {
             settings: &gl::Settings::default(),
         })?;
 
-        self.present_program.draw(gl::DrawInput {
+        self.present_program.draw(gl::Input {
             uniform: &present_pass::Uniform {
                 state: self.state.as_binding(),
                 scene: self
