@@ -196,7 +196,7 @@ impl Demo {
         use gl::BufferUsage::{StaticDraw, StreamDraw};
 
         let depth_map_size = glam::uvec2(DEPTH_MAP_SIZE, DEPTH_MAP_SIZE);
-        let light_depth_image = gl::DepthImage::zero_f32(depth_map_size);
+        let light_depth_image = gl::DepthImage::f32_zero(depth_map_size);
 
         Ok(Demo {
             flat_program: gl.create_program(flat_pass::vertex, flat_pass::fragment)?,

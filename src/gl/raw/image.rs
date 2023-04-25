@@ -3,7 +3,7 @@ pub enum ImageFormat {
     Rgba,
     Rgb,
     Rg,
-    Red,
+    R,
     RgbaInteger,
     RgbInteger,
     RgInteger,
@@ -20,7 +20,7 @@ impl ImageFormat {
             Rgba => glow::RGBA,
             Rgb => glow::RGB,
             Rg => glow::RG,
-            Red => glow::RED,
+            R => glow::RED,
             RgbaInteger => glow::RGBA_INTEGER,
             RgbInteger => glow::RGB_INTEGER,
             RgInteger => glow::RG_INTEGER,
@@ -37,7 +37,7 @@ impl ImageFormat {
             Rgba => 4,
             Rgb => 3,
             Rg => 2,
-            Red => 1,
+            R => 1,
             RgbaInteger => 4,
             RgbInteger => 3,
             RgInteger => 2,
@@ -83,9 +83,19 @@ impl ImageComponentType {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ImageInternalFormat {
     RgbaU8,
-    SrgbU8AlphaU8,
+    RgbaU8Gamma,
     RgbaI8Snorm,
     RgbaF32,
+    RgbU8,
+    RgbU8Gamma,
+    RgbI8Snorm,
+    RgbF32,
+    RgU8,
+    RgI8Snorm,
+    RgF32,
+    RU8,
+    RI8Snorm,
+    RF32,
     DepthF32,
 }
 
@@ -95,9 +105,19 @@ impl ImageInternalFormat {
 
         match self {
             RgbaU8 => glow::RGBA8,
-            SrgbU8AlphaU8 => glow::SRGB8_ALPHA8,
+            RgbaU8Gamma => glow::SRGB8_ALPHA8,
             RgbaI8Snorm => glow::RGBA8_SNORM,
             RgbaF32 => glow::RGBA32F,
+            RgbU8 => glow::RGB8,
+            RgbU8Gamma => glow::SRGB8,
+            RgbI8Snorm => glow::RGB8_SNORM,
+            RgbF32 => glow::RGB32F,
+            RgU8 => glow::RG8,
+            RgI8Snorm => glow::RG8_SNORM,
+            RgF32 => glow::RG32F,
+            RU8 => glow::R8,
+            RI8Snorm => glow::R8_SNORM,
+            RF32 => glow::R32F,
             DepthF32 => glow::DEPTH_COMPONENT32F,
         }
     }
@@ -106,7 +126,10 @@ impl ImageInternalFormat {
         use ImageInternalFormat::*;
 
         match self {
-            RgbaU8 | SrgbU8AlphaU8 | RgbaI8Snorm | RgbaF32 => ImageFormat::Rgba,
+            RgbaU8 | RgbaU8Gamma | RgbaI8Snorm | RgbaF32 => ImageFormat::Rgba,
+            RgbU8 | RgbU8Gamma | RgbI8Snorm | RgbF32 => ImageFormat::Rgb,
+            RgU8 | RgI8Snorm | RgF32 => ImageFormat::Rg,
+            RU8 | RI8Snorm | RF32 => ImageFormat::R,
             DepthF32 => ImageFormat::Depth,
         }
     }
@@ -115,10 +138,10 @@ impl ImageInternalFormat {
         use ImageInternalFormat::*;
 
         match self {
-            RgbaU8 => ty == ImageComponentType::U8,
-            SrgbU8AlphaU8 => ty == ImageComponentType::U8,
-            RgbaI8Snorm => ty == ImageComponentType::I8,
-            RgbaF32 => ty == ImageComponentType::F32,
+            RgbaU8 | RgbU8 | RgU8 | RU8 => ty == ImageComponentType::U8,
+            RgbaU8Gamma | RgbU8Gamma => ty == ImageComponentType::U8,
+            RgbaI8Snorm | RgbI8Snorm | RgI8Snorm | RI8Snorm => ty == ImageComponentType::I8,
+            RgbaF32 | RgbF32 | RgF32 | RF32 => ty == ImageComponentType::F32,
             DepthF32 => ty == ImageComponentType::F32,
         }
     }
@@ -127,7 +150,18 @@ impl ImageInternalFormat {
         use ImageInternalFormat::*;
 
         match self {
-            RgbaU8 | SrgbU8AlphaU8 | RgbaI8Snorm | RgbaF32 => true,
+            RgbaU8 | RgbU8 | RgU8 | RU8 => true,
+            RgbaU8Gamma => true,
+            RgbU8Gamma => {
+                // FIXME: Does this always hold?
+                false
+            }
+            RgbaI8Snorm | RgbI8Snorm | RgI8Snorm | RI8Snorm => false,
+            RgbaF32 | RgbF32 | RgF32 | RF32 => {
+                // FIXME: This should rely on caps. Default OpenGL ES 3.0 does
+                // not support rendering to float color textures!
+                true
+            }
             DepthF32 => false,
         }
     }
@@ -135,19 +169,18 @@ impl ImageInternalFormat {
     pub fn is_depth_renderable(&self) -> bool {
         use ImageInternalFormat::*;
 
+        // FIXME: This should rely on caps (maybe).
+
         match self {
-            RgbaU8 | SrgbU8AlphaU8 | RgbaI8Snorm | RgbaF32 => false,
             DepthF32 => true,
+            _ => false,
         }
     }
 
     pub fn is_stencil_renderable(&self) -> bool {
-        use ImageInternalFormat::*;
+        // FIXME: This should rely on caps (maybe).
 
-        match self {
-            RgbaU8 | SrgbU8AlphaU8 | RgbaI8Snorm | RgbaF32 => false,
-            DepthF32 => false,
-        }
+        false
     }
 }
 
