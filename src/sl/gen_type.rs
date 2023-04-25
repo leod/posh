@@ -74,7 +74,7 @@ macro_rules! impl_gen_type {
             }
 
             pub fn signum(self) -> Self {
-                super::primitives::built_in_1("signum", self)
+                super::primitives::built_in_1("sign", self)
             }
 
             pub fn floor(self) -> Self {
