@@ -98,8 +98,6 @@ fn collect_structs_in_type(
             return;
         }
 
-        log::info!("adding {}", ty.name);
-
         structs_insertion_order.push(ty.clone());
 
         for (_, field_ty) in &ty.fields {
