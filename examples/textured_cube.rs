@@ -72,7 +72,7 @@ impl Demo {
             .decode()
             .unwrap()
             .to_rgba8();
-        let image = gl::ColorImage::slice_u8(image.dimensions().into(), image.as_bytes());
+        let image = gl::ColorImage::rgba_u8_slice(image.dimensions().into(), image.as_bytes());
 
         Ok(Self {
             program: gl.create_program(vertex_shader, sl::ColorSampler2d::sample)?,
