@@ -89,7 +89,7 @@ impl Demo {
         let time = Instant::now().duration_since(self.start_time).as_secs_f32();
         self.time.set(time);
 
-        self.program.draw(gl::DrawInput {
+        self.program.draw(gl::Input {
             uniform: &(
                 Uniform {
                     camera: self.camera.as_binding(),
