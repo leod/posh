@@ -44,6 +44,23 @@ pub enum VertexInputRate {
     Instance,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum InterpolationQualifier {
+    Smooth,
+    Flat,
+}
+
+impl InterpolationQualifier {
+    pub fn to_glsl(self) -> &'static str {
+        use InterpolationQualifier::*;
+
+        match self {
+            Smooth => "smooth",
+            Flat => "flat",
+        }
+    }
+}
+
 /// Vertex input definition.
 #[derive(Debug, Clone)]
 pub struct VertexBlockDef {

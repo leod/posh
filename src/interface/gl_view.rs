@@ -62,7 +62,9 @@ macro_rules! impl_block_for_mat {
 impl_block_for_scalar!(F32);
 impl_block_for_scalar!(I32);
 impl_block_for_scalar!(U32);
-impl_block_for_scalar!(Bool);
+
+// TODO: Bools in block.
+//impl_block_for_scalar!(Bool);
 
 impl_block_for_vec!(Vec2);
 impl_block_for_vec!(IVec2);

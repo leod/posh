@@ -88,9 +88,7 @@ mod shaded_pass {
 
     #[derive(Clone, Copy, Value, Varying)]
     pub struct OutputVertex {
-        world_pos: sl::Vec3,
-        world_normal: sl::Vec3,
-        color: sl::Vec3,
+        vertex: SceneVertex,
         light_clip_pos: sl::Vec4,
     }
 
@@ -105,9 +103,7 @@ mod shaded_pass {
             .world_to_clip(vertex.world_pos + vertex.world_normal * EXTRUDE);
 
         let output = OutputVertex {
-            world_pos: vertex.world_pos,
-            world_normal: vertex.world_normal,
-            color: vertex.color,
+            vertex,
             light_clip_pos,
         };
 
@@ -135,14 +131,14 @@ mod shaded_pass {
             light_depth_map,
             ..
         }: Uniform,
-        vertex: OutputVertex,
+        input: OutputVertex,
     ) -> sl::Vec4 {
-        let light_dir = (light.world_pos - vertex.world_pos).normalize();
-        let diffuse = light.color * vertex.world_normal.dot(light_dir).max(0.0);
+        let light_dir = (light.world_pos - input.vertex.world_pos).normalize();
+        let diffuse = light.color * input.vertex.world_normal.dot(light_dir).max(0.0);
 
-        let shadow = sample_shadow(light_depth_map, vertex.light_clip_pos);
+        let shadow = sample_shadow(light_depth_map, input.light_clip_pos);
 
-        let color = (light.ambient + shadow * diffuse) * vertex.color;
+        let color = (light.ambient + shadow * diffuse) * input.vertex.color;
 
         color.extend(1.0)
     }
@@ -463,6 +459,8 @@ fn debug_elements() -> Vec<u32> {
 // SDL glue
 
 fn main() {
+    simple_logger::init().unwrap();
+
     let sdl = sdl2::init().unwrap();
     let video = sdl.video().unwrap();
 
