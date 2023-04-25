@@ -28,7 +28,7 @@ impl<'a> ColorImage<'a, sl::Vec4> {
         }
     }
 
-    pub fn slice_u8_srgb(size: glam::UVec2, data: &'a [u8]) -> Self {
+    pub fn slice_u8_gamma(size: glam::UVec2, data: &'a [u8]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -76,7 +76,7 @@ impl<'a> ColorImage<'a, sl::Vec4> {
         }
     }
 
-    pub fn zero_u8_srgb(size: glam::UVec2) -> Self {
+    pub fn zero_u8_gamma(size: glam::UVec2) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
