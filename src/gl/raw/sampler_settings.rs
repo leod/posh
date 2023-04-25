@@ -33,15 +33,6 @@ pub struct Sampler2dSettings {
     pub wrap_t: SamplerWrap,
 }
 
-impl Sampler2dSettings {
-    pub fn wrap(mut self, wrap: SamplerWrap) -> Self {
-        self.wrap_s = wrap;
-        self.wrap_t = wrap;
-
-        self
-    }
-}
-
 impl SamplerMagFilter {
     pub const fn to_gl(self) -> u32 {
         use SamplerMagFilter::*;
@@ -92,6 +83,30 @@ impl Default for Sampler2dSettings {
 }
 
 impl Sampler2dSettings {
+    pub fn linear() -> Self {
+        Self {
+            mag_filter: SamplerMagFilter::Linear,
+            min_filter: SamplerMinFilter::LinearMipmapLinear,
+            wrap_s: SamplerWrap::Repeat,
+            wrap_t: SamplerWrap::Repeat,
+        }
+    }
+
+    pub fn nearest() -> Self {
+        Self {
+            mag_filter: SamplerMagFilter::Nearest,
+            min_filter: SamplerMinFilter::NearestMipmapNearest,
+            wrap_s: SamplerWrap::Repeat,
+            wrap_t: SamplerWrap::Repeat,
+        }
+    }
+
+    pub fn with_wrap(mut self, wrap: SamplerWrap) -> Self {
+        self.wrap_s = wrap;
+        self.wrap_t = wrap;
+        self
+    }
+
     pub(super) fn set_delta(&self, gl: &glow::Context, current: &Sampler2dSettings) {
         if self.mag_filter != current.mag_filter {
             let mag_filter = self.mag_filter.to_gl() as i32;
