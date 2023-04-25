@@ -304,17 +304,6 @@ impl Bool {
         binary(self, BinaryOp::Or, right)
     }
 
-    pub fn branch<V: Value>(self, yes: impl ToSl<Output = V>, no: impl ToSl<Output = V>) -> V {
-        let ty = V::ty();
-        let cond = self.expr();
-        let yes = yes.to_sl().expr();
-        let no = no.to_sl().expr();
-
-        let expr = Expr::Branch { ty, cond, yes, no };
-
-        V::from_expr(expr)
-    }
-
     pub fn as_i32(self) -> I32 {
         cast(self)
     }
