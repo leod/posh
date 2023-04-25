@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{BTreeMap, BTreeSet},
     rc::Rc,
 };
 
@@ -13,7 +13,7 @@ use super::{
 #[derive(Default)]
 pub struct VarForm {
     var_exprs: Vec<SimplifiedExpr>,
-    simplified_exprs: HashMap<ExprKey, SimplifiedExpr>,
+    simplified_exprs: BTreeMap<ExprKey, SimplifiedExpr>,
     roots: Vec<ExprKey>,
 }
 
@@ -161,8 +161,8 @@ impl VarForm {
 
 fn visit(
     node: &Rc<Expr>,
-    permanent_mark: &mut HashSet<ExprKey>,
-    temporary_mark: &mut HashSet<ExprKey>,
+    permanent_mark: &mut BTreeSet<ExprKey>,
+    temporary_mark: &mut BTreeSet<ExprKey>,
     output: &mut Vec<Rc<Expr>>,
 ) {
     let key: ExprKey = node.into();
@@ -185,8 +185,8 @@ fn visit(
 }
 
 fn topological_ordering(roots: &[Rc<Expr>]) -> Vec<Rc<Expr>> {
-    let mut permanent_mark = HashSet::new();
-    let mut temporary_mark = HashSet::new();
+    let mut permanent_mark = BTreeSet::new();
+    let mut temporary_mark = BTreeSet::new();
     let mut output = Vec::new();
 
     for root in roots {
@@ -196,8 +196,8 @@ fn topological_ordering(roots: &[Rc<Expr>]) -> Vec<Rc<Expr>> {
     output
 }
 
-fn count_usages(exprs: &[Rc<Expr>]) -> HashMap<ExprKey, usize> {
-    let mut usages = HashMap::new();
+fn count_usages(exprs: &[Rc<Expr>]) -> BTreeMap<ExprKey, usize> {
+    let mut usages = BTreeMap::new();
 
     for expr in exprs {
         expr.successors(|succ| {
