@@ -173,11 +173,10 @@ macro_rules! impl_gen_type {
                 super::primitives::built_in_3("mix", x.to_sl(), y.to_sl(), a.to_sl())
             }
 
-            // FIXME: Different argument order than `branch`...
             pub fn select(
+                a: impl super::ToSl<Output = $tyb>,
                 x: impl super::ToSl<Output = Self>,
                 y: impl super::ToSl<Output = Self>,
-                a: impl super::ToSl<Output = $tyb>,
             ) -> Self {
                 super::primitives::built_in_3("mix", x.to_sl(), y.to_sl(), a.to_sl())
             }
