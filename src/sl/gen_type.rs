@@ -45,8 +45,12 @@ macro_rules! impl_gen_type {
                 super::primitives::built_in_2("atan", self, x.to_sl())
             }
 
-            pub fn pow(self, y: impl super::ToSl<Output = Self>) -> Self {
+            pub fn powf_cwise(self, y: impl super::ToSl<Output = Self>) -> Self {
                 super::primitives::built_in_2("pow", self, y.to_sl())
+            }
+
+            pub fn powf(self, y: impl super::ToSl<Output = super::F32>) -> Self {
+                self.powf_cwise(Self::ONE * y.to_sl())
             }
 
             pub fn exp(self) -> Self {
@@ -133,15 +137,15 @@ macro_rules! impl_gen_type {
                 super::primitives::built_in_2("max", self, y.to_sl())
             }
 
-            pub fn modulus(self, y: impl super::ToSl<Output = Self>) -> Self {
+            pub fn modulus_cwise(self, y: impl super::ToSl<Output = Self>) -> Self {
                 super::primitives::built_in_2("mod", self, y.to_sl())
             }
 
-            pub fn modulus_with_f32(self, y: impl super::ToSl<Output = F32>) -> Self {
+            pub fn modulus(self, y: impl super::ToSl<Output = F32>) -> Self {
                 super::primitives::built_in_2("mod", self, y.to_sl())
             }
 
-            pub fn cmpclamp(
+            pub fn clamp(
                 self,
                 min: impl super::ToSl<Output = Self>,
                 max: impl super::ToSl<Output = Self>,
@@ -149,67 +153,58 @@ macro_rules! impl_gen_type {
                 super::primitives::built_in_3("clamp", self, min.to_sl(), max.to_sl())
             }
 
-            pub fn clamp(
+            pub fn lerp(
                 self,
-                min: impl super::ToSl<Output = F32>,
-                max: impl super::ToSl<Output = F32>,
+                rhs: impl super::ToSl<Output = Self>,
+                s: impl super::ToSl<Output = F32>,
             ) -> Self {
-                super::primitives::built_in_3("clamp", self, min.to_sl(), max.to_sl())
+                super::primitives::built_in_3("mix", self, rhs.to_sl(), s.to_sl())
             }
 
-            pub fn cmpmix(
-                x: impl super::ToSl<Output = Self>,
-                y: impl super::ToSl<Output = Self>,
-                a: impl super::ToSl<Output = Self>,
+            pub fn lerp_cwise(
+                self,
+                rhs: impl super::ToSl<Output = Self>,
+                s: impl super::ToSl<Output = Self>,
             ) -> Self {
-                super::primitives::built_in_3("mix", x.to_sl(), y.to_sl(), a.to_sl())
-            }
-
-            pub fn mix(
-                x: impl super::ToSl<Output = Self>,
-                y: impl super::ToSl<Output = Self>,
-                a: impl super::ToSl<Output = F32>,
-            ) -> Self {
-                super::primitives::built_in_3("mix", x.to_sl(), y.to_sl(), a.to_sl())
+                super::primitives::built_in_3("mix", self, rhs.to_sl(), s.to_sl())
             }
 
             pub fn select(
-                a: impl super::ToSl<Output = $tyb>,
-                x: impl super::ToSl<Output = Self>,
-                y: impl super::ToSl<Output = Self>,
+                mask: impl super::ToSl<Output = $tyb>,
+                if_true: impl super::ToSl<Output = Self>,
+                if_false: impl super::ToSl<Output = Self>,
             ) -> Self {
-                super::primitives::built_in_3("mix", x.to_sl(), y.to_sl(), a.to_sl())
+                super::primitives::built_in_3(
+                    "mix",
+                    if_true.to_sl(),
+                    if_false.to_sl(),
+                    mask.to_sl(),
+                )
             }
 
-            pub fn cmpstep(
-                edge: impl super::ToSl<Output = Self>,
-                x: impl super::ToSl<Output = Self>,
-            ) -> Self {
-                super::primitives::built_in_2("step", edge.to_sl(), x.to_sl())
+            pub fn step_cwise(self, edge: impl super::ToSl<Output = Self>) -> Self {
+                super::primitives::built_in_2("step", edge.to_sl(), self)
             }
 
-            pub fn step(
-                edge: impl super::ToSl<Output = F32>,
-                x: impl super::ToSl<Output = Self>,
-            ) -> Self {
-                super::primitives::built_in_2("step", edge.to_sl(), x.to_sl())
+            /// Returns 1.0 if `self >= edge` and 0.0 otherwise.
+            pub fn step(self, edge: impl super::ToSl<Output = F32>) -> Self {
+                super::primitives::built_in_2("step", edge.to_sl(), self)
             }
 
-            pub fn cmpsmoothstep(
+            pub fn smoothstep_cwise(
+                self,
+                edge0: impl super::ToSl<Output = Self>,
                 edge1: impl super::ToSl<Output = Self>,
-                edge2: impl super::ToSl<Output = Self>,
-                x: impl super::ToSl<Output = Self>,
             ) -> Self {
-                super::primitives::built_in_3("smoothstep", edge1.to_sl(), edge2.to_sl(), x.to_sl())
+                super::primitives::built_in_3("smoothstep", edge0.to_sl(), edge1.to_sl(), self)
             }
 
             pub fn smoothstep(
                 self,
+                edge0: impl super::ToSl<Output = F32>,
                 edge1: impl super::ToSl<Output = F32>,
-                edge2: impl super::ToSl<Output = F32>,
-                x: impl super::ToSl<Output = F32>,
             ) -> Self {
-                super::primitives::built_in_3("smoothstep", edge1.to_sl(), edge2.to_sl(), x.to_sl())
+                super::primitives::built_in_3("smoothstep", edge0.to_sl(), edge1.to_sl(), self)
             }
         }
     };
