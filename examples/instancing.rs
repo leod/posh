@@ -80,7 +80,7 @@ impl Demo {
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less),
             },
-            &gl::Framebuffer::default(),
+            gl::Framebuffer::default(),
         )
     }
 }

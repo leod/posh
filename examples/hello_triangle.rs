@@ -63,7 +63,7 @@ impl Demo {
                 vertex: &self.vertices.as_vertex_spec(gl::Mode::Triangles),
                 settings: &gl::Settings::default().with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0)),
             },
-            &gl::Framebuffer::default(),
+            gl::Framebuffer::default(),
         )
     }
 }
