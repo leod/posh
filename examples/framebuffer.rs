@@ -111,7 +111,7 @@ impl Demo {
                 vertex: &self.triangle_vertices.as_vertex_spec(gl::Mode::Triangles),
                 settings: &gl::Settings::default(),
             },
-            &self.texture.as_color_attachment(),
+            self.texture.as_color_attachment(),
         )?;
 
         self.present_program.draw(
@@ -128,7 +128,7 @@ impl Demo {
                     .with_element_data(self.quad_elements.as_binding()),
                 settings: &gl::Settings::default(),
             },
-            &gl::Framebuffer::default(),
+            gl::Framebuffer::default(),
         )?;
 
         Ok(())

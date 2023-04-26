@@ -16,7 +16,7 @@ use super::{
     primitives::value_arg,
     program_def::{ProgramDef, UniformBlockDef, UniformSamplerDef, VertexBlockDef},
     ColorSample, ColorSampler2d, ComparisonSampler2d, ConstParams, FragmentInput, FragmentOutput,
-    FullVertexOutput, Object, Varying, Vec4, VertexOutput, VertexInput, I32,
+    FullVertexOutput, Object, Varying, Vec4, VertexInput, VertexOutput, I32,
 };
 
 /// Types that can be used as vertex input for a vertex shader.

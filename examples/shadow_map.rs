@@ -241,7 +241,7 @@ impl Demo {
                     .with_depth_test(gl::Comparison::Less)
                     .with_cull_face(gl::CullFace::Back),
             },
-            &self.light_depth_map.as_depth_attachment(),
+            self.light_depth_map.as_depth_attachment(),
         )?;
 
         self.shaded_program.draw(
@@ -261,7 +261,7 @@ impl Demo {
                     .with_depth_test(gl::Comparison::Less)
                     .with_cull_face(gl::CullFace::Back),
             },
-            &gl::Framebuffer::default(),
+            gl::Framebuffer::default(),
         )?;
 
         self.flat_program.draw(
@@ -275,7 +275,7 @@ impl Demo {
                     .with_depth_test(gl::Comparison::Less)
                     .with_cull_face(gl::CullFace::Back),
             },
-            &gl::Framebuffer::default(),
+            gl::Framebuffer::default(),
         )?;
 
         self.debug_program.draw(
@@ -289,7 +289,7 @@ impl Demo {
                     .with_element_data(self.debug_elements.as_binding()),
                 settings: &gl::Settings::default(),
             },
-            &gl::Framebuffer::default(),
+            gl::Framebuffer::default(),
         )?;
 
         Ok(())
