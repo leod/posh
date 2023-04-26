@@ -14,11 +14,11 @@ pub fn or(left: impl ToSl<Output = Bool>, right: impl ToSl<Output = Bool>) -> Bo
 }
 
 pub fn any(vs: impl IntoIterator<Item = Bool>) -> Bool {
-    vs.into_iter().fold(false.to_sl(), |x, v| or(x, v))
+    vs.into_iter().fold(false.to_sl(), or)
 }
 
 pub fn all(vs: impl IntoIterator<Item = Bool>) -> Bool {
-    vs.into_iter().fold(true.to_sl(), |x, v| and(x, v))
+    vs.into_iter().fold(true.to_sl(), and)
 }
 
 pub fn branch<V: Value>(
