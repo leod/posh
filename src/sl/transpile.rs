@@ -16,7 +16,7 @@ use super::{
     primitives::value_arg,
     program_def::{ProgramDef, UniformBlockDef, UniformSamplerDef, VertexBlockDef},
     ColorSample, ColorSampler2d, ComparisonSampler2d, ConstParams, FragmentInput, FragmentOutput,
-    Object, Varying, VaryingOutput, Vec4, VertexInput, VertexOutput, I32,
+    FullVertexOutput, Object, Varying, Vec4, VertexInput, VertexOutput, I32,
 };
 
 /// Types that can be used as vertex input for a vertex shader.
@@ -43,13 +43,13 @@ impl<V: Vertex<Sl>> FromVertexInput for V {
 }
 
 /// Types that can be used as vertex output for a vertex shader.
-pub trait IntoVertexOutput {
+pub trait IntoFullVertexOutput {
     type Varying: Varying;
 
-    fn into(self) -> VertexOutput<Self::Varying>;
+    fn into(self) -> FullVertexOutput<Self::Varying>;
 }
 
-impl<W: Varying> IntoVertexOutput for VertexOutput<W> {
+impl<W: Varying> IntoFullVertexOutput for FullVertexOutput<W> {
     type Varying = W;
 
     fn into(self) -> Self {
@@ -57,11 +57,11 @@ impl<W: Varying> IntoVertexOutput for VertexOutput<W> {
     }
 }
 
-impl<V: Varying> IntoVertexOutput for VaryingOutput<V> {
+impl<V: Varying> IntoFullVertexOutput for VertexOutput<V> {
     type Varying = V;
 
-    fn into(self) -> VertexOutput<V> {
-        VertexOutput {
+    fn into(self) -> FullVertexOutput<V> {
+        FullVertexOutput {
             position: self.position,
             varying: self.varying,
             point_size: None,
@@ -69,13 +69,13 @@ impl<V: Varying> IntoVertexOutput for VaryingOutput<V> {
     }
 }
 
-impl IntoVertexOutput for Vec4 {
+impl IntoFullVertexOutput for Vec4 {
     type Varying = ();
 
-    fn into(self) -> VertexOutput<()> {
-        VertexOutput {
-            varying: (),
+    fn into(self) -> FullVertexOutput<()> {
+        FullVertexOutput {
             position: self,
+            varying: (),
             point_size: None,
         }
     }
@@ -147,7 +147,7 @@ where
     F: Fragment<Sl>,
     W: Varying,
     InV: FromVertexInput<Vertex = V>,
-    OutW: IntoVertexOutput<Varying = W>,
+    OutW: IntoFullVertexOutput<Varying = W>,
     InW: FromFragmentInput<Varying = W>,
     OutF: IntoFragmentOutput<Fragment = F>,
 {
@@ -176,7 +176,7 @@ where
     F: Fragment<Sl>,
     W: Varying,
     InV: FromVertexInput<Vertex = V>,
-    OutW: IntoVertexOutput<Varying = W>,
+    OutW: IntoFullVertexOutput<Varying = W>,
     InW: FromFragmentInput<Varying = W>,
     OutF: IntoFragmentOutput<Fragment = F>,
 {
@@ -199,7 +199,7 @@ where
     F: Fragment<Sl>,
     W: Varying,
     InV: FromVertexInput<Vertex = V>,
-    OutW: IntoVertexOutput<Varying = W>,
+    OutW: IntoFullVertexOutput<Varying = W>,
     InW: FromFragmentInput<Varying = W>,
     OutF: IntoFragmentOutput<Fragment = F>,
 {

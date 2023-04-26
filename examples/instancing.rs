@@ -30,13 +30,13 @@ struct Vertex<D: VertexDom = Sl> {
 
 // Shader code
 
-fn vertex_shader(camera: Camera, input: Vertex) -> sl::VaryingOutput<sl::Vec3> {
-    sl::VaryingOutput {
-        varying: input.instance.color,
+fn vertex_shader(camera: Camera, vertex: Vertex) -> sl::VertexOutput<sl::Vec3> {
+    sl::VertexOutput {
         position: camera.view_to_screen
             * camera.world_to_view
-            * input.instance.model_to_view
-            * input.model_pos.extend(1.0),
+            * vertex.instance.model_to_view
+            * vertex.model_pos.extend(1.0),
+        varying: vertex.instance.color,
     }
 }
 
@@ -80,7 +80,7 @@ impl Demo {
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less),
             },
-            &gl::Framebuffer::default(),
+            gl::Framebuffer::default(),
         )
     }
 }

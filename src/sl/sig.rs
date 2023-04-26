@@ -16,17 +16,17 @@ pub struct VertexInput<V> {
 
 /// Per-vertex output computed by a vertex shader.
 #[derive(Debug, Clone)]
-pub struct VertexOutput<W> {
-    pub varying: W,
+pub struct FullVertexOutput<W> {
     pub position: Vec4,
+    pub varying: W,
     pub point_size: Option<F32>,
 }
 
 /// Per-vertex position and varying output computed by a vertex shader.
 #[derive(Debug, Clone)]
-pub struct VaryingOutput<W> {
-    pub varying: W,
+pub struct VertexOutput<W> {
     pub position: Vec4,
+    pub varying: W,
 }
 
 /// Per-fragment input given to a fragment shader.

@@ -5,7 +5,7 @@ use crevice::std140::AsStd140;
 use crate::{
     sl::{
         transpile::transpile_to_program_def,
-        transpile::{FromFragmentInput, FromVertexInput, IntoFragmentOutput, IntoVertexOutput},
+        transpile::{FromFragmentInput, FromVertexInput, IntoFragmentOutput, IntoFullVertexOutput},
         ColorSample, Varying,
     },
     Block, Fragment, Sl, Uniform, UniformUnion, Vertex,
@@ -122,7 +122,7 @@ impl Context {
         F: Fragment<Sl>,
         W: Varying,
         InV: FromVertexInput<Vertex = V>,
-        OutW: IntoVertexOutput<Varying = W>,
+        OutW: IntoFullVertexOutput<Varying = W>,
         InW: FromFragmentInput<Varying = W>,
         OutF: IntoFragmentOutput<Fragment = F>,
     {
