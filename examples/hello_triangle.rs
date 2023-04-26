@@ -11,17 +11,17 @@ struct Globals<D: BlockDom = Sl> {
 
 // Shader code
 
-fn vertex_shader(_: (), input: sl::Vec2) -> sl::VaryingOutput<sl::Vec2> {
-    let pos = input - sl::vec2(0.5, 0.5);
+fn vertex_shader(_: (), vertex: sl::Vec2) -> sl::VertexOutput<sl::Vec2> {
+    let pos = vertex - sl::vec2(0.5, 0.5);
 
-    sl::VaryingOutput {
-        varying: pos,
+    sl::VertexOutput {
         position: sl::vec4(pos.x, pos.y, 0.0, 1.0),
+        varying: pos,
     }
 }
 
-fn fragment_shader(uniform: Globals, input: sl::Vec2) -> sl::Vec4 {
-    let rg = (input + uniform.time).cos().pow(sl::vec2(2.0, 2.0));
+fn fragment_shader(uniform: Globals, varying: sl::Vec2) -> sl::Vec4 {
+    let rg = (varying + uniform.time).cos().pow(sl::vec2(2.0, 2.0));
 
     sl::vec4(rg.x, rg.y, 0.5, 1.0)
 }
@@ -63,7 +63,7 @@ impl Demo {
                 vertex: &self.vertices.as_vertex_spec(gl::Mode::Triangles),
                 settings: &gl::Settings::default().with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0)),
             },
-            &gl::Framebuffer::default(),
+            gl::Framebuffer::default(),
         )
     }
 }
