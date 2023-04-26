@@ -164,7 +164,7 @@ macro_rules! impl_binary_op_scalar_rhs {
 
 // Implements all the things for `$mat`.
 macro_rules! impl_mat {
-    ($mat:ident, $vec_ty:ident, $($member:ident),+) => {
+    ($mat:ident, $vec_ty:ident, ($($member:ident),+), ($($axis:ident),+)) => {
         impl_value!($mat, $($member),+);
 
         impl_binary_op_symmetric!($mat, add, Add);
@@ -189,17 +189,25 @@ macro_rules! impl_mat {
 
         impl Default for $mat {
             fn default() -> Self {
-                Self::identity()
+                Self::IDENTITY
             }
         }
 
         impl $mat {
+            pub const ZERO: Self = Self {
+                $(
+                    $member: $vec_ty::ZERO
+                ),+
+            };
+
+            pub const IDENTITY: Self = Self {
+                $(
+                    $member: $vec_ty::$axis
+                ),+
+            };
+
             pub fn diagonal(value: impl ToSl<Output = F32>) -> Self {
                 built_in_1(&format!("{}", Self::ty()), value.to_sl())
-            }
-
-            pub fn identity() -> Self {
-                Self::diagonal(1.0)
             }
 
             pub fn transpose(self) -> Self {
@@ -221,9 +229,9 @@ macro_rules! impl_mat {
     };
 }
 
-impl_mat!(Mat2, Vec2, x_axis, y_axis);
-impl_mat!(Mat3, Vec3, x_axis, y_axis, z_axis);
-impl_mat!(Mat4, Vec4, x_axis, y_axis, z_axis, w_axis);
+impl_mat!(Mat2, Vec2, (x_axis, y_axis), (X, Y));
+impl_mat!(Mat3, Vec3, (x_axis, y_axis, z_axis), (X, Y, Z));
+impl_mat!(Mat4, Vec4, (x_axis, y_axis, z_axis, w_axis), (X, Y, Z, W));
 
 /// Creates a two-by-two floating-point matrix from column vectors.
 pub fn mat2(x: impl ToSl<Output = Vec2>, y: impl ToSl<Output = Vec2>) -> Mat2 {
