@@ -17,17 +17,17 @@ mod scene_pass {
 
     use super::State;
 
-    pub fn vertex(_: (), input: sl::Vec2) -> sl::VaryingOutput<sl::Vec2> {
-        let vertex = input - sl::vec2(0.5, 0.5);
+    pub fn vertex(_: (), vertex: sl::Vec2) -> sl::VertexOutput<sl::Vec2> {
+        let vertex = vertex - sl::vec2(0.5, 0.5);
 
-        sl::VaryingOutput {
-            varying: vertex,
+        sl::VertexOutput {
             position: vertex.extend(0.0).extend(1.0),
+            varying: vertex,
         }
     }
 
-    pub fn fragment(state: State, input: sl::Vec2) -> sl::Vec4 {
-        let rg = (input + state.time).cos().pow(sl::vec2(2.0, 2.0));
+    pub fn fragment(state: State, varying: sl::Vec2) -> sl::Vec4 {
+        let rg = (varying + state.time).cos().pow(sl::vec2(2.0, 2.0));
 
         sl::vec4(rg.x, rg.y, 0.5, 1.0)
     }
@@ -50,10 +50,10 @@ mod present_pass {
         pub scene: D::ColorSampler2d<sl::Vec4>,
     }
 
-    pub fn vertex(_: (), vertex: Vertex) -> sl::VaryingOutput<sl::Vec2> {
-        sl::VaryingOutput {
-            varying: vertex.tex_coords,
+    pub fn vertex(_: (), vertex: Vertex) -> sl::VertexOutput<sl::Vec2> {
+        sl::VertexOutput {
             position: vertex.pos.extend(0.0).extend(1.0),
+            varying: vertex.tex_coords,
         }
     }
 

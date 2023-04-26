@@ -45,10 +45,10 @@ mod flat_pass {
 
     use super::{Camera, SceneVertex};
 
-    pub fn vertex(camera: Camera, vertex: SceneVertex) -> sl::VaryingOutput<sl::Vec3> {
-        sl::VaryingOutput {
-            varying: vertex.color,
+    pub fn vertex(camera: Camera, vertex: SceneVertex) -> sl::VertexOutput<sl::Vec3> {
+        sl::VertexOutput {
             position: camera.world_to_clip(vertex.world_pos),
+            varying: vertex.color,
         }
     }
 
@@ -72,10 +72,7 @@ mod depth_pass {
 }
 
 mod shaded_pass {
-    use posh::{
-        sl::{self, Value, Varying},
-        Sl, UniformDom,
-    };
+    use posh::{sl, Sl, UniformDom};
 
     use super::{Camera, Light, SceneVertex};
 
@@ -86,8 +83,8 @@ mod shaded_pass {
         pub light_depth_map: D::ComparisonSampler2d,
     }
 
-    #[derive(Clone, Copy, Value, Varying)]
-    pub struct OutputVertex {
+    #[derive(Clone, Copy, sl::Value, sl::Varying)]
+    pub struct Varying {
         vertex: SceneVertex,
         light_clip_pos: sl::Vec4,
     }
@@ -95,21 +92,21 @@ mod shaded_pass {
     pub fn vertex(
         Uniform { light, camera, .. }: Uniform,
         vertex: SceneVertex,
-    ) -> sl::VaryingOutput<OutputVertex> {
+    ) -> sl::VertexOutput<Varying> {
         const EXTRUDE: f32 = 0.1;
 
         let light_clip_pos = light
             .camera
             .world_to_clip(vertex.world_pos + vertex.world_normal * EXTRUDE);
 
-        let output = OutputVertex {
+        let output = Varying {
             vertex,
             light_clip_pos,
         };
 
-        sl::VaryingOutput {
-            varying: output,
+        sl::VertexOutput {
             position: camera.world_to_clip(vertex.world_pos),
+            varying: output,
         }
     }
 
@@ -131,14 +128,14 @@ mod shaded_pass {
             light_depth_map,
             ..
         }: Uniform,
-        input: OutputVertex,
+        varying: Varying,
     ) -> sl::Vec4 {
-        let light_dir = (light.world_pos - input.vertex.world_pos).normalize();
-        let diffuse = light.color * input.vertex.world_normal.dot(light_dir).max(0.0);
+        let light_dir = (light.world_pos - varying.vertex.world_pos).normalize();
+        let diffuse = light.color * varying.vertex.world_normal.dot(light_dir).max(0.0);
 
-        let shadow = sample_shadow(light_depth_map, input.light_clip_pos);
+        let shadow = sample_shadow(light_depth_map, varying.light_clip_pos);
 
-        let color = (light.ambient + shadow * diffuse) * input.vertex.color;
+        let color = (light.ambient + shadow * diffuse) * varying.vertex.color;
 
         color.extend(1.0)
     }
@@ -153,8 +150,8 @@ mod debug_pass {
         pub tex_coords: D::Vec2,
     }
 
-    pub fn vertex(_: (), vertex: Vertex) -> sl::VaryingOutput<sl::Vec2> {
-        sl::VaryingOutput {
+    pub fn vertex(_: (), vertex: Vertex) -> sl::VertexOutput<sl::Vec2> {
+        sl::VertexOutput {
             varying: vertex.tex_coords,
             position: vertex.pos.extend(0.0).extend(1.0),
         }
