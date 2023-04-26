@@ -27,7 +27,7 @@ mod scene_pass {
     }
 
     pub fn fragment(state: State, varying: sl::Vec2) -> sl::Vec4 {
-        let rg = (varying + state.time).cos().pow(sl::vec2(2.0, 2.0));
+        let rg = (varying + state.time).cos().powf(2.0);
 
         sl::vec4(rg.x, rg.y, 0.5, 1.0)
     }
