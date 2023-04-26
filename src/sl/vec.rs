@@ -4,7 +4,7 @@ use std::{
 };
 
 use super::{
-    dag::{BinaryOp, BuiltInType, Expr, Type, UnaryOp},
+    dag::{BinaryOp, BuiltInType, Expr, Trace, Type, UnaryOp},
     primitives::{
         binary, built_in_1, built_in_2, cast, common_field_base, field, unary, value_arg,
     },
@@ -540,6 +540,48 @@ impl_gen_type!(Vec3, BVec3);
 impl_gen_type!(Vec4, BVec4);
 
 impl Vec2 {
+    // All zeroes.
+    pub const ZERO: Self = Self {
+        x: F32::ZERO,
+        y: F32::ZERO,
+    };
+
+    // All ones.
+    pub const ONE: Self = Self {
+        x: F32::ONE,
+        y: F32::ONE,
+    };
+
+    // All negative ones.
+    pub const NEG_ONE: Self = Self {
+        x: F32::NEG_ONE,
+        y: F32::NEG_ONE,
+    };
+
+    // A unit-length vector pointing along the positive X axis.
+    pub const X: Self = Self {
+        x: F32::ONE,
+        y: F32::ZERO,
+    };
+
+    // A unit-length vector pointing along the positive Y axis.
+    pub const Y: Self = Self {
+        x: F32::ZERO,
+        y: F32::ONE,
+    };
+
+    // A unit-length vector pointing along the negative X axis.
+    pub const NEG_X: Self = Self {
+        x: F32::NEG_ONE,
+        y: F32::ZERO,
+    };
+
+    // A unit-length vector pointing along the negative Y axis.
+    pub const NEG_Y: Self = Self {
+        x: F32::ZERO,
+        y: F32::NEG_ONE,
+    };
+
     pub fn from_angle(angle: F32) -> Self {
         let (sin, cos) = angle.sin_cos();
         Self { x: cos, y: sin }
@@ -565,7 +607,154 @@ impl Vec2 {
     }
 }
 
+impl IVec2 {
+    // All zeroes.
+    pub const ZERO: Self = Self {
+        x: I32::ZERO,
+        y: I32::ZERO,
+    };
+
+    // All ones.
+    pub const ONE: Self = Self {
+        x: I32::ONE,
+        y: I32::ONE,
+    };
+
+    // All negative ones.
+    pub const NEG_ONE: Self = Self {
+        x: I32::NEG_ONE,
+        y: I32::NEG_ONE,
+    };
+
+    // A unit-length vector pointing along the positive X axis.
+    pub const X: Self = Self {
+        x: I32::ONE,
+        y: I32::ZERO,
+    };
+
+    // A unit-length vector pointing along the positive Y axis.
+    pub const Y: Self = Self {
+        x: I32::ZERO,
+        y: I32::ONE,
+    };
+
+    // A unit-length vector pointing along the negative X axis.
+    pub const NEG_X: Self = Self {
+        x: I32::NEG_ONE,
+        y: I32::ZERO,
+    };
+
+    // A unit-length vector pointing along the negative Y axis.
+    pub const NEG_Y: Self = Self {
+        x: I32::ZERO,
+        y: I32::NEG_ONE,
+    };
+}
+
+impl UVec2 {
+    // All zeroes.
+    pub const ZERO: Self = Self {
+        x: U32::ZERO,
+        y: U32::ZERO,
+    };
+
+    // All ones.
+    pub const ONE: Self = Self {
+        x: U32::ONE,
+        y: U32::ONE,
+    };
+
+    // A unit-length vector pointing along the positive X axis.
+    pub const X: Self = Self {
+        x: U32::ONE,
+        y: U32::ZERO,
+    };
+
+    // A unit-length vector pointing along the positive Y axis.
+    pub const Y: Self = Self {
+        x: U32::ZERO,
+        y: U32::ONE,
+    };
+}
+
+impl BVec2 {
+    // All false.
+    pub const ZERO: Self = Self {
+        x: Bool::FALSE,
+        y: Bool::FALSE,
+    };
+
+    // All true.
+    pub const ONE: Self = Self {
+        x: Bool::TRUE,
+        y: Bool::TRUE,
+    };
+}
+
 impl Vec3 {
+    // All zeroes.
+    pub const ZERO: Self = Self {
+        x: F32::ZERO,
+        y: F32::ZERO,
+        z: F32::ZERO,
+    };
+
+    // All ones.
+    pub const ONE: Self = Self {
+        x: F32::ONE,
+        y: F32::ONE,
+        z: F32::ONE,
+    };
+
+    // All negative ones.
+    pub const NEG_ONE: Self = Self {
+        x: F32::NEG_ONE,
+        y: F32::NEG_ONE,
+        z: F32::NEG_ONE,
+    };
+
+    // A unit-length vector pointing along the positive X axis.
+    pub const X: Self = Self {
+        x: F32::ONE,
+        y: F32::ZERO,
+        z: F32::ZERO,
+    };
+
+    // A unit-length vector pointing along the positive Y axis.
+    pub const Y: Self = Self {
+        x: F32::ZERO,
+        y: F32::ONE,
+        z: F32::ZERO,
+    };
+
+    // A unit-length vector pointing along the positive Z axis.
+    pub const Z: Self = Self {
+        x: F32::ZERO,
+        y: F32::ZERO,
+        z: F32::ONE,
+    };
+
+    // A unit-length vector pointing along the negative X axis.
+    pub const NEG_X: Self = Self {
+        x: F32::NEG_ONE,
+        y: F32::ZERO,
+        z: F32::ZERO,
+    };
+
+    // A unit-length vector pointing along the negative Y axis.
+    pub const NEG_Y: Self = Self {
+        x: F32::ZERO,
+        y: F32::NEG_ONE,
+        z: F32::ZERO,
+    };
+
+    // A unit-length vector pointing along the negative Z axis.
+    pub const NEG_Z: Self = Self {
+        x: F32::ZERO,
+        y: F32::ZERO,
+        z: F32::NEG_ONE,
+    };
+
     pub fn cross(self, y: Vec3) -> Self {
         built_in_2("cross", self, y)
     }
@@ -575,8 +764,372 @@ impl Vec3 {
     }
 }
 
+impl IVec3 {
+    // All zeroes.
+    pub const ZERO: Self = Self {
+        x: I32::ZERO,
+        y: I32::ZERO,
+        z: I32::ZERO,
+    };
+
+    // All ones.
+    pub const ONE: Self = Self {
+        x: I32::ONE,
+        y: I32::ONE,
+        z: I32::ONE,
+    };
+
+    // All negative ones.
+    pub const NEG_ONE: Self = Self {
+        x: I32::NEG_ONE,
+        y: I32::NEG_ONE,
+        z: I32::NEG_ONE,
+    };
+
+    // A unit-length vector pointing along the positive X axis.
+    pub const X: Self = Self {
+        x: I32::ONE,
+        y: I32::ZERO,
+        z: I32::ZERO,
+    };
+
+    // A unit-length vector pointing along the positive Y axis.
+    pub const Y: Self = Self {
+        x: I32::ZERO,
+        y: I32::ONE,
+        z: I32::ZERO,
+    };
+
+    // A unit-length vector pointing along the positive Z axis.
+    pub const Z: Self = Self {
+        x: I32::ZERO,
+        y: I32::ZERO,
+        z: I32::ONE,
+    };
+
+    // A unit-length vector pointing along the negative X axis.
+    pub const NEG_X: Self = Self {
+        x: I32::NEG_ONE,
+        y: I32::ZERO,
+        z: I32::ZERO,
+    };
+
+    // A unit-length vector pointing along the negative Y axis.
+    pub const NEG_Y: Self = Self {
+        x: I32::ZERO,
+        y: I32::NEG_ONE,
+        z: I32::ZERO,
+    };
+
+    // A unit-length vector pointing along the negative Z axis.
+    pub const NEG_Z: Self = Self {
+        x: I32::ZERO,
+        y: I32::ZERO,
+        z: I32::NEG_ONE,
+    };
+}
+
+impl UVec3 {
+    // All zeroes.
+    pub const ZERO: Self = Self {
+        x: U32::ZERO,
+        y: U32::ZERO,
+        z: U32::ZERO,
+    };
+
+    // All ones.
+    pub const ONE: Self = Self {
+        x: U32::ONE,
+        y: U32::ONE,
+        z: U32::ONE,
+    };
+
+    // A unit-length vector pointing along the positive X axis.
+    pub const X: Self = Self {
+        x: U32::ONE,
+        y: U32::ZERO,
+        z: U32::ZERO,
+    };
+
+    // A unit-length vector pointing along the positive Y axis.
+    pub const Y: Self = Self {
+        x: U32::ZERO,
+        y: U32::ONE,
+        z: U32::ZERO,
+    };
+
+    // A unit-length vector pointing along the positive Z axis.
+    pub const Z: Self = Self {
+        x: U32::ZERO,
+        y: U32::ZERO,
+        z: U32::ONE,
+    };
+}
+
+impl BVec3 {
+    // All false.
+    pub const FALSE: Self = Self {
+        x: Bool::FALSE,
+        y: Bool::FALSE,
+        z: Bool::FALSE,
+    };
+
+    // All true.
+    pub const TRUE: Self = Self {
+        x: Bool::TRUE,
+        y: Bool::TRUE,
+        z: Bool::TRUE,
+    };
+}
+
 impl Vec4 {
+    // All zeroes.
+    pub const ZERO: Self = Self {
+        x: F32::ZERO,
+        y: F32::ZERO,
+        z: F32::ZERO,
+        w: F32::ZERO,
+    };
+
+    // All ones.
+    pub const ONE: Self = Self {
+        x: F32::ONE,
+        y: F32::ONE,
+        z: F32::ONE,
+        w: F32::ONE,
+    };
+
+    // All negative ones.
+    pub const NEG_ONE: Self = Self {
+        x: F32::NEG_ONE,
+        y: F32::NEG_ONE,
+        z: F32::NEG_ONE,
+        w: F32::NEG_ONE,
+    };
+
+    // A unit-length vector pointing along the positive X axis.
+    pub const X: Self = Self {
+        x: F32::ONE,
+        y: F32::ZERO,
+        z: F32::ZERO,
+        w: F32::ZERO,
+    };
+
+    // A unit-length vector pointing along the positive Y axis.
+    pub const Y: Self = Self {
+        x: F32::ZERO,
+        y: F32::ONE,
+        z: F32::ZERO,
+        w: F32::ZERO,
+    };
+
+    // A unit-length vector pointing along the positive Z axis.
+    pub const Z: Self = Self {
+        x: F32::ZERO,
+        y: F32::ZERO,
+        z: F32::ONE,
+        w: F32::ZERO,
+    };
+
+    // A unit-length vector pointing along the positive W axis.
+    pub const W: Self = Self {
+        x: F32::ZERO,
+        y: F32::ZERO,
+        z: F32::ZERO,
+        w: F32::ONE,
+    };
+
+    // A unit-length vector pointing along the negative X axis.
+    pub const NEG_X: Self = Self {
+        x: F32::NEG_ONE,
+        y: F32::ZERO,
+        z: F32::ZERO,
+        w: F32::ZERO,
+    };
+
+    // A unit-length vector pointing along the negative Y axis.
+    pub const NEG_Y: Self = Self {
+        x: F32::ZERO,
+        y: F32::NEG_ONE,
+        z: F32::ZERO,
+        w: F32::ZERO,
+    };
+
+    // A unit-length vector pointing along the negative Z axis.
+    pub const NEG_Z: Self = Self {
+        x: F32::ZERO,
+        y: F32::ZERO,
+        z: F32::NEG_ONE,
+        w: F32::ZERO,
+    };
+
+    // A unit-length vector pointing along the negative W axis.
+    pub const NEG_W: Self = Self {
+        x: F32::ZERO,
+        y: F32::ZERO,
+        z: F32::ZERO,
+        w: F32::NEG_ONE,
+    };
+
     pub fn outer_product(self, y: Vec4) -> Mat4 {
         built_in_2("outerProduct", self, y)
     }
+}
+
+impl IVec4 {
+    // All zeroes.
+    pub const ZERO: Self = Self {
+        x: I32::ZERO,
+        y: I32::ZERO,
+        z: I32::ZERO,
+        w: I32::ZERO,
+    };
+
+    // All ones.
+    pub const ONE: Self = Self {
+        x: I32::ONE,
+        y: I32::ONE,
+        z: I32::ONE,
+        w: I32::ONE,
+    };
+
+    // All negative ones.
+    pub const NEG_ONE: Self = Self {
+        x: I32::NEG_ONE,
+        y: I32::NEG_ONE,
+        z: I32::NEG_ONE,
+        w: I32::NEG_ONE,
+    };
+
+    // A unit-length vector pointing along the positive X axis.
+    pub const X: Self = Self {
+        x: I32::ONE,
+        y: I32::ZERO,
+        z: I32::ZERO,
+        w: I32::ZERO,
+    };
+
+    // A unit-length vector pointing along the positive Y axis.
+    pub const Y: Self = Self {
+        x: I32::ZERO,
+        y: I32::ONE,
+        z: I32::ZERO,
+        w: I32::ZERO,
+    };
+
+    // A unit-length vector pointing along the positive Z axis.
+    pub const Z: Self = Self {
+        x: I32::ZERO,
+        y: I32::ZERO,
+        z: I32::ONE,
+        w: I32::ZERO,
+    };
+
+    // A unit-length vector pointing along the positive W axis.
+    pub const W: Self = Self {
+        x: I32::ZERO,
+        y: I32::ZERO,
+        z: I32::ZERO,
+        w: I32::ONE,
+    };
+
+    // A unit-length vector pointing along the negative X axis.
+    pub const NEG_X: Self = Self {
+        x: I32::NEG_ONE,
+        y: I32::ZERO,
+        z: I32::ZERO,
+        w: I32::ZERO,
+    };
+
+    // A unit-length vector pointing along the negative Y axis.
+    pub const NEG_Y: Self = Self {
+        x: I32::ZERO,
+        y: I32::NEG_ONE,
+        z: I32::ZERO,
+        w: I32::ZERO,
+    };
+
+    // A unit-length vector pointing along the negative Z axis.
+    pub const NEG_Z: Self = Self {
+        x: I32::ZERO,
+        y: I32::ZERO,
+        z: I32::NEG_ONE,
+        w: I32::ZERO,
+    };
+
+    // A unit-length vector pointing along the negative W axis.
+    pub const NEG_W: Self = Self {
+        x: I32::ZERO,
+        y: I32::ZERO,
+        z: I32::ZERO,
+        w: I32::NEG_ONE,
+    };
+}
+
+impl UVec4 {
+    // All zeroes.
+    pub const ZERO: Self = Self {
+        x: U32::ZERO,
+        y: U32::ZERO,
+        z: U32::ZERO,
+        w: U32::ZERO,
+    };
+
+    // All ones.
+    pub const ONE: Self = Self {
+        x: U32::ONE,
+        y: U32::ONE,
+        z: U32::ONE,
+        w: U32::ONE,
+    };
+
+    // A unit-length vector pointing along the positive X axis.
+    pub const X: Self = Self {
+        x: U32::ONE,
+        y: U32::ZERO,
+        z: U32::ZERO,
+        w: U32::ZERO,
+    };
+
+    // A unit-length vector pointing along the positive Y axis.
+    pub const Y: Self = Self {
+        x: U32::ZERO,
+        y: U32::ONE,
+        z: U32::ZERO,
+        w: U32::ZERO,
+    };
+
+    // A unit-length vector pointing along the positive Z axis.
+    pub const Z: Self = Self {
+        x: U32::ZERO,
+        y: U32::ZERO,
+        z: U32::ONE,
+        w: U32::ZERO,
+    };
+
+    // A unit-length vector pointing along the positive W axis.
+    pub const W: Self = Self {
+        x: U32::ZERO,
+        y: U32::ZERO,
+        z: U32::ZERO,
+        w: U32::ONE,
+    };
+}
+
+impl BVec4 {
+    // All false.
+    pub const FALSE: Self = Self {
+        x: Bool::FALSE,
+        y: Bool::FALSE,
+        z: Bool::FALSE,
+        w: Bool::FALSE,
+    };
+
+    // All true.
+    pub const TRUE: Self = Self {
+        x: Bool::TRUE,
+        y: Bool::TRUE,
+        z: Bool::TRUE,
+        w: Bool::TRUE,
+    };
 }

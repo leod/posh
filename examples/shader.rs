@@ -40,9 +40,14 @@ fn vertex_shader(globals: Globals, vertex: ColorVertex) -> VaryingOutput<sl::Vec
         sl::branch(false, x * -1.0, y.as_vec2() * -2.0)
     });
 
-    let position = sl::Mat2::identity() * vertex.position + shift2 + sl::Mat2::diagonal(4.0).x_axis;
+    let position = sl::Mat2::IDENTITY * vertex.position + shift2 + sl::Mat2::diagonal(4.0).x_axis;
 
-    let offsets = sl::array([position, position, sl::vec2(0.3, 0.4), sl::vec2(0.5, 0.6)]);
+    let offsets = sl::array([
+        position,
+        position,
+        sl::vec2(0.3, 0.4) * sl::Vec2::ONE,
+        sl::vec2(0.5, 0.6),
+    ]);
 
     VaryingOutput {
         varying: sl::Vec4::splat(0.0)
