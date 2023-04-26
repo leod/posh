@@ -33,17 +33,17 @@ fn zxy(v: sl::Vec3) -> sl::Vec3 {
     sl::vec3(v.z, v.x, v.y)
 }
 
-fn vertex_shader(uniforms: Uniform, input: Vertex) -> sl::VaryingOutput<sl::Vec2> {
+fn vertex_shader(uniforms: Uniform, vertex: Vertex) -> sl::VertexOutput<sl::Vec2> {
     let camera = uniforms.camera;
     let time = uniforms.time / 3.0;
 
-    let vertex_pos = sl::vec2(input.pos.x, input.pos.y)
+    let vertex_pos = sl::vec2(vertex.pos.x, vertex.pos.y)
         .rotate(sl::Vec2::from_angle(uniforms.time))
-        .extend(input.pos.z);
+        .extend(vertex.pos.z);
     let position = camera.view_to_screen * camera.world_to_view * zxy(vertex_pos).extend(1.0);
 
-    sl::VaryingOutput {
-        varying: input.tex_coords,
+    sl::VertexOutput {
+        varying: vertex.tex_coords,
         position,
     }
 }
