@@ -260,10 +260,10 @@ pub trait VertexField<D: VertexDom>: Sized {
 /// fn my_vertex_shader(
 ///     uniforms: (),
 ///     vertex: MyVertex,
-/// ) -> sl::VaryingOutput<sl::Vec4> {
-///     sl::VaryingOutput {
-///         varying: vertex.material.color,
+/// ) -> sl::VertexOutput<sl::Vec4> {
+///     sl::VertexOutput {
 ///         position: (vertex.position + vertex.material.normal * 1.3).extend(1.0),
+///         varying: vertex.material.color,
 ///     }
 /// }
 /// ```
