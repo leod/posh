@@ -35,7 +35,6 @@ fn zxy(v: sl::Vec3) -> sl::Vec3 {
 
 fn vertex_shader(uniforms: Uniform, vertex: Vertex) -> sl::VertexOutput<sl::Vec2> {
     let camera = uniforms.camera;
-    let time = uniforms.time / 3.0;
 
     let vertex_pos = sl::vec2(vertex.pos.x, vertex.pos.y)
         .rotate(sl::Vec2::from_angle(uniforms.time))
