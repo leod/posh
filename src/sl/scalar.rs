@@ -258,6 +258,10 @@ impl_integral_ops!(U32);
 impl_gen_type!(F32, Bool);
 
 impl F32 {
+    pub const ZERO: Self = F32(Trace::c(|| 0.0.to_sl().expr()));
+    pub const ONE: Self = F32(Trace::c(|| 1.0.to_sl().expr()));
+    pub const NEG_ONE: Self = F32(Trace::c(|| (-1.0).to_sl().expr()));
+
     pub fn as_i32(self) -> I32 {
         cast(self)
     }
@@ -268,6 +272,10 @@ impl F32 {
 }
 
 impl I32 {
+    pub const ZERO: Self = I32(Trace::c(|| 0i32.to_sl().expr()));
+    pub const ONE: Self = I32(Trace::c(|| 1i32.to_sl().expr()));
+    pub const NEG_ONE: Self = I32(Trace::c(|| (-1i32).to_sl().expr()));
+
     pub fn as_f32(self) -> F32 {
         cast(self)
     }
@@ -282,6 +290,9 @@ impl I32 {
 }
 
 impl U32 {
+    pub const ZERO: Self = U32(Trace::c(|| 0u32.to_sl().expr()));
+    pub const ONE: Self = U32(Trace::c(|| 1u32.to_sl().expr()));
+
     pub fn as_f32(self) -> F32 {
         cast(self)
     }
@@ -296,6 +307,9 @@ impl U32 {
 }
 
 impl Bool {
+    pub const TRUE: Self = Bool(Trace::c(|| true.to_sl().expr()));
+    pub const FALSE: Self = Bool(Trace::c(|| false.to_sl().expr()));
+
     pub fn as_i32(self) -> I32 {
         cast(self)
     }

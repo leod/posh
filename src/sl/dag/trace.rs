@@ -6,8 +6,11 @@ thread_local! {
     static REGISTRY: RefCell<Registry> = RefCell::new(Registry::default());
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
-pub struct Trace(usize);
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Trace {
+    Id(usize),
+    Const(fn() -> Rc<Expr>),
+}
 
 impl Trace {
     pub fn new(expr: Expr) -> Self {
@@ -16,11 +19,20 @@ impl Trace {
             reg.insert(expr)
         });
 
-        Trace(id)
+        Trace::Id(id)
+    }
+
+    pub(crate) const fn c(f: fn() -> Rc<Expr>) -> Self {
+        Trace::Const(f)
     }
 
     pub fn expr(&self) -> Rc<Expr> {
-        REGISTRY.with(|reg| reg.borrow().get(self.0))
+        use Trace::*;
+
+        match self {
+            Id(id) => REGISTRY.with(|reg| reg.borrow().get(*id)),
+            Const(f) => f(),
+        }
     }
 }
 
