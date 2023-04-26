@@ -38,7 +38,7 @@ impl<'a, S: ColorSample> From<&'a ColorAttachment<S>> for Framebuffer<S> {
 
 impl<S: ColorSample> From<ColorAttachment<S>> for Framebuffer<S> {
     fn from(value: ColorAttachment<S>) -> Self {
-        Framebuffer(FramebufferInternal::Color(value.clone()))
+        Framebuffer(FramebufferInternal::Color(value))
     }
 }
 
@@ -61,7 +61,7 @@ impl<'a> From<&'a DepthAttachment> for Framebuffer<()> {
 
 impl From<DepthAttachment> for Framebuffer<()> {
     fn from(value: DepthAttachment) -> Self {
-        Framebuffer(FramebufferInternal::Depth(value.clone()))
+        Framebuffer(FramebufferInternal::Depth(value))
     }
 }
 
@@ -79,7 +79,7 @@ impl<'a, F: Fragment<Sl>> From<&'a ColorDepthFramebuffer<F>> for Framebuffer<F> 
 
 impl<F: Fragment<Sl>> From<ColorDepthFramebuffer<F>> for Framebuffer<F> {
     fn from(value: ColorDepthFramebuffer<F>) -> Self {
-        Framebuffer(FramebufferInternal::ColorDepth(value.clone()))
+        Framebuffer(FramebufferInternal::ColorDepth(value))
     }
 }
 

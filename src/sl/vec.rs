@@ -4,7 +4,7 @@ use std::{
 };
 
 use super::{
-    dag::{BinaryOp, BuiltInType, Expr, Trace, Type, UnaryOp},
+    dag::{BinaryOp, BuiltInType, Expr, Type, UnaryOp},
     primitives::{
         binary, built_in_1, built_in_2, cast, common_field_base, field, unary, value_arg,
     },
