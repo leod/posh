@@ -7,11 +7,12 @@ use crate::utils::{
 };
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream> {
+    let attrs = &input.attrs;
     let ident = &input.ident;
     let ident_str = ident.to_string();
     let visibility = input.vis;
 
-    let as_std140_ident = Ident::new(&format!("PoshInternal{ident}BlockAsStd140"), ident.span());
+    let helper_ident = Ident::new(&format!("PoshInternal{ident}BlockHelper"), ident.span());
 
     let generics_init = remove_domain_param(ident, &input.generics)?;
 
@@ -115,23 +116,41 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             }
         }
 
-        // Helper type for which we can derive `AsStd140`.
-        // FIXME: AFAIK, crevice does not support generic types (yet?).
+        // Helper type that is specialized for the `Gl` view of the struct. We
+        // use this for two things:
+        // 1. Derive `AsStd140` for the `Gl` view of the struct by utilizing the
+        //    derive macro of `crevice`.
+        // 2. Safety: check that the `Gl` view of the struct satisfies the
+        //    requirements for `Zeroable` and `Pod` by utilizing the derive
+        //    macros of `bytemuck`.
         #[doc(hidden)]
-        #[derive(::posh::crevice::std140::AsStd140)]
-        #visibility struct #as_std140_ident {
+        #[derive(
+            Clone,
+            Copy,
+            ::posh::bytemuck::Zeroable,
+            ::posh::bytemuck::Pod,
+            ::posh::crevice::std140::AsStd140,
+        )]
+        #(#attrs)*
+        #visibility struct #helper_ident {
             #(
                 #field_idents: #field_types_gl
             ),*
         }
 
+        // Implement `Zeroable` for the `Gl` view of the struct.
+        unsafe impl ::posh::bytemuck::Zeroable for #ident #ty_generics_gl {}
+
+        // Implement `Pod` for the `Gl` view of the struct.
+        unsafe impl ::posh::bytemuck::Pod for #ident #ty_generics_gl {}
+
         // Implement `AsStd140` for the `Gl` view of the struct via the helper
         // type above.
         impl ::posh::crevice::std140::AsStd140 for #ident #ty_generics_gl {
-            type Output = <#as_std140_ident as ::posh::crevice::std140::AsStd140>::Output;
+            type Output = <#helper_ident as ::posh::crevice::std140::AsStd140>::Output;
 
             fn as_std140(&self) -> Self::Output {
-                #as_std140_ident {
+                #helper_ident {
                     #(
                         #field_idents: self.#field_idents.clone()
                     ),*
@@ -189,13 +208,10 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             {
                 let mut result = Vec::new();
 
-                // Passing this type to `offset_of` directly didn't work for me.
-                type Pod = <#as_std140_ident as ::posh::crevice::std140::AsStd140>::Output;
-
                 #(
                     let offset = ::posh::bytemuck::offset_of!(
                         ::posh::bytemuck::Zeroable::zeroed(),
-                        Pod,
+                        Self::Gl,
                         #field_idents
                     );
 

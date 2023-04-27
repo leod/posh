@@ -15,7 +15,7 @@ pub(super) struct ContextShared {
     caps: Caps,
     draw_settings: Cell<Settings>,
     draw_fbo: glow::Framebuffer,
-    default_framebuffer_size: Cell<glam::UVec2>,
+    default_framebuffer_size: Cell<[u32; 2]>,
 }
 
 pub struct Context {
@@ -35,7 +35,7 @@ impl ContextShared {
         &self.caps
     }
 
-    pub(super) fn set_draw_settings(&self, new: &Settings, framebuffer_size: glam::UVec2) {
+    pub(super) fn set_draw_settings(&self, new: &Settings, framebuffer_size: [u32; 2]) {
         let gl = &self.gl;
 
         let current = self.draw_settings.get();
@@ -47,7 +47,7 @@ impl ContextShared {
         self.draw_fbo
     }
 
-    pub(super) fn default_framebuffer_size(&self) -> glam::UVec2 {
+    pub(super) fn default_framebuffer_size(&self) -> [u32; 2] {
         self.default_framebuffer_size.get()
     }
 }
@@ -72,10 +72,10 @@ impl Context {
 
             unsafe { gl.get_parameter_i32_slice(glow::VIEWPORT, &mut viewport) };
 
-            glam::uvec2(
+            [
                 viewport[2].try_into().unwrap(),
                 viewport[3].try_into().unwrap(),
-            )
+            ]
         };
 
         let shared = Rc::new(ContextShared {
@@ -118,11 +118,11 @@ impl Context {
         unsafe { self.shared.gl.finish() };
     }
 
-    pub fn default_framebuffer_size(&self) -> glam::UVec2 {
+    pub fn default_framebuffer_size(&self) -> [u32; 2] {
         self.shared.default_framebuffer_size.get()
     }
 
-    pub fn set_default_framebuffer_size(&self, size: glam::UVec2) {
+    pub fn set_default_framebuffer_size(&self, size: [u32; 2]) {
         self.shared.default_framebuffer_size.set(size);
     }
 }

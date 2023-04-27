@@ -2,11 +2,11 @@ use sealed::sealed;
 
 use crate::{
     gl::{
-        ColorAttachment, ColorSampler2d, ComparisonSampler2d, UniformBufferBinding,
+        self, ColorAttachment, ColorSampler2d, ComparisonSampler2d, UniformBufferBinding,
         VertexBufferBinding,
     },
     internal::join_ident_path,
-    sl::{self, ColorSample},
+    sl::{self, program_def::VertexAttributeDef, ColorSample},
 };
 
 use super::{Block, Fragment, FragmentVisitor, Gl, Sl, Uniform, Vertex, VertexVisitor};
@@ -18,67 +18,66 @@ impl super::BlockDom for Gl {
     type F32 = f32;
     type I32 = i32;
     type U32 = u32;
-    type Vec2 = glam::Vec2;
-    type Vec3 = glam::Vec3;
-    type Vec4 = glam::Vec4;
-    type IVec2 = glam::IVec2;
-    type IVec3 = glam::IVec3;
-    type IVec4 = glam::IVec4;
-    type UVec2 = glam::UVec2;
-    type UVec3 = glam::UVec3;
-    type UVec4 = glam::UVec4;
-    type Mat2 = glam::Mat2;
-    type Mat3 = glam::Mat3;
-    type Mat4 = glam::Mat4;
+    type Vec2 = gl::Vec2;
+    type Vec3 = gl::Vec3;
+    type Vec4 = gl::Vec4;
+    type IVec2 = gl::IVec2;
+    type IVec3 = gl::IVec3;
+    type IVec4 = gl::IVec4;
+    type UVec2 = gl::UVec2;
+    type UVec3 = gl::UVec3;
+    type UVec4 = gl::UVec4;
+    type Mat2 = gl::Mat2;
+    type Mat3 = gl::Mat3;
+    type Mat4 = gl::Mat4;
 }
 
-macro_rules! impl_block_for_scalar {
-    ($scalar:ident) => {
-        unsafe impl Block<Gl> for sl::scalar_physical!($scalar) {
-            type Gl = Self;
-            type Sl = sl::$scalar;
+macro_rules! impl_block {
+    ($gl:ty, $sl:ty) => {
+        unsafe impl Block<Gl> for $gl {
+            type Gl = $gl;
+            type Sl = $sl;
+        }
+
+        unsafe impl Block<Sl> for $sl {
+            type Gl = $gl;
+            type Sl = $sl;
+
+            fn uniform_input(path: &str) -> Self {
+                <Self as sl::Object>::from_arg(path)
+            }
+
+            fn vertex_input(path: &str) -> Self {
+                // FIXME: Cast from u32 to bool!
+                <Self as sl::Object>::from_arg(path)
+            }
+
+            fn vertex_attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
+                vec![VertexAttributeDef {
+                    name: path.to_string(),
+                    ty: <Self as sl::Object>::ty().built_in_type().unwrap(),
+                    offset: 0,
+                }]
+            }
         }
     };
 }
 
-macro_rules! impl_block_for_vec {
-    ($vec:ident) => {
-        unsafe impl Block<Gl> for glam::$vec {
-            type Gl = Self;
-            type Sl = sl::$vec;
-        }
-    };
-}
-
-macro_rules! impl_block_for_mat {
-    ($mat:ident) => {
-        unsafe impl Block<Gl> for glam::$mat {
-            type Gl = Self;
-            type Sl = sl::$mat;
-        }
-    };
-}
-
-impl_block_for_scalar!(F32);
-impl_block_for_scalar!(I32);
-impl_block_for_scalar!(U32);
-
-// TODO: Bools in block.
-//impl_block_for_scalar!(Bool);
-
-impl_block_for_vec!(Vec2);
-impl_block_for_vec!(IVec2);
-impl_block_for_vec!(UVec2);
-impl_block_for_vec!(Vec3);
-impl_block_for_vec!(IVec3);
-impl_block_for_vec!(UVec3);
-impl_block_for_vec!(Vec4);
-impl_block_for_vec!(IVec4);
-impl_block_for_vec!(UVec4);
-
-impl_block_for_mat!(Mat2);
-impl_block_for_mat!(Mat3);
-impl_block_for_mat!(Mat4);
+impl_block!(f32, sl::F32);
+impl_block!(i32, sl::I32);
+impl_block!(u32, sl::U32);
+impl_block!(gl::Vec2, sl::Vec2);
+impl_block!(gl::Vec3, sl::Vec3);
+impl_block!(gl::Vec4, sl::Vec4);
+impl_block!(gl::IVec2, sl::IVec2);
+impl_block!(gl::IVec3, sl::IVec3);
+impl_block!(gl::IVec4, sl::IVec4);
+impl_block!(gl::UVec2, sl::UVec2);
+impl_block!(gl::UVec3, sl::UVec3);
+impl_block!(gl::UVec4, sl::UVec4);
+impl_block!(gl::Mat2, sl::Mat2);
+impl_block!(gl::Mat3, sl::Mat3);
+impl_block!(gl::Mat4, sl::Mat4);
 
 // Vertex
 
