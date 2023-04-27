@@ -2,8 +2,8 @@ use glow::HasContext;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Rect {
-    pub lower_left_corner: glam::UVec2,
-    pub size: glam::UVec2,
+    pub lower_left_corner: [u32; 2],
+    pub size: [u32; 2],
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -33,12 +33,6 @@ impl Comparison {
             NotEqual => glow::NOTEQUAL,
         }
     }
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct Viewport {
-    pub lower_left_corner: glam::UVec2,
-    pub size: glam::UVec2,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -132,7 +126,7 @@ pub struct Blending {
     pub dst_func_color: BlendFunc,
     pub src_func_alpha: BlendFunc,
     pub dst_func_alpha: BlendFunc,
-    pub constant_color: glam::Vec4,
+    pub constant_color: [f32; 4],
 }
 
 impl Default for Blending {
@@ -144,7 +138,7 @@ impl Default for Blending {
             src_func_alpha: BlendFunc::One,
             dst_func_color: BlendFunc::Zero,
             dst_func_alpha: BlendFunc::Zero,
-            constant_color: glam::Vec4::ZERO,
+            constant_color: [0.0; 4],
         }
     }
 }
@@ -223,7 +217,7 @@ impl Blending {
         self.with_src_func(func).with_dst_func(func)
     }
 
-    pub fn with_constant_color(mut self, color: glam::Vec4) -> Self {
+    pub fn with_constant_color(mut self, color: [f32; 4]) -> Self {
         self.constant_color = color;
         self
     }
@@ -314,7 +308,7 @@ impl StencilOps {
 pub struct Settings {
     pub clear_stencil: Option<u8>,
     pub clear_depth: Option<f32>,
-    pub clear_color: Option<glam::Vec4>,
+    pub clear_color: Option<[f32; 4]>,
     pub viewport: Option<Rect>,
     pub cull_face: Option<CullFace>,
     pub scissor: Option<Rect>,
@@ -327,7 +321,7 @@ pub struct Settings {
     pub stencil_mask_front: u32,
     pub stencil_mask_back: u32,
     pub depth_mask: bool,
-    pub color_mask: glam::BVec4,
+    pub color_mask: [bool; 4],
 }
 
 impl Default for Settings {
@@ -348,7 +342,7 @@ impl Default for Settings {
             stencil_mask_front: !0,
             stencil_mask_back: !0,
             depth_mask: true,
-            color_mask: glam::BVec4::TRUE,
+            color_mask: [true; 4],
         }
     }
 }
@@ -358,14 +352,14 @@ impl Settings {
         &self,
         gl: &glow::Context,
         current: &Settings,
-        framebuffer_size: glam::UVec2,
+        framebuffer_size: [u32; 2],
     ) {
         if self.scissor != current.scissor {
             if let Some(scissor) = self.scissor {
-                let x = scissor.lower_left_corner.x.try_into().unwrap();
-                let y = scissor.lower_left_corner.y.try_into().unwrap();
-                let width = scissor.size.x.try_into().unwrap();
-                let height = scissor.size.y.try_into().unwrap();
+                let x = scissor.lower_left_corner[0].try_into().unwrap();
+                let y = scissor.lower_left_corner[1].try_into().unwrap();
+                let width = scissor.size[0].try_into().unwrap();
+                let height = scissor.size[1].try_into().unwrap();
 
                 unsafe { gl.enable(glow::SCISSOR_TEST) };
                 unsafe { gl.scissor(x, y, width, height) };
@@ -389,7 +383,7 @@ impl Settings {
         }
 
         if let Some(c) = self.clear_color {
-            unsafe { gl.clear_color(c.x, c.y, c.z, c.w) };
+            unsafe { gl.clear_color(c[0], c[1], c[2], c[3]) };
 
             clear_mask |= glow::COLOR_BUFFER_BIT;
         }
@@ -400,14 +394,14 @@ impl Settings {
 
         {
             let viewport = self.viewport.unwrap_or(Rect {
-                lower_left_corner: glam::UVec2::ZERO,
+                lower_left_corner: [0; 2],
                 size: framebuffer_size,
             });
 
-            let x = viewport.lower_left_corner.x.try_into().unwrap();
-            let y = viewport.lower_left_corner.y.try_into().unwrap();
-            let width = viewport.size.x.try_into().unwrap();
-            let height = viewport.size.y.try_into().unwrap();
+            let x = viewport.lower_left_corner[0].try_into().unwrap();
+            let y = viewport.lower_left_corner[1].try_into().unwrap();
+            let width = viewport.size[0].try_into().unwrap();
+            let height = viewport.size[1].try_into().unwrap();
 
             unsafe { gl.viewport(x, y, width, height) };
         }
@@ -482,10 +476,10 @@ impl Settings {
                 };
                 unsafe {
                     gl.blend_color(
-                        blending.constant_color.x,
-                        blending.constant_color.y,
-                        blending.constant_color.z,
-                        blending.constant_color.w,
+                        blending.constant_color[0],
+                        blending.constant_color[1],
+                        blending.constant_color[2],
+                        blending.constant_color[3],
                     )
                 };
             } else {
@@ -508,7 +502,7 @@ impl Settings {
         if self.color_mask != current.color_mask {
             let mask = self.color_mask;
 
-            unsafe { gl.color_mask(mask.x, mask.y, mask.z, mask.w) };
+            unsafe { gl.color_mask(mask[0], mask[1], mask[2], mask[3]) };
         }
     }
 
@@ -522,7 +516,7 @@ impl Settings {
         self
     }
 
-    pub fn with_clear_color(mut self, clear_color: glam::Vec4) -> Self {
+    pub fn with_clear_color(mut self, clear_color: [f32; 4]) -> Self {
         self.clear_color = Some(clear_color);
         self
     }
@@ -596,7 +590,7 @@ impl Settings {
             .with_stencil_mask_back(mask)
     }
 
-    pub fn with_color_mask(mut self, mask: glam::BVec4) -> Self {
+    pub fn with_color_mask(mut self, mask: [bool; 4]) -> Self {
         self.color_mask = mask;
         self
     }

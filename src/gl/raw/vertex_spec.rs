@@ -68,8 +68,6 @@ impl Mode {
 // TODO: VertexBlockDef should eventually be split into program definition and
 // vertex stream definition.
 
-// TODO: Instancing.
-
 #[derive(Clone)]
 pub struct VertexBufferBinding {
     pub buffer: Rc<Buffer>,

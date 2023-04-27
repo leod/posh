@@ -14,7 +14,7 @@ pub enum Attachment {
 }
 
 impl Attachment {
-    pub fn size(&self) -> glam::UVec2 {
+    pub fn size(&self) -> [u32; 2] {
         use Attachment::*;
 
         match self {
@@ -54,7 +54,7 @@ pub enum Framebuffer {
 }
 
 impl Framebuffer {
-    pub(super) fn size(&self, ctx: &ContextShared) -> glam::UVec2 {
+    pub(super) fn size(&self, ctx: &ContextShared) -> [u32; 2] {
         use Framebuffer::*;
 
         match self {
@@ -62,7 +62,7 @@ impl Framebuffer {
             Attachments { attachments } => attachments
                 .iter()
                 .map(|attachment| attachment.size())
-                .fold(glam::UVec2::ZERO, glam::UVec2::max),
+                .fold([0, 0], |[x1, y1], [x2, y2]| [x1.max(x2), y1.max(y2)]),
         }
     }
 }

@@ -11,14 +11,10 @@ pub use interface::{
 
 pub use posh_derive::{Block, Uniform, Vertex};
 
-pub use crevice;
-pub use glam;
-pub use glow;
-
-// Only re-exported for `posh-derive`.
-// FIXME: Use `crevice`'s re-export.
-#[doc(hidden)]
 pub use bytemuck;
+pub use crevice;
+pub use glow;
+pub use mint;
 
 // Hidden unstable symbols, needed for `posh-derive`.
 #[doc(hidden)]

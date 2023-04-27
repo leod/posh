@@ -4,11 +4,13 @@ use posh::{
 };
 
 #[derive(Clone, Copy, Block)]
+#[repr(C)]
 struct Foo<D: BlockDom = Sl> {
     bar: D::I32,
 }
 
 #[derive(Clone, Copy, Block)]
+#[repr(C)]
 struct Globals<D: BlockDom = Sl> {
     time: D::F32,
     offset: D::Vec2,
@@ -19,6 +21,7 @@ struct Globals<D: BlockDom = Sl> {
 }
 
 #[derive(Clone, Copy, Block)]
+#[repr(C)]
 struct ColorVertex<D: BlockDom = Sl> {
     position: D::Vec2,
     color: D::Vec2,

@@ -13,7 +13,7 @@ use super::{
 
 // Implements `Object` and `Value` for `$vec`.
 macro_rules! impl_value {
-    ($vec:ident, $scalar:ident, $($member:ident),+) => {
+    ($vec:ident, $mint:ty, $scalar:ident, $($member:ident),+) => {
         impl Object for $vec {
             fn ty() -> Type {
                 Type::BuiltIn(BuiltInType::$vec)
@@ -58,7 +58,7 @@ macro_rules! impl_value {
 
         impl ValueNonArray for $vec {}
 
-        impl ToSl for glam::$vec {
+        impl ToSl for $mint {
             type Output = $vec;
 
             fn to_sl(self) -> Self::Output {
@@ -274,7 +274,7 @@ macro_rules! impl_ops {
 
 // Implements two-dimensional `$vec`.
 macro_rules! impl_vec2 {
-    ($vec:ident, $bvec:ident, $vec_lower:ident, $scalar:ident, $vec3:ident) => {
+    ($vec:ident, $mint:ty, $bvec:ident, $vec_lower:ident, $scalar:ident, $vec3:ident) => {
         #[doc = concat!("A two-dimensional ", scalar_name!($scalar), " vector.")]
         #[derive(Debug, Copy, Clone, Default)]
         pub struct $vec {
@@ -313,14 +313,22 @@ macro_rules! impl_vec2 {
             $vec::new(x, y)
         }
 
-        impl_value!($vec, $scalar, x, y);
+        impl_value!($vec, $mint, $scalar, x, y);
         impl_ops!($vec, $bvec, $scalar);
     };
 }
 
 // Implements three-dimensional `$vec`.
 macro_rules! impl_vec3 {
-    ($vec:ident, $bvec:ident, $vec_lower:ident, $scalar:ident, $vec2:ident, $vec4:ident) => {
+    (
+        $vec:ident,
+        $mint:ty,
+        $bvec:ident,
+        $vec_lower:ident,
+        $scalar:ident,
+        $vec2:ident,
+        $vec4:ident
+    ) => {
         #[doc = concat!("A three-dimensional ", scalar_name!($scalar), " vector.")]
         #[derive(Debug, Copy, Clone, Default)]
         pub struct $vec {
@@ -384,14 +392,22 @@ macro_rules! impl_vec3 {
             $vec::new(x, y, z)
         }
 
-        impl_value!($vec, $scalar, x, y, z);
+        impl_value!($vec, $mint, $scalar, x, y, z);
         impl_ops!($vec, $bvec, $scalar);
     };
 }
 
 // Implements four-dimensional `$vec`.
 macro_rules! impl_vec4 {
-    ($vec:ident, $bvec:ident, $vec_lower:ident, $scalar:ident, $vec2:ident, $vec3:ident) => {
+    (
+        $vec:ident,
+        $mint:ty,
+        $bvec:ident, 
+        $vec_lower:ident,
+        $scalar:ident,
+        $vec2:ident,
+        $vec3:ident
+    ) => {
         #[doc = concat!("A four-dimensional ", scalar_name!($scalar), " vector.")]
         #[derive(Debug, Copy, Clone, Default)]
         pub struct $vec {
@@ -486,7 +502,7 @@ macro_rules! impl_vec4 {
             $vec::new(x, y, z, w)
         }
 
-        impl_value!($vec, $scalar, x, y, z, w);
+        impl_value!($vec, $mint, $scalar, x, y, z, w);
         impl_ops!($vec, $bvec, $scalar);
     };
 }
@@ -504,20 +520,21 @@ macro_rules! impl_casts {
     };
 }
 
-impl_vec2!(Vec2, BVec2, vec2, F32, Vec3);
-impl_vec2!(IVec2, BVec2, ivec2, I32, IVec3);
-impl_vec2!(UVec2, BVec2, uvec2, U32, UVec3);
-impl_vec2!(BVec2, BVec2, bvec2, Bool, BVec3);
+impl_vec2!(Vec2, mint::Vector2<f32>, BVec2, vec2, F32, Vec3);
+impl_vec3!(Vec3, mint::Vector3<f32>, BVec3, vec3, F32, Vec2, Vec4);
+impl_vec4!(Vec4, mint::Vector4<f32>, BVec4, vec4, F32, Vec2, Vec3);
 
-impl_vec3!(Vec3, BVec3, vec3, F32, Vec2, Vec4);
-impl_vec3!(IVec3, BVec3, ivec3, I32, IVec2, IVec4);
-impl_vec3!(UVec3, BVec3, uvec3, U32, UVec2, UVec4);
-impl_vec3!(BVec3, BVec3, bvec3, Bool, BVec2, BVec4);
+impl_vec2!(IVec2, mint::Vector2<i32>, BVec2, ivec2, I32, IVec3);
+impl_vec3!(IVec3, mint::Vector3<i32>, BVec3, ivec3, I32, IVec2, IVec4);
+impl_vec4!(IVec4, mint::Vector4<i32>, BVec4, ivec4, I32, IVec2, IVec3);
 
-impl_vec4!(Vec4, BVec4, vec4, F32, Vec2, Vec3);
-impl_vec4!(IVec4, BVec4, ivec4, I32, IVec2, IVec3);
-impl_vec4!(UVec4, BVec4, uvec4, U32, UVec2, UVec3);
-impl_vec4!(BVec4, BVec4, bvec4, Bool, BVec2, BVec3);
+impl_vec2!(UVec2, mint::Vector2<u32>, BVec2, uvec2, U32, UVec3);
+impl_vec3!(UVec3, mint::Vector3<u32>, BVec3, uvec3, U32, UVec2, UVec4);
+impl_vec4!(UVec4, mint::Vector4<u32>, BVec4, uvec4, U32, UVec2, UVec3);
+
+impl_vec2!(BVec2, mint::Vector2<bool>, BVec2, bvec2, Bool, BVec3);
+impl_vec3!(BVec3, mint::Vector3<bool>, BVec3, bvec3, Bool, BVec2, BVec4);
+impl_vec4!(BVec4, mint::Vector4<bool>, BVec4, bvec4, Bool, BVec2, BVec3);
 
 impl_casts!(Vec2, as_ivec2, IVec2, as_uvec2, UVec2);
 impl_casts!(Vec3, as_ivec3, IVec3, as_uvec3, UVec3);

@@ -42,10 +42,7 @@ impl Context {
     where
         B: Block<Sl, Sl = B>,
     {
-        // FIXME
-        let data: Vec<_> = data.iter().map(AsStd140::as_std140).collect();
-
-        let raw = self.raw.create_buffer(&data, glow::ARRAY_BUFFER, usage)?;
+        let raw = self.raw.create_buffer(data, glow::ARRAY_BUFFER, usage)?;
 
         Ok(VertexBuffer::from_raw(raw))
     }
@@ -182,7 +179,7 @@ impl Context {
         }
     */
 
-    pub fn set_default_framebuffer_size(&self, size: glam::UVec2) {
+    pub fn set_default_framebuffer_size(&self, size: [u32; 2]) {
         self.raw.set_default_framebuffer_size(size);
     }
 

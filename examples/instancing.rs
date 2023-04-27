@@ -11,15 +11,24 @@ const HEIGHT: u32 = 768;
 // Shader interface
 
 #[derive(Clone, Copy, Block)]
+#[repr(C)]
 struct Camera<D: BlockDom = Sl> {
     world_to_view: D::Mat4,
     view_to_screen: D::Mat4,
 }
 
 #[derive(Clone, Copy, Block)]
+#[repr(C)]
 struct Instance<D: BlockDom = Sl> {
     model_to_view: D::Mat4,
     color: D::Vec3,
+}
+
+#[derive(Copy, Clone, bytemuck::Zeroable, bytemuck::Pod)]
+#[repr(C)]
+struct Foo {
+    x: [f32; 4],
+    y: f32,
 }
 
 #[derive(posh::Vertex)]
@@ -76,7 +85,7 @@ impl Demo {
                     model_pos: self.teapot.as_binding(),
                 }),
                 settings: &gl::Settings::default()
-                    .with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0))
+                    .with_clear_color([0.1, 0.2, 0.3, 1.0])
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less),
             },
@@ -133,13 +142,15 @@ impl Default for Camera<Gl> {
                 glam::Vec3::new(-20.0, -20.0, -20.0),
                 glam::Vec3::ZERO,
                 glam::Vec3::NEG_Y,
-            ),
+            )
+            .into(),
             view_to_screen: glam::Mat4::perspective_rh_gl(
                 std::f32::consts::PI / 2.0,
                 WIDTH as f32 / HEIGHT as f32,
                 1.0,
                 500.0,
-            ),
+            )
+            .into(),
         }
     }
 }
@@ -154,8 +165,8 @@ fn instances(_time: f32) -> Vec<Instance<Gl>> {
                     let color = glam::uvec3(x, 10 - y, z).as_vec3() / 10.0;
 
                     Instance {
-                        model_to_view,
-                        color,
+                        model_to_view: model_to_view.into(),
+                        color: color.into(),
                     }
                 })
             })
@@ -163,7 +174,7 @@ fn instances(_time: f32) -> Vec<Instance<Gl>> {
         .collect()
 }
 
-fn teapot_positions() -> Vec<glam::Vec3> {
+fn teapot_positions() -> Vec<gl::Vec3> {
     let file = File::open("examples/resources/teapot.csv").expect("Could not find teapot.csv");
     BufReader::new(file)
         .lines()
@@ -172,11 +183,12 @@ fn teapot_positions() -> Vec<glam::Vec3> {
             let cols = line.split(",").collect::<Vec<_>>();
             assert_eq!(cols.len(), 3);
 
-            glam::vec3(
+            [
                 cols[0].parse().unwrap(),
                 cols[1].parse().unwrap(),
                 cols[2].parse().unwrap(),
-            )
+            ]
+            .into()
         })
         .collect()
 }
