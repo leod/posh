@@ -1,9 +1,9 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{parse_quote, DeriveInput, Ident, Result};
+use syn::{parse_quote, DeriveInput, Error, Ident, Result};
 
 use crate::utils::{
-    remove_view_param, specialize_field_types, SpecializedTypeGenerics, StructFields,
+    remove_domain_param, specialize_field_types, SpecializedTypeGenerics, StructFields,
 };
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream> {
@@ -13,10 +13,16 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
     let as_std140_ident = Ident::new(&format!("PoshInternal{ident}BlockAsStd140"), ident.span());
 
-    let generics_tail = remove_view_param(ident, &input.generics)?;
+    let generics_init = remove_domain_param(ident, &input.generics)?;
+
+    if !generics_init.params.is_empty() {
+        return Err(Error::new_spanned(
+            &generics_init.params[0],
+            "posh derive(Block) macro expects the struct to be generic only in its domain",
+        ));
+    }
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-    let (impl_generics_init, ty_generics_init, where_clause_init) = generics_tail.split_for_impl();
 
     let ty_generics_sl =
         SpecializedTypeGenerics::new(parse_quote!(::posh::Sl), ident, &input.generics)?;
@@ -34,9 +40,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
     Ok(quote! {
         // Implement `Object` for the `Sl` view of the struct.
-        impl #impl_generics_init ::posh::sl::Object for #ident #ty_generics_sl
-        #where_clause_init
-        {
+        impl ::posh::sl::Object for #ident #ty_generics_sl {
             fn ty() -> ::posh::internal::Type {
                 ::posh::internal::Type::Struct(<Self as ::posh::sl::Struct>::struct_type())
             }
@@ -58,9 +62,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         }
 
         // Implement `Value` for the `Sl` view of the struct.
-        impl #impl_generics_init ::posh::sl::Value for #ident #ty_generics_sl
-        #where_clause_init
-        {
+        impl ::posh::sl::Value for #ident #ty_generics_sl {
             fn from_expr(expr: ::posh::internal::Expr) -> Self {
                 let base = ::std::rc::Rc::new(expr);
 
@@ -76,14 +78,10 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         }
 
         // Implement `ValueNonArray` for the `Sl` view of the struct.
-        impl #impl_generics_init ::posh::sl::ValueNonArray for #ident #ty_generics_sl
-        #where_clause
-        {}
+        impl ::posh::sl::ValueNonArray for #ident #ty_generics_sl {}
 
         // Implement `Struct` for the `Sl` view of the struct.
-        impl #impl_generics_init ::posh::sl::Struct for #ident #ty_generics_sl
-        #where_clause
-        {
+        impl ::posh::sl::Struct for #ident #ty_generics_sl {
             fn struct_type() -> ::std::rc::Rc<::posh::internal::StructType> {
                 ::posh::internal::unique_struct_type::<Self>(
                     || ::posh::internal::StructType {
@@ -116,11 +114,12 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                 }
             }
         }
+
         // Helper type for which we can derive `AsStd140`.
         // FIXME: AFAIK, crevice does not support generic types (yet?).
         #[doc(hidden)]
         #[derive(::posh::crevice::std140::AsStd140)]
-        #visibility struct #as_std140_ident #impl_generics_init {
+        #visibility struct #as_std140_ident {
             #(
                 #field_idents: #field_types_gl
             ),*
@@ -128,12 +127,8 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
         // Implement `AsStd140` for the `Gl` view of the struct via the helper
         // type above.
-        impl #impl_generics_init ::posh::crevice::std140::AsStd140 for #ident #ty_generics_gl
-        #where_clause
-        {
-            type Output = <
-                #as_std140_ident #ty_generics_init as ::posh::crevice::std140::AsStd140
-            >::Output;
+        impl ::posh::crevice::std140::AsStd140 for #ident #ty_generics_gl {
+            type Output = <#as_std140_ident as ::posh::crevice::std140::AsStd140>::Output;
 
             fn as_std140(&self) -> Self::Output {
                 #as_std140_ident {
@@ -156,10 +151,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         }
 
         // Implement `Block<Gl>` for the `Gl` view of the struct.
-        unsafe impl #impl_generics_init ::posh::Block<::posh::Gl>
-        for #ident #ty_generics_gl
-        #where_clause_init
-        {
+        unsafe impl ::posh::Block<::posh::Gl> for #ident #ty_generics_gl {
             type Sl = #ident #ty_generics_sl;
             type Gl = #ident #ty_generics_gl;
 
@@ -173,9 +165,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         }
 
         // Implement `Block<Sl>` for the `Sl` view of the struct.
-        unsafe impl #impl_generics_init ::posh::Block<::posh::Sl>
-        for #ident #ty_generics_sl
-        #where_clause_init
+        unsafe impl ::posh::Block<::posh::Sl> for #ident #ty_generics_sl
         {
             type Sl = #ident #ty_generics_sl;
             type Gl = #ident #ty_generics_gl;
@@ -200,9 +190,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                 let mut result = Vec::new();
 
                 // Passing this type to `offset_of` directly didn't work for me.
-                type Pod = <
-                    #as_std140_ident #ty_generics_init as ::posh::crevice::std140::AsStd140
-                >::Output;
+                type Pod = <#as_std140_ident as ::posh::crevice::std140::AsStd140>::Output;
 
                 #(
                     let offset = ::posh::bytemuck::offset_of!(
@@ -230,10 +218,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         }
 
         // Implement `Varying` for the `Sl` view of the struct.
-        unsafe impl #impl_generics_init ::posh::sl::Varying
-        for #ident #ty_generics_sl
-        #where_clause_init
-        {
+        unsafe impl ::posh::sl::Varying for #ident #ty_generics_sl {
             fn shader_outputs(&self, path: &str) -> Vec<(
                 ::std::string::String,
                 ::posh::sl::program_def::InterpolationQualifier,

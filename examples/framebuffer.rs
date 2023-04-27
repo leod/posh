@@ -39,6 +39,7 @@ mod present_pass {
     use super::State;
 
     #[derive(Clone, Copy, Block)]
+    #[repr(C)]
     pub struct Vertex<D: BlockDom = Sl> {
         pub pos: D::Vec2,
         pub tex_coords: D::Vec2,
