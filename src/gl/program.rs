@@ -13,9 +13,10 @@ use super::{
 
 pub struct Input<'a, U, V>
 where
+    U: Uniform<Sl>,
     V: Vertex<Sl>,
 {
-    pub uniform: &'a U,
+    pub uniform: &'a U::Gl,
     pub vertex: &'a VertexSpec<V>,
     pub settings: &'a Settings,
 }
@@ -40,7 +41,7 @@ where
 
     pub fn draw(
         &self,
-        input: Input<U::Gl, V>,
+        input: Input<U, V>,
         framebuffer: impl Into<Framebuffer<F>>,
     ) -> Result<(), DrawError> {
         // TODO: These allocations can be avoided once stable has allocators.
