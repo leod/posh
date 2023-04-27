@@ -70,7 +70,7 @@ impl SpecializedTypeGenerics {
     pub fn new(domain: Type, ident: &Ident, generics: &Generics) -> Result<Self> {
         Ok(Self {
             domain,
-            params: remove_view_param(ident, generics)?
+            params: remove_domain_param(ident, generics)?
                 .params
                 .into_iter()
                 .collect(),
@@ -180,7 +180,7 @@ pub fn specialize_field_types(
 
     let mut visitor = Visitor {
         domain,
-        generics_d_ident: get_view_param(ident, generics)?,
+        generics_d_ident: get_domain_param(ident, generics)?,
     };
 
     let mut types = fields.types().into_iter().cloned().collect();
@@ -205,11 +205,11 @@ pub fn validate_generics(generics: &Generics) -> Result<()> {
     Ok(())
 }
 
-pub fn remove_view_param(ident: &Ident, generics: &Generics) -> Result<Generics> {
+pub fn remove_domain_param(ident: &Ident, generics: &Generics) -> Result<Generics> {
     if generics.params.is_empty() {
         return Err(Error::new_spanned(
             ident,
-            "posh derive macro expects the struct to be generic in its view",
+            "posh derive macro expects the struct to be generic in its domain",
         ));
     }
 
@@ -222,11 +222,11 @@ pub fn remove_view_param(ident: &Ident, generics: &Generics) -> Result<Generics>
     })
 }
 
-pub fn get_view_param(ident: &Ident, generics: &Generics) -> Result<Ident> {
+pub fn get_domain_param(ident: &Ident, generics: &Generics) -> Result<Ident> {
     let last_param = generics.params.last().ok_or_else(|| {
         Error::new_spanned(
             ident,
-            "posh derive macro expects the struct to be generic in its view",
+            "posh derive macro expects the struct to be generic in its domain",
         )
     })?;
 
@@ -234,7 +234,7 @@ pub fn get_view_param(ident: &Ident, generics: &Generics) -> Result<Ident> {
         GenericParam::Type(type_param) => Ok(type_param.ident.clone()),
         _ => Err(Error::new_spanned(
             last_param,
-            "posh derive macro expects the last generic parameter to be generic in the view",
+            "posh derive macro expects the last generic parameter to be generic in the domain",
         )),
     }
 }
