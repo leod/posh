@@ -59,6 +59,7 @@ pub trait Object: 'static {
     fn ty() -> Type;
 
     /// Returns an expression for computing the object.
+    #[doc(hidden)]
     fn expr(&self) -> Rc<Expr>;
 
     #[doc(hidden)]
