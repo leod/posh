@@ -3,7 +3,7 @@ use sealed::sealed;
 use crate::{
     gl,
     internal::join_ident_path,
-    sl::{self, dag::BuiltInType, program_def::VertexAttributeDef, ColorSample, Object},
+    sl::{self, ColorSample, Object},
 };
 
 use super::{Block, Fragment, FragmentVisitor, Sl, Uniform, UniformNonUnit, Vertex, VertexVisitor};
@@ -28,104 +28,6 @@ impl super::BlockDom for Sl {
     type Mat3 = sl::Mat3;
     type Mat4 = sl::Mat4;
 }
-
-macro_rules! impl_block_for_scalar {
-    ($scalar:ident) => {
-        unsafe impl Block<Sl> for sl::$scalar {
-            type Gl = sl::scalar_physical!($scalar);
-            type Sl = Self;
-
-            fn uniform_input(path: &str) -> Self {
-                <Self as Object>::from_arg(path)
-            }
-
-            fn vertex_input(path: &str) -> Self {
-                // FIXME: Cast from u32 to bool!
-                <Self as Object>::from_arg(path)
-            }
-
-            fn vertex_attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
-                vec![VertexAttributeDef {
-                    name: path.to_string(),
-                    ty: BuiltInType::$scalar,
-                    offset: 0,
-                }]
-            }
-        }
-    };
-}
-
-macro_rules! impl_block_for_vec {
-    ($vec:ident) => {
-        unsafe impl Block<Sl> for sl::$vec {
-            type Sl = Self;
-            type Gl = glam::$vec;
-
-            fn uniform_input(path: &str) -> Self {
-                <Self as Object>::from_arg(path)
-            }
-
-            fn vertex_input(path: &str) -> Self {
-                // FIXME: Cast from u32 to bool!
-                <Self as Object>::from_arg(path)
-            }
-
-            fn vertex_attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
-                vec![VertexAttributeDef {
-                    name: path.to_string(),
-                    ty: <Self as Object>::ty().built_in_type().unwrap(),
-                    offset: 0,
-                }]
-            }
-        }
-    };
-}
-
-macro_rules! impl_block_for_mat {
-    ($mat:ident) => {
-        unsafe impl Block<Sl> for sl::$mat {
-            type Sl = Self;
-            type Gl = glam::$mat;
-
-            fn uniform_input(path: &str) -> Self {
-                <Self as Object>::from_arg(path)
-            }
-
-            fn vertex_input(path: &str) -> Self {
-                <Self as Object>::from_arg(path)
-            }
-
-            fn vertex_attribute_defs(path: &str) -> Vec<VertexAttributeDef> {
-                vec![VertexAttributeDef {
-                    name: path.to_string(),
-                    ty: BuiltInType::$mat,
-                    offset: 0,
-                }]
-            }
-        }
-    };
-}
-
-impl_block_for_scalar!(F32);
-impl_block_for_scalar!(I32);
-impl_block_for_scalar!(U32);
-
-// TODO: Bools in block.
-//impl_block_for_scalar!(Bool);
-
-impl_block_for_vec!(Vec2);
-impl_block_for_vec!(IVec2);
-impl_block_for_vec!(UVec2);
-impl_block_for_vec!(Vec3);
-impl_block_for_vec!(IVec3);
-impl_block_for_vec!(UVec3);
-impl_block_for_vec!(Vec4);
-impl_block_for_vec!(IVec4);
-impl_block_for_vec!(UVec4);
-
-impl_block_for_mat!(Mat2);
-impl_block_for_mat!(Mat3);
-impl_block_for_mat!(Mat4);
 
 // Vertex
 

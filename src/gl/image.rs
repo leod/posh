@@ -16,7 +16,7 @@ impl<'a, S: ColorSample> ColorImage<'a, S> {
 }
 
 impl<'a> ColorImage<'a, sl::Vec4> {
-    pub fn rgba_u8_slice(size: glam::UVec2, data: &'a [u8]) -> Self {
+    pub fn rgba_u8_slice(size: [u32; 2], data: &'a [u8]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -28,7 +28,7 @@ impl<'a> ColorImage<'a, sl::Vec4> {
         }
     }
 
-    pub fn rgba_u8_gamma_slice(size: glam::UVec2, data: &'a [u8]) -> Self {
+    pub fn rgba_u8_gamma_slice(size: [u32; 2], data: &'a [u8]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -40,7 +40,7 @@ impl<'a> ColorImage<'a, sl::Vec4> {
         }
     }
 
-    pub fn rgba_i8_snorm_slice(size: glam::UVec2, data: &'a [i8]) -> Self {
+    pub fn rgba_i8_snorm_slice(size: [u32; 2], data: &'a [i8]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -52,7 +52,7 @@ impl<'a> ColorImage<'a, sl::Vec4> {
         }
     }
 
-    pub fn rgba_f32_slice(size: glam::UVec2, data: &'a [f32]) -> Self {
+    pub fn rgba_f32_slice(size: [u32; 2], data: &'a [f32]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -64,7 +64,7 @@ impl<'a> ColorImage<'a, sl::Vec4> {
         }
     }
 
-    pub fn rgba_u8_zero(size: glam::UVec2) -> Self {
+    pub fn rgba_u8_zero(size: [u32; 2]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -76,7 +76,7 @@ impl<'a> ColorImage<'a, sl::Vec4> {
         }
     }
 
-    pub fn rgba_u8_gamma_zero(size: glam::UVec2) -> Self {
+    pub fn rgba_u8_gamma_zero(size: [u32; 2]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -88,7 +88,7 @@ impl<'a> ColorImage<'a, sl::Vec4> {
         }
     }
 
-    pub fn rgba_i8_snorm_zero(size: glam::UVec2) -> Self {
+    pub fn rgba_i8_snorm_zero(size: [u32; 2]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -100,7 +100,7 @@ impl<'a> ColorImage<'a, sl::Vec4> {
         }
     }
 
-    pub fn rgba_f32_zero(size: glam::UVec2) -> Self {
+    pub fn rgba_f32_zero(size: [u32; 2]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -114,7 +114,7 @@ impl<'a> ColorImage<'a, sl::Vec4> {
 }
 
 impl<'a> ColorImage<'a, sl::Vec3> {
-    pub fn rgb_u8_slice(size: glam::UVec2, data: &'a [u8]) -> Self {
+    pub fn rgb_u8_slice(size: [u32; 2], data: &'a [u8]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -126,7 +126,7 @@ impl<'a> ColorImage<'a, sl::Vec3> {
         }
     }
 
-    pub fn rgb_u8_gamma_slice(size: glam::UVec2, data: &'a [u8]) -> Self {
+    pub fn rgb_u8_gamma_slice(size: [u32; 2], data: &'a [u8]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -138,7 +138,7 @@ impl<'a> ColorImage<'a, sl::Vec3> {
         }
     }
 
-    pub fn rgb_i8_snorm_slice(size: glam::UVec2, data: &'a [i8]) -> Self {
+    pub fn rgb_i8_snorm_slice(size: [u32; 2], data: &'a [i8]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -150,7 +150,7 @@ impl<'a> ColorImage<'a, sl::Vec3> {
         }
     }
 
-    pub fn rgb_f32_slice(size: glam::UVec2, data: &'a [f32]) -> Self {
+    pub fn rgb_f32_slice(size: [u32; 2], data: &'a [f32]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -162,7 +162,7 @@ impl<'a> ColorImage<'a, sl::Vec3> {
         }
     }
 
-    pub fn rgb_u8_zero(size: glam::UVec2) -> Self {
+    pub fn rgb_u8_zero(size: [u32; 2]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -174,7 +174,7 @@ impl<'a> ColorImage<'a, sl::Vec3> {
         }
     }
 
-    pub fn rgb_u8_gamma_zero(size: glam::UVec2) -> Self {
+    pub fn rgb_u8_gamma_zero(size: [u32; 2]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -186,7 +186,7 @@ impl<'a> ColorImage<'a, sl::Vec3> {
         }
     }
 
-    pub fn rgb_i8_snorm_zero(size: glam::UVec2) -> Self {
+    pub fn rgb_i8_snorm_zero(size: [u32; 2]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -198,7 +198,7 @@ impl<'a> ColorImage<'a, sl::Vec3> {
         }
     }
 
-    pub fn rgb_f32_zero(size: glam::UVec2) -> Self {
+    pub fn rgb_f32_zero(size: [u32; 2]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -212,7 +212,7 @@ impl<'a> ColorImage<'a, sl::Vec3> {
 }
 
 impl<'a> ColorImage<'a, sl::Vec2> {
-    pub fn rg_u8_slice(size: glam::UVec2, data: &'a [u8]) -> Self {
+    pub fn rg_u8_slice(size: [u32; 2], data: &'a [u8]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -224,7 +224,7 @@ impl<'a> ColorImage<'a, sl::Vec2> {
         }
     }
 
-    pub fn rg_i8_snorm_slice(size: glam::UVec2, data: &'a [i8]) -> Self {
+    pub fn rg_i8_snorm_slice(size: [u32; 2], data: &'a [i8]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -236,7 +236,7 @@ impl<'a> ColorImage<'a, sl::Vec2> {
         }
     }
 
-    pub fn rg_f32_slice(size: glam::UVec2, data: &'a [f32]) -> Self {
+    pub fn rg_f32_slice(size: [u32; 2], data: &'a [f32]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -248,7 +248,7 @@ impl<'a> ColorImage<'a, sl::Vec2> {
         }
     }
 
-    pub fn rg_u8_zero(size: glam::UVec2) -> Self {
+    pub fn rg_u8_zero(size: [u32; 2]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -260,7 +260,7 @@ impl<'a> ColorImage<'a, sl::Vec2> {
         }
     }
 
-    pub fn rg_i8_snorm_zero(size: glam::UVec2) -> Self {
+    pub fn rg_i8_snorm_zero(size: [u32; 2]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -272,7 +272,7 @@ impl<'a> ColorImage<'a, sl::Vec2> {
         }
     }
 
-    pub fn rg_f32_zero(size: glam::UVec2) -> Self {
+    pub fn rg_f32_zero(size: [u32; 2]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -286,7 +286,7 @@ impl<'a> ColorImage<'a, sl::Vec2> {
 }
 
 impl<'a> ColorImage<'a, sl::F32> {
-    pub fn r_u8_slice(size: glam::UVec2, data: &'a [u8]) -> Self {
+    pub fn r_u8_slice(size: [u32; 2], data: &'a [u8]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -298,7 +298,7 @@ impl<'a> ColorImage<'a, sl::F32> {
         }
     }
 
-    pub fn r_i8_snorm_slice(size: glam::UVec2, data: &'a [i8]) -> Self {
+    pub fn r_i8_snorm_slice(size: [u32; 2], data: &'a [i8]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -310,7 +310,7 @@ impl<'a> ColorImage<'a, sl::F32> {
         }
     }
 
-    pub fn r_f32_slice(size: glam::UVec2, data: &'a [f32]) -> Self {
+    pub fn r_f32_slice(size: [u32; 2], data: &'a [f32]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -322,7 +322,7 @@ impl<'a> ColorImage<'a, sl::F32> {
         }
     }
 
-    pub fn r_u8_zero(size: glam::UVec2) -> Self {
+    pub fn r_u8_zero(size: [u32; 2]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -334,7 +334,7 @@ impl<'a> ColorImage<'a, sl::F32> {
         }
     }
 
-    pub fn r_i8_snorm_zero(size: glam::UVec2) -> Self {
+    pub fn r_i8_snorm_zero(size: [u32; 2]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -346,7 +346,7 @@ impl<'a> ColorImage<'a, sl::F32> {
         }
     }
 
-    pub fn r_f32_zero(size: glam::UVec2) -> Self {
+    pub fn r_f32_zero(size: [u32; 2]) -> Self {
         ColorImage {
             raw: raw::Image {
                 size,
@@ -370,7 +370,7 @@ impl<'a> DepthImage<'a> {
 }
 
 impl<'a> DepthImage<'a> {
-    pub fn f32_slice(size: glam::UVec2, data: &'a [f32]) -> Self {
+    pub fn f32_slice(size: [u32; 2], data: &'a [f32]) -> Self {
         DepthImage {
             raw: raw::Image {
                 size,
@@ -381,7 +381,7 @@ impl<'a> DepthImage<'a> {
         }
     }
 
-    pub fn f32_zero(size: glam::UVec2) -> Self {
+    pub fn f32_zero(size: [u32; 2]) -> Self {
         DepthImage {
             raw: raw::Image {
                 size,

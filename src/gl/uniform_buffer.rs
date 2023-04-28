@@ -28,8 +28,9 @@ impl<B: Block<Sl>> UniformBuffer<B> {
     /// Panics if the length of `raw` is not a multiple of the size of
     /// `<U::Gl as AsStd140>::Output`.
     pub(super) fn from_raw(raw: raw::Buffer) -> Self {
-        assert!(Self::uniform_size() > 0);
-        assert_eq!(raw.len() % Self::uniform_size(), 0);
+        assert!(uniform_size::<B>() > 0);
+        assert_eq!(raw.len() % uniform_size::<B>(), 0);
+        assert_eq!(raw.len() / uniform_size::<B>(), 1);
 
         Self {
             raw: Rc::new(raw),
@@ -41,16 +42,10 @@ impl<B: Block<Sl>> UniformBuffer<B> {
         self.raw.usage()
     }
 
-    pub fn len(&self) -> usize {
-        self.raw.len() / Self::uniform_size()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
-
     pub fn set(&self, data: B::Gl) {
         self.raw.set(&[data.as_std140()]);
+
+        assert_eq!(self.raw.len() % uniform_size::<B>(), 0);
     }
 
     pub fn as_binding(&self) -> UniformBufferBinding<B> {
@@ -59,14 +54,14 @@ impl<B: Block<Sl>> UniformBuffer<B> {
             _phantom: PhantomData,
         }
     }
-
-    fn uniform_size() -> usize {
-        std::mem::size_of::<<B::Gl as AsStd140>::Output>()
-    }
 }
 
 impl<B> UniformBufferBinding<B> {
     pub(super) fn raw(&self) -> &raw::Buffer {
         &self.raw
     }
+}
+
+fn uniform_size<B: Block<Sl>>() -> usize {
+    std::mem::size_of::<<B::Gl as AsStd140>::Output>()
 }

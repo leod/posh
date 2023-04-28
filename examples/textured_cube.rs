@@ -10,12 +10,14 @@ const HEIGHT: u32 = 768;
 // Shader interface
 
 #[derive(Clone, Copy, Block)]
+#[repr(C)]
 struct Camera<D: BlockDom = Sl> {
     world_to_view: D::Mat4,
     view_to_screen: D::Mat4,
 }
 
 #[derive(Clone, Copy, Block)]
+#[repr(C)]
 struct Vertex<D: BlockDom = Sl> {
     pos: D::Vec3,
     tex_coords: D::Vec2,
@@ -71,7 +73,10 @@ impl Demo {
             .decode()
             .unwrap()
             .to_rgba8();
-        let image = gl::ColorImage::rgba_u8_slice(image.dimensions().into(), image.as_bytes());
+        let image = gl::ColorImage::rgba_u8_slice(
+            [image.dimensions().0, image.dimensions().1],
+            image.as_bytes(),
+        );
 
         Ok(Self {
             program: gl.create_program(vertex_shader, sl::ColorSampler2d::sample)?,
@@ -103,7 +108,7 @@ impl Demo {
                     .as_vertex_spec(gl::Mode::Triangles)
                     .with_element_data(self.elements.as_binding()),
                 settings: &gl::Settings::default()
-                    .with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0))
+                    .with_clear_color([0.1, 0.2, 0.3, 1.0])
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less),
             },
@@ -117,13 +122,14 @@ impl Demo {
 impl Default for Camera<Gl> {
     fn default() -> Self {
         Self {
-            world_to_view: glam::Mat4::from_translation(glam::Vec3::new(0.0, 0.0, -3.0)),
+            world_to_view: glam::Mat4::from_translation(glam::Vec3::new(0.0, 0.0, -3.0)).into(),
             view_to_screen: glam::Mat4::perspective_rh_gl(
                 std::f32::consts::PI / 2.0,
                 WIDTH as f32 / HEIGHT as f32,
                 1.0,
                 10.0,
-            ),
+            )
+            .into(),
         }
     }
 }

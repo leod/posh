@@ -1,7 +1,5 @@
 use std::{marker::PhantomData, rc::Rc};
 
-use crevice::std140::AsStd140;
-
 use crate::{sl::program_def::VertexInputRate, Block, Sl};
 
 use super::{raw, BufferUsage, Mode, VertexSpec};
@@ -51,9 +49,6 @@ where
     }
 
     pub fn set(&self, data: &[B::Gl]) {
-        // FIXME: Get rid of this conversion + allocation.
-        let data: Vec<_> = data.iter().map(AsStd140::as_std140).collect();
-
         self.raw.set(&data);
     }
 
@@ -95,6 +90,6 @@ impl<B: Block<Sl>> VertexBufferBinding<B> {
     }
 }
 
-fn vertex_size<V: Block<Sl>>() -> usize {
-    std::mem::size_of::<<V::Gl as AsStd140>::Output>()
+pub(super) fn vertex_size<V: Block<Sl>>() -> usize {
+    std::mem::size_of::<V::Gl>()
 }

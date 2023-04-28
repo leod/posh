@@ -5,7 +5,8 @@ use posh::{gl, sl, Block, BlockDom, Gl, Sl};
 // Shader interface
 
 #[derive(Clone, Copy, Block)]
-pub struct State<D: BlockDom = Sl> {
+#[repr(C)]
+pub struct State<D: BlockDom> {
     time: D::F32,
     flip: D::U32,
 }
@@ -13,7 +14,7 @@ pub struct State<D: BlockDom = Sl> {
 // Shaders
 
 mod scene_pass {
-    use posh::sl;
+    use posh::{sl, Sl};
 
     use super::State;
 
@@ -26,7 +27,7 @@ mod scene_pass {
         }
     }
 
-    pub fn fragment(state: State, varying: sl::Vec2) -> sl::Vec4 {
+    pub fn fragment(state: State<Sl>, varying: sl::Vec2) -> sl::Vec4 {
         let rg = (varying + state.time).cos().powf(2.0);
 
         sl::vec4(rg.x, rg.y, 0.5, 1.0)
@@ -39,25 +40,26 @@ mod present_pass {
     use super::State;
 
     #[derive(Clone, Copy, Block)]
-    pub struct Vertex<D: BlockDom = Sl> {
+    #[repr(C)]
+    pub struct Vertex<D: BlockDom> {
         pub pos: D::Vec2,
         pub tex_coords: D::Vec2,
     }
 
     #[derive(posh::Uniform)]
-    pub struct Uniform<D: UniformDom = Sl> {
-        pub state: D::Block<State>,
+    pub struct Uniform<D: UniformDom> {
+        pub state: D::Block<State<Sl>>,
         pub scene: D::ColorSampler2d<sl::Vec4>,
     }
 
-    pub fn vertex(_: (), vertex: Vertex) -> sl::VertexOutput<sl::Vec2> {
+    pub fn vertex(_: (), vertex: Vertex<Sl>) -> sl::VertexOutput<sl::Vec2> {
         sl::VertexOutput {
             position: vertex.pos.extend(0.0).extend(1.0),
             varying: vertex.tex_coords,
         }
     }
 
-    pub fn fragment(uniform: Uniform, tex_coords: sl::Vec2) -> sl::Vec4 {
+    pub fn fragment(uniform: Uniform<Sl>, tex_coords: sl::Vec2) -> sl::Vec4 {
         let flip = uniform.state.flip;
         let coords = sl::branch(flip.eq(0u32), tex_coords, -tex_coords);
 
@@ -68,14 +70,14 @@ mod present_pass {
 // Host code
 
 struct Demo {
-    scene_program: gl::Program<State, sl::Vec2>,
-    present_program: gl::Program<present_pass::Uniform, present_pass::Vertex>,
+    scene_program: gl::Program<State<Sl>, sl::Vec2>,
+    present_program: gl::Program<present_pass::Uniform<Sl>, present_pass::Vertex<Sl>>,
 
-    state: gl::UniformBuffer<State>,
-    texture: gl::ColorTexture2d<sl::Vec4>,
+    state: gl::UniformBuffer<State<Sl>>,
+    texture: gl::ColorTexture2d,
 
     triangle_vertices: gl::VertexBuffer<sl::Vec2>,
-    quad_vertices: gl::VertexBuffer<present_pass::Vertex>,
+    quad_vertices: gl::VertexBuffer<present_pass::Vertex<Sl>>,
     quad_elements: gl::ElementBuffer,
 
     start_time: Instant,
@@ -85,7 +87,7 @@ impl Demo {
     pub fn new(gl: gl::Context) -> Result<Self, gl::CreateError> {
         use gl::BufferUsage::*;
 
-        let image = gl::ColorImage::rgba_u8_zero(glam::uvec2(1024, 768));
+        let image = gl::ColorImage::rgba_u8_zero([1024, 768]);
 
         Ok(Self {
             scene_program: gl.create_program(scene_pass::vertex, scene_pass::fragment)?,
@@ -137,7 +139,7 @@ impl Demo {
 
 // Scene data
 
-fn triangle_vertices() -> Vec<glam::Vec2> {
+fn triangle_vertices() -> Vec<gl::Vec2> {
     vec![[0.5f32, 1.0].into(), [0.0, 0.0].into(), [1.0, 0.0].into()]
 }
 

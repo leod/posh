@@ -5,6 +5,7 @@ use posh::{gl, sl, Block, BlockDom, Sl};
 // Shader interface
 
 #[derive(Clone, Copy, Block)]
+#[repr(C)]
 struct Globals<D: BlockDom = Sl> {
     time: D::F32,
 }
@@ -61,7 +62,7 @@ impl Demo {
             gl::Input {
                 uniform: &self.globals.as_binding(),
                 vertex: &self.vertices.as_vertex_spec(gl::Mode::Triangles),
-                settings: &gl::Settings::default().with_clear_color(glam::vec4(0.1, 0.2, 0.3, 1.0)),
+                settings: &gl::Settings::default().with_clear_color([0.1, 0.2, 0.3, 1.0]),
             },
             gl::Framebuffer::default(),
         )

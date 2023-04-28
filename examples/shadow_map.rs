@@ -12,6 +12,7 @@ const NUM_CUBES: u32 = 30;
 // Shader interface
 
 #[derive(Clone, Copy, Block)]
+#[repr(C)]
 pub struct Camera<D: BlockDom = Sl> {
     pub world_to_eye: D::Mat4,
     pub eye_to_clip: D::Mat4,
@@ -24,6 +25,7 @@ impl Camera<Sl> {
 }
 
 #[derive(Clone, Copy, Block)]
+#[repr(C)]
 pub struct Light<D: BlockDom = Sl> {
     pub camera: Camera<D>,
     pub world_pos: D::Vec3,
@@ -32,6 +34,7 @@ pub struct Light<D: BlockDom = Sl> {
 }
 
 #[derive(Clone, Copy, Block)]
+#[repr(C)]
 pub struct SceneVertex<D: BlockDom = Sl> {
     pub world_pos: D::Vec3,
     pub world_normal: D::Vec3,
@@ -145,6 +148,7 @@ mod debug_pass {
     use posh::{sl, Block, BlockDom, Sl};
 
     #[derive(Clone, Copy, Block)]
+    #[repr(C)]
     pub struct Vertex<D: BlockDom = Sl> {
         pub pos: D::Vec2,
         pub tex_coords: D::Vec2,
@@ -192,8 +196,7 @@ impl Demo {
     pub fn new(gl: gl::Context) -> Result<Self, gl::CreateError> {
         use gl::BufferUsage::{StaticDraw, StreamDraw};
 
-        let depth_map_size = glam::uvec2(DEPTH_MAP_SIZE, DEPTH_MAP_SIZE);
-        let light_depth_image = gl::DepthImage::f32_zero(depth_map_size);
+        let light_depth_image = gl::DepthImage::f32_zero([DEPTH_MAP_SIZE, DEPTH_MAP_SIZE]);
 
         Ok(Demo {
             flat_program: gl.create_program(flat_pass::vertex, flat_pass::fragment)?,
@@ -256,7 +259,7 @@ impl Demo {
                 },
                 vertex: &scene_spec,
                 settings: &gl::Settings::default()
-                    .with_clear_color(glam::Vec4::ONE)
+                    .with_clear_color(glam::Vec4::ONE.into())
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less)
                     .with_cull_face(gl::CullFace::Back),
@@ -310,13 +313,15 @@ impl Default for Camera<Gl> {
                 CAMERA_POS,
                 glam::Vec3::new(0.0, 0.0, 10.0),
                 glam::vec3(0.0, 1.0, 0.0),
-            ),
+            )
+            .into(),
             eye_to_clip: glam::Mat4::perspective_rh_gl(
                 std::f32::consts::PI / 2.0,
                 SCREEN_WIDTH as f32 / SCREEN_HEIGHT as f32,
                 1.0,
                 100.0,
-            ),
+            )
+            .into(),
         }
     }
 }
@@ -331,17 +336,19 @@ impl Light<Gl> {
                     world_pos,
                     glam::vec3(0.0, 0.0, 0.0),
                     glam::vec3(0.0, 1.0, 0.0),
-                ),
+                )
+                .into(),
                 eye_to_clip: glam::Mat4::perspective_rh_gl(
                     std::f32::consts::PI / 1.5,
                     1.0,
                     10.0,
                     150.0,
-                ),
+                )
+                .into(),
             },
-            world_pos,
-            color: glam::vec3(1.0, 1.0, 0.7),
-            ambient: glam::vec3(0.1, 0.1, 0.1),
+            world_pos: world_pos.into(),
+            color: glam::vec3(1.0, 1.0, 0.7).into(),
+            ambient: glam::vec3(0.1, 0.1, 0.1).into(),
         }
     }
 }
@@ -376,7 +383,12 @@ fn scene_elements() -> Vec<u32> {
 fn light_vertices(x: f32, y: f32) -> Vec<SceneVertex<Gl>> {
     let world_pos = Light::new(x, y).world_pos;
 
-    rect_cuboid_vertices(world_pos, glam::Vec3::splat(2.0), glam::vec3(0.5, 0.5, 0.1)).collect()
+    rect_cuboid_vertices(
+        world_pos.into(),
+        glam::Vec3::splat(2.0),
+        glam::vec3(0.5, 0.5, 0.1),
+    )
+    .collect()
 }
 
 fn light_elements() -> Vec<u32> {
@@ -417,7 +429,7 @@ fn rect_cuboid_vertices(
     .into_iter()
     .enumerate()
     .map(move |(i, pos)| SceneVertex {
-        world_pos: center + glam::Vec3::from(pos) * size,
+        world_pos: (center + glam::Vec3::from(pos) * size).into(),
         world_normal: glam::Vec3::from(
             [
                 [1.0, 0.0, 0.0],
@@ -427,8 +439,9 @@ fn rect_cuboid_vertices(
                 [0.0, 0.0, 1.0],
                 [0.0, 0.0, -1.0],
             ][i / 4],
-        ),
-        color,
+        )
+        .into(),
+        color: color.into(),
     })
 }
 

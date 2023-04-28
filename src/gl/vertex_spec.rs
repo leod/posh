@@ -1,9 +1,7 @@
-use std::{mem::size_of, ops::Range};
-
-use crevice::std140::AsStd140;
+use std::ops::Range;
 
 use crate::{
-    gl::VertexBufferBinding,
+    gl::{vertex_buffer::vertex_size, VertexBufferBinding},
     interface::VertexVisitor,
     sl::program_def::{VertexBlockDef, VertexInputRate},
     Block, Gl, Sl, Vertex,
@@ -106,7 +104,7 @@ fn raw_vertices<V: Vertex<Gl>>(vertices: &V) -> Vec<raw::VertexBufferBinding> {
                     attributes: B::vertex_attribute_defs(path),
                 },
                 input_rate: binding.input_rate(),
-                stride: size_of::<<B::Gl as AsStd140>::Output>(),
+                stride: vertex_size::<B>(),
             });
         }
     }

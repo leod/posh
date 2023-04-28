@@ -1,6 +1,7 @@
 mod gl_view;
 mod sl_view;
 
+use bytemuck::Pod;
 use crevice::std140::AsStd140;
 use sealed::sealed;
 
@@ -38,82 +39,82 @@ pub trait BlockDom: Copy {
 
     /// A boolean value.
     ///
-    /// Has [`gl::Bool`] as its physical view and [`sl::Bool`] as its logical
-    /// view.
+    /// Has [`gl::Bool`](crate::gl::Bool) as its physical view and [`sl::Bool`] as its
+    /// logical view.
     ///
     /// TODO: Bool in `Block`. Need to special case vertex attributes.
     //type Bool: Block<Self> + sl::ToSl<Output = sl::Bool>;
 
-    /// A two-dimensional floating-point vector.
+    /// A two-crate::dimensional floating-point vector.
     ///
-    /// Has [`glam::Vec2`] as its physical view and [`sl::Vec2`] as its logical
-    /// view.
+    /// Has [`gl::Vec2`](crate::gl::Vec2) as its physical view and [`sl::Vec2`]
+    /// as its logical view.
     type Vec2: Block<Self> + sl::ToSl<Output = sl::Vec2>;
 
     /// A three-dimensional floating-point vector.
     ///
-    /// Has [`glam::Vec3`] as its physical view and [`sl::Vec3`] as its logical
-    /// view.
+    /// Has [`gl::Vec3`](crate::gl::Vec3) as its physical view and [`sl::Vec3`]
+    /// as its logical view.
     type Vec3: Block<Self> + sl::ToSl<Output = sl::Vec3>;
 
     /// A four-dimensional floating-point vector.
     ///
-    /// Has [`glam::Vec4`] as its physical view and [`sl::Vec4`] as its logical
-    /// view.
+    /// Has [`gl::Vec4`](crate::gl::Vec4) as its physical view and [`sl::Vec4`]
+    /// as its logical view.
     type Vec4: Block<Self> + sl::ToSl<Output = sl::Vec4>;
 
     /// A two-dimensional signed integer vector.
     ///
-    /// Has [`glam::IVec2`] as its physical view and [`sl::IVec2`] as its
-    /// logical view.
+    /// Has [`gl::IVec2`](crate::gl::IVec2) as its physical view and
+    /// [`sl::IVec2`] as its logical view.
     type IVec2: Block<Self> + sl::ToSl<Output = sl::IVec2>;
 
     /// A three-dimensional signed integer vector.
     ///
-    /// Has [`glam::IVec3`] as its physical view and [`sl::IVec3`] as its
-    /// logical view.
+    /// Has [`gl::IVec3`](crate::gl::IVec3) as its physical view and
+    /// [`sl::IVec3`] as its logical view.
     type IVec3: Block<Self> + sl::ToSl<Output = sl::IVec3>;
 
     /// A four-dimensional signed integer vector.
     ///
-    /// Has [`glam::IVec4`] as its physical view and [`sl::IVec4`] as its
-    /// logical view.
+    /// Has [`gl::IVec4`](crate::gl::IVec4) as its physical view and
+    /// [`sl::IVec4`] as its logical view.
     type IVec4: Block<Self> + sl::ToSl<Output = sl::IVec4>;
 
     /// A two-dimensional unsigned integer vector.
     ///
-    /// Has [`glam::UVec2`] as its physical view and [`sl::UVec2`] as its
-    /// logical view.
+    /// Has [`gl::UVec2`](crate::gl::UVec2) as its physical view and
+    /// [`sl::UVec2`] as its logical view.
     type UVec2: Block<Self> + sl::ToSl<Output = sl::UVec2>;
 
     /// A three-dimensional unsigned integer vector.
     ///
-    /// Has [`glam::UVec3`] as its physical view and [`sl::UVec3`] as its
-    /// logical view.
+    /// Has [`gl::UVec3`](crate::gl::UVec3) as its physical view and
+    /// [`sl::UVec3`] as its logical view.
     type UVec3: Block<Self> + sl::ToSl<Output = sl::UVec3>;
 
     /// A four-dimensional unsigned integer vector.
     ///
-    /// Has [`glam::UVec4`] as its physical view and [`sl::UVec4`] as its
-    /// logical view.
+    /// Has [`gl::UVec4`](crate::gl::UVec4) as its physical view and
+    /// [`sl::UVec4`] as its logical view.
     type UVec4: Block<Self> + sl::ToSl<Output = sl::UVec4>;
 
     /// A two-by-two floating-point matrix.
     ///
-    /// Has [`glam::Mat2`] as its physical view and [`sl::Mat2`] as its logical
-    /// view.
+    /// Has [`gl::Mat2`](crate::gl::Mat2) as its physical view and [`sl::Mat2`]
+    /// as its logical view.
     type Mat2: Block<Self> + sl::ToSl<Output = sl::Mat2>;
 
     /// A three-by-three floating-point matrix.
     ///
-    /// Has [`glam::Mat3`] as its physical view and [`sl::Mat3`] as its logical
-    /// view.
+    /// Has [`gl::Mat3`](crate::gl::Mat3) as its physical view and [`sl::Mat3`]
+    /// as its logical view.
     type Mat3: Block<Self> + sl::ToSl<Output = sl::Mat3>;
 
     /// A four-by-four floating-point matrix.
     ///
-    /// Has [`glam::Mat4`] as its physical view and [`sl::Mat4`] as its logical
-    /// view.
+    /// Has [`gl::Mat4`](crate::gl::Mat4) as its physical view and [`sl::Mat4`]
+    /// as its logical view.
     type Mat4: Block<Self> + sl::ToSl<Output = sl::Mat4>;
 }
 
@@ -144,12 +145,14 @@ pub trait BlockDom: Copy {
 /// use posh::{sl, Block, BlockDom, Sl};
 ///
 /// #[derive(Clone, Copy, Block)]
+/// #[repr(C)]
 /// struct SomeColor<D: BlockDom = Sl> {
 ///     rainbow: D::U32,
 ///     thing: D::Vec2,
 /// }
 ///
 /// #[derive(Clone, Copy, Block)]
+/// #[repr(C)]
 /// struct MyVertex<D: BlockDom = Sl> {
 ///     position: D::Vec3,
 ///     normal: D::Vec3,
@@ -175,7 +178,7 @@ pub unsafe trait Block<D: BlockDom>: sl::ToSl {
     ///
     /// This is the type through which the host provides block data in draw
     /// calls.
-    type Gl: Block<Gl> + AsStd140 + sl::ToSl<Output = Self::Sl>;
+    type Gl: Block<Gl> + AsStd140 + Pod + sl::ToSl<Output = Self::Sl>;
 
     #[doc(hidden)]
     fn uniform_input(_path: &str) -> Self {
@@ -245,6 +248,7 @@ pub trait VertexField<D: VertexDom>: Sized {
 /// use posh::{gl, sl, Block, BlockDom, Sl, Vertex, VertexDom};
 ///
 /// #[derive(Clone, Copy, Block)]
+/// #[repr(C)]
 /// struct Material<D: BlockDom = Sl> {
 ///     normal: D::Vec3,
 ///     color: D::Vec4,
@@ -352,7 +356,7 @@ pub unsafe trait Uniform<D: UniformDom>: Sized {
     ///
     /// This is the type through which the host provides uniform bindings such
     /// as [uniform buffer bindings](crate::gl::UniformBuffer) or
-    /// [samplers](crate::gl::Sampler2d) in [draw calls](crate::gl::Program::draw).
+    /// [samplers](crate::gl::ColorSampler2d) in [draw calls](crate::gl::Program::draw).
     type Gl: Uniform<Gl>;
 
     #[doc(hidden)]
