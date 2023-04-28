@@ -80,18 +80,6 @@ macro_rules! impl_value {
 
         impl ValueNonArray for $mat {}
 
-        impl ToSl for glam::$mat {
-            type Output = $mat;
-
-            fn to_sl(self) -> Self::Output {
-                Self::Output {
-                    $(
-                        $member: self.$member.to_sl()
-                    ),+
-                }
-            }
-        }
-
         impl ToSl for $mat {
             type Output = Self;
 
@@ -232,6 +220,42 @@ macro_rules! impl_mat {
 impl_mat!(Mat2, Vec2, (x_axis, y_axis), (X, Y));
 impl_mat!(Mat3, Vec3, (x_axis, y_axis, z_axis), (X, Y, Z));
 impl_mat!(Mat4, Vec4, (x_axis, y_axis, z_axis, w_axis), (X, Y, Z, W));
+
+impl ToSl for mint::ColumnMatrix2<f32> {
+    type Output = Mat2;
+
+    fn to_sl(self) -> Self::Output {
+        Self::Output {
+            x_axis: self.x.to_sl(),
+            y_axis: self.y.to_sl(),
+        }
+    }
+}
+
+impl ToSl for mint::ColumnMatrix3<f32> {
+    type Output = Mat3;
+
+    fn to_sl(self) -> Self::Output {
+        Self::Output {
+            x_axis: self.x.to_sl(),
+            y_axis: self.y.to_sl(),
+            z_axis: self.z.to_sl(),
+        }
+    }
+}
+
+impl ToSl for mint::ColumnMatrix4<f32> {
+    type Output = Mat4;
+
+    fn to_sl(self) -> Self::Output {
+        Self::Output {
+            x_axis: self.x.to_sl(),
+            y_axis: self.y.to_sl(),
+            z_axis: self.y.to_sl(),
+            w_axis: self.w.to_sl(),
+        }
+    }
+}
 
 /// Creates a two-by-two floating-point matrix from column vectors.
 pub fn mat2(x: impl ToSl<Output = Vec2>, y: impl ToSl<Output = Vec2>) -> Mat2 {

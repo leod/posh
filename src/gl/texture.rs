@@ -59,14 +59,14 @@ impl<S: ColorSample> ColorTexture2d<S> {
         })
     }
 
-    pub fn size(&self) -> glam::UVec2 {
+    pub fn size(&self) -> [u32; 2] {
         self.raw.size()
     }
 
     pub fn set(
         &self,
         level: usize,
-        lower_left_corner: glam::UVec2,
+        lower_left_corner: [u32; 2],
         image: ColorImage<S>,
     ) -> Result<(), TextureError> {
         self.raw.set(level, lower_left_corner, image.raw())
@@ -115,14 +115,14 @@ impl DepthTexture2d {
         })
     }
 
-    pub fn size(&self) -> glam::UVec2 {
+    pub fn size(&self) -> [u32; 2] {
         self.raw.size()
     }
 
     pub fn set(
         &self,
         level: usize,
-        lower_left_corner: glam::UVec2,
+        lower_left_corner: [u32; 2],
         image: DepthImage,
     ) -> Result<(), TextureError> {
         self.raw.set(level, lower_left_corner, image.raw())

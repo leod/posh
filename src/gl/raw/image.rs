@@ -187,7 +187,7 @@ impl ImageInternalFormat {
 #[doc(hidden)]
 #[derive(Clone)]
 pub struct Image<'a> {
-    pub size: glam::UVec2,
+    pub size: [u32; 2],
     pub ty: ImageComponentType,
     pub internal_format: ImageInternalFormat,
     pub data: Option<&'a [u8]>,
@@ -195,8 +195,8 @@ pub struct Image<'a> {
 
 impl<'a> Image<'a> {
     pub fn required_data_len(&self) -> usize {
-        let width = self.size.x as usize;
-        let height = self.size.y as usize;
+        let width = self.size[0] as usize;
+        let height = self.size[1] as usize;
         let bytes = self.ty.size_of();
         let num_components = self.internal_format.to_format().size();
 

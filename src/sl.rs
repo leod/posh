@@ -25,8 +25,6 @@ use std::{collections::BTreeMap, rc::Rc};
 
 use dag::{Expr, StructType, Type};
 
-pub(crate) use scalar::scalar_physical;
-
 pub use {
     array::{array, Array},
     mat::{mat2, mat3, mat4, Mat2, Mat3, Mat4},
@@ -59,6 +57,7 @@ pub trait Object: 'static {
     fn ty() -> Type;
 
     /// Returns an expression for computing the object.
+    #[doc(hidden)]
     fn expr(&self) -> Rc<Expr>;
 
     #[doc(hidden)]

@@ -12,7 +12,7 @@ use super::{
 pub struct Texture2d {
     ctx: Rc<ContextShared>,
     id: glow::Texture,
-    size: glam::UVec2,
+    size: [u32; 2],
     internal_format: ImageInternalFormat,
     levels: usize,
     settings: Cell<Sampler2dSettings>,
@@ -75,14 +75,10 @@ impl Texture2d {
         assert!(levels > 0);
 
         let levels = levels.try_into().expect("levels is out of i32 range");
-        let width = image
-            .size
-            .x
+        let width = image.size[0]
             .try_into()
             .expect("max_texture_size is out of i32 range");
-        let height = image
-            .size
-            .y
+        let height = image.size[1]
             .try_into()
             .expect("max_texture_size is out of i32 range");
 
@@ -148,7 +144,7 @@ impl Texture2d {
         // OpenGL ES 3.0.6: 3.8.4 Immutable-Format Texture Images
         // > An INVALID_OPERATION error is generated if `levels` is greater than
         // > `floor(log_2(max(width, height))) + 1`.
-        let levels = (image.size.x.max(image.size.y) as f64).log2() as usize + 1;
+        let levels = (image.size[0].max(image.size[1]) as f64).log2() as usize + 1;
 
         let texture = Self::new_with_levels(ctx.clone(), image, levels)?;
         let gl = ctx.gl();
@@ -168,7 +164,7 @@ impl Texture2d {
         self.id
     }
 
-    pub fn size(&self) -> glam::UVec2 {
+    pub fn size(&self) -> [u32; 2] {
         self.size
     }
 
@@ -179,7 +175,7 @@ impl Texture2d {
     pub fn set(
         &self,
         level: usize,
-        lower_left_corner: glam::UVec2,
+        lower_left_corner: [u32; 2],
         image: Image,
     ) -> Result<(), TextureError> {
         assert!(level <= self.levels);
@@ -191,10 +187,10 @@ impl Texture2d {
         let gl = self.ctx.gl();
 
         let level = level.try_into().unwrap();
-        let x = lower_left_corner.x.try_into().unwrap();
-        let y = lower_left_corner.y.try_into().unwrap();
-        let width = image.size.x.try_into().unwrap();
-        let height = image.size.y.try_into().unwrap();
+        let x = lower_left_corner[0].try_into().unwrap();
+        let y = lower_left_corner[1].try_into().unwrap();
+        let width = image.size[0].try_into().unwrap();
+        let height = image.size[1].try_into().unwrap();
 
         unsafe { gl.bind_texture(glow::TEXTURE_2D, Some(self.id)) };
         unsafe {
@@ -287,24 +283,24 @@ impl Sampler {
     }
 }
 
-fn validate_size(size: glam::UVec2, caps: &Caps) -> Result<(), TextureError> {
+fn validate_size(size: [u32; 2], caps: &Caps) -> Result<(), TextureError> {
     // OpenGL ES 3.0.6: 3.8.4 Immutable-Format Texture Images
     // > If [...] `width`, `height` [...] is less than 1, the error
     // > `INVALID_VALUE` is generated.
-    if size.x == 0 || size.y == 0 {
+    if size[0] == 0 || size[1] == 0 {
         return Err(TextureError::Empty);
     }
 
-    if size.x > caps.max_texture_size {
+    if size[0] > caps.max_texture_size {
         return Err(TextureError::Oversized {
-            requested: size.x,
+            requested: size[0],
             max: caps.max_texture_size,
         });
     }
 
-    if size.y > caps.max_texture_size {
+    if size[1] > caps.max_texture_size {
         return Err(TextureError::Oversized {
-            requested: size.y,
+            requested: size[1],
             max: caps.max_texture_size,
         });
     }
