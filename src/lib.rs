@@ -13,7 +13,10 @@ pub use posh_derive::{Block, Uniform, Vertex};
 
 pub use bytemuck;
 pub use crevice;
+#[cfg(feature = "glam")]
+pub use glam;
 pub use glow;
+#[cfg(feature = "mint")]
 pub use mint;
 
 // Hidden unstable symbols, needed for `posh-derive`.
