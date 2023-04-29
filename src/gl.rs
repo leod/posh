@@ -53,6 +53,12 @@ impl AsStd140 for Bool {
     }
 }
 
+impl Default for Bool {
+    fn default() -> Self {
+        false.into()
+    }
+}
+
 impl ToSl for Bool {
     type Output = sl::Bool;
 
