@@ -61,7 +61,7 @@ impl VertexDom for Sl {
 ///     color: D::Vec4,
 /// }
 ///
-/// #[derive(Vertex)]
+/// #[derive(Clone, Copy, Vertex)]
 /// struct MyVertex<D: VertexDom = Sl> {
 ///     position: D::Block<sl::Vec3>,
 ///     material: D::Block<Material>,

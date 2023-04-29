@@ -31,7 +31,7 @@ struct Foo {
     y: f32,
 }
 
-#[derive(posh::Vertex)]
+#[derive(Copy, Clone, posh::Vertex)]
 struct Vertex<D: VertexDom = Sl> {
     instance: D::Block<Instance>,
     model_pos: D::Block<sl::Vec3>,
