@@ -1,10 +1,10 @@
-use std::{marker::PhantomData, rc::Rc};
+use std::{marker::PhantomData, mem::size_of, rc::Rc};
 
 use crevice::std140::{AsStd140, Std140};
 
 use crate::{Block, Sl};
 
-use super::{raw, BufferUsage};
+use super::{raw, BufferError, BufferUsage};
 
 /// Stores a uniform block in a buffer on the GPU.
 ///
@@ -23,19 +23,21 @@ pub struct UniformBufferBinding<B> {
 }
 
 impl<B: Block<Sl>> UniformBuffer<B> {
-    /// # Panics
-    ///
-    /// Panics if the length of `raw` is not a multiple of the size of
-    /// `<U::Gl as AsStd140>::Output`.
-    pub(super) fn from_raw(raw: raw::Buffer) -> Self {
-        assert!(uniform_size::<B>() > 0);
-        assert_eq!(raw.len() % uniform_size::<B>(), 0);
-        assert_eq!(raw.len() / uniform_size::<B>(), 1);
+    pub(super) fn new(
+        ctx: &raw::Context,
+        data: &B::Gl,
+        usage: BufferUsage,
+    ) -> Result<Self, BufferError> {
+        let mut buffer = Vec::new();
+        let data = data.as_std140();
+        let bytes = to_bytes(&data, &mut buffer);
 
-        Self {
+        let raw = ctx.create_buffer(bytes, glow::UNIFORM_BUFFER, usage)?;
+
+        Ok(Self {
             raw: Rc::new(raw),
             _phantom: PhantomData,
-        }
+        })
     }
 
     pub fn usage(&self) -> BufferUsage {
@@ -43,9 +45,11 @@ impl<B: Block<Sl>> UniformBuffer<B> {
     }
 
     pub fn set(&self, data: B::Gl) {
-        self.raw.set(data.as_std140().as_bytes());
+        let mut buffer = Vec::new();
+        let data = data.as_std140();
+        let bytes = to_bytes(&data, &mut buffer);
 
-        assert_eq!(self.raw.len() % uniform_size::<B>(), 0);
+        self.raw.set(bytes);
     }
 
     pub fn as_binding(&self) -> UniformBufferBinding<B> {
@@ -62,6 +66,32 @@ impl<B> UniformBufferBinding<B> {
     }
 }
 
-fn uniform_size<B: Block<Sl>>() -> usize {
-    std::mem::size_of::<<B::Gl as AsStd140>::Output>()
+fn to_bytes<'a, B: Std140>(data: &'a B, buffer: &'a mut Vec<u8>) -> &'a [u8] {
+    // FIXME: This is a workaround for cases like an uniform buffer that
+    // contains only a `Vec2`. In this case, `crevice` gives us a type that is
+    // only 8 bytes in size. However, as far as I can tell, OpenGL requires us
+    // to round up to multiples of 16 bytes. At least Firefox complains
+    // if we do not do this.
+
+    const MIN_ALIGNMENT: usize = 16;
+
+    let bytes = data.as_bytes();
+
+    let rem = size_of::<<B as AsStd140>::Output>() % MIN_ALIGNMENT;
+
+    if rem == 0 {
+        return bytes;
+    }
+
+    assert!(rem < MIN_ALIGNMENT);
+
+    let padded_len = bytes.len() + MIN_ALIGNMENT - rem;
+
+    assert!(padded_len > bytes.len());
+    assert_eq!(padded_len % MIN_ALIGNMENT, 0);
+
+    buffer.resize(padded_len, 0);
+    buffer[0..bytes.len()].copy_from_slice(bytes);
+
+    buffer.as_slice()
 }
