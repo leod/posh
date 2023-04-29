@@ -69,6 +69,16 @@ macro_rules! impl_vec {
             ),+
         }
 
+        impl Default for $vec {
+            fn default() -> Self {
+                Self {
+                    $(
+                        $field: Default::default()
+                    ),+
+                }
+            }
+        }
+
         impl ToSl for $vec {
             type Output = sl::$vec;
 
