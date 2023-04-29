@@ -49,7 +49,7 @@ where
     }
 
     pub fn set(&self, data: &[B::Gl]) {
-        self.raw.set(data);
+        self.raw.set(bytemuck::cast_slice(data));
     }
 
     pub fn as_binding(&self) -> VertexBufferBinding<B> {
