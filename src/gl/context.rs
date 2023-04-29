@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crevice::std140::AsStd140;
+use crevice::std140::{AsStd140, Std140};
 
 use crate::{
     sl::{
@@ -42,7 +42,9 @@ impl Context {
     where
         B: Block<Sl, Sl = B>,
     {
-        let raw = self.raw.create_buffer(data, glow::ARRAY_BUFFER, usage)?;
+        let raw = self
+            .raw
+            .create_buffer(bytemuck::cast_slice(data), glow::ARRAY_BUFFER, usage)?;
 
         Ok(VertexBuffer::from_raw(raw))
     }
@@ -55,9 +57,11 @@ impl Context {
     where
         E: Element,
     {
-        let raw = self
-            .raw
-            .create_buffer(data, glow::ELEMENT_ARRAY_BUFFER, usage)?;
+        let raw = self.raw.create_buffer(
+            bytemuck::cast_slice(data),
+            glow::ELEMENT_ARRAY_BUFFER,
+            usage,
+        )?;
 
         Ok(ElementBuffer::from_raw(raw))
     }
@@ -70,9 +74,9 @@ impl Context {
     where
         B: Block<Sl>,
     {
-        let raw = self
-            .raw
-            .create_buffer(&[data.as_std140()], glow::UNIFORM_BUFFER, usage)?;
+        let raw =
+            self.raw
+                .create_buffer(data.as_std140().as_bytes(), glow::UNIFORM_BUFFER, usage)?;
 
         Ok(UniformBuffer::from_raw(raw))
     }

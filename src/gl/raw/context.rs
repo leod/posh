@@ -1,6 +1,5 @@
 use std::{cell::Cell, rc::Rc};
 
-use bytemuck::Pod;
 use glow::HasContext;
 
 use crate::{
@@ -93,9 +92,9 @@ impl Context {
         &self.shared.caps
     }
 
-    pub fn create_buffer<T: Pod>(
+    pub fn create_buffer(
         &self,
-        data: &[T],
+        data: &[u8],
         target: u32,
         usage: BufferUsage,
     ) -> Result<Buffer, BufferError> {
