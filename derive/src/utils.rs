@@ -112,10 +112,14 @@ pub fn associated_type_to_trait(ty: &str) -> Option<Path> {
         "UVec4", "Mat2", "Mat3", "Mat4",
     ];
 
+    let fragment_tys = vec!["Output"];
+
     // TODO: Update associated type list, or see if we can do without it by now.
 
     if block_tys.contains(&ty) {
         Some(parse_quote!(::posh::BlockDom))
+    } else if fragment_tys.contains(&ty) {
+        Some(parse_quote!(::posh::FragmentDom))
     } else {
         None
     }
