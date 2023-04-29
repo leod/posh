@@ -65,7 +65,7 @@ macro_rules! impl_vec {
         #[repr(C)]
         pub struct $vec {
             $(
-                $field: $scalar
+                pub $field: $scalar
             ),+
         }
 
