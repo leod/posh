@@ -2,9 +2,13 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{parse_quote, DeriveInput, Result};
 
-use crate::utils::{get_domain_param, remove_domain_param, SpecializedTypeGenerics, StructFields};
+use crate::utils::{
+    get_domain_param, remove_domain_param, validate_generics, SpecializedTypeGenerics, StructFields,
+};
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream> {
+    validate_generics(&input.generics)?;
+
     let ident = &input.ident;
 
     let generics_view_type = get_domain_param(ident, &input.generics)?;

@@ -1,25 +1,21 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{DeriveInput, Result};
+use syn::{parse_quote, DeriveInput, Ident, ImplGenerics, Path, Result, Type, WhereClause};
 
 use crate::utils::{validate_generics, StructFields};
 
-pub fn derive(input: DeriveInput) -> Result<TokenStream> {
-    validate_generics(&input.generics)?;
-
-    let ident = &input.ident;
-    let ident_str = ident.to_string();
-
-    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-
-    let fields = StructFields::new(&input.ident, &input.data)?;
-    let field_idents = fields.idents();
-    let field_types = fields.types();
-    let field_strings = fields.strings();
+pub fn derive_impl(
+    ident_str: &str,
+    ty: &Path,
+    field_idents: &[&Ident],
+    field_types: &[&Type],
+    (impl_generics, where_clause): (ImplGenerics, Option<&WhereClause>),
+) -> Result<TokenStream> {
+    let field_strings: Vec<_> = field_idents.iter().map(|ident| ident.to_string()).collect();
 
     Ok(quote! {
         // Implement `Struct` for the struct.
-        impl #impl_generics ::posh::sl::Struct for #ident #ty_generics #where_clause {
+        impl #impl_generics ::posh::sl::Struct for #ty #where_clause {
             fn struct_type() -> ::std::rc::Rc<::posh::internal::StructType> {
                 ::posh::internal::unique_struct_type::<Self>(
                     || ::posh::internal::StructType  {
@@ -38,7 +34,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         }
 
         // Implement `Object` for the struct.
-        impl #impl_generics ::posh::sl::Object for #ident #ty_generics #where_clause {
+        impl #impl_generics ::posh::sl::Object for #ty #where_clause {
             fn ty() -> ::posh::internal::Type {
                 ::posh::internal::Type::Struct(<Self as ::posh::sl::Struct>::struct_type())
             }
@@ -60,7 +56,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         }
 
         // Implement `Value` for the struct.
-        impl #impl_generics ::posh::sl::Value for #ident #ty_generics #where_clause {
+        impl #impl_generics ::posh::sl::Value for #ty #where_clause {
             fn from_expr(expr: ::posh::internal::Expr) -> Self {
                 let base = ::std::rc::Rc::new(expr);
 
@@ -76,10 +72,10 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         }
 
         // Implement `ValueNonArray` for the struct.
-        impl #impl_generics ::posh::sl::ValueNonArray for #ident #ty_generics #where_clause {}
+        impl #impl_generics ::posh::sl::ValueNonArray for #ty #where_clause {}
 
         // Implement `ToSl` for the struct.
-        impl #impl_generics ::posh::sl::ToSl for #ident #ty_generics #where_clause {
+        impl #impl_generics ::posh::sl::ToSl for #ty #where_clause {
             type Output = Self;
 
             fn to_sl(self) -> Self {
@@ -98,4 +94,20 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             }
         };
     })
+}
+
+pub fn derive(input: DeriveInput) -> Result<TokenStream> {
+    validate_generics(&input.generics)?;
+
+    let ident = &input.ident;
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+    let fields = StructFields::new(ident, &input.data)?;
+
+    derive_impl(
+        &ident.to_string(),
+        &parse_quote!(#ident #ty_generics),
+        fields.idents().as_slice(),
+        fields.types().as_slice(),
+        (impl_generics, where_clause),
+    )
 }

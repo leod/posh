@@ -38,7 +38,7 @@ pub unsafe trait Fragment<D: FragmentDom>: Clone {
     /// The logical view of `Self`.
     ///
     /// This is the type through which fragment shaders output fragment data.
-    type Sl: Fragment<Sl>;
+    type Sl: Fragment<Sl> + sl::Value + sl::Varying + sl::ToSl<Output = Self::Sl>;
 
     #[doc(hidden)]
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl FragmentVisitor<'a, D>);

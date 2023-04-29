@@ -53,14 +53,6 @@ mod scene_pass {
 
     use super::Globals;
 
-    // TODO: Derive Varying for Fragment<Sl>
-    #[derive(Clone, Copy, sl::Value, sl::Varying)]
-    pub struct Varying {
-        albedo: sl::Vec3,
-        world_normal: sl::Vec3,
-        world_pos: sl::Vec3,
-    }
-
     const CUBE_POSITIONS: [glam::Vec3; 24] = [
         glam::vec3(0.5, -0.5, -0.5),
         glam::vec3(0.5, -0.5, 0.5),
@@ -103,7 +95,10 @@ mod scene_pass {
         sl::vec3(v.z, v.x, v.y)
     }
 
-    pub fn vertex(globals: Globals<Sl>, input: sl::VertexInput<()>) -> sl::VertexOutput<Varying> {
+    pub fn vertex(
+        globals: Globals<Sl>,
+        input: sl::VertexInput<()>,
+    ) -> sl::VertexOutput<SceneFragment<Sl>> {
         let vertex_id = input.vertex_id / 6 * 4 + CUBE_ELEMENTS.to_sl().get(input.vertex_id % 6);
 
         let object_pos = CUBE_POSITIONS
@@ -121,7 +116,7 @@ mod scene_pass {
 
         sl::VertexOutput {
             position: screen_pos,
-            varying: Varying {
+            varying: SceneFragment {
                 albedo: sl::vec3(1.0, 0.0, 0.0),
                 world_pos,
                 world_normal,
@@ -129,12 +124,8 @@ mod scene_pass {
         }
     }
 
-    pub fn fragment(_: (), varying: Varying) -> SceneFragment<Sl> {
-        SceneFragment {
-            albedo: varying.albedo,
-            world_normal: varying.world_normal,
-            world_pos: varying.world_pos,
-        }
+    pub fn fragment(_: (), varying: SceneFragment<Sl>) -> SceneFragment<Sl> {
+        varying
     }
 }
 

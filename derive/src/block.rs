@@ -3,10 +3,12 @@ use quote::quote;
 use syn::{parse_quote, DeriveInput, Error, Ident, Result};
 
 use crate::utils::{
-    remove_domain_param, specialize_field_types, SpecializedTypeGenerics, StructFields,
+    remove_domain_param, specialize_field_types, SpecializedTypeGenerics, StructFields, validate_generics,
 };
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream> {
+    validate_generics(&input.generics)?;
+
     let attrs = &input.attrs;
     let ident = &input.ident;
     let ident_str = ident.to_string();
