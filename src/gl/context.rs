@@ -1,7 +1,5 @@
 use std::rc::Rc;
 
-use crevice::std140::{AsStd140, Std140};
-
 use crate::{
     sl::{
         transpile::transpile_to_program_def,
