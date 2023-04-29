@@ -1,6 +1,6 @@
 use std::{marker::PhantomData, rc::Rc};
 
-use crevice::std140::AsStd140;
+use crevice::std140::{AsStd140, Std140};
 
 use crate::{Block, Sl};
 
@@ -43,7 +43,7 @@ impl<B: Block<Sl>> UniformBuffer<B> {
     }
 
     pub fn set(&self, data: B::Gl) {
-        self.raw.set(&[data.as_std140()]);
+        self.raw.set(data.as_std140().as_bytes());
 
         assert_eq!(self.raw.len() % uniform_size::<B>(), 0);
     }

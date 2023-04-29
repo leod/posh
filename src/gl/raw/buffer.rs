@@ -1,6 +1,5 @@
 use std::{cell::Cell, rc::Rc};
 
-use bytemuck::Pod;
 use glow::HasContext;
 
 use super::{context::ContextShared, error::check_gl_error, BufferError};
@@ -39,9 +38,9 @@ pub struct Buffer {
 }
 
 impl Buffer {
-    pub(super) fn new<T: Pod>(
+    pub(super) fn new(
         ctx: Rc<ContextShared>,
-        data: &[T],
+        data: &[u8],
         target: u32,
         usage: BufferUsage,
     ) -> Result<Self, BufferError> {
@@ -83,19 +82,18 @@ impl Buffer {
         self.len() != 0
     }
 
-    pub fn set<T: Pod>(&self, data: &[T]) {
+    pub fn set(&self, data: &[u8]) {
         let gl = self.ctx.gl();
-        let raw_data = bytemuck::cast_slice(data);
 
         unsafe {
             gl.bind_buffer(self.target, Some(self.id));
-            gl.buffer_data_u8_slice(self.target, raw_data, self.usage.to_gl());
+            gl.buffer_data_u8_slice(self.target, data, self.usage.to_gl());
 
             // TODO: Could avoid unbinding here by using `ContextShared`.
             gl.bind_buffer(self.target, None);
         }
 
-        self.len.set(raw_data.len());
+        self.len.set(data.len());
 
         #[cfg(debug_assertions)]
         check_gl_error(gl).expect("OpenGL error after Buffer::set");

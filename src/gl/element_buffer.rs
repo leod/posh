@@ -57,7 +57,7 @@ impl<E: Element> ElementBuffer<E> {
     }
 
     pub fn set(&self, data: &[E]) {
-        self.raw.set(data);
+        self.raw.set(bytemuck::cast_slice(data));
     }
 
     pub fn as_binding(&self) -> ElementBufferBinding {
