@@ -9,7 +9,7 @@ pub use interface::{
     Vertex, VertexDom,
 };
 
-pub use posh_derive::{Block, Uniform, Vertex};
+pub use posh_derive::{Block, Fragment, Uniform, Vertex};
 
 pub use bytemuck;
 pub use crevice;
@@ -31,7 +31,7 @@ pub struct Sl;
 #[doc(hidden)]
 pub mod internal {
     pub use super::{
-        interface::{UniformVisitor, VertexField, VertexVisitor},
+        interface::{FragmentVisitor, UniformVisitor, VertexField, VertexVisitor},
         sl::{
             dag::{Expr, StructType, Type},
             primitives::{field, simplify_struct_literal, value_arg},

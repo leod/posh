@@ -28,7 +28,7 @@ use dag::{Expr, StructType, Type};
 pub use {
     array::{array, Array},
     mat::{mat2, mat3, mat4, Mat2, Mat3, Mat4},
-    primitives::{all, and, any, branch, or},
+    primitives::{all, and, any, branch, branches, or},
     sampler::{ColorSample, ColorSampler2d, ComparisonSampler2d, Sample},
     scalar::{Bool, F32, I32, U32},
     sig::{
