@@ -15,7 +15,7 @@ use super::{
     dag::{Expr, SamplerType, Type},
     primitives::value_arg,
     program_def::{ProgramDef, UniformBlockDef, UniformSamplerDef, VertexBlockDef},
-    ColorSample, ColorSampler2d, ComparisonSampler2d, ConstParams, FragmentInput, FragmentOutput,
+    ColorSample, ColorSampler2d, ComparisonSampler2d, Const, FragmentInput, FragmentOutput,
     FullVertexOutput, Object, Varying, Vec4, VertexInput, VertexOutput, I32,
 };
 
@@ -152,7 +152,7 @@ where
     OutF: IntoFragmentOutput<Fragment = F>,
 {
     transpile_to_program_def_with_consts_impl(
-        (),
+        &(),
         |(), uniforms: U, input| vertex_shader(uniforms.lhs(), input),
         |(), uniforms: U, input| fragment_shader(uniforms.rhs(), input),
     )
@@ -163,12 +163,12 @@ where
 ///
 /// See also [`transpile_to_program_def`].
 pub fn transpile_to_program_def_with_consts<C, U, U1, U2, V, F, W, InV, OutW, InW, OutF>(
-    consts: C,
-    vertex_shader: fn(C, U1, InV) -> OutW,
-    fragment_shader: fn(C, U2, InW) -> OutF,
+    consts: &C,
+    vertex_shader: fn(&C, U1, InV) -> OutW,
+    fragment_shader: fn(&C, U2, InW) -> OutF,
 ) -> ProgramDef
 where
-    C: ConstParams,
+    C: Const,
     U1: Uniform<Sl>,
     U2: Uniform<Sl>,
     U: UniformUnion<U1, U2>,
@@ -188,12 +188,12 @@ where
 }
 
 fn transpile_to_program_def_with_consts_impl<C, U, V, F, W, InV, OutW, InW, OutF>(
-    consts: C,
-    vertex_shader: impl FnOnce(C, U, InV) -> OutW,
-    fragment_shader: impl FnOnce(C, U, InW) -> OutF,
+    consts: &C,
+    vertex_shader: impl FnOnce(&C, U, InV) -> OutW,
+    fragment_shader: impl FnOnce(&C, U, InW) -> OutF,
 ) -> ProgramDef
 where
-    C: ConstParams,
+    C: Const,
     U: Uniform<Sl>,
     V: Vertex<Sl>,
     F: Fragment<Sl>,

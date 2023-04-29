@@ -31,9 +31,7 @@ pub use {
     primitives::{all, and, any, branch, branches, or},
     sampler::{ColorSample, ColorSampler2d, ComparisonSampler2d, Sample},
     scalar::{Bool, F32, I32, U32},
-    sig::{
-        ConstParams, FragmentInput, FragmentOutput, FullVertexOutput, VertexInput, VertexOutput,
-    },
+    sig::{Const, FragmentInput, FragmentOutput, FullVertexOutput, VertexInput, VertexOutput},
     varying::Varying,
     vec::{
         bvec2, bvec3, bvec4, ivec2, ivec3, ivec4, uvec2, uvec3, uvec4, vec2, vec3, vec4, BVec2,
@@ -41,7 +39,7 @@ pub use {
     },
 };
 
-pub use posh_derive::{Value, Varying};
+pub use posh_derive::{Const, Value, Varying};
 
 use self::dag::BinaryOp;
 

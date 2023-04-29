@@ -64,4 +64,14 @@ where
     x: D::Uniform<U>,
 }
 
+#[derive(sl::Const)]
+pub struct Consts {}
+
+#[derive(sl::Const)]
+pub struct Const<T: sl::Const> {
+    x: T,
+    y: Vec<T>,
+    z: f32,
+}
+
 fn main() {}
