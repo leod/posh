@@ -37,7 +37,7 @@ struct MyNestedVertex<D: BlockDom = Sl> {
     y: D::Vec2,
 }
 
-#[derive(Vertex)]
+#[derive(Copy, Clone, Vertex)]
 struct MyVertexIface<D: VertexDom = Sl> {
     vertex: D::Block<MyVertex>,
     instance: D::Block<MyNestedVertex>,
