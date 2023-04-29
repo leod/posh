@@ -1,9 +1,22 @@
+use crate::{Block, Gl};
+
 use super::{Bool, Vec2, Vec4, F32, U32};
 
 /// Constants that can be passed to a shader at shader build time.
-pub trait ConstParams: Copy {}
+///
+/// This trait is used to restrict the types that can be used as constants.
+pub unsafe trait Const {}
 
-impl ConstParams for () {}
+unsafe impl Const for () {}
+unsafe impl Const for usize {}
+unsafe impl Const for isize {}
+unsafe impl Const for bool {}
+unsafe impl Const for String {}
+unsafe impl<B: Block<Gl>> Const for B {}
+unsafe impl<T: Const> Const for Vec<T> {}
+unsafe impl<T: Const> Const for Option<T> {}
+unsafe impl<U: Const, V: Const> Const for (U, V) {}
+unsafe impl<T: Const, const N: usize> Const for [T; N] {}
 
 /// Per-vertex input given to a vertex shader.
 #[derive(Debug, Clone)]
