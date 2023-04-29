@@ -36,6 +36,29 @@ pub fn branch<V: Value>(
     V::from_expr(expr)
 }
 
+pub fn branches<V, B1, V1, V2>(
+    if_branches: impl IntoIterator<Item = (B1, V1)>,
+    else_branch: V2,
+) -> V
+where
+    V: Value,
+    B1: ToSl<Output = Bool>,
+    V1: ToSl<Output = V>,
+    V2: ToSl<Output = V>,
+{
+    let mut if_branches = if_branches.into_iter();
+
+    if let Some((cond, yes)) = if_branches.next() {
+        branch(
+            cond.to_sl(),
+            yes.to_sl(),
+            branches(if_branches, else_branch),
+        )
+    } else {
+        else_branch.to_sl()
+    }
+}
+
 pub(crate) fn cast<U, V>(u: impl ToSl<Output = U>) -> V
 where
     U: Value,

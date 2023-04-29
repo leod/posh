@@ -1,4 +1,5 @@
 mod block;
+mod fragment;
 mod uniform;
 mod utils;
 mod value;
@@ -13,6 +14,17 @@ use syn::{parse_macro_input, DeriveInput};
 pub fn derive_block(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match block::derive(input) {
+        Ok(ts) => ts,
+        Err(e) => e.to_compile_error(),
+    }
+    .into()
+}
+
+/// Derives `Fragment` for a struct that is generic in `FragmentDom`.
+#[proc_macro_derive(Fragment)]
+pub fn derive_fragment(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    match fragment::derive(input) {
         Ok(ts) => ts,
         Err(e) => e.to_compile_error(),
     }

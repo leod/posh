@@ -22,8 +22,8 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let field_strings = fields.strings();
 
     Ok(quote! {
-        // Implement `Vertex<D>` for the struct.
-        unsafe impl #impl_generics ::posh::Vertex<#generics_view_type>
+        // Implement `Fragment<D>` for the struct.
+        unsafe impl #impl_generics ::posh::Fragment<#generics_view_type>
         for #ident #ty_generics
         #where_clause
         {
@@ -33,7 +33,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             fn visit<'a>(
                 &'a self,
                 path: &str,
-                visitor: &mut impl ::posh::internal::VertexVisitor<'a, #generics_view_type>,
+                visitor: &mut impl ::posh::internal::FragmentVisitor<'a, #generics_view_type>,
             ) {
                 #(
                     visitor.accept(
@@ -42,29 +42,14 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                     );
                 )*
             }
-
-            fn shader_input(path: &str) -> Self {
-                Self {
-                    #(
-                        #field_idents:
-                            <
-                                #field_types
-                                as
-                                ::posh::internal::VertexField<#generics_view_type>
-                            >::shader_input(
-                                &::posh::internal::join_ident_path(path, #field_strings),
-                            ),
-                    )*
-                }
-            }
         }
 
-        // Check that all field types implement `VertexField<D>`.
+        // Check that all field types implement `Fragment<D>`.
         const _: fn() = || {
             fn check_field<D, T>()
             where
-                D: ::posh::VertexDom,
-                T: ::posh::internal::VertexField<D>,
+                D: ::posh::FragmentDom,
+                T: ::posh::Fragment<D>,
             {}
 
             fn check_struct #impl_generics(value: &#ident #ty_generics) #where_clause {
