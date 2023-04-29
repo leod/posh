@@ -1,4 +1,5 @@
 mod block;
+mod r#const;
 mod fragment;
 mod uniform;
 mod utils;
@@ -14,6 +15,17 @@ use syn::{parse_macro_input, DeriveInput};
 pub fn derive_block(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match block::derive(input) {
+        Ok(ts) => ts,
+        Err(e) => e.to_compile_error(),
+    }
+    .into()
+}
+
+/// Derives `Const` for a struct.
+#[proc_macro_derive(Const)]
+pub fn derive_consts(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    match r#const::derive(input) {
         Ok(ts) => ts,
         Err(e) => e.to_compile_error(),
     }
