@@ -1,9 +1,9 @@
 use super::{Bool, Vec2, Vec4, F32, U32};
 
 /// Constants that can be passed to a shader at shader build time.
-pub trait ConstParams: Copy {}
+pub trait Consts: Copy {}
 
-impl ConstParams for () {}
+impl Consts for () {}
 
 /// Per-vertex input given to a vertex shader.
 #[derive(Debug, Clone)]

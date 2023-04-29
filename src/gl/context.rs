@@ -2,9 +2,9 @@ use std::rc::Rc;
 
 use crate::{
     sl::{
-        transpile::transpile_to_program_def,
+        transpile::{transpile_to_program_def, transpile_to_program_def_with_consts},
         transpile::{FromFragmentInput, FromVertexInput, IntoFragmentOutput, IntoFullVertexOutput},
-        ColorSample, Varying,
+        ColorSample, Consts, Varying,
     },
     Block, Fragment, Sl, Uniform, UniformUnion, Vertex,
 };
@@ -134,48 +134,38 @@ impl Context {
         Ok(Program::unchecked_from_raw(raw))
     }
 
-    // TODO: Program creation with consts
-    /*
-        pub fn create_program_with_consts<
-            Consts,
-            UData,
-            VData,
-            FData,
-            Vary,
-            VertIn,
-            VertOut,
-            FragIn,
-            FragOut,
-        >(
-            &self,
-            consts: Consts,
-            vertex_shader: fn(Consts, UData, VertIn) -> VertOut,
-            fragment_shader: fn(Consts, UData, FragIn) -> FragOut,
-        ) -> Result<Program<UData, VData, FData>, ProgramError>
-        where
-            Consts: ConstParams,
-            UData: Uniform<Sl, Sl = UData>,
-            VData: Vertex<Sl, Sl = VData>,
-            FData: Fragment<Sl, Sl = FData>,
-            Vary: Varying,
-            VertIn: FromVertexInput<Vert = VData>,
-            VertOut: IntoVertexOutput<Vary = Vary>,
-            FragIn: FromFragmentInput<Vary = Vary>,
-            FragOut: IntoFragmentOutput<Frag = FData>,
-        {
-            let program_def =
-                transpile_to_program_def_with_consts(consts, vertex_shader, fragment_shader);
+    pub fn create_program_with_consts<C, U, U1, U2, V, F, W, InV, OutW, InW, OutF>(
+        &self,
+        consts: &C,
+        vertex_shader: fn(&C, U1, InV) -> OutW,
+        fragment_shader: fn(&C, U2, InW) -> OutF,
+    ) -> Result<Program<U, V, F>, ProgramError>
+    where
+        C: Consts,
+        U: UniformUnion<U1, U2>,
+        U1: Uniform<Sl>,
+        U2: Uniform<Sl>,
+        V: Vertex<Sl>,
+        F: Fragment<Sl>,
+        W: Varying,
+        InV: FromVertexInput<Vertex = V>,
+        OutW: IntoFullVertexOutput<Varying = W>,
+        InW: FromFragmentInput<Varying = W>,
+        OutF: IntoFragmentOutput<Fragment = F>,
+    {
+        let program_def = transpile_to_program_def_with_consts::<_, U, _, _, _, _, _, _, _, _, _>(
+            consts,
+            vertex_shader,
+            fragment_shader,
+        );
 
-            println!(
-                "{}\n==================={}",
-                program_def.vertex_shader_source, program_def.fragment_shader_source
-            );
+        log::info!("Vertex shader:\n{}", program_def.vertex_shader_source);
+        log::info!("Fragment shader:\n{}", program_def.fragment_shader_source);
 
-            let raw = self.raw.create_program(program_def)?;
+        let raw = self.raw.create_program(program_def)?;
 
-            Ok(Program::unchecked_from_raw(raw))
-        }
-    */
+        Ok(Program::unchecked_from_raw(raw))
+    }
 
     pub fn set_default_framebuffer_size(&self, size: [u32; 2]) {
         self.raw.set_default_framebuffer_size(size);
