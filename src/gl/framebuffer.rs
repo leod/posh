@@ -12,7 +12,7 @@ use super::{
 };
 
 #[derive(Clone)]
-pub struct ColorAttachment<S> {
+pub struct ColorAttachment<S = sl::Vec4> {
     raw: raw::Attachment,
     _phantom: PhantomData<S>,
 }
@@ -66,35 +66,31 @@ impl From<DepthAttachment> for Framebuffer<()> {
 }
 
 #[derive(Clone)]
-pub struct ColorDepthFramebuffer<F: Fragment<Sl>> {
-    pub color: F::Gl,
-    pub depth: DepthAttachment,
-}
-
-impl<'a, F: Fragment<Sl>> From<&'a ColorDepthFramebuffer<F>> for Framebuffer<F> {
-    fn from(value: &'a ColorDepthFramebuffer<F>) -> Self {
-        Framebuffer(FramebufferInternal::ColorDepth(value.clone()))
-    }
-}
-
-impl<F: Fragment<Sl>> From<ColorDepthFramebuffer<F>> for Framebuffer<F> {
-    fn from(value: ColorDepthFramebuffer<F>) -> Self {
-        Framebuffer(FramebufferInternal::ColorDepth(value))
-    }
-}
-
-#[derive(Clone)]
 enum FramebufferInternal<F: Fragment<Sl>> {
     Default,
     Depth(DepthAttachment),
     Color(F::Gl),
-    ColorDepth(ColorDepthFramebuffer<F>),
+    ColorDepth {
+        color: F::Gl,
+        depth: DepthAttachment,
+    },
 }
 
 #[derive(Clone)]
 pub struct Framebuffer<F: Fragment<Sl> = sl::Vec4>(FramebufferInternal<F>);
 
 impl<F: Fragment<Sl>> Framebuffer<F> {
+    pub fn color(color: &F::Gl) -> Self {
+        Framebuffer(FramebufferInternal::Color(color.clone()))
+    }
+
+    pub fn color_and_depth(color: &F::Gl, depth: &DepthAttachment) -> Self {
+        Framebuffer(FramebufferInternal::ColorDepth {
+            color: color.clone(),
+            depth: depth.clone(),
+        })
+    }
+
     pub fn raw(&self) -> raw::Framebuffer {
         use FramebufferInternal::*;
 
@@ -106,12 +102,18 @@ impl<F: Fragment<Sl>> Framebuffer<F> {
             Color(color) => raw::Framebuffer::Attachments {
                 attachments: raw_color_attachments(color),
             },
-            ColorDepth(color_depth) => {
-                let mut attachments = raw_color_attachments(&color_depth.color);
-                attachments.push(color_depth.depth.raw.clone());
+            ColorDepth { color, depth } => {
+                let mut attachments = raw_color_attachments(color);
+                attachments.push(depth.raw.clone());
                 raw::Framebuffer::Attachments { attachments }
             }
         }
+    }
+}
+
+impl Framebuffer<()> {
+    pub fn depth(depth: &DepthAttachment) -> Self {
+        Framebuffer(FramebufferInternal::Depth(depth.clone()))
     }
 }
 
