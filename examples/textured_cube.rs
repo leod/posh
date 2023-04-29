@@ -38,7 +38,9 @@ fn zxy(v: sl::Vec3) -> sl::Vec3 {
 fn vertex_shader(uniforms: Uniform, vertex: Vertex) -> sl::VertexOutput<sl::Vec2> {
     let camera = uniforms.camera;
 
-    let vertex_pos = sl::vec2(vertex.pos.x, vertex.pos.y)
+    let vertex_pos = vertex
+        .pos
+        .xy()
         .rotate(sl::Vec2::from_angle(uniforms.time))
         .extend(vertex.pos.z);
     let position = camera.view_to_screen * camera.world_to_view * zxy(vertex_pos).extend(1.0);
