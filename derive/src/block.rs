@@ -2,8 +2,12 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{parse_quote, DeriveInput, Error, Ident, Result};
 
-use crate::utils::{
-    remove_domain_param, specialize_field_types, SpecializedTypeGenerics, StructFields, validate_generics,
+use crate::{
+    utils::{
+        remove_domain_param, specialize_field_types, validate_generics, SpecializedTypeGenerics,
+        StructFields,
+    },
+    value,
 };
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream> {
@@ -11,7 +15,6 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
     let attrs = &input.attrs;
     let ident = &input.ident;
-    let ident_str = ident.to_string();
     let visibility = input.vis;
 
     let helper_ident = Ident::new(&format!("PoshInternal{ident}BlockHelper"), ident.span());
@@ -26,6 +29,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     }
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+    let (impl_generics_init, _, where_clause_init) = generics_init.split_for_impl();
 
     let ty_generics_sl =
         SpecializedTypeGenerics::new(parse_quote!(::posh::Sl), ident, &input.generics)?;
@@ -41,67 +45,17 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let field_types_gl =
         specialize_field_types(parse_quote!(::posh::Gl), ident, &input.generics, &fields)?;
 
+    let value_impl = value::derive_impl(
+        &ident.to_string(),
+        &parse_quote!(#ident #ty_generics_sl),
+        field_idents.as_slice(),
+        &field_types_sl.iter().collect::<Vec<_>>(),
+        (&impl_generics_init, where_clause_init),
+    )?;
+
     Ok(quote! {
-        // Implement `Object` for the `Sl` view of the struct.
-        impl ::posh::sl::Object for #ident #ty_generics_sl {
-            fn ty() -> ::posh::internal::Type {
-                ::posh::internal::Type::Struct(<Self as ::posh::sl::Struct>::struct_type())
-            }
-
-            fn expr(&self) -> ::std::rc::Rc<::posh::internal::Expr> {
-                ::posh::internal::simplify_struct_literal(
-                    <Self as ::posh::sl::Struct>::struct_type(),
-                    &[
-                        #(
-                            ::posh::sl::Object::expr(&self.#field_idents)
-                        ),*
-                    ]
-                )
-            }
-
-            fn from_arg(name: &str) -> Self {
-                ::posh::internal::value_arg(name)
-            }
-        }
-
-        // Implement `Value` for the `Sl` view of the struct.
-        impl ::posh::sl::Value for #ident #ty_generics_sl {
-            fn from_expr(expr: ::posh::internal::Expr) -> Self {
-                let base = ::std::rc::Rc::new(expr);
-
-                Self {
-                    #(
-                        #field_idents: ::posh::internal::field(
-                            base.clone(),
-                            #field_strings,
-                        )
-                    ),*
-                }
-            }
-        }
-
-        // Implement `ValueNonArray` for the `Sl` view of the struct.
-        impl ::posh::sl::ValueNonArray for #ident #ty_generics_sl {}
-
-        // Implement `Struct` for the `Sl` view of the struct.
-        impl ::posh::sl::Struct for #ident #ty_generics_sl {
-            fn struct_type() -> ::std::rc::Rc<::posh::internal::StructType> {
-                ::posh::internal::unique_struct_type::<Self>(
-                    || ::posh::internal::StructType {
-                        name: #ident_str.to_string(),
-                        fields: vec![
-                            #(
-                                (
-                                    #field_strings.to_string(),
-                                    <#field_types_sl as ::posh::sl::Object>::ty(),
-                                )
-                            ),*
-                        ],
-                    }
-                )
-
-            }
-        }
+        // Implement `Value` and co. for the `Sl` view of the struct.
+        #value_impl
 
         // Implement `ToSl` for all views of the struct.
         impl #impl_generics ::posh::sl::ToSl for #ident #ty_generics
@@ -238,6 +192,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         }
 
         // Implement `Varying` for the `Sl` view of the struct.
+        // TODO: This can go away once we unify `Value` and `Varying`.
         unsafe impl ::posh::sl::Varying for #ident #ty_generics_sl {
             fn shader_outputs(&self, path: &str) -> Vec<(
                 ::std::string::String,
@@ -272,7 +227,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         const _: fn() = || {
             fn check_field<T: ::posh::Block<::posh::Sl>>() {}
 
-            fn check_struct #impl_generics(value: &#ident #ty_generics) #where_clause {
+            fn check_struct #impl_generics() #where_clause {
                 #(
                     check_field::<#field_types_sl>();
                 )*
@@ -283,9 +238,21 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         const _: fn() = || {
             fn check_field<T: ::posh::Block<::posh::Gl>>() {}
 
-            fn check_struct #impl_generics(value: &#ident #ty_generics) #where_clause {
+            fn check_struct #impl_generics() #where_clause {
                 #(
                     check_field::<#field_types_gl>();
+                )*
+            }
+        };
+
+        // Check that all field types in `Sl` implement `Varying`.
+        // TODO: This can go away once we unify `Value` and `Varying`.
+        const _: fn() = || {
+            fn check_field<V: ::posh::sl::Varying>() {}
+
+            fn check_struct #impl_generics() #where_clause {
+                #(
+                    check_field::<#field_types_sl>();
                 )*
             }
         };

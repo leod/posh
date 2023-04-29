@@ -9,7 +9,7 @@ pub fn derive_impl(
     ty: &Path,
     field_idents: &[&Ident],
     field_types: &[&Type],
-    (impl_generics, where_clause): (ImplGenerics, Option<&WhereClause>),
+    (impl_generics, where_clause): (&ImplGenerics, Option<&WhereClause>),
 ) -> Result<TokenStream> {
     let field_strings: Vec<_> = field_idents.iter().map(|ident| ident.to_string()).collect();
 
@@ -74,15 +74,6 @@ pub fn derive_impl(
         // Implement `ValueNonArray` for the struct.
         impl #impl_generics ::posh::sl::ValueNonArray for #ty #where_clause {}
 
-        // Implement `ToSl` for the struct.
-        impl #impl_generics ::posh::sl::ToSl for #ty #where_clause {
-            type Output = Self;
-
-            fn to_sl(self) -> Self {
-                self
-            }
-        }
-
         // Check that all field types implement `Value`.
         const _: fn() = || {
             fn check_field<V: ::posh::sl::Value>() {}
@@ -103,11 +94,24 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
     let fields = StructFields::new(ident, &input.data)?;
 
-    derive_impl(
+    let value_impl = derive_impl(
         &ident.to_string(),
         &parse_quote!(#ident #ty_generics),
         fields.idents().as_slice(),
         fields.types().as_slice(),
-        (impl_generics, where_clause),
-    )
+        (&impl_generics, where_clause),
+    )?;
+
+    Ok(quote! {
+        #value_impl
+
+        // Implement `ToSl` for the struct.
+        impl #impl_generics ::posh::sl::ToSl for #ident #where_clause {
+            type Output = Self;
+
+            fn to_sl(self) -> Self {
+                self
+            }
+        }
+    })
 }

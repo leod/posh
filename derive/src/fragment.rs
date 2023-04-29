@@ -16,10 +16,10 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let ident = &input.ident;
 
     let generics_view_type = get_domain_param(ident, &input.generics)?;
-    let generics_tail = remove_domain_param(ident, &input.generics)?;
+    let generics_init = remove_domain_param(ident, &input.generics)?;
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-    let (impl_generics_init, _, where_clause_init) = generics_tail.split_for_impl();
+    let (impl_generics_init, _, where_clause_init) = generics_init.split_for_impl();
 
     let ty_generics_sl =
         SpecializedTypeGenerics::new(parse_quote!(::posh::Sl), ident, &input.generics)?;
@@ -39,7 +39,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         &parse_quote!(#ident #ty_generics_sl),
         field_idents.as_slice(),
         &field_types_sl.iter().collect::<Vec<_>>(),
-        (impl_generics_init, where_clause_init),
+        (&impl_generics_init, where_clause_init),
     )?;
 
     Ok(quote! {
@@ -68,7 +68,17 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         // Implement `Value` and co. for the `Sl` view of the struct.
         #value_impl
 
+        // Implement `ToSl` for the struct.
+        impl #impl_generics_init ::posh::sl::ToSl for #ident #ty_generics_sl #where_clause_init {
+            type Output = Self;
+
+            fn to_sl(self) -> Self {
+                self
+            }
+        }
+
         // Implement `Varying` for the `Sl` view of the struct.
+        // TODO: This can go away once we unify `Value` and `Varying`.
         unsafe impl ::posh::sl::Varying for #ident #ty_generics_sl {
             fn shader_outputs(&self, path: &str) -> Vec<(
                 ::std::string::String,
@@ -110,6 +120,18 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             fn check_struct #impl_generics(value: &#ident #ty_generics) #where_clause {
                 #(
                     check_field::<#generics_view_type, #field_types>();
+                )*
+            }
+        };
+
+        // Check that all field types in `Sl` implement `Varying`.
+        // TODO: This can go away once we unify `Value` and `Varying`.
+        const _: fn() = || {
+            fn check_field<V: ::posh::sl::Varying>() {}
+
+            fn check_struct #impl_generics() #where_clause {
+                #(
+                    check_field::<#field_types_sl>();
                 )*
             }
         };

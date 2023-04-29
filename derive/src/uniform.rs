@@ -12,10 +12,10 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let ident = &input.ident;
 
     let generics_view_type = get_domain_param(ident, &input.generics)?;
-    let generics_tail = remove_domain_param(ident, &input.generics)?;
+    let generics_init = remove_domain_param(ident, &input.generics)?;
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-    let (impl_generics_init, _, where_clause_init) = generics_tail.split_for_impl();
+    let (impl_generics_init, _, where_clause_init) = generics_init.split_for_impl();
 
     let ty_generics_sl =
         SpecializedTypeGenerics::new(parse_quote!(::posh::Sl), ident, &input.generics)?;
