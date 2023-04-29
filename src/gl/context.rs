@@ -74,11 +74,7 @@ impl Context {
     where
         B: Block<Sl>,
     {
-        let raw =
-            self.raw
-                .create_buffer(data.as_std140().as_bytes(), glow::UNIFORM_BUFFER, usage)?;
-
-        Ok(UniformBuffer::from_raw(raw))
+        UniformBuffer::new(&self.raw, &data, usage)
     }
 
     pub fn create_color_texture_2d<S: ColorSample>(
