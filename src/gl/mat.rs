@@ -52,28 +52,6 @@ macro_rules! impl_convs {
             }
         }
 
-        impl AsStd140 for $mat {
-            type Output = crevice::std140::$mat;
-
-            fn as_std140(&self) -> Self::Output {
-                let mut output = <Self::Output as Zeroable>::zeroed();
-
-                $(
-                    output.$field_crevice = self.$field.as_std140();
-                )+
-
-                output
-            }
-
-            fn from_std140(value: Self::Output) -> Self {
-                Self {
-                    $(
-                        $field: AsStd140::from_std140(value.$field_crevice)
-                    ),+
-                }
-            }
-        }
-
         impl From<[[f32; $size]; $size]> for $mat {
             #[allow(unused)]
             fn from(value: [[f32; $size]; $size]) -> Self {
@@ -139,3 +117,68 @@ impl_convs!(
     (x_axis, y_axis, z_axis, w_axis),
     (x, y, z, w)
 );
+
+impl AsStd140 for Mat2 {
+    type Output = crevice::std140::Mat2;
+
+    fn as_std140(&self) -> Self::Output {
+        Self::Output {
+            x: self.x_axis.as_std140(),
+            _pad_x: Default::default(),
+            y: self.y_axis.as_std140(),
+            _pad_y: Default::default(),
+        }
+    }
+
+    fn from_std140(value: Self::Output) -> Self {
+        Self {
+            x_axis: AsStd140::from_std140(value.x),
+            y_axis: AsStd140::from_std140(value.y),
+        }
+    }
+}
+
+impl AsStd140 for Mat3 {
+    type Output = crevice::std140::Mat3;
+
+    fn as_std140(&self) -> Self::Output {
+        Self::Output {
+            x: self.x_axis.as_std140(),
+            _pad_x: Default::default(),
+            y: self.y_axis.as_std140(),
+            _pad_y: Default::default(),
+            z: self.z_axis.as_std140(),
+            _pad_z: Default::default(),
+        }
+    }
+
+    fn from_std140(value: Self::Output) -> Self {
+        Self {
+            x_axis: AsStd140::from_std140(value.x),
+            y_axis: AsStd140::from_std140(value.y),
+            z_axis: AsStd140::from_std140(value.z),
+        }
+    }
+}
+
+impl AsStd140 for Mat4 {
+    type Output = crevice::std140::Mat4;
+
+    fn as_std140(&self) -> Self::Output {
+        Self::Output {
+            x: self.x_axis.as_std140(),
+            y: self.y_axis.as_std140(),
+            z: self.z_axis.as_std140(),
+            w: self.w_axis.as_std140(),
+        }
+    }
+
+    fn from_std140(value: Self::Output) -> Self {
+        Self {
+            x_axis: AsStd140::from_std140(value.x),
+            y_axis: AsStd140::from_std140(value.y),
+            z_axis: AsStd140::from_std140(value.z),
+            w_axis: AsStd140::from_std140(value.w),
+        }
+    }
+}

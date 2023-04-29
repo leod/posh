@@ -65,8 +65,18 @@ macro_rules! impl_vec {
         #[repr(C)]
         pub struct $vec {
             $(
-                $field: $scalar
+                pub $field: $scalar
             ),+
+        }
+
+        impl Default for $vec {
+            fn default() -> Self {
+                Self {
+                    $(
+                        $field: Default::default()
+                    ),+
+                }
+            }
         }
 
         impl ToSl for $vec {

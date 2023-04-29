@@ -1,5 +1,5 @@
 use posh::{
-    sl::{self, ToSl, VertexOutput},
+    sl::{self, VertexOutput},
     Block, BlockDom, Sl,
 };
 

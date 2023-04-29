@@ -58,6 +58,20 @@ macro_rules! impl_value {
 
         impl ValueNonArray for $vec {}
 
+        #[cfg(feature = "glam")]
+        impl ToSl for glam::$vec {
+            type Output = $vec;
+
+            fn to_sl(self) -> Self::Output {
+                Self::Output {
+                    $(
+                        $member: self.$member.to_sl()
+                    ),+
+                }
+            }
+        }
+
+        #[cfg(feature = "mint")]
         impl ToSl for $mint {
             type Output = $vec;
 

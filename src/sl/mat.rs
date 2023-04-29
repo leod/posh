@@ -221,6 +221,46 @@ impl_mat!(Mat2, Vec2, (x_axis, y_axis), (X, Y));
 impl_mat!(Mat3, Vec3, (x_axis, y_axis, z_axis), (X, Y, Z));
 impl_mat!(Mat4, Vec4, (x_axis, y_axis, z_axis, w_axis), (X, Y, Z, W));
 
+#[cfg(feature = "glam")]
+impl ToSl for glam::Mat2 {
+    type Output = Mat2;
+
+    fn to_sl(self) -> Self::Output {
+        Self::Output {
+            x_axis: self.x_axis.to_sl(),
+            y_axis: self.y_axis.to_sl(),
+        }
+    }
+}
+
+#[cfg(feature = "glam")]
+impl ToSl for glam::Mat3 {
+    type Output = Mat3;
+
+    fn to_sl(self) -> Self::Output {
+        Self::Output {
+            x_axis: self.x_axis.to_sl(),
+            y_axis: self.y_axis.to_sl(),
+            z_axis: self.z_axis.to_sl(),
+        }
+    }
+}
+
+#[cfg(feature = "glam")]
+impl ToSl for glam::Mat4 {
+    type Output = Mat4;
+
+    fn to_sl(self) -> Self::Output {
+        Self::Output {
+            x_axis: self.x_axis.to_sl(),
+            y_axis: self.y_axis.to_sl(),
+            z_axis: self.y_axis.to_sl(),
+            w_axis: self.w_axis.to_sl(),
+        }
+    }
+}
+
+#[cfg(feature = "mint")]
 impl ToSl for mint::ColumnMatrix2<f32> {
     type Output = Mat2;
 
@@ -232,6 +272,7 @@ impl ToSl for mint::ColumnMatrix2<f32> {
     }
 }
 
+#[cfg(feature = "mint")]
 impl ToSl for mint::ColumnMatrix3<f32> {
     type Output = Mat3;
 
@@ -244,6 +285,7 @@ impl ToSl for mint::ColumnMatrix3<f32> {
     }
 }
 
+#[cfg(feature = "mint")]
 impl ToSl for mint::ColumnMatrix4<f32> {
     type Output = Mat4;
 
