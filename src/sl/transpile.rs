@@ -15,7 +15,7 @@ use super::{
     dag::{Expr, SamplerType, Type},
     primitives::value_arg,
     program_def::{ProgramDef, UniformBlockDef, UniformSamplerDef, VertexBlockDef},
-    ColorSample, ColorSampler2d, ComparisonSampler2d, Consts, FragmentInput, FragmentOutput,
+    ColorSample, ColorSampler2d, ComparisonSampler2d, Const, FragmentInput, FragmentOutput,
     FullVertexOutput, Object, Varying, Vec4, VertexInput, VertexOutput, I32,
 };
 
@@ -168,7 +168,7 @@ pub fn transpile_to_program_def_with_consts<C, U, U1, U2, V, F, W, InV, OutW, In
     fragment_shader: fn(&C, U2, InW) -> OutF,
 ) -> ProgramDef
 where
-    C: Consts,
+    C: Const,
     U1: Uniform<Sl>,
     U2: Uniform<Sl>,
     U: UniformUnion<U1, U2>,
@@ -193,7 +193,7 @@ fn transpile_to_program_def_with_consts_impl<C, U, V, F, W, InV, OutW, InW, OutF
     fragment_shader: impl FnOnce(&C, U, InW) -> OutF,
 ) -> ProgramDef
 where
-    C: Consts,
+    C: Const,
     U: Uniform<Sl>,
     V: Vertex<Sl>,
     F: Fragment<Sl>,

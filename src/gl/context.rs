@@ -4,7 +4,7 @@ use crate::{
     sl::{
         transpile::{transpile_to_program_def, transpile_to_program_def_with_consts},
         transpile::{FromFragmentInput, FromVertexInput, IntoFragmentOutput, IntoFullVertexOutput},
-        ColorSample, Consts, Varying,
+        ColorSample, Const, Varying,
     },
     Block, Fragment, Sl, Uniform, UniformUnion, Vertex,
 };
@@ -141,7 +141,7 @@ impl Context {
         fragment_shader: fn(&C, U2, InW) -> OutF,
     ) -> Result<Program<U, V, F>, ProgramError>
     where
-        C: Consts,
+        C: Const,
         U: UniformUnion<U1, U2>,
         U1: Uniform<Sl>,
         U2: Uniform<Sl>,
