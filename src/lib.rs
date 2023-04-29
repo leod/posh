@@ -5,8 +5,8 @@ pub mod gl;
 pub mod sl;
 
 pub use interface::{
-    Block, BlockDom, Fragment, FragmentDom, Gl, Sl, Uniform, UniformDom, UniformNonUnit,
-    UniformUnion, Vertex, VertexDom,
+    Block, BlockDom, Fragment, FragmentDom, Uniform, UniformDom, UniformNonUnit, UniformUnion,
+    Vertex, VertexDom,
 };
 
 pub use posh_derive::{Block, Uniform, Vertex};
@@ -18,6 +18,14 @@ pub use glam;
 pub use glow;
 #[cfg(feature = "mint")]
 pub use mint;
+
+/// The graphics library's view of shader inputs and outputs.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+pub struct Gl;
+
+/// The shading language's view of shader inputs and outputs.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+pub struct Sl;
 
 // Hidden unstable symbols, needed for `posh-derive`.
 #[doc(hidden)]
