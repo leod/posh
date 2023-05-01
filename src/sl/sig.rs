@@ -57,13 +57,5 @@ pub struct FragmentInput<W> {
 pub struct FragmentOutput<F> {
     pub fragment: F,
     pub fragment_depth: Option<F32>,
-}
-
-impl<Frag> FragmentOutput<Frag> {
-    pub fn new(fragment: Frag) -> Self {
-        FragmentOutput {
-            fragment,
-            fragment_depth: None,
-        }
-    }
+    pub discard: Option<Bool>,
 }

@@ -126,6 +126,7 @@ impl<F: Fragment<Sl>> IntoFragmentOutput for F {
         FragmentOutput {
             fragment: self,
             fragment_depth: None,
+            discard: None,
         }
     }
 }
