@@ -39,8 +39,8 @@ struct VsBindings<D: VsBindingsDom = Sl> {
 
 // Shader code
 
-fn vertex_shader(camera: Camera, vertex: VsBindings) -> sl::VertexOutput<sl::Vec3> {
-    sl::VertexOutput {
+fn vertex_shader(camera: Camera, vertex: VsBindings) -> sl::VsOut<sl::Vec3> {
+    sl::VsOut {
         position: camera.view_to_screen
             * camera.world_to_view
             * vertex.instance.model_to_view

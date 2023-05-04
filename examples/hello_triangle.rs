@@ -12,10 +12,10 @@ struct Globals<D: BlockDom = Sl> {
 
 // Shader code
 
-fn vertex_shader(_: (), vertex: sl::Vec2) -> sl::VertexOutput<sl::Vec2> {
+fn vertex_shader(_: (), vertex: sl::Vec2) -> sl::VsOut<sl::Vec2> {
     let pos = vertex - sl::vec2(0.5, 0.5);
 
-    sl::VertexOutput {
+    sl::VsOut {
         position: sl::vec4(pos.x, pos.y, 0.0, 1.0),
         varying: pos,
     }

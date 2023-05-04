@@ -18,7 +18,7 @@ struct Camera<D: BlockDom = Sl> {
 
 #[derive(Clone, Copy, Block)]
 #[repr(C)]
-struct VsBindings<D: BlockDom = Sl> {
+struct Vertex<D: BlockDom = Sl> {
     pos: D::Vec3,
     tex_coords: D::Vec2,
 }
@@ -35,7 +35,7 @@ fn zxy(v: sl::Vec3) -> sl::Vec3 {
     sl::vec3(v.z, v.x, v.y)
 }
 
-fn vertex_shader(uniforms: UniformBindings, vertex: VsBindings) -> sl::VertexOutput<sl::Vec2> {
+fn vertex_shader(uniforms: UniformBindings, vertex: Vertex) -> sl::VsOut<sl::Vec2> {
     let camera = uniforms.camera;
 
     let vertex_pos = vertex
@@ -45,7 +45,7 @@ fn vertex_shader(uniforms: UniformBindings, vertex: VsBindings) -> sl::VertexOut
         .extend(vertex.pos.z);
     let position = camera.view_to_screen * camera.world_to_view * zxy(vertex_pos).extend(1.0);
 
-    sl::VertexOutput {
+    sl::VsOut {
         varying: vertex.tex_coords,
         position,
     }
@@ -54,13 +54,13 @@ fn vertex_shader(uniforms: UniformBindings, vertex: VsBindings) -> sl::VertexOut
 // Host code
 
 struct Demo {
-    program: gl::Program<(UniformBindings, sl::ColorSampler2d), VsBindings>,
+    program: gl::Program<(UniformBindings, sl::ColorSampler2d), Vertex>,
 
     camera: gl::UniformBuffer<Camera>,
     time: gl::UniformBuffer<sl::F32>,
     texture: gl::ColorTexture2d<sl::Vec4>,
 
-    vertices: gl::VertexBuffer<VsBindings>,
+    vertices: gl::VertexBuffer<Vertex>,
     elements: gl::ElementBuffer,
 
     start_time: Instant,
@@ -136,7 +136,7 @@ impl Default for Camera<Gl> {
     }
 }
 
-fn cube_vertices() -> Vec<VsBindings<Gl>> {
+fn cube_vertices() -> Vec<Vertex<Gl>> {
     [
         [0.5, -0.5, -0.5],
         [0.5, -0.5, 0.5],
@@ -165,7 +165,7 @@ fn cube_vertices() -> Vec<VsBindings<Gl>> {
     ]
     .into_iter()
     .enumerate()
-    .map(|(i, pos)| VsBindings {
+    .map(|(i, pos)| Vertex {
         pos: pos.into(),
         tex_coords: [[0.0, 0.0], [0.0, 1.0], [1.0, 1.0], [1.0, 0.0]][i % 4].into(),
     })

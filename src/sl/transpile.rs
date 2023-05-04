@@ -15,18 +15,18 @@ use super::{
     dag::{Expr, SamplerType, Type},
     primitives::value_arg,
     program_def::{ProgramDef, UniformBlockDef, UniformSamplerDef, VertexBlockDef},
-    ColorSample, ColorSampler2d, ComparisonSampler2d, Const, FragmentInput, FragmentOutput,
-    FullVertexOutput, Object, Varying, Vec4, VertexInput, VertexOutput, I32,
+    ColorSample, ColorSampler2d, ComparisonSampler2d, Const, FsIn, FsOut, FullVsOut, Object,
+    Varying, Vec4, VsIn, VsOut, I32,
 };
 
 /// Types that can be used as vertex input for a vertex shader.
-pub trait FromVertexInput {
+pub trait FromVsIn {
     type VsBindings: VsBindings<Sl>;
 
-    fn from(input: VertexInput<Self::VsBindings>) -> Self;
+    fn from(input: VsIn<Self::VsBindings>) -> Self;
 }
 
-impl<V: VsBindings<Sl>> FromVertexInput for VertexInput<V> {
+impl<V: VsBindings<Sl>> FromVsIn for VsIn<V> {
     type VsBindings = V;
 
     fn from(input: Self) -> Self {
@@ -34,22 +34,22 @@ impl<V: VsBindings<Sl>> FromVertexInput for VertexInput<V> {
     }
 }
 
-impl<V: VsBindings<Sl>> FromVertexInput for V {
+impl<V: VsBindings<Sl>> FromVsIn for V {
     type VsBindings = Self;
 
-    fn from(input: VertexInput<Self>) -> Self {
+    fn from(input: VsIn<Self>) -> Self {
         input.vertex
     }
 }
 
 /// Types that can be used as vertex output for a vertex shader.
-pub trait IntoFullVertexOutput {
+pub trait IntoFullVsOut {
     type Varying: Varying;
 
-    fn into(self) -> FullVertexOutput<Self::Varying>;
+    fn into(self) -> FullVsOut<Self::Varying>;
 }
 
-impl<W: Varying> IntoFullVertexOutput for FullVertexOutput<W> {
+impl<W: Varying> IntoFullVsOut for FullVsOut<W> {
     type Varying = W;
 
     fn into(self) -> Self {
@@ -57,11 +57,11 @@ impl<W: Varying> IntoFullVertexOutput for FullVertexOutput<W> {
     }
 }
 
-impl<V: Varying> IntoFullVertexOutput for VertexOutput<V> {
+impl<V: Varying> IntoFullVsOut for VsOut<V> {
     type Varying = V;
 
-    fn into(self) -> FullVertexOutput<V> {
-        FullVertexOutput {
+    fn into(self) -> FullVsOut<V> {
+        FullVsOut {
             position: self.position,
             varying: self.varying,
             point_size: None,
@@ -69,11 +69,11 @@ impl<V: Varying> IntoFullVertexOutput for VertexOutput<V> {
     }
 }
 
-impl IntoFullVertexOutput for Vec4 {
+impl IntoFullVsOut for Vec4 {
     type Varying = ();
 
-    fn into(self) -> FullVertexOutput<()> {
-        FullVertexOutput {
+    fn into(self) -> FullVsOut<()> {
+        FullVsOut {
             position: self,
             varying: (),
             point_size: None,
@@ -82,13 +82,13 @@ impl IntoFullVertexOutput for Vec4 {
 }
 
 /// Types that can be used as fragment input for a fragment shader.
-pub trait FromFragmentInput {
+pub trait FromFsIn {
     type Varying: Varying;
 
-    fn from(input: FragmentInput<Self::Varying>) -> Self;
+    fn from(input: FsIn<Self::Varying>) -> Self;
 }
 
-impl<W: Varying> FromFragmentInput for FragmentInput<W> {
+impl<W: Varying> FromFsIn for FsIn<W> {
     type Varying = W;
 
     fn from(input: Self) -> Self {
@@ -96,22 +96,22 @@ impl<W: Varying> FromFragmentInput for FragmentInput<W> {
     }
 }
 
-impl<W: Varying> FromFragmentInput for W {
+impl<W: Varying> FromFsIn for W {
     type Varying = Self;
 
-    fn from(input: FragmentInput<Self>) -> Self {
+    fn from(input: FsIn<Self>) -> Self {
         input.varying
     }
 }
 
 /// Types that can be used as fragment output for a fragment shader.
-pub trait IntoFragmentOutput {
+pub trait IntoFsOut {
     type FsBindings: FsBindings<Sl>;
 
-    fn into(self) -> FragmentOutput<Self::FsBindings>;
+    fn into(self) -> FsOut<Self::FsBindings>;
 }
 
-impl<F: FsBindings<Sl>> IntoFragmentOutput for FragmentOutput<F> {
+impl<F: FsBindings<Sl>> IntoFsOut for FsOut<F> {
     type FsBindings = F;
 
     fn into(self) -> Self {
@@ -119,11 +119,11 @@ impl<F: FsBindings<Sl>> IntoFragmentOutput for FragmentOutput<F> {
     }
 }
 
-impl<F: FsBindings<Sl>> IntoFragmentOutput for F {
+impl<F: FsBindings<Sl>> IntoFsOut for F {
     type FsBindings = Self;
 
-    fn into(self) -> FragmentOutput<Self> {
-        FragmentOutput {
+    fn into(self) -> FsOut<Self> {
+        FsOut {
             fragment: self,
             fragment_depth: None,
             discard: None,
@@ -147,10 +147,10 @@ where
     V: VsBindings<Sl>,
     F: FsBindings<Sl>,
     W: Varying,
-    InV: FromVertexInput<VsBindings = V>,
-    OutW: IntoFullVertexOutput<Varying = W>,
-    InW: FromFragmentInput<Varying = W>,
-    OutF: IntoFragmentOutput<FsBindings = F>,
+    InV: FromVsIn<VsBindings = V>,
+    OutW: IntoFullVsOut<Varying = W>,
+    InW: FromFsIn<Varying = W>,
+    OutF: IntoFsOut<FsBindings = F>,
 {
     transpile_to_program_def_with_consts_impl(
         &(),
@@ -176,10 +176,10 @@ where
     V: VsBindings<Sl>,
     F: FsBindings<Sl>,
     W: Varying,
-    InV: FromVertexInput<VsBindings = V>,
-    OutW: IntoFullVertexOutput<Varying = W>,
-    InW: FromFragmentInput<Varying = W>,
-    OutF: IntoFragmentOutput<FsBindings = F>,
+    InV: FromVsIn<VsBindings = V>,
+    OutW: IntoFullVsOut<Varying = W>,
+    InW: FromFsIn<Varying = W>,
+    OutF: IntoFsOut<FsBindings = F>,
 {
     transpile_to_program_def_with_consts_impl(
         consts,
@@ -199,10 +199,10 @@ where
     V: VsBindings<Sl>,
     F: FsBindings<Sl>,
     W: Varying,
-    InV: FromVertexInput<VsBindings = V>,
-    OutW: IntoFullVertexOutput<Varying = W>,
-    InW: FromFragmentInput<Varying = W>,
-    OutF: IntoFragmentOutput<FsBindings = F>,
+    InV: FromVsIn<VsBindings = V>,
+    OutW: IntoFullVsOut<Varying = W>,
+    InW: FromFsIn<Varying = W>,
+    OutF: IntoFsOut<FsBindings = F>,
 {
     // TODO: Remove hardcoded path names.
     let uniforms = U::shader_input("uniforms");
@@ -216,7 +216,7 @@ where
     };
 
     let (vertex_block_defs, varying_outputs, vertex_shader_source) = {
-        let input = || VertexInput {
+        let input = || VsIn {
             vertex: V::shader_input("vertex_input"),
             vertex_id: value_arg::<I32>("gl_VertexID").as_u32(),
             instance_id: value_arg::<I32>("gl_InstanceID").as_u32(),
@@ -280,7 +280,7 @@ where
     let uniforms = U::shader_input("uniforms");
 
     let fragment_shader_source = {
-        let input = FragmentInput {
+        let input = FsIn {
             varying: W::shader_input("vertex_output"),
             fragment_coord: value_arg("gl_FragCoord"),
             front_facing: value_arg("gl_FrontFacing"),

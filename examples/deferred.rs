@@ -25,13 +25,13 @@ pub struct SceneSamplers<D: UniformBindingsDom> {
 }
 
 #[derive(Clone, Copy, FsBindings)]
-pub struct SceneFragment<D: FsBindingsDom> {
+pub struct SceneFsBindings<D: FsBindingsDom> {
     albedo: D::Output<sl::Vec3>,
     world_normal: D::Output<sl::Vec3>,
     world_pos: D::Output<sl::Vec3>,
 }
 
-impl SceneFragment<Gl> {
+impl SceneFsBindings<Gl> {
     fn as_scene_samplers(&self) -> SceneSamplers<Gl> {
         let settings = gl::Sampler2dSettings::linear();
 
@@ -51,7 +51,7 @@ mod scene_pass {
         Sl,
     };
 
-    use crate::SceneFragment;
+    use crate::SceneFsBindings;
 
     use super::Globals;
 
@@ -97,10 +97,10 @@ mod scene_pass {
         sl::vec3(v.z, v.x, v.y)
     }
 
-    pub fn vertex(
+    pub fn vertex_stage(
         globals: Globals<Sl>,
-        input: sl::VertexInput<()>,
-    ) -> sl::VertexOutput<SceneFragment<Sl>> {
+        input: sl::VsIn<()>,
+    ) -> sl::VsOut<SceneFsBindings<Sl>> {
         let vertex_id = input.vertex_id / 6 * 4 + CUBE_ELEMENTS.to_sl().get(input.vertex_id % 6);
 
         let object_pos = CUBE_POSITIONS
@@ -116,9 +116,9 @@ mod scene_pass {
         // TODO: Fix world normal calculation.
         let world_normal = CUBE_NORMALS.to_sl().get((vertex_id / 4) % 6);
 
-        sl::VertexOutput {
+        sl::VsOut {
             position: screen_pos,
-            varying: SceneFragment {
+            varying: SceneFsBindings {
                 albedo: sl::vec3(1.0, 0.0, 0.0),
                 world_pos,
                 world_normal,
@@ -126,7 +126,7 @@ mod scene_pass {
         }
     }
 
-    pub fn fragment(_: (), varying: SceneFragment<Sl>) -> SceneFragment<Sl> {
+    pub fn fragment_stage(_: (), varying: SceneFsBindings<Sl>) -> SceneFsBindings<Sl> {
         varying
     }
 }
@@ -148,10 +148,10 @@ mod present_pass {
         glam::vec2(1., -1.),
     ];
 
-    pub fn vertex(_: (), input: sl::VertexInput<()>) -> sl::VertexOutput<sl::Vec2> {
+    pub fn vertex(_: (), input: sl::VsIn<()>) -> sl::VsOut<sl::Vec2> {
         let position = SQUARE_POSITIONS.to_sl().get(input.vertex_id);
 
-        sl::VertexOutput {
+        sl::VsOut {
             position: position.extend(0.0).extend(1.0),
             varying: (position + 1.0) / 2.0,
         }
@@ -180,11 +180,11 @@ mod present_pass {
 // Host code
 
 struct Demo {
-    scene_program: gl::Program<Globals<Sl>, (), SceneFragment<Sl>>,
+    scene_program: gl::Program<Globals<Sl>, (), SceneFsBindings<Sl>>,
     present_program: gl::Program<SceneSamplers<Sl>, ()>,
 
     globals: gl::UniformBuffer<Globals<Sl>>,
-    scene_textures: SceneFragment<Gl>,
+    scene_textures: SceneFsBindings<Gl>,
     depth_texture: gl::DepthTexture2d,
 
     start_time: Instant,
@@ -201,14 +201,15 @@ impl Demo {
         let scene_texture =
             || gl.create_color_texture_2d(gl::ColorImage::rgb_u8_zero([WIDTH, HEIGHT]));
 
-        let scene_textures = SceneFragment {
+        let scene_textures = SceneFsBindings {
             albedo: scene_texture()?.as_color_attachment(),
             world_normal: scene_texture()?.as_color_attachment(),
             world_pos: scene_texture()?.as_color_attachment(),
         };
 
         Ok(Self {
-            scene_program: gl.create_program(scene_pass::vertex, scene_pass::fragment)?,
+            scene_program: gl
+                .create_program(scene_pass::vertex_stage, scene_pass::fragment_stage)?,
             present_program: gl.create_program(present_pass::vertex, present_pass::fragment)?,
             globals: gl.create_uniform_buffer(Globals::new(0.0), StreamDraw)?,
             scene_textures,

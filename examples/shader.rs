@@ -1,5 +1,5 @@
 use posh::{
-    sl::{self, VertexOutput},
+    sl::{self, VsOut},
     Block, BlockDom, Sl,
 };
 
@@ -28,7 +28,7 @@ struct ColorVertex<D: BlockDom = Sl> {
     flag: D::I32,
 }
 
-fn vertex_shader(globals: Globals, vertex: ColorVertex) -> VertexOutput<sl::Vec4> {
+fn vertex_shader(globals: Globals, vertex: ColorVertex) -> VsOut<sl::Vec4> {
     let shift = globals.offset * globals.time;
     let shift = sl::branch(
         globals.invert.eq(2),
@@ -52,7 +52,7 @@ fn vertex_shader(globals: Globals, vertex: ColorVertex) -> VertexOutput<sl::Vec4
         sl::vec2(0.5, 0.6),
     ]);
 
-    VertexOutput {
+    VsOut {
         varying: sl::Vec4::splat(0.0)
             + offsets
                 .get(globals.invert.as_u32() + 3)
