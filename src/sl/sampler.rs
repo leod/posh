@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, rc::Rc};
+use std::rc::Rc;
 
 use sealed::sealed;
 
@@ -60,12 +60,15 @@ impl_color_sample!(Vec4, ColorSampler2d, |v: Vec4| v);
 impl_color_sample!(IVec4, IColorSampler2d, |v: IVec4| v);
 impl_color_sample!(UVec4, UColorSampler2d, |v: UVec4| v);
 
+#[derive(Debug, Copy, Clone)]
+pub enum ColorSampler2dInternal<S> {
+    Sampler(Trace),
+    Constant(S),
+}
+
 /// An object which can be sampled.
 #[derive(Debug, Copy, Clone)]
-pub struct ColorSampler2d<S = Vec4> {
-    trace: Trace,
-    _phantom: PhantomData<S>,
-}
+pub struct ColorSampler2d<S = Vec4>(ColorSampler2dInternal<S>);
 
 #[derive(Debug, Copy, Clone)]
 pub struct ComparisonSampler2d {
@@ -78,21 +81,27 @@ impl<S: ColorSample> Object for ColorSampler2d<S> {
     }
 
     fn expr(&self) -> Rc<Expr> {
-        self.trace.expr()
+        use ColorSampler2dInternal::*;
+
+        match &self.0 {
+            Sampler(sampler) => sampler.expr(),
+            Constant(sample) => sample.expr(),
+        }
     }
 
     fn from_arg(name: &str) -> Self {
-        Self {
-            trace: Trace::new(Expr::Arg {
-                ty: Self::ty(),
-                name: name.into(),
-            }),
-            _phantom: PhantomData,
-        }
+        ColorSampler2d(ColorSampler2dInternal::Sampler(Trace::new(Expr::Arg {
+            ty: Self::ty(),
+            name: name.into(),
+        })))
     }
 }
 
 impl<S: ColorSample> ColorSampler2d<S> {
+    pub fn constant(sample: S) -> Self {
+        ColorSampler2d(ColorSampler2dInternal::Constant(sample))
+    }
+
     pub fn sample(self, tex_coords: Vec2) -> S {
         let sample = built_in_2("texture", self, tex_coords);
 
