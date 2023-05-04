@@ -157,11 +157,12 @@ impl ImageInternalFormat {
                 false
             }
             RgbaI8Snorm | RgbI8Snorm | RgI8Snorm | RI8Snorm => false,
-            RgbaF32 | RgbF32 | RgF32 | RF32 => {
+            RgbaF32 | RgF32 | RF32 => {
                 // FIXME: This should rely on caps. Default OpenGL ES 3.0 does
                 // not support rendering to float color textures!
                 true
             }
+            RgbF32 => false,
             DepthF32 => false,
         }
     }
