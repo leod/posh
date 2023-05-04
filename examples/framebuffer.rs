@@ -35,31 +35,31 @@ mod scene_pass {
 }
 
 mod present_pass {
-    use posh::{sl, Block, BlockDom, Sl, UniformDom};
+    use posh::{sl, Block, BlockDom, Sl, UniformBindingsDom};
 
     use super::State;
 
     #[derive(Clone, Copy, Block)]
     #[repr(C)]
-    pub struct Vertex<D: BlockDom> {
+    pub struct VsBindings<D: BlockDom> {
         pub pos: D::Vec2,
         pub tex_coords: D::Vec2,
     }
 
-    #[derive(posh::Uniform)]
-    pub struct Uniform<D: UniformDom> {
+    #[derive(posh::UniformBindings)]
+    pub struct UniformBindings<D: UniformBindingsDom> {
         pub state: D::Block<State<Sl>>,
         pub scene: D::ColorSampler2d<sl::Vec4>,
     }
 
-    pub fn vertex(_: (), vertex: Vertex<Sl>) -> sl::VertexOutput<sl::Vec2> {
+    pub fn vertex(_: (), vertex: VsBindings<Sl>) -> sl::VertexOutput<sl::Vec2> {
         sl::VertexOutput {
             position: vertex.pos.extend(0.0).extend(1.0),
             varying: vertex.tex_coords,
         }
     }
 
-    pub fn fragment(uniform: Uniform<Sl>, tex_coords: sl::Vec2) -> sl::Vec4 {
+    pub fn fragment(uniform: UniformBindings<Sl>, tex_coords: sl::Vec2) -> sl::Vec4 {
         let flip = uniform.state.flip;
         let coords = sl::branch(flip.eq(0u32), tex_coords, -tex_coords);
 
@@ -71,13 +71,13 @@ mod present_pass {
 
 struct Demo {
     scene_program: gl::Program<State<Sl>, sl::Vec2>,
-    present_program: gl::Program<present_pass::Uniform<Sl>, present_pass::Vertex<Sl>>,
+    present_program: gl::Program<present_pass::UniformBindings<Sl>, present_pass::VsBindings<Sl>>,
 
     state: gl::UniformBuffer<State<Sl>>,
     texture: gl::ColorTexture2d,
 
     triangle_vertices: gl::VertexBuffer<sl::Vec2>,
-    quad_vertices: gl::VertexBuffer<present_pass::Vertex<Sl>>,
+    quad_vertices: gl::VertexBuffer<present_pass::VsBindings<Sl>>,
     quad_elements: gl::ElementBuffer,
 
     start_time: Instant,
@@ -118,7 +118,7 @@ impl Demo {
 
         self.present_program.draw(
             gl::Input {
-                uniform: &present_pass::Uniform {
+                uniform: &present_pass::UniformBindings {
                     state: self.state.as_binding(),
                     scene: self
                         .texture
@@ -143,21 +143,21 @@ fn triangle_vertices() -> Vec<gl::Vec2> {
     vec![[0.5f32, 1.0].into(), [0.0, 0.0].into(), [1.0, 0.0].into()]
 }
 
-fn quad_vertices() -> Vec<present_pass::Vertex<Gl>> {
+fn quad_vertices() -> Vec<present_pass::VsBindings<Gl>> {
     vec![
-        present_pass::Vertex {
+        present_pass::VsBindings {
             pos: [-1.0, -1.0].into(),
             tex_coords: [0.0, 0.0].into(),
         },
-        present_pass::Vertex {
+        present_pass::VsBindings {
             pos: [1.0, -1.0].into(),
             tex_coords: [1.0, 0.0].into(),
         },
-        present_pass::Vertex {
+        present_pass::VsBindings {
             pos: [1.0, 1.0].into(),
             tex_coords: [1.0, 1.0].into(),
         },
-        present_pass::Vertex {
+        present_pass::VsBindings {
             pos: [-1.0, 1.0].into(),
             tex_coords: [0.0, 1.0].into(),
         },

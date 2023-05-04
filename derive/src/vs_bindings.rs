@@ -43,8 +43,8 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     )?;
 
     Ok(quote! {
-        // Implement `Vertex<D>` for the struct.
-        unsafe impl #impl_generics ::posh::Vertex<#generics_view_type>
+        // Implement `VsBindings<D>` for the struct.
+        unsafe impl #impl_generics ::posh::VsBindings<#generics_view_type>
         for #ident #ty_generics
         #where_clause
         {
@@ -129,7 +129,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         const _: fn() = || {
             fn check_field<D, T>()
             where
-                D: ::posh::VertexDom,
+                D: ::posh::VsBindingsDom,
                 T: ::posh::internal::VertexField<D>,
             {}
 

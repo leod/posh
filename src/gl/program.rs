@@ -3,7 +3,7 @@ use std::{marker::PhantomData, rc::Rc};
 use crate::{
     interface::UniformVisitor,
     sl::{self, ColorSample},
-    Block, Fragment, Gl, Sl, Uniform, Vertex,
+    Block, FsBindings, Gl, Sl, UniformBindings, VsBindings,
 };
 
 use super::{
@@ -13,8 +13,8 @@ use super::{
 
 pub struct Input<'a, U, V>
 where
-    U: Uniform<Sl>,
-    V: Vertex<Sl>,
+    U: UniformBindings<Sl>,
+    V: VsBindings<Sl>,
 {
     pub uniform: &'a U::Gl,
     pub vertex: &'a VertexSpec<V>,
@@ -28,9 +28,9 @@ pub struct Program<U, V, F = sl::Vec4> {
 
 impl<U, V, F> Program<U, V, F>
 where
-    U: Uniform<Sl>,
-    V: Vertex<Sl>,
-    F: Fragment<Sl>,
+    U: UniformBindings<Sl>,
+    V: VsBindings<Sl>,
+    F: FsBindings<Sl>,
 {
     pub(super) fn unchecked_from_raw(raw: raw::Program) -> Self {
         Program {

@@ -54,7 +54,7 @@ impl_varying!(Mat3, Smooth);
 impl_varying!(Mat4, Smooth);
 
 // GLSL ES 3.0: 4.3.6 Output Variables
-// > Vertex shader outputs that are, or contain, signed or unsigned integers or
+// > VsBindings shader outputs that are, or contain, signed or unsigned integers or
 // > integer vectors must be qualified with the interpolation qualifier flat
 impl_varying!(I32, Flat);
 impl_varying!(IVec2, Flat);

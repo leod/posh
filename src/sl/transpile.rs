@@ -7,7 +7,7 @@ use std::{iter::once, rc::Rc};
 
 use crate::{
     interface::{FragmentVisitor, UniformUnion, UniformVisitor, VertexVisitor},
-    Block, Fragment, Sl, Uniform, Vertex,
+    Block, FsBindings, Sl, UniformBindings, VsBindings,
 };
 
 use super::{
@@ -21,21 +21,21 @@ use super::{
 
 /// Types that can be used as vertex input for a vertex shader.
 pub trait FromVertexInput {
-    type Vertex: Vertex<Sl>;
+    type VsBindings: VsBindings<Sl>;
 
-    fn from(input: VertexInput<Self::Vertex>) -> Self;
+    fn from(input: VertexInput<Self::VsBindings>) -> Self;
 }
 
-impl<V: Vertex<Sl>> FromVertexInput for VertexInput<V> {
-    type Vertex = V;
+impl<V: VsBindings<Sl>> FromVertexInput for VertexInput<V> {
+    type VsBindings = V;
 
     fn from(input: Self) -> Self {
         input
     }
 }
 
-impl<V: Vertex<Sl>> FromVertexInput for V {
-    type Vertex = Self;
+impl<V: VsBindings<Sl>> FromVertexInput for V {
+    type VsBindings = Self;
 
     fn from(input: VertexInput<Self>) -> Self {
         input.vertex
@@ -106,21 +106,21 @@ impl<W: Varying> FromFragmentInput for W {
 
 /// Types that can be used as fragment output for a fragment shader.
 pub trait IntoFragmentOutput {
-    type Fragment: Fragment<Sl>;
+    type FsBindings: FsBindings<Sl>;
 
-    fn into(self) -> FragmentOutput<Self::Fragment>;
+    fn into(self) -> FragmentOutput<Self::FsBindings>;
 }
 
-impl<F: Fragment<Sl>> IntoFragmentOutput for FragmentOutput<F> {
-    type Fragment = F;
+impl<F: FsBindings<Sl>> IntoFragmentOutput for FragmentOutput<F> {
+    type FsBindings = F;
 
     fn into(self) -> Self {
         self
     }
 }
 
-impl<F: Fragment<Sl>> IntoFragmentOutput for F {
-    type Fragment = Self;
+impl<F: FsBindings<Sl>> IntoFragmentOutput for F {
+    type FsBindings = Self;
 
     fn into(self) -> FragmentOutput<Self> {
         FragmentOutput {
@@ -141,16 +141,16 @@ pub fn transpile_to_program_def<U, U1, U2, V, F, W, InV, OutW, InW, OutF>(
     fragment_shader: fn(U2, InW) -> OutF,
 ) -> ProgramDef
 where
-    U1: Uniform<Sl>,
-    U2: Uniform<Sl>,
+    U1: UniformBindings<Sl>,
+    U2: UniformBindings<Sl>,
     U: UniformUnion<U1, U2>,
-    V: Vertex<Sl>,
-    F: Fragment<Sl>,
+    V: VsBindings<Sl>,
+    F: FsBindings<Sl>,
     W: Varying,
-    InV: FromVertexInput<Vertex = V>,
+    InV: FromVertexInput<VsBindings = V>,
     OutW: IntoFullVertexOutput<Varying = W>,
     InW: FromFragmentInput<Varying = W>,
-    OutF: IntoFragmentOutput<Fragment = F>,
+    OutF: IntoFragmentOutput<FsBindings = F>,
 {
     transpile_to_program_def_with_consts_impl(
         &(),
@@ -170,16 +170,16 @@ pub fn transpile_to_program_def_with_consts<C, U, U1, U2, V, F, W, InV, OutW, In
 ) -> ProgramDef
 where
     C: Const,
-    U1: Uniform<Sl>,
-    U2: Uniform<Sl>,
+    U1: UniformBindings<Sl>,
+    U2: UniformBindings<Sl>,
     U: UniformUnion<U1, U2>,
-    V: Vertex<Sl>,
-    F: Fragment<Sl>,
+    V: VsBindings<Sl>,
+    F: FsBindings<Sl>,
     W: Varying,
-    InV: FromVertexInput<Vertex = V>,
+    InV: FromVertexInput<VsBindings = V>,
     OutW: IntoFullVertexOutput<Varying = W>,
     InW: FromFragmentInput<Varying = W>,
-    OutF: IntoFragmentOutput<Fragment = F>,
+    OutF: IntoFragmentOutput<FsBindings = F>,
 {
     transpile_to_program_def_with_consts_impl(
         consts,
@@ -195,14 +195,14 @@ fn transpile_to_program_def_with_consts_impl<C, U, V, F, W, InV, OutW, InW, OutF
 ) -> ProgramDef
 where
     C: Const,
-    U: Uniform<Sl>,
-    V: Vertex<Sl>,
-    F: Fragment<Sl>,
+    U: UniformBindings<Sl>,
+    V: VsBindings<Sl>,
+    F: FsBindings<Sl>,
     W: Varying,
-    InV: FromVertexInput<Vertex = V>,
+    InV: FromVertexInput<VsBindings = V>,
     OutW: IntoFullVertexOutput<Varying = W>,
     InW: FromFragmentInput<Varying = W>,
-    OutF: IntoFragmentOutput<Fragment = F>,
+    OutF: IntoFragmentOutput<FsBindings = F>,
 {
     // TODO: Remove hardcoded path names.
     let uniforms = U::shader_input("uniforms");

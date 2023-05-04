@@ -127,7 +127,7 @@ impl VertexSpec {
                     }
 
                     let divisor = match input_rate {
-                        VertexInputRate::Vertex => 0,
+                        VertexInputRate::VsBindings => 0,
                         VertexInputRate::Instance => 1,
                     };
 
@@ -244,7 +244,7 @@ impl VertexSpec {
             {
                 let num = buffer.len() / stride;
                 match input_rate {
-                    VertexInputRate::Vertex => {
+                    VertexInputRate::VsBindings => {
                         // Safety: this is only safe if the element buffer does not have any
                         // elements which are out of bound for one of the vertex buffers.
                         // Here, we assume that this is checked by the caller.
@@ -271,7 +271,7 @@ impl VertexSpec {
             {
                 let num = buffer.len() / stride;
                 match input_rate {
-                    VertexInputRate::Vertex => {
+                    VertexInputRate::VsBindings => {
                         assert!(num >= end);
                     }
                     VertexInputRate::Instance => {
