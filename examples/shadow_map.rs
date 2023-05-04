@@ -75,12 +75,12 @@ mod depth_pass {
 }
 
 mod shaded_pass {
-    use posh::{sl, Sl, UniformDom};
+    use posh::{sl, Sl, UniformBindingsDom};
 
     use super::{Camera, Light, SceneVertex};
 
-    #[derive(Clone, posh::Uniform)]
-    pub struct Uniform<D: UniformDom = Sl> {
+    #[derive(Clone, posh::UniformBindings)]
+    pub struct UniformBindings<D: UniformBindingsDom = Sl> {
         pub camera: D::Block<Camera>,
         pub light: D::Block<Light>,
         pub light_depth_map: D::ComparisonSampler2d,
@@ -93,7 +93,7 @@ mod shaded_pass {
     }
 
     pub fn vertex(
-        Uniform { light, camera, .. }: Uniform,
+        UniformBindings { light, camera, .. }: UniformBindings,
         vertex: SceneVertex,
     ) -> sl::VertexOutput<Varying> {
         const EXTRUDE: f32 = 0.1;
@@ -126,11 +126,11 @@ mod shaded_pass {
     }
 
     pub fn fragment(
-        Uniform {
+        UniformBindings {
             light,
             light_depth_map,
             ..
-        }: Uniform,
+        }: UniformBindings,
         varying: Varying,
     ) -> sl::Vec4 {
         let light_dir = (light.world_pos - varying.vertex.world_pos).normalize();
@@ -149,12 +149,12 @@ mod debug_pass {
 
     #[derive(Clone, Copy, Block)]
     #[repr(C)]
-    pub struct Vertex<D: BlockDom = Sl> {
+    pub struct VsBindings<D: BlockDom = Sl> {
         pub pos: D::Vec2,
         pub tex_coords: D::Vec2,
     }
 
-    pub fn vertex(_: (), vertex: Vertex) -> sl::VertexOutput<sl::Vec2> {
+    pub fn vertex(_: (), vertex: VsBindings) -> sl::VertexOutput<sl::Vec2> {
         sl::VertexOutput {
             varying: vertex.tex_coords,
             position: vertex.pos.extend(0.0).extend(1.0),
@@ -173,8 +173,8 @@ mod debug_pass {
 struct Demo {
     flat_program: gl::Program<Camera, SceneVertex>,
     depth_program: gl::Program<Light, SceneVertex, ()>,
-    shaded_program: gl::Program<shaded_pass::Uniform, SceneVertex>,
-    debug_program: gl::Program<sl::ColorSampler2d<sl::F32>, debug_pass::Vertex>,
+    shaded_program: gl::Program<shaded_pass::UniformBindings, SceneVertex>,
+    debug_program: gl::Program<sl::ColorSampler2d<sl::F32>, debug_pass::VsBindings>,
 
     camera_buffer: gl::UniformBuffer<Camera>,
     light_buffer: gl::UniformBuffer<Light>,
@@ -186,7 +186,7 @@ struct Demo {
     light_vertices: gl::VertexBuffer<SceneVertex>,
     light_elements: gl::ElementBuffer,
 
-    debug_vertices: gl::VertexBuffer<debug_pass::Vertex>,
+    debug_vertices: gl::VertexBuffer<debug_pass::VsBindings>,
     debug_elements: gl::ElementBuffer,
 
     start_time: Instant,
@@ -249,7 +249,7 @@ impl Demo {
 
         self.shaded_program.draw(
             gl::Input {
-                uniform: &shaded_pass::Uniform {
+                uniform: &shaded_pass::UniformBindings {
                     camera: self.camera_buffer.as_binding(),
                     light: self.light_buffer.as_binding(),
                     light_depth_map: self.light_depth_map.as_comparison_sampler(
@@ -451,23 +451,23 @@ fn cuboid_elements(n: u32) -> impl Iterator<Item = u32> {
     (0..6u32).flat_map(move |face| [1, 0, 2, 2, 0, 3].map(|i| start + face * 4 + i))
 }
 
-fn debug_vertices() -> Vec<debug_pass::Vertex<Gl>> {
-    use debug_pass::Vertex;
+fn debug_vertices() -> Vec<debug_pass::VsBindings<Gl>> {
+    use debug_pass::VsBindings;
 
     vec![
-        Vertex {
+        VsBindings {
             pos: [-1.0, 1.0].into(),
             tex_coords: [0.0, 1.0].into(),
         },
-        Vertex {
+        VsBindings {
             pos: [-0.5, 1.0].into(),
             tex_coords: [1.0, 1.0].into(),
         },
-        Vertex {
+        VsBindings {
             pos: [-0.5, 0.5].into(),
             tex_coords: [1.0, 0.0].into(),
         },
-        Vertex {
+        VsBindings {
             pos: [-1.0, 0.5].into(),
             tex_coords: [0.0, 0.0].into(),
         },

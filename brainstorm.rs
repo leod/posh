@@ -1,21 +1,21 @@
 // Shared definitions
 
-#[derive(Uniform)]
-pub struct Camera<D: UniformDomain = Sl> {
+#[derive(UniformBindings)]
+pub struct Camera<D: UniformBindingsDomain = Sl> {
     pub model_to_world: D::Mat4<f32>,
     pub world_to_screen: D::Mat4<f32>,
 }
 
 // Geometry pass
 
-#[derive(Vertex)]
+#[derive(VsBindings)]
 pub struct ModelVertex<D: VertexDomain = Sl> {
     pub color: D::Vec3<f32>,
     pub model_pos: D::Vec3<f32>,
     pub model_normal: D::Vec3<f32>,
 }
 
-#[derive(Fragment)]
+#[derive(FsBindings)]
 pub struct GeometryOutput<D: FragmentDomain = Sl> {
     pub color: D::Attachment2d,
     pub world_pos: D::Attachment2d,
@@ -64,7 +64,7 @@ fn geometry_fragment_shader(
 
 // Light pass
 
-#[derive(Uniform)]
+#[derive(UniformBindings)]
 pub struct LightParams<D: Domain = Sl> {
     world_pos: D::Vec3<f32>,
     color: D::Vec3<f32>,
@@ -77,7 +77,7 @@ pub struct LightResources<D: ResourceDomain = Sl> {
     color_tex: D::Sampler2d<f32>,
     world_pos_tex: D::Sampler2d<f32>,
     world_normal_tex: D::Sampler2d<f32>,
-    params: D::Uniform<LightParams<D>>,
+    params: D::UniformBindings<LightParams<D>>,
 }
 
 #[derive(Varying)]
@@ -124,8 +124,8 @@ fn light_fragment_shader(
 
 #[derive(Attributes)]
 struct InstancedVertex<D: AttributesDomain = Sl> {
-    model: D::Vertex<ModelVertex<D>>,
-    instance: D::Vertex<Instance<D>>,
+    model: D::VsBindings<ModelVertex<D>>,
+    instance: D::VsBindings<Instance<D>>,
 }
 
 // Usage

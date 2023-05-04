@@ -55,7 +55,7 @@ where
     pub fn as_binding(&self) -> VertexBufferBinding<B> {
         VertexBufferBinding {
             raw: self.raw.clone(),
-            input_rate: VertexInputRate::Vertex,
+            input_rate: VertexInputRate::VsBindings,
             _phantom: PhantomData,
         }
     }

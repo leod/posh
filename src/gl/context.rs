@@ -6,7 +6,7 @@ use crate::{
         transpile::{FromFragmentInput, FromVertexInput, IntoFragmentOutput, IntoFullVertexOutput},
         ColorSample, Const, Varying,
     },
-    Block, Fragment, Sl, Uniform, UniformUnion, Vertex,
+    Block, FsBindings, Sl, UniformBindings, UniformUnion, VsBindings,
 };
 
 use super::{
@@ -111,23 +111,23 @@ impl Context {
     ) -> Result<Program<U, V, F>, ProgramError>
     where
         U: UniformUnion<U1, U2>,
-        U1: Uniform<Sl>,
-        U2: Uniform<Sl>,
-        V: Vertex<Sl>,
-        F: Fragment<Sl>,
+        U1: UniformBindings<Sl>,
+        U2: UniformBindings<Sl>,
+        V: VsBindings<Sl>,
+        F: FsBindings<Sl>,
         W: Varying,
-        InV: FromVertexInput<Vertex = V>,
+        InV: FromVertexInput<VsBindings = V>,
         OutW: IntoFullVertexOutput<Varying = W>,
         InW: FromFragmentInput<Varying = W>,
-        OutF: IntoFragmentOutput<Fragment = F>,
+        OutF: IntoFragmentOutput<FsBindings = F>,
     {
         let program_def = transpile_to_program_def::<U, _, _, _, _, _, _, _, _, _>(
             vertex_shader,
             fragment_shader,
         );
 
-        log::info!("Vertex shader:\n{}", program_def.vertex_shader_source);
-        log::info!("Fragment shader:\n{}", program_def.fragment_shader_source);
+        log::info!("VsBindings shader:\n{}", program_def.vertex_shader_source);
+        log::info!("FsBindings shader:\n{}", program_def.fragment_shader_source);
 
         let raw = self.raw.create_program(program_def)?;
 
@@ -143,15 +143,15 @@ impl Context {
     where
         C: Const,
         U: UniformUnion<U1, U2>,
-        U1: Uniform<Sl>,
-        U2: Uniform<Sl>,
-        V: Vertex<Sl>,
-        F: Fragment<Sl>,
+        U1: UniformBindings<Sl>,
+        U2: UniformBindings<Sl>,
+        V: VsBindings<Sl>,
+        F: FsBindings<Sl>,
         W: Varying,
-        InV: FromVertexInput<Vertex = V>,
+        InV: FromVertexInput<VsBindings = V>,
         OutW: IntoFullVertexOutput<Varying = W>,
         InW: FromFragmentInput<Varying = W>,
-        OutF: IntoFragmentOutput<Fragment = F>,
+        OutF: IntoFragmentOutput<FsBindings = F>,
     {
         let program_def = transpile_to_program_def_with_consts::<_, U, _, _, _, _, _, _, _, _, _>(
             consts,
@@ -159,8 +159,8 @@ impl Context {
             fragment_shader,
         );
 
-        log::info!("Vertex shader:\n{}", program_def.vertex_shader_source);
-        log::info!("Fragment shader:\n{}", program_def.fragment_shader_source);
+        log::info!("VsBindings shader:\n{}", program_def.vertex_shader_source);
+        log::info!("FsBindings shader:\n{}", program_def.fragment_shader_source);
 
         let raw = self.raw.create_program(program_def)?;
 

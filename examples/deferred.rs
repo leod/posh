@@ -1,6 +1,8 @@
 use std::time::Instant;
 
-use posh::{gl, sl, Block, BlockDom, Fragment, FragmentDom, Gl, Sl, Uniform, UniformDom};
+use posh::{
+    gl, sl, Block, BlockDom, FsBindings, FsBindingsDom, Gl, Sl, UniformBindings, UniformBindingsDom,
+};
 
 const WIDTH: u32 = 1024;
 const HEIGHT: u32 = 768;
@@ -15,15 +17,15 @@ pub struct Globals<D: BlockDom> {
     time: D::F32,
 }
 
-#[derive(Clone, Copy, Uniform)]
-pub struct SceneSamplers<D: UniformDom> {
+#[derive(Clone, Copy, UniformBindings)]
+pub struct SceneSamplers<D: UniformBindingsDom> {
     albedo: D::ColorSampler2d<sl::Vec3>,
     world_normal: D::ColorSampler2d<sl::Vec3>,
     world_pos: D::ColorSampler2d<sl::Vec3>,
 }
 
-#[derive(Clone, Copy, Fragment)]
-pub struct SceneFragment<D: FragmentDom> {
+#[derive(Clone, Copy, FsBindings)]
+pub struct SceneFragment<D: FsBindingsDom> {
     albedo: D::Output<sl::Vec3>,
     world_normal: D::Output<sl::Vec3>,
     world_pos: D::Output<sl::Vec3>,

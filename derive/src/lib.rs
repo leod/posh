@@ -1,11 +1,11 @@
 mod block;
 mod r#const;
-mod fragment;
-mod uniform;
+mod fs_bindings;
+mod uniform_bindings;
 mod utils;
 mod value;
 mod varying;
-mod vertex;
+mod vs_bindings;
 
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput};
@@ -32,22 +32,23 @@ pub fn derive_consts(input: TokenStream) -> TokenStream {
     .into()
 }
 
-/// Derives `Fragment` for a struct that is generic in `FragmentDom`.
-#[proc_macro_derive(Fragment)]
-pub fn derive_fragment(input: TokenStream) -> TokenStream {
+/// Derives `FsBindings` for a struct that is generic in `FsBindingsDom`.
+#[proc_macro_derive(FsBindings)]
+pub fn derive_fs_bindings(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    match fragment::derive(input) {
+    match fs_bindings::derive(input) {
         Ok(ts) => ts,
         Err(e) => e.to_compile_error(),
     }
     .into()
 }
 
-/// Derives `Uniform` for a struct that is generic in `UniformDom`.
-#[proc_macro_derive(Uniform)]
+/// Derives `UniformBindings` for a struct that is generic in
+/// `UniformBindingsDom`.
+#[proc_macro_derive(UniformBindings)]
 pub fn derive_uniform_data(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    match uniform::derive(input) {
+    match uniform_bindings::derive(input) {
         Ok(ts) => ts,
         Err(e) => e.to_compile_error(),
     }
@@ -76,11 +77,11 @@ pub fn derive_varying(input: TokenStream) -> TokenStream {
     .into()
 }
 
-/// Derives `Vertex` for a struct that is generic in `VertexDom`.
-#[proc_macro_derive(Vertex, attributes(vertex))]
-pub fn derive_vertex_data(input: TokenStream) -> TokenStream {
+/// Derives `VsBindings` for a struct that is generic in `VsBindingsDom`.
+#[proc_macro_derive(VsBindings, attributes(vertex))]
+pub fn derive_vs_bindings(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    match vertex::derive(input) {
+    match vs_bindings::derive(input) {
         Ok(ts) => ts,
         Err(e) => e.to_compile_error(),
     }

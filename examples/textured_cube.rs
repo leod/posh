@@ -2,7 +2,7 @@ use std::time::Instant;
 
 use image::{io::Reader as ImageReader, EncodableLayout};
 
-use posh::{gl, sl, Block, BlockDom, Gl, Sl, UniformDom};
+use posh::{gl, sl, Block, BlockDom, Gl, Sl, UniformBindingsDom};
 
 const WIDTH: u32 = 1024;
 const HEIGHT: u32 = 768;
@@ -18,13 +18,13 @@ struct Camera<D: BlockDom = Sl> {
 
 #[derive(Clone, Copy, Block)]
 #[repr(C)]
-struct Vertex<D: BlockDom = Sl> {
+struct VsBindings<D: BlockDom = Sl> {
     pos: D::Vec3,
     tex_coords: D::Vec2,
 }
 
-#[derive(posh::Uniform)]
-struct Uniform<D: UniformDom = Sl> {
+#[derive(posh::UniformBindings)]
+struct UniformBindings<D: UniformBindingsDom = Sl> {
     camera: D::Block<Camera>,
     time: D::Block<sl::F32>,
 }
@@ -35,7 +35,7 @@ fn zxy(v: sl::Vec3) -> sl::Vec3 {
     sl::vec3(v.z, v.x, v.y)
 }
 
-fn vertex_shader(uniforms: Uniform, vertex: Vertex) -> sl::VertexOutput<sl::Vec2> {
+fn vertex_shader(uniforms: UniformBindings, vertex: VsBindings) -> sl::VertexOutput<sl::Vec2> {
     let camera = uniforms.camera;
 
     let vertex_pos = vertex
@@ -54,13 +54,13 @@ fn vertex_shader(uniforms: Uniform, vertex: Vertex) -> sl::VertexOutput<sl::Vec2
 // Host code
 
 struct Demo {
-    program: gl::Program<(Uniform, sl::ColorSampler2d), Vertex>,
+    program: gl::Program<(UniformBindings, sl::ColorSampler2d), VsBindings>,
 
     camera: gl::UniformBuffer<Camera>,
     time: gl::UniformBuffer<sl::F32>,
     texture: gl::ColorTexture2d<sl::Vec4>,
 
-    vertices: gl::VertexBuffer<Vertex>,
+    vertices: gl::VertexBuffer<VsBindings>,
     elements: gl::ElementBuffer,
 
     start_time: Instant,
@@ -98,7 +98,7 @@ impl Demo {
         self.program.draw(
             gl::Input {
                 uniform: &(
-                    Uniform {
+                    UniformBindings {
                         camera: self.camera.as_binding(),
                         time: self.time.as_binding(),
                     },
@@ -136,7 +136,7 @@ impl Default for Camera<Gl> {
     }
 }
 
-fn cube_vertices() -> Vec<Vertex<Gl>> {
+fn cube_vertices() -> Vec<VsBindings<Gl>> {
     [
         [0.5, -0.5, -0.5],
         [0.5, -0.5, 0.5],
@@ -165,7 +165,7 @@ fn cube_vertices() -> Vec<Vertex<Gl>> {
     ]
     .into_iter()
     .enumerate()
-    .map(|(i, pos)| Vertex {
+    .map(|(i, pos)| VsBindings {
         pos: pos.into(),
         tex_coords: [[0.0, 0.0], [0.0, 1.0], [1.0, 1.0], [1.0, 0.0]][i % 4].into(),
     })

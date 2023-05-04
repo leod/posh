@@ -3,7 +3,7 @@ use std::{
     io::{BufRead, BufReader},
 };
 
-use posh::{gl, sl, Block, BlockDom, Gl, Sl, VertexDom};
+use posh::{gl, sl, Block, BlockDom, Gl, Sl, VsBindingsDom};
 
 const WIDTH: u32 = 1024;
 const HEIGHT: u32 = 768;
@@ -31,15 +31,15 @@ struct Foo {
     y: f32,
 }
 
-#[derive(Copy, Clone, posh::Vertex)]
-struct Vertex<D: VertexDom = Sl> {
+#[derive(Copy, Clone, posh::VsBindings)]
+struct VsBindings<D: VsBindingsDom = Sl> {
     instance: D::Block<Instance>,
     model_pos: D::Block<sl::Vec3>,
 }
 
 // Shader code
 
-fn vertex_shader(camera: Camera, vertex: Vertex) -> sl::VertexOutput<sl::Vec3> {
+fn vertex_shader(camera: Camera, vertex: VsBindings) -> sl::VertexOutput<sl::Vec3> {
     sl::VertexOutput {
         position: camera.view_to_screen
             * camera.world_to_view
@@ -56,7 +56,7 @@ fn fragment_shader(_: (), color: sl::Vec3) -> sl::Vec4 {
 // Host code
 
 struct Demo {
-    program: gl::Program<Camera, Vertex>,
+    program: gl::Program<Camera, VsBindings>,
 
     camera: gl::UniformBuffer<Camera>,
 
@@ -80,7 +80,7 @@ impl Demo {
         self.program.draw(
             gl::Input {
                 uniform: &self.camera.as_binding(),
-                vertex: &gl::VertexSpec::new(gl::Mode::Triangles).with_vertex_data(Vertex {
+                vertex: &gl::VertexSpec::new(gl::Mode::Triangles).with_vertex_data(VsBindings {
                     instance: self.instances.as_binding().with_instancing(),
                     model_pos: self.teapot.as_binding(),
                 }),

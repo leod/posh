@@ -4,13 +4,13 @@ use crate::{
     gl::{vertex_buffer::vertex_size, VertexBufferBinding},
     interface::VertexVisitor,
     sl::program_def::{VertexBlockDef, VertexInputRate},
-    Block, Gl, Sl, Vertex,
+    Block, Gl, Sl, VsBindings,
 };
 
 use super::{raw, ElementBufferBinding, Mode};
 
 #[derive(Clone)]
-pub struct VertexSpec<V: Vertex<Sl>> {
+pub struct VertexSpec<V: VsBindings<Sl>> {
     mode: Mode,
     vertex_data: V::Gl,
     vertex_range: Option<Range<usize>>,
@@ -31,8 +31,8 @@ impl VertexSpec<()> {
 
     pub fn with_vertex_data<V>(self, vertices: V) -> VertexSpec<V::Sl>
     where
-        V: Vertex<Gl>,
-        V::Sl: Vertex<Sl, Gl = V>,
+        V: VsBindings<Gl>,
+        V::Sl: VsBindings<Sl, Gl = V>,
     {
         let Counts {
             num_vertices,
@@ -57,7 +57,7 @@ impl VertexSpec<()> {
     }
 }
 
-impl<V: Vertex<Sl>> VertexSpec<V> {
+impl<V: VsBindings<Sl>> VertexSpec<V> {
     pub fn with_vertex_range(mut self, vertex_range: Range<usize>) -> Self {
         // NOTE: The stored `vertex_range` is ignored if an element buffer is
         // passed as well.
@@ -92,7 +92,7 @@ impl<V: Vertex<Sl>> VertexSpec<V> {
     }
 }
 
-fn raw_vertices<V: Vertex<Gl>>(vertices: &V) -> Vec<raw::VertexBufferBinding> {
+fn raw_vertices<V: VsBindings<Gl>>(vertices: &V) -> Vec<raw::VertexBufferBinding> {
     // TODO: Reduce per-draw-call allocations.
     struct Visitor(Vec<raw::VertexBufferBinding>);
 
@@ -127,7 +127,7 @@ impl<'a> VertexVisitor<'a, Gl> for Counts {
         let len = binding.len();
 
         match binding.input_rate() {
-            VertexInputRate::Vertex => {
+            VertexInputRate::VsBindings => {
                 if let Some(num_vertices) = self.num_vertices {
                     assert!(num_vertices == len);
                 }
@@ -143,7 +143,7 @@ impl<'a> VertexVisitor<'a, Gl> for Counts {
     }
 }
 
-fn get_counts<V: Vertex<Gl>>(vertices: &V) -> Counts {
+fn get_counts<V: VsBindings<Gl>>(vertices: &V) -> Counts {
     // TODO: Remove hardcoded path names.
     let mut counts = Counts {
         num_vertices: None,
