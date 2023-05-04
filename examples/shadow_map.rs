@@ -48,8 +48,8 @@ mod flat_pass {
 
     use super::{Camera, SceneVertex};
 
-    pub fn vertex(camera: Camera, vertex: SceneVertex) -> sl::VertexOutput<sl::Vec3> {
-        sl::VertexOutput {
+    pub fn vertex(camera: Camera, vertex: SceneVertex) -> sl::VsOut<sl::Vec3> {
+        sl::VsOut {
             position: camera.world_to_clip(vertex.world_pos),
             varying: vertex.color,
         }
@@ -95,7 +95,7 @@ mod shaded_pass {
     pub fn vertex(
         UniformBindings { light, camera, .. }: UniformBindings,
         vertex: SceneVertex,
-    ) -> sl::VertexOutput<Varying> {
+    ) -> sl::VsOut<Varying> {
         const EXTRUDE: f32 = 0.1;
 
         let light_clip_pos = light
@@ -107,7 +107,7 @@ mod shaded_pass {
             light_clip_pos,
         };
 
-        sl::VertexOutput {
+        sl::VsOut {
             position: camera.world_to_clip(vertex.world_pos),
             varying: output,
         }
@@ -154,8 +154,8 @@ mod debug_pass {
         pub tex_coords: D::Vec2,
     }
 
-    pub fn vertex(_: (), vertex: VsBindings) -> sl::VertexOutput<sl::Vec2> {
-        sl::VertexOutput {
+    pub fn vertex(_: (), vertex: VsBindings) -> sl::VsOut<sl::Vec2> {
+        sl::VsOut {
             varying: vertex.tex_coords,
             position: vertex.pos.extend(0.0).extend(1.0),
         }

@@ -3,7 +3,7 @@ use std::rc::Rc;
 use crate::{
     sl::{
         transpile::{transpile_to_program_def, transpile_to_program_def_with_consts},
-        transpile::{FromFragmentInput, FromVertexInput, IntoFragmentOutput, IntoFullVertexOutput},
+        transpile::{FromFsIn, FromVsIn, IntoFsOut, IntoFullVsOut},
         ColorSample, Const, Varying,
     },
     Block, FsBindings, Sl, UniformBindings, UniformUnion, VsBindings,
@@ -116,10 +116,10 @@ impl Context {
         V: VsBindings<Sl>,
         F: FsBindings<Sl>,
         W: Varying,
-        InV: FromVertexInput<VsBindings = V>,
-        OutW: IntoFullVertexOutput<Varying = W>,
-        InW: FromFragmentInput<Varying = W>,
-        OutF: IntoFragmentOutput<FsBindings = F>,
+        InV: FromVsIn<VsBindings = V>,
+        OutW: IntoFullVsOut<Varying = W>,
+        InW: FromFsIn<Varying = W>,
+        OutF: IntoFsOut<FsBindings = F>,
     {
         let program_def = transpile_to_program_def::<U, _, _, _, _, _, _, _, _, _>(
             vertex_shader,
@@ -148,10 +148,10 @@ impl Context {
         V: VsBindings<Sl>,
         F: FsBindings<Sl>,
         W: Varying,
-        InV: FromVertexInput<VsBindings = V>,
-        OutW: IntoFullVertexOutput<Varying = W>,
-        InW: FromFragmentInput<Varying = W>,
-        OutF: IntoFragmentOutput<FsBindings = F>,
+        InV: FromVsIn<VsBindings = V>,
+        OutW: IntoFullVsOut<Varying = W>,
+        InW: FromFsIn<Varying = W>,
+        OutF: IntoFsOut<FsBindings = F>,
     {
         let program_def = transpile_to_program_def_with_consts::<_, U, _, _, _, _, _, _, _, _, _>(
             consts,

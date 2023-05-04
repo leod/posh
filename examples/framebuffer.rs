@@ -18,10 +18,10 @@ mod scene_pass {
 
     use super::State;
 
-    pub fn vertex(_: (), vertex: sl::Vec2) -> sl::VertexOutput<sl::Vec2> {
+    pub fn vertex(_: (), vertex: sl::Vec2) -> sl::VsOut<sl::Vec2> {
         let vertex = vertex - sl::vec2(0.5, 0.5);
 
-        sl::VertexOutput {
+        sl::VsOut {
             position: vertex.extend(0.0).extend(1.0),
             varying: vertex,
         }
@@ -52,8 +52,8 @@ mod present_pass {
         pub scene: D::ColorSampler2d<sl::Vec4>,
     }
 
-    pub fn vertex(_: (), vertex: VsBindings<Sl>) -> sl::VertexOutput<sl::Vec2> {
-        sl::VertexOutput {
+    pub fn vertex(_: (), vertex: VsBindings<Sl>) -> sl::VsOut<sl::Vec2> {
+        sl::VsOut {
             position: vertex.pos.extend(0.0).extend(1.0),
             varying: vertex.tex_coords,
         }
