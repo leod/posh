@@ -5,13 +5,13 @@ use posh::{
 
 #[derive(Clone, Copy, Block)]
 #[repr(C)]
-struct Foo<D: BlockDom = Sl> {
+struct Foo<D: BlockDom> {
     bar: D::I32,
 }
 
 #[derive(Clone, Copy, Block)]
 #[repr(C)]
-struct Globals<D: BlockDom = Sl> {
+struct Globals<D: BlockDom> {
     time: D::F32,
     offset: D::Vec2,
     invert: D::I32,
@@ -22,13 +22,13 @@ struct Globals<D: BlockDom = Sl> {
 
 #[derive(Clone, Copy, Block)]
 #[repr(C)]
-struct ColorVertex<D: BlockDom = Sl> {
+struct ColorVertex<D: BlockDom> {
     position: D::Vec2,
     color: D::Vec2,
     flag: D::I32,
 }
 
-fn vertex_stage(globals: Globals, vertex: ColorVertex) -> VsOut<sl::Vec4> {
+fn vertex_stage(globals: Globals<Sl>, vertex: ColorVertex<Sl>) -> VsOut<sl::Vec4> {
     let shift = globals.offset * globals.time;
     let shift = sl::branch(
         globals.invert.eq(2),
@@ -68,7 +68,7 @@ fn fragment_stage(_: (), varying: sl::Vec4) -> sl::Vec4 {
 
 fn main() {
     let program_def =
-        posh::sl::transpile::transpile_to_program_def::<Globals, _, _, _, _, _, _, _, _, _>(
+        posh::sl::transpile::transpile_to_program_def::<Globals<Sl>, _, _, _, _, _, _, _, _, _>(
             vertex_stage,
             fragment_stage,
         );

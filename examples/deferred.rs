@@ -184,7 +184,7 @@ struct Demo {
     scene_program: gl::Program<Globals<Sl>, (), SceneAttachments<Sl>>,
     present_program: gl::Program<SceneSamplers<Sl>, ()>,
 
-    globals: gl::UniformBuffer<Globals<Sl>>,
+    globals: gl::UniformBuffer<Globals<Gl>>,
     scene_attachments: SceneAttachments<Gl>,
     depth_texture: gl::DepthTexture2d,
 

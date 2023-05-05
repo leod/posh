@@ -6,7 +6,7 @@ use crate::{
         transpile::{FromFsIn, FromVsIn, IntoFsOut, IntoFullVsOut},
         ColorSample, Const, Varying,
     },
-    Block, FsInterface, Sl, UniformInterface, UniformUnion, VsInterface,
+    Block, FsInterface, Gl, Sl, UniformInterface, UniformUnion, VsInterface,
 };
 
 use super::{
@@ -34,11 +34,11 @@ impl Context {
 
     pub fn create_vertex_buffer<B>(
         &self,
-        data: &[B::Gl],
+        data: &[B],
         usage: BufferUsage,
     ) -> Result<VertexBuffer<B>, BufferError>
     where
-        B: Block<Sl, Sl = B>,
+        B: Block<Gl> + bytemuck::Pod,
     {
         let raw = self
             .raw
@@ -70,7 +70,7 @@ impl Context {
         usage: BufferUsage,
     ) -> Result<UniformBuffer<B>, BufferError>
     where
-        B: Block<Sl>,
+        B: Block<Gl>,
     {
         UniformBuffer::new(&self.raw, &data, usage)
     }

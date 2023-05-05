@@ -55,8 +55,7 @@ impl UniformInterfaceDom for Sl {
 /// same uniform data in their signature. See
 /// [`create_program`](crate::gl::Context::create_program) for details.
 ///
-/// By convention, the generic view parameter is named `D`, with [`Sl`] as the
-/// default view.
+/// By convention, the generic view parameter is named `D`.
 ///
 /// User-defined types should implement this trait with a [derive
 /// macro](`posh_derive::UniformInterface`).
