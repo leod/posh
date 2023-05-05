@@ -1,7 +1,7 @@
-use std::ops::Range;
+use std::{mem::size_of, ops::Range};
 
 use crate::{
-    gl::{vertex_buffer::vertex_size, VertexBufferBinding},
+    gl::VertexBufferBinding,
     interface::VertexVisitor,
     sl::program_def::{VertexBlockDef, VertexInputRate},
     Block, Gl, Sl, VsInterface,
@@ -29,19 +29,18 @@ impl VertexSpec<()> {
         }
     }
 
-    pub fn with_vertex_data<V>(self, vertices: V) -> VertexSpec<V::Sl>
+    pub fn with_vertex_data<V>(self, vertex_data: V::Gl) -> VertexSpec<V>
     where
-        V: VsInterface<Gl>,
-        V::Sl: VsInterface<Sl, Gl = V>,
+        V: VsInterface<Sl>,
     {
         let Counts {
             num_vertices,
             num_instances,
-        } = get_counts(&vertices);
+        } = get_counts(&vertex_data);
 
         VertexSpec {
             mode: self.mode,
-            vertex_data: vertices,
+            vertex_data,
             vertex_range: if self.vertex_range.is_some() {
                 self.vertex_range
             } else {
@@ -104,7 +103,7 @@ fn raw_vertices<V: VsInterface<Gl>>(vertices: &V) -> Vec<raw::VertexBufferBindin
                     attributes: B::vertex_attribute_defs(path),
                 },
                 input_rate: binding.input_rate(),
-                stride: vertex_size::<B>(),
+                stride: size_of::<B>(),
             });
         }
     }

@@ -27,28 +27,27 @@ impl VsInterfaceDom for Sl {
 ///
 /// Defines vertex data that can be passed to vertex shaders in draw calls.
 ///
-/// `VsInterface` declarations are generic in [`VsInterfaceDom`] and can be instantiated
-/// as their [`Sl`] view or their [`Gl`] view. The views have the following
-/// purpose respectively:
+/// `VsInterface` declarations are generic in [`VsInterfaceDom`] and can be
+/// instantiated as their [`Sl`] view or their [`Gl`] view. The views have the
+/// following purpose respectively:
 ///
-/// 1. `VsInterface<Sl>` is a view of vertex data as seen in shader definitions. Each
-///    field corresponds to a part of the current vertex value.
+/// 1. `VsInterface<Sl>` is a view of vertex data as seen in shader definitions.
+///    Each field corresponds to a part of the current vertex value.
 ///
-/// 2. `VsInterface<Gl>` is a view of vertex data in the graphics library. Each field
-///    is a vertex buffer binding.
+/// 2. `VsInterface<Gl>` is a view of vertex data in the graphics library. Each
+///    field is a vertex buffer binding.
 ///
-/// By convention, the generic view parameter is named `D`, with [`Sl`] as the
-/// default view.
+/// By convention, the generic view parameter is named `D`.
 ///
 /// User-defined types should implement this trait with a [derive
 /// macro](`posh_derive::VsInterface`). Types that implement `Block<Sl>`
-/// automatically implement `VsInterface<Sl>` as well, so block data can be passed to
-/// shaders without having to declare a custom [`VsInterface`] type.
+/// automatically implement `VsInterface<Sl>` as well, so block data can be
+/// passed to shaders without having to declare a custom [`VsInterface`] type.
 ///
 /// # Example
 ///
-/// This example declares a custom [`VsInterface`] type that provides `position` in
-/// one vertex buffer, while `normal` and `color` are specified in a second
+/// This example declares a custom [`VsInterface`] type that provides `position`
+/// in one vertex buffer, while `normal` and `color` are specified in a second
 /// vertex buffer.
 ///
 /// ```
@@ -56,21 +55,21 @@ impl VsInterfaceDom for Sl {
 ///
 /// #[derive(Clone, Copy, Block)]
 /// #[repr(C)]
-/// struct Material<D: BlockDom = Sl> {
+/// struct Material<D: BlockDom> {
 ///     normal: D::Vec3,
 ///     color: D::Vec4,
 /// }
 ///
 /// #[derive(Clone, Copy, VsInterface)]
-/// struct MyVertex<D: VsInterfaceDom = Sl> {
+/// struct MyVertex<D: VsInterfaceDom> {
 ///     position: D::Block<sl::Vec3>,
-///     material: D::Block<Material>,
+///     material: D::Block<Material<Sl>>,
 /// }
 ///
 /// // A vertex stage that receives `MyVertex` as vertex input.
 /// fn my_vertex_stage(
 ///     uniforms: (),
-///     vertex: MyVertex,
+///     vertex: MyVertex<Sl>,
 /// ) -> sl::VsOut<sl::Vec4> {
 ///     sl::VsOut {
 ///         position: (vertex.position + vertex.material.normal * 1.3).extend(1.0),

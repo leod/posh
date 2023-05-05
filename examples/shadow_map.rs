@@ -13,7 +13,7 @@ const NUM_CUBES: u32 = 30;
 
 #[derive(Clone, Copy, Block)]
 #[repr(C)]
-pub struct Camera<D: BlockDom = Sl> {
+pub struct Camera<D: BlockDom> {
     pub world_to_eye: D::Mat4,
     pub eye_to_clip: D::Mat4,
 }
@@ -26,7 +26,7 @@ impl Camera<Sl> {
 
 #[derive(Clone, Copy, Block)]
 #[repr(C)]
-pub struct Light<D: BlockDom = Sl> {
+pub struct Light<D: BlockDom> {
     pub camera: Camera<D>,
     pub world_pos: D::Vec3,
     pub color: D::Vec3,
@@ -35,22 +35,22 @@ pub struct Light<D: BlockDom = Sl> {
 
 #[derive(Clone, Copy, Block)]
 #[repr(C)]
-pub struct SceneVertex<D: BlockDom = Sl> {
+pub struct SceneVertex<D: BlockDom> {
     pub world_pos: D::Vec3,
     pub world_normal: D::Vec3,
     pub color: D::Vec3,
 }
 
 #[derive(Clone, UniformInterface)]
-pub struct SceneUniforms<D: UniformInterfaceDom = Sl> {
-    pub camera: D::Block<Camera>,
-    pub light: D::Block<Light>,
+pub struct SceneUniforms<D: UniformInterfaceDom> {
+    pub camera: D::Block<Camera<Sl>>,
+    pub light: D::Block<Light<Sl>>,
     pub light_depth_map: D::ComparisonSampler2d,
 }
 
 #[derive(Clone, Copy, Block)]
 #[repr(C)]
-pub struct ScreenVertex<D: BlockDom = Sl> {
+pub struct ScreenVertex<D: BlockDom> {
     pub pos: D::Vec2,
     pub tex_coords: D::Vec2,
 }
@@ -58,11 +58,11 @@ pub struct ScreenVertex<D: BlockDom = Sl> {
 // Shaders
 
 mod flat_pass {
-    use posh::sl;
+    use posh::{sl, Sl};
 
     use super::{Camera, SceneVertex};
 
-    pub fn vertex_stage(camera: Camera, vertex: SceneVertex) -> sl::VsOut<sl::Vec3> {
+    pub fn vertex_stage(camera: Camera<Sl>, vertex: SceneVertex<Sl>) -> sl::VsOut<sl::Vec3> {
         sl::VsOut {
             position: camera.world_to_clip(vertex.world_pos),
             varying: vertex.color,
@@ -75,11 +75,11 @@ mod flat_pass {
 }
 
 mod depth_pass {
-    use posh::sl;
+    use posh::{sl, Sl};
 
     use super::{Light, SceneVertex};
 
-    pub fn vertex_stage(light: Light, vertex: SceneVertex) -> sl::Vec4 {
+    pub fn vertex_stage(light: Light<Sl>, vertex: SceneVertex<Sl>) -> sl::Vec4 {
         light.camera.world_to_clip(vertex.world_pos)
     }
 
@@ -89,19 +89,19 @@ mod depth_pass {
 }
 
 mod scene_pass {
-    use posh::sl;
+    use posh::{sl, Sl};
 
     use super::{SceneUniforms, SceneVertex};
 
     #[derive(Clone, Copy, sl::Value, sl::Varying)]
     pub struct Varying {
-        vertex: SceneVertex,
+        vertex: SceneVertex<Sl>,
         light_clip_pos: sl::Vec4,
     }
 
     pub fn vertex_stage(
-        SceneUniforms { light, camera, .. }: SceneUniforms,
-        vertex: SceneVertex,
+        SceneUniforms { light, camera, .. }: SceneUniforms<Sl>,
+        vertex: SceneVertex<Sl>,
     ) -> sl::VsOut<Varying> {
         const EXTRUDE: f32 = 0.1;
 
@@ -141,7 +141,7 @@ mod scene_pass {
             light,
             light_depth_map,
             ..
-        }: SceneUniforms,
+        }: SceneUniforms<Sl>,
         varying: Varying,
     ) -> sl::Vec4 {
         let light_dir = (light.world_pos - varying.vertex.world_pos).normalize();
@@ -156,11 +156,11 @@ mod scene_pass {
 }
 
 mod debug_pass {
-    use posh::sl;
+    use posh::{sl, Sl};
 
     use crate::ScreenVertex;
 
-    pub fn vertex_stage(_: (), vertex: ScreenVertex) -> sl::VsOut<sl::Vec2> {
+    pub fn vertex_stage(_: (), vertex: ScreenVertex<Sl>) -> sl::VsOut<sl::Vec2> {
         sl::VsOut {
             varying: vertex.tex_coords,
             position: vertex.pos.extend(0.0).extend(1.0),
@@ -177,22 +177,22 @@ mod debug_pass {
 // Host code
 
 struct Demo {
-    flat_program: gl::Program<Camera, SceneVertex>,
-    depth_program: gl::Program<Light, SceneVertex, ()>,
-    scene_program: gl::Program<SceneUniforms, SceneVertex>,
-    debug_program: gl::Program<sl::ColorSampler2d<sl::F32>, ScreenVertex>,
+    flat_program: gl::Program<Camera<Sl>, SceneVertex<Sl>>,
+    depth_program: gl::Program<Light<Sl>, SceneVertex<Sl>, ()>,
+    scene_program: gl::Program<SceneUniforms<Sl>, SceneVertex<Sl>>,
+    debug_program: gl::Program<sl::ColorSampler2d<sl::F32>, ScreenVertex<Sl>>,
 
-    camera_buffer: gl::UniformBuffer<Camera>,
-    light_buffer: gl::UniformBuffer<Light>,
+    camera_buffer: gl::UniformBuffer<Camera<Gl>>,
+    light_buffer: gl::UniformBuffer<Light<Gl>>,
     light_depth_map: gl::DepthTexture2d,
 
-    scene_vertices: gl::VertexBuffer<SceneVertex>,
+    scene_vertices: gl::VertexBuffer<SceneVertex<Gl>>,
     scene_elements: gl::ElementBuffer,
 
-    light_vertices: gl::VertexBuffer<SceneVertex>,
+    light_vertices: gl::VertexBuffer<SceneVertex<Gl>>,
     light_elements: gl::ElementBuffer,
 
-    debug_vertices: gl::VertexBuffer<ScreenVertex>,
+    debug_vertices: gl::VertexBuffer<ScreenVertex<Gl>>,
     debug_elements: gl::ElementBuffer,
 
     start_time: Instant,

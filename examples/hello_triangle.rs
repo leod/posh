@@ -1,12 +1,12 @@
 use std::time::Instant;
 
-use posh::{gl, sl, Block, BlockDom, Sl};
+use posh::{gl, sl, Block, BlockDom, Gl, Sl};
 
 // Shader interface
 
 #[derive(Clone, Copy, Block)]
 #[repr(C)]
-struct Globals<D: BlockDom = Sl> {
+struct Globals<D: BlockDom> {
     time: D::F32,
 }
 
@@ -21,7 +21,7 @@ fn vertex_stage(_: (), vertex: sl::Vec2) -> sl::VsOut<sl::Vec2> {
     }
 }
 
-fn fragment_stage(globals: Globals, varying: sl::Vec2) -> sl::Vec4 {
+fn fragment_stage(globals: Globals<Sl>, varying: sl::Vec2) -> sl::Vec4 {
     let rg = (varying + globals.time).cos().powf(2.0);
 
     sl::vec4(rg.x, rg.y, 0.5, 1.0)
@@ -30,10 +30,10 @@ fn fragment_stage(globals: Globals, varying: sl::Vec2) -> sl::Vec4 {
 // Host code
 
 struct Demo {
-    program: gl::Program<Globals, sl::Vec2>,
+    program: gl::Program<Globals<Sl>, sl::Vec2>,
 
-    globals: gl::UniformBuffer<Globals>,
-    vertices: gl::VertexBuffer<sl::Vec2>,
+    globals: gl::UniformBuffer<Globals<Gl>>,
+    vertices: gl::VertexBuffer<gl::Vec2>,
 
     start_time: Instant,
 }

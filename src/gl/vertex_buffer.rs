@@ -1,6 +1,6 @@
-use std::{marker::PhantomData, rc::Rc};
+use std::{marker::PhantomData, mem::size_of, rc::Rc};
 
-use crate::{sl::program_def::VertexInputRate, Block, Sl};
+use crate::{sl::program_def::VertexInputRate, Block, Gl, Sl};
 
 use super::{raw, BufferUsage, PrimitiveMode, VertexSpec};
 
@@ -22,11 +22,11 @@ pub struct VertexBufferBinding<B> {
 
 impl<B> VertexBuffer<B>
 where
-    B: Block<Sl, Sl = B>,
+    B: Block<Gl> + bytemuck::Pod,
 {
     pub(super) fn from_raw(raw: raw::Buffer) -> Self {
-        assert!(vertex_size::<B>() > 0);
-        assert_eq!(raw.len() % vertex_size::<B>(), 0);
+        assert!(size_of::<B>() > 0);
+        assert_eq!(raw.len() % size_of::<B>(), 0);
 
         Self {
             raw: Rc::new(raw),
@@ -39,20 +39,20 @@ where
     }
 
     pub fn len(&self) -> usize {
-        assert_eq!(self.raw.len() % vertex_size::<B>(), 0);
+        assert_eq!(self.raw.len() % size_of::<B>(), 0);
 
-        self.raw.len() / vertex_size::<B>()
+        self.raw.len() / size_of::<B>()
     }
 
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
-    pub fn set(&self, data: &[B::Gl]) {
+    pub fn set(&self, data: &[B]) {
         self.raw.set(bytemuck::cast_slice(data));
     }
 
-    pub fn as_binding(&self) -> VertexBufferBinding<B> {
+    pub fn as_binding(&self) -> VertexBufferBinding<B::Sl> {
         VertexBufferBinding {
             raw: self.raw.clone(),
             input_rate: VertexInputRate::Vertex,
@@ -60,7 +60,7 @@ where
         }
     }
 
-    pub fn as_vertex_spec(&self, mode: PrimitiveMode) -> VertexSpec<B> {
+    pub fn as_vertex_spec(&self, mode: PrimitiveMode) -> VertexSpec<B::Sl> {
         VertexSpec::new(mode).with_vertex_data(self.as_binding())
     }
 }
@@ -71,9 +71,9 @@ impl<B: Block<Sl>> VertexBufferBinding<B> {
     }
 
     pub fn len(&self) -> usize {
-        assert_eq!(self.raw.len() % vertex_size::<B>(), 0);
+        assert_eq!(self.raw.len() % size_of::<B>(), 0);
 
-        self.raw.len() / vertex_size::<B>()
+        self.raw.len() / size_of::<B>()
     }
 
     pub fn is_empty(&self) -> bool {
@@ -88,8 +88,4 @@ impl<B: Block<Sl>> VertexBufferBinding<B> {
     pub(crate) fn input_rate(&self) -> VertexInputRate {
         self.input_rate
     }
-}
-
-pub(super) fn vertex_size<V: Block<Sl>>() -> usize {
-    std::mem::size_of::<V::Gl>()
 }
