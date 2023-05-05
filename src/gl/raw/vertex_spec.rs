@@ -39,7 +39,7 @@ impl ElementType {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum Mode {
+pub enum PrimitiveMode {
     Points,
     Lines,
     LineStrip,
@@ -49,9 +49,9 @@ pub enum Mode {
     TriangleFan,
 }
 
-impl Mode {
+impl PrimitiveMode {
     pub const fn to_gl(self) -> u32 {
-        use Mode::*;
+        use PrimitiveMode::*;
 
         match self {
             Points => glow::POINTS,
@@ -80,7 +80,7 @@ pub struct VertexBufferBinding {
 pub struct VertexSpec {
     pub vertex_data: Vec<VertexBufferBinding>,
     pub element_data: Option<(Rc<Buffer>, ElementType)>,
-    pub mode: Mode,
+    pub mode: PrimitiveMode,
     pub index_range: Range<usize>,
     pub num_instances: usize,
 }

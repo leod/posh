@@ -305,7 +305,7 @@ impl StencilOps {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Settings {
+pub struct DrawSettings {
     pub clear_stencil: Option<u8>,
     pub clear_depth: Option<f32>,
     pub clear_color: Option<[f32; 4]>,
@@ -324,7 +324,7 @@ pub struct Settings {
     pub color_mask: [bool; 4],
 }
 
-impl Default for Settings {
+impl Default for DrawSettings {
     fn default() -> Self {
         Self {
             clear_stencil: None,
@@ -347,11 +347,11 @@ impl Default for Settings {
     }
 }
 
-impl Settings {
+impl DrawSettings {
     pub(super) fn set_delta(
         &self,
         gl: &glow::Context,
-        current: &Settings,
+        current: &DrawSettings,
         framebuffer_size: [u32; 2],
     ) {
         if self.scissor != current.scissor {

@@ -20,7 +20,7 @@ unsafe impl<T: Const, const N: usize> Const for [T; N] {}
 
 /// Per-vertex input given to a vertex shader.
 #[derive(Debug, Clone)]
-pub struct VertexInput<V> {
+pub struct VsIn<V> {
     pub vertex: V,
     pub vertex_id: U32,
     pub instance_id: U32,
@@ -29,7 +29,7 @@ pub struct VertexInput<V> {
 
 /// Per-vertex output computed by a vertex shader.
 #[derive(Debug, Clone)]
-pub struct FullVertexOutput<W> {
+pub struct FullVsOut<W> {
     pub position: Vec4,
     pub varying: W,
     pub point_size: Option<F32>,
@@ -37,14 +37,14 @@ pub struct FullVertexOutput<W> {
 
 /// Per-vertex position and varying output computed by a vertex shader.
 #[derive(Debug, Clone)]
-pub struct VertexOutput<W> {
+pub struct VsOut<W> {
     pub position: Vec4,
     pub varying: W,
 }
 
 /// Per-fragment input given to a fragment shader.
 #[derive(Debug, Clone)]
-pub struct FragmentInput<W> {
+pub struct FsIn<W> {
     pub varying: W,
     pub fragment_coord: Vec4,
     pub front_facing: Bool,
@@ -54,7 +54,7 @@ pub struct FragmentInput<W> {
 
 /// Per-fragment output computed by a fragment shader.
 #[derive(Debug, Clone)]
-pub struct FragmentOutput<F> {
+pub struct FsOut<F> {
     pub fragment: F,
     pub fragment_depth: Option<F32>,
     pub discard: Option<Bool>,

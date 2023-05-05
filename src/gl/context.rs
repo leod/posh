@@ -3,10 +3,10 @@ use std::rc::Rc;
 use crate::{
     sl::{
         transpile::{transpile_to_program_def, transpile_to_program_def_with_consts},
-        transpile::{FromFragmentInput, FromVertexInput, IntoFragmentOutput, IntoFullVertexOutput},
+        transpile::{FromFsIn, FromVsIn, IntoFsOut, IntoFullVsOut},
         ColorSample, Const, Varying,
     },
-    Block, Fragment, Sl, Uniform, UniformUnion, Vertex,
+    Block, FsInterface, Sl, UniformInterface, UniformUnion, VsInterface,
 };
 
 use super::{
@@ -111,23 +111,26 @@ impl Context {
     ) -> Result<Program<U, V, F>, ProgramError>
     where
         U: UniformUnion<U1, U2>,
-        U1: Uniform<Sl>,
-        U2: Uniform<Sl>,
-        V: Vertex<Sl>,
-        F: Fragment<Sl>,
+        U1: UniformInterface<Sl>,
+        U2: UniformInterface<Sl>,
+        V: VsInterface<Sl>,
+        F: FsInterface<Sl>,
         W: Varying,
-        InV: FromVertexInput<Vertex = V>,
-        OutW: IntoFullVertexOutput<Varying = W>,
-        InW: FromFragmentInput<Varying = W>,
-        OutF: IntoFragmentOutput<Fragment = F>,
+        InV: FromVsIn<VsInterface = V>,
+        OutW: IntoFullVsOut<Varying = W>,
+        InW: FromFsIn<Varying = W>,
+        OutF: IntoFsOut<FsInterface = F>,
     {
         let program_def = transpile_to_program_def::<U, _, _, _, _, _, _, _, _, _>(
             vertex_shader,
             fragment_shader,
         );
 
-        log::info!("Vertex shader:\n{}", program_def.vertex_shader_source);
-        log::info!("Fragment shader:\n{}", program_def.fragment_shader_source);
+        log::info!("VsInterface shader:\n{}", program_def.vertex_shader_source);
+        log::info!(
+            "FsInterface shader:\n{}",
+            program_def.fragment_shader_source
+        );
 
         let raw = self.raw.create_program(program_def)?;
 
@@ -143,15 +146,15 @@ impl Context {
     where
         C: Const,
         U: UniformUnion<U1, U2>,
-        U1: Uniform<Sl>,
-        U2: Uniform<Sl>,
-        V: Vertex<Sl>,
-        F: Fragment<Sl>,
+        U1: UniformInterface<Sl>,
+        U2: UniformInterface<Sl>,
+        V: VsInterface<Sl>,
+        F: FsInterface<Sl>,
         W: Varying,
-        InV: FromVertexInput<Vertex = V>,
-        OutW: IntoFullVertexOutput<Varying = W>,
-        InW: FromFragmentInput<Varying = W>,
-        OutF: IntoFragmentOutput<Fragment = F>,
+        InV: FromVsIn<VsInterface = V>,
+        OutW: IntoFullVsOut<Varying = W>,
+        InW: FromFsIn<Varying = W>,
+        OutF: IntoFsOut<FsInterface = F>,
     {
         let program_def = transpile_to_program_def_with_consts::<_, U, _, _, _, _, _, _, _, _, _>(
             consts,
@@ -159,8 +162,11 @@ impl Context {
             fragment_shader,
         );
 
-        log::info!("Vertex shader:\n{}", program_def.vertex_shader_source);
-        log::info!("Fragment shader:\n{}", program_def.fragment_shader_source);
+        log::info!("VsInterface shader:\n{}", program_def.vertex_shader_source);
+        log::info!(
+            "FsInterface shader:\n{}",
+            program_def.fragment_shader_source
+        );
 
         let raw = self.raw.create_program(program_def)?;
 

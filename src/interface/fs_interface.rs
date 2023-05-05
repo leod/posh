@@ -4,54 +4,54 @@ use crate::{gl, sl, Gl, Sl};
 
 /// A view of fragment data attributes.
 ///
-/// See [`Fragment`] for more details.
+/// See [`FsInterface`] for more details.
 #[sealed]
-pub trait FragmentDom: Copy {
-    type Output<S: sl::ColorSample>: Fragment<Self>;
+pub trait FsInterfaceDom: Copy {
+    type ColorAttachment<S: sl::ColorSample>: FsInterface<Self>;
 }
 
 #[sealed]
-impl FragmentDom for Gl {
-    type Output<S: sl::ColorSample> = gl::ColorAttachment<S>;
+impl FsInterfaceDom for Gl {
+    type ColorAttachment<S: sl::ColorSample> = gl::ColorAttachment<S>;
 }
 
 #[sealed]
-impl FragmentDom for Sl {
-    type Output<S: sl::ColorSample> = S;
+impl FsInterfaceDom for Sl {
+    type ColorAttachment<S: sl::ColorSample> = S;
 }
 
-/// Fragment shader output data.
+/// FsInterface shader output data.
 ///
 /// User-defined types should implement this trait with a [derive
-/// macro](`posh_derive::Fragment`).
+/// macro](`posh_derive::FsInterface`).
 ///
 /// # Safety
 ///
 /// TODO
-pub unsafe trait Fragment<D: FragmentDom>: Clone {
+pub unsafe trait FsInterface<D: FsInterfaceDom>: Clone {
     /// The physical view of `Self`.
     ///
     /// This is the type through which framebuffer attachments are provided on
     /// the host.
-    type Gl: Fragment<Gl>;
+    type Gl: FsInterface<Gl>;
 
     /// The logical view of `Self`.
     ///
     /// This is the type through which fragment shaders output fragment data.
-    type Sl: Fragment<Sl> + sl::Value + sl::Varying + sl::ToSl<Output = Self::Sl>;
+    type Sl: FsInterface<Sl> + sl::Value + sl::Varying + sl::ToSl<Output = Self::Sl>;
 
     #[doc(hidden)]
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl FragmentVisitor<'a, D>);
 }
 
-unsafe impl<D: FragmentDom> Fragment<D> for () {
+unsafe impl<D: FsInterfaceDom> FsInterface<D> for () {
     type Sl = ();
     type Gl = ();
 
     fn visit<'a>(&'a self, _: &str, _: &mut impl FragmentVisitor<'a, D>) {}
 }
 
-unsafe impl<S: sl::ColorSample> Fragment<Gl> for gl::ColorAttachment<S> {
+unsafe impl<S: sl::ColorSample> FsInterface<Gl> for gl::ColorAttachment<S> {
     type Gl = gl::ColorAttachment<S>;
     type Sl = S;
 
@@ -60,7 +60,7 @@ unsafe impl<S: sl::ColorSample> Fragment<Gl> for gl::ColorAttachment<S> {
     }
 }
 
-unsafe impl<S: sl::ColorSample> Fragment<Sl> for S {
+unsafe impl<S: sl::ColorSample> FsInterface<Sl> for S {
     type Gl = gl::ColorAttachment<S>;
     type Sl = S;
 
@@ -70,6 +70,6 @@ unsafe impl<S: sl::ColorSample> Fragment<Sl> for S {
 }
 
 #[doc(hidden)]
-pub trait FragmentVisitor<'a, D: FragmentDom> {
-    fn accept<S: sl::ColorSample>(&mut self, path: &str, attachment: &'a D::Output<S>);
+pub trait FragmentVisitor<'a, D: FsInterfaceDom> {
+    fn accept<S: sl::ColorSample>(&mut self, path: &str, attachment: &'a D::ColorAttachment<S>);
 }

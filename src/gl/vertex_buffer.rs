@@ -2,7 +2,7 @@ use std::{marker::PhantomData, rc::Rc};
 
 use crate::{sl::program_def::VertexInputRate, Block, Sl};
 
-use super::{raw, BufferUsage, Mode, VertexSpec};
+use super::{raw, BufferUsage, PrimitiveMode, VertexSpec};
 
 /// Stores vertex blocks in a buffer on the GPU.
 ///
@@ -60,7 +60,7 @@ where
         }
     }
 
-    pub fn as_vertex_spec(&self, mode: Mode) -> VertexSpec<B> {
+    pub fn as_vertex_spec(&self, mode: PrimitiveMode) -> VertexSpec<B> {
         VertexSpec::new(mode).with_vertex_data(self.as_binding())
     }
 }

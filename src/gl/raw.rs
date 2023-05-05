@@ -23,8 +23,8 @@ pub use framebuffer::{Attachment, Framebuffer};
 pub use program::Program;
 pub use sampler_settings::{Sampler2dSettings, SamplerMagFilter, SamplerMinFilter, SamplerWrap};
 pub use settings::{
-    BlendEquation, BlendFunc, Blending, Comparison, CullFace, Rect, Settings, StencilOp,
+    BlendEquation, BlendFunc, Blending, Comparison, CullFace, DrawSettings, Rect, StencilOp,
     StencilOps, StencilTest,
 };
 pub use texture::{Sampler, Sampler2d, Texture2d};
-pub use vertex_spec::{ElementType, Mode, VertexBufferBinding, VertexSpec};
+pub use vertex_spec::{ElementType, PrimitiveMode, VertexBufferBinding, VertexSpec};

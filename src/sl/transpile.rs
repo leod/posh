@@ -7,7 +7,7 @@ use std::{iter::once, rc::Rc};
 
 use crate::{
     interface::{FragmentVisitor, UniformUnion, UniformVisitor, VertexVisitor},
-    Block, Fragment, Sl, Uniform, Vertex,
+    Block, FsInterface, Sl, UniformInterface, VsInterface,
 };
 
 use super::{
@@ -15,41 +15,41 @@ use super::{
     dag::{Expr, SamplerType, Type},
     primitives::value_arg,
     program_def::{ProgramDef, UniformBlockDef, UniformSamplerDef, VertexBlockDef},
-    ColorSample, ColorSampler2d, ComparisonSampler2d, Const, FragmentInput, FragmentOutput,
-    FullVertexOutput, Object, Varying, Vec4, VertexInput, VertexOutput, I32,
+    ColorSample, ColorSampler2d, ComparisonSampler2d, Const, FsIn, FsOut, FullVsOut, Object,
+    Varying, Vec4, VsIn, VsOut, I32,
 };
 
 /// Types that can be used as vertex input for a vertex shader.
-pub trait FromVertexInput {
-    type Vertex: Vertex<Sl>;
+pub trait FromVsIn {
+    type VsInterface: VsInterface<Sl>;
 
-    fn from(input: VertexInput<Self::Vertex>) -> Self;
+    fn from(input: VsIn<Self::VsInterface>) -> Self;
 }
 
-impl<V: Vertex<Sl>> FromVertexInput for VertexInput<V> {
-    type Vertex = V;
+impl<V: VsInterface<Sl>> FromVsIn for VsIn<V> {
+    type VsInterface = V;
 
     fn from(input: Self) -> Self {
         input
     }
 }
 
-impl<V: Vertex<Sl>> FromVertexInput for V {
-    type Vertex = Self;
+impl<V: VsInterface<Sl>> FromVsIn for V {
+    type VsInterface = Self;
 
-    fn from(input: VertexInput<Self>) -> Self {
+    fn from(input: VsIn<Self>) -> Self {
         input.vertex
     }
 }
 
 /// Types that can be used as vertex output for a vertex shader.
-pub trait IntoFullVertexOutput {
+pub trait IntoFullVsOut {
     type Varying: Varying;
 
-    fn into(self) -> FullVertexOutput<Self::Varying>;
+    fn into(self) -> FullVsOut<Self::Varying>;
 }
 
-impl<W: Varying> IntoFullVertexOutput for FullVertexOutput<W> {
+impl<W: Varying> IntoFullVsOut for FullVsOut<W> {
     type Varying = W;
 
     fn into(self) -> Self {
@@ -57,11 +57,11 @@ impl<W: Varying> IntoFullVertexOutput for FullVertexOutput<W> {
     }
 }
 
-impl<V: Varying> IntoFullVertexOutput for VertexOutput<V> {
+impl<V: Varying> IntoFullVsOut for VsOut<V> {
     type Varying = V;
 
-    fn into(self) -> FullVertexOutput<V> {
-        FullVertexOutput {
+    fn into(self) -> FullVsOut<V> {
+        FullVsOut {
             position: self.position,
             varying: self.varying,
             point_size: None,
@@ -69,11 +69,11 @@ impl<V: Varying> IntoFullVertexOutput for VertexOutput<V> {
     }
 }
 
-impl IntoFullVertexOutput for Vec4 {
+impl IntoFullVsOut for Vec4 {
     type Varying = ();
 
-    fn into(self) -> FullVertexOutput<()> {
-        FullVertexOutput {
+    fn into(self) -> FullVsOut<()> {
+        FullVsOut {
             position: self,
             varying: (),
             point_size: None,
@@ -82,13 +82,13 @@ impl IntoFullVertexOutput for Vec4 {
 }
 
 /// Types that can be used as fragment input for a fragment shader.
-pub trait FromFragmentInput {
+pub trait FromFsIn {
     type Varying: Varying;
 
-    fn from(input: FragmentInput<Self::Varying>) -> Self;
+    fn from(input: FsIn<Self::Varying>) -> Self;
 }
 
-impl<W: Varying> FromFragmentInput for FragmentInput<W> {
+impl<W: Varying> FromFsIn for FsIn<W> {
     type Varying = W;
 
     fn from(input: Self) -> Self {
@@ -96,34 +96,34 @@ impl<W: Varying> FromFragmentInput for FragmentInput<W> {
     }
 }
 
-impl<W: Varying> FromFragmentInput for W {
+impl<W: Varying> FromFsIn for W {
     type Varying = Self;
 
-    fn from(input: FragmentInput<Self>) -> Self {
+    fn from(input: FsIn<Self>) -> Self {
         input.varying
     }
 }
 
 /// Types that can be used as fragment output for a fragment shader.
-pub trait IntoFragmentOutput {
-    type Fragment: Fragment<Sl>;
+pub trait IntoFsOut {
+    type FsInterface: FsInterface<Sl>;
 
-    fn into(self) -> FragmentOutput<Self::Fragment>;
+    fn into(self) -> FsOut<Self::FsInterface>;
 }
 
-impl<F: Fragment<Sl>> IntoFragmentOutput for FragmentOutput<F> {
-    type Fragment = F;
+impl<F: FsInterface<Sl>> IntoFsOut for FsOut<F> {
+    type FsInterface = F;
 
     fn into(self) -> Self {
         self
     }
 }
 
-impl<F: Fragment<Sl>> IntoFragmentOutput for F {
-    type Fragment = Self;
+impl<F: FsInterface<Sl>> IntoFsOut for F {
+    type FsInterface = Self;
 
-    fn into(self) -> FragmentOutput<Self> {
-        FragmentOutput {
+    fn into(self) -> FsOut<Self> {
+        FsOut {
             fragment: self,
             fragment_depth: None,
             discard: None,
@@ -141,16 +141,16 @@ pub fn transpile_to_program_def<U, U1, U2, V, F, W, InV, OutW, InW, OutF>(
     fragment_shader: fn(U2, InW) -> OutF,
 ) -> ProgramDef
 where
-    U1: Uniform<Sl>,
-    U2: Uniform<Sl>,
+    U1: UniformInterface<Sl>,
+    U2: UniformInterface<Sl>,
     U: UniformUnion<U1, U2>,
-    V: Vertex<Sl>,
-    F: Fragment<Sl>,
+    V: VsInterface<Sl>,
+    F: FsInterface<Sl>,
     W: Varying,
-    InV: FromVertexInput<Vertex = V>,
-    OutW: IntoFullVertexOutput<Varying = W>,
-    InW: FromFragmentInput<Varying = W>,
-    OutF: IntoFragmentOutput<Fragment = F>,
+    InV: FromVsIn<VsInterface = V>,
+    OutW: IntoFullVsOut<Varying = W>,
+    InW: FromFsIn<Varying = W>,
+    OutF: IntoFsOut<FsInterface = F>,
 {
     transpile_to_program_def_with_consts_impl(
         &(),
@@ -170,16 +170,16 @@ pub fn transpile_to_program_def_with_consts<C, U, U1, U2, V, F, W, InV, OutW, In
 ) -> ProgramDef
 where
     C: Const,
-    U1: Uniform<Sl>,
-    U2: Uniform<Sl>,
+    U1: UniformInterface<Sl>,
+    U2: UniformInterface<Sl>,
     U: UniformUnion<U1, U2>,
-    V: Vertex<Sl>,
-    F: Fragment<Sl>,
+    V: VsInterface<Sl>,
+    F: FsInterface<Sl>,
     W: Varying,
-    InV: FromVertexInput<Vertex = V>,
-    OutW: IntoFullVertexOutput<Varying = W>,
-    InW: FromFragmentInput<Varying = W>,
-    OutF: IntoFragmentOutput<Fragment = F>,
+    InV: FromVsIn<VsInterface = V>,
+    OutW: IntoFullVsOut<Varying = W>,
+    InW: FromFsIn<Varying = W>,
+    OutF: IntoFsOut<FsInterface = F>,
 {
     transpile_to_program_def_with_consts_impl(
         consts,
@@ -195,14 +195,14 @@ fn transpile_to_program_def_with_consts_impl<C, U, V, F, W, InV, OutW, InW, OutF
 ) -> ProgramDef
 where
     C: Const,
-    U: Uniform<Sl>,
-    V: Vertex<Sl>,
-    F: Fragment<Sl>,
+    U: UniformInterface<Sl>,
+    V: VsInterface<Sl>,
+    F: FsInterface<Sl>,
     W: Varying,
-    InV: FromVertexInput<Vertex = V>,
-    OutW: IntoFullVertexOutput<Varying = W>,
-    InW: FromFragmentInput<Varying = W>,
-    OutF: IntoFragmentOutput<Fragment = F>,
+    InV: FromVsIn<VsInterface = V>,
+    OutW: IntoFullVsOut<Varying = W>,
+    InW: FromFsIn<Varying = W>,
+    OutF: IntoFsOut<FsInterface = F>,
 {
     // TODO: Remove hardcoded path names.
     let uniforms = U::shader_input("uniforms");
@@ -216,7 +216,7 @@ where
     };
 
     let (vertex_block_defs, varying_outputs, vertex_shader_source) = {
-        let input = || VertexInput {
+        let input = || VsIn {
             vertex: V::shader_input("vertex_input"),
             vertex_id: value_arg::<I32>("gl_VertexID").as_u32(),
             instance_id: value_arg::<I32>("gl_InstanceID").as_u32(),
@@ -280,7 +280,7 @@ where
     let uniforms = U::shader_input("uniforms");
 
     let fragment_shader_source = {
-        let input = FragmentInput {
+        let input = FsIn {
             varying: W::shader_input("vertex_output"),
             fragment_coord: value_arg("gl_FragCoord"),
             front_facing: value_arg("gl_FrontFacing"),

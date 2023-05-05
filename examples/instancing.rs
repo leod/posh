@@ -3,7 +3,7 @@ use std::{
     io::{BufRead, BufReader},
 };
 
-use posh::{gl, sl, Block, BlockDom, Gl, Sl, VertexDom};
+use posh::{gl, sl, Block, BlockDom, Gl, Sl, VsInterface, VsInterfaceDom};
 
 const WIDTH: u32 = 1024;
 const HEIGHT: u32 = 768;
@@ -24,23 +24,16 @@ struct Instance<D: BlockDom = Sl> {
     color: D::Vec3,
 }
 
-#[derive(Copy, Clone, bytemuck::Zeroable, bytemuck::Pod)]
-#[repr(C)]
-struct Foo {
-    x: [f32; 4],
-    y: f32,
-}
-
-#[derive(Copy, Clone, posh::Vertex)]
-struct Vertex<D: VertexDom = Sl> {
+#[derive(Copy, Clone, VsInterface)]
+struct VsInput<D: VsInterfaceDom = Sl> {
     instance: D::Block<Instance>,
     model_pos: D::Block<sl::Vec3>,
 }
 
 // Shader code
 
-fn vertex_shader(camera: Camera, vertex: Vertex) -> sl::VertexOutput<sl::Vec3> {
-    sl::VertexOutput {
+fn vertex_stage(camera: Camera, vertex: VsInput) -> sl::VsOut<sl::Vec3> {
+    sl::VsOut {
         position: camera.view_to_screen
             * camera.world_to_view
             * vertex.instance.model_to_view
@@ -49,14 +42,14 @@ fn vertex_shader(camera: Camera, vertex: Vertex) -> sl::VertexOutput<sl::Vec3> {
     }
 }
 
-fn fragment_shader(_: (), color: sl::Vec3) -> sl::Vec4 {
-    color.extend(1.0)
+fn fragment_stage(_: (), varying: sl::Vec3) -> sl::Vec4 {
+    varying.extend(1.0)
 }
 
 // Host code
 
 struct Demo {
-    program: gl::Program<Camera, Vertex>,
+    program: gl::Program<Camera, VsInput>,
 
     camera: gl::UniformBuffer<Camera>,
 
@@ -69,7 +62,7 @@ impl Demo {
         use gl::BufferUsage::*;
 
         Ok(Self {
-            program: gl.create_program(vertex_shader, fragment_shader)?,
+            program: gl.create_program(vertex_stage, fragment_stage)?,
             camera: gl.create_uniform_buffer(Camera::default(), StaticDraw)?,
             instances: gl.create_vertex_buffer(&instances(0.0), StaticDraw)?,
             teapot: gl.create_vertex_buffer(&teapot_positions(), StaticDraw)?,
@@ -78,13 +71,15 @@ impl Demo {
 
     pub fn draw(&self) -> Result<(), gl::DrawError> {
         self.program.draw(
-            gl::Input {
-                uniform: &self.camera.as_binding(),
-                vertex: &gl::VertexSpec::new(gl::Mode::Triangles).with_vertex_data(Vertex {
-                    instance: self.instances.as_binding().with_instancing(),
-                    model_pos: self.teapot.as_binding(),
-                }),
-                settings: &gl::Settings::default()
+            gl::DrawInputs {
+                uniforms: &self.camera.as_binding(),
+                vertex_spec: &gl::VertexSpec::new(gl::PrimitiveMode::Triangles).with_vertex_data(
+                    VsInput {
+                        instance: self.instances.as_binding().with_instancing(),
+                        model_pos: self.teapot.as_binding(),
+                    },
+                ),
+                settings: &gl::DrawSettings::default()
                     .with_clear_color([0.1, 0.2, 0.3, 1.0])
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less),

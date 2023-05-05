@@ -12,17 +12,17 @@ struct Globals<D: BlockDom = Sl> {
 
 // Shader code
 
-fn vertex_shader(_: (), vertex: sl::Vec2) -> sl::VertexOutput<sl::Vec2> {
+fn vertex_stage(_: (), vertex: sl::Vec2) -> sl::VsOut<sl::Vec2> {
     let pos = vertex - sl::vec2(0.5, 0.5);
 
-    sl::VertexOutput {
+    sl::VsOut {
         position: sl::vec4(pos.x, pos.y, 0.0, 1.0),
         varying: pos,
     }
 }
 
-fn fragment_shader(uniform: Globals, varying: sl::Vec2) -> sl::Vec4 {
-    let rg = (varying + uniform.time).cos().powf(2.0);
+fn fragment_stage(globals: Globals, varying: sl::Vec2) -> sl::Vec4 {
+    let rg = (varying + globals.time).cos().powf(2.0);
 
     sl::vec4(rg.x, rg.y, 0.5, 1.0)
 }
@@ -46,7 +46,7 @@ impl Demo {
         let vertices = vec![[0.5f32, 1.0].into(), [0.0, 0.0].into(), [1.0, 0.0].into()];
 
         Ok(Self {
-            program: gl.create_program(vertex_shader, fragment_shader)?,
+            program: gl.create_program(vertex_stage, fragment_stage)?,
             globals: gl.create_uniform_buffer(globals, StreamDraw)?,
             vertices: gl.create_vertex_buffer(&vertices, StaticDraw)?,
             start_time: Instant::now(),
@@ -59,10 +59,10 @@ impl Demo {
         });
 
         self.program.draw(
-            gl::Input {
-                uniform: &self.globals.as_binding(),
-                vertex: &self.vertices.as_vertex_spec(gl::Mode::Triangles),
-                settings: &gl::Settings::default().with_clear_color([0.1, 0.2, 0.3, 1.0]),
+            gl::DrawInputs {
+                uniforms: &self.globals.as_binding(),
+                vertex_spec: &self.vertices.as_vertex_spec(gl::PrimitiveMode::Triangles),
+                settings: &gl::DrawSettings::default().with_clear_color([0.1, 0.2, 0.3, 1.0]),
             },
             gl::Framebuffer::default(),
         )
