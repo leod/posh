@@ -6,49 +6,49 @@ use super::Block;
 
 /// A view of uniform data attributes.
 ///
-/// See [`Uniform`] for more details.
+/// See [`UniformInterface`] for more details.
 #[sealed]
-pub trait UniformDom: Copy {
+pub trait UniformInterfaceDom: Copy {
     /// A block field.
-    type Block<B: Block<Sl, Sl = B>>: Uniform<Self>;
+    type Block<B: Block<Sl, Sl = B>>: UniformInterface<Self>;
 
     /// A two-dimensional color sampler field.
-    type ColorSampler2d<S: sl::ColorSample>: Uniform<Self>;
+    type ColorSampler2d<S: sl::ColorSample>: UniformInterface<Self>;
 
     /// A two-dimensional comparison sampler field.
-    type ComparisonSampler2d: Uniform<Self>;
+    type ComparisonSampler2d: UniformInterface<Self>;
 
     /// A nested uniform interface field.
-    type Uniform<U: Uniform<Sl>>: Uniform<Self>;
+    type UniformInterface<U: UniformInterface<Sl>>: UniformInterface<Self>;
 }
 
 #[sealed]
-impl UniformDom for Gl {
+impl UniformInterfaceDom for Gl {
     type Block<B: Block<Sl, Sl = B>> = gl::UniformBufferBinding<B>;
     type ColorSampler2d<S: sl::ColorSample> = gl::ColorSampler2d<S>;
     type ComparisonSampler2d = gl::ComparisonSampler2d;
-    type Uniform<R: Uniform<Sl>> = R::Gl;
+    type UniformInterface<R: UniformInterface<Sl>> = R::Gl;
 }
 
 #[sealed]
-impl UniformDom for Sl {
+impl UniformInterfaceDom for Sl {
     type Block<B: Block<Sl, Sl = B>> = B;
     type ColorSampler2d<S: sl::ColorSample> = sl::ColorSampler2d<S>;
     type ComparisonSampler2d = sl::ComparisonSampler2d;
-    type Uniform<R: Uniform<Sl>> = R;
+    type UniformInterface<R: UniformInterface<Sl>> = R;
 }
 
-/// Uniform data.
+/// UniformInterface data.
 ///
 /// Defines uniform data that can be passed to shaders in draw calls.
 ///
-/// `Uniform` declarations are generic in [`UniformDom`] and can be instantiated
+/// `UniformInterface` declarations are generic in [`UniformInterfaceDom`] and can be instantiated
 /// as their [`Sl`] view or their [`Gl`] view. The views have the following
 /// purpose respectively:
 ///
-/// 1. `Uniform<Sl>` is a view of uniform data as seen in shader definitions.
+/// 1. `UniformInterface<Sl>` is a view of uniform data as seen in shader definitions.
 ///
-/// 2. `Uniform<Gl>` is a view of uniform data in the graphics library
+/// 2. `UniformInterface<Gl>` is a view of uniform data in the graphics library
 ///    containing buffer and sampler bindings.
 ///
 /// In order to use a vertex shader with a fragment shader, they must use the
@@ -59,23 +59,23 @@ impl UniformDom for Sl {
 /// default view.
 ///
 /// User-defined types should implement this trait with a [derive
-/// macro](`posh_derive::Uniform`).
+/// macro](`posh_derive::UniformInterface`).
 ///
 /// # Safety
 ///
 /// TODO
-pub unsafe trait Uniform<D: UniformDom>: Sized {
+pub unsafe trait UniformInterface<D: UniformInterfaceDom>: Sized {
     /// The physical view of `Self`.
     ///
     /// This is the type through which the host provides uniform bindings such
     /// as [uniform buffer bindings](crate::gl::UniformBuffer) or
     /// [samplers](crate::gl::ColorSampler2d) in [draw calls](crate::gl::Program::draw).
-    type Gl: Uniform<Gl>;
+    type Gl: UniformInterface<Gl>;
 
     /// The logical view of `Self`.
     ///
     /// This is the type through which shaders access uniform data.
-    type Sl: Uniform<Sl>;
+    type Sl: UniformInterface<Sl>;
 
     #[doc(hidden)]
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl UniformVisitor<'a, D>);
@@ -86,7 +86,7 @@ pub unsafe trait Uniform<D: UniformDom>: Sized {
     }
 }
 
-unsafe impl<D: UniformDom> Uniform<D> for () {
+unsafe impl<D: UniformInterfaceDom> UniformInterface<D> for () {
     type Gl = ();
     type Sl = ();
 
@@ -95,7 +95,7 @@ unsafe impl<D: UniformDom> Uniform<D> for () {
     fn shader_input(_: &str) -> Self {}
 }
 
-unsafe impl<U: Block<Sl, Sl = U>> Uniform<Gl> for gl::UniformBufferBinding<U> {
+unsafe impl<U: Block<Sl, Sl = U>> UniformInterface<Gl> for gl::UniformBufferBinding<U> {
     type Gl = gl::UniformBufferBinding<U>;
     type Sl = U;
 
@@ -104,7 +104,7 @@ unsafe impl<U: Block<Sl, Sl = U>> Uniform<Gl> for gl::UniformBufferBinding<U> {
     }
 }
 
-unsafe impl<B: Block<Sl, Sl = B>> Uniform<Sl> for B {
+unsafe impl<B: Block<Sl, Sl = B>> UniformInterface<Sl> for B {
     type Gl = gl::UniformBufferBinding<B>;
     type Sl = B;
 
@@ -117,7 +117,7 @@ unsafe impl<B: Block<Sl, Sl = B>> Uniform<Sl> for B {
     }
 }
 
-unsafe impl<S: sl::ColorSample> Uniform<Gl> for gl::ColorSampler2d<S> {
+unsafe impl<S: sl::ColorSample> UniformInterface<Gl> for gl::ColorSampler2d<S> {
     type Gl = gl::ColorSampler2d<S>;
     type Sl = sl::ColorSampler2d<S>;
 
@@ -126,7 +126,7 @@ unsafe impl<S: sl::ColorSample> Uniform<Gl> for gl::ColorSampler2d<S> {
     }
 }
 
-unsafe impl<S: sl::ColorSample> Uniform<Sl> for sl::ColorSampler2d<S> {
+unsafe impl<S: sl::ColorSample> UniformInterface<Sl> for sl::ColorSampler2d<S> {
     type Gl = gl::ColorSampler2d<S>;
     type Sl = Self;
 
@@ -139,7 +139,7 @@ unsafe impl<S: sl::ColorSample> Uniform<Sl> for sl::ColorSampler2d<S> {
     }
 }
 
-unsafe impl Uniform<Gl> for gl::ComparisonSampler2d {
+unsafe impl UniformInterface<Gl> for gl::ComparisonSampler2d {
     type Gl = gl::ComparisonSampler2d;
     type Sl = sl::ComparisonSampler2d;
 
@@ -148,7 +148,7 @@ unsafe impl Uniform<Gl> for gl::ComparisonSampler2d {
     }
 }
 
-unsafe impl Uniform<Sl> for sl::ComparisonSampler2d {
+unsafe impl UniformInterface<Sl> for sl::ComparisonSampler2d {
     type Gl = gl::ComparisonSampler2d;
     type Sl = sl::ComparisonSampler2d;
 
@@ -161,10 +161,10 @@ unsafe impl Uniform<Sl> for sl::ComparisonSampler2d {
     }
 }
 
-unsafe impl<U, V> Uniform<Gl> for (U, V)
+unsafe impl<U, V> UniformInterface<Gl> for (U, V)
 where
-    U: Uniform<Gl>,
-    V: Uniform<Gl>,
+    U: UniformInterface<Gl>,
+    V: UniformInterface<Gl>,
 {
     type Gl = (U, V);
     type Sl = (U::Sl, V::Sl);
@@ -175,10 +175,10 @@ where
     }
 }
 
-unsafe impl<U, V> Uniform<Sl> for (U, V)
+unsafe impl<U, V> UniformInterface<Sl> for (U, V)
 where
-    U: Uniform<Sl>,
-    V: Uniform<Sl>,
+    U: UniformInterface<Sl>,
+    V: UniformInterface<Sl>,
 {
     type Gl = (U::Gl, V::Gl);
     type Sl = (U, V);
@@ -197,7 +197,7 @@ where
 }
 
 #[doc(hidden)]
-pub trait UniformVisitor<'a, D: UniformDom> {
+pub trait UniformVisitor<'a, D: UniformInterfaceDom> {
     fn accept_block<B: Block<Sl, Sl = B>>(&mut self, path: &str, block: &'a D::Block<B>);
     fn accept_color_sampler_2d<S: sl::ColorSample>(
         &mut self,
@@ -208,7 +208,7 @@ pub trait UniformVisitor<'a, D: UniformDom> {
 }
 
 /// Non-empty uniform data.
-pub trait UniformNonUnit: Uniform<Sl> {}
+pub trait UniformNonUnit: UniformInterface<Sl> {}
 
 impl<B: Block<Sl, Sl = B>> UniformNonUnit for B {}
 
@@ -218,8 +218,8 @@ impl UniformNonUnit for sl::ComparisonSampler2d {}
 
 impl<U, V> UniformNonUnit for (U, V)
 where
-    U: Uniform<Sl>,
-    V: Uniform<Sl>,
+    U: UniformInterface<Sl>,
+    V: UniformInterface<Sl>,
 {
 }
 
@@ -228,10 +228,10 @@ where
 /// # Safety
 ///
 /// TODO
-pub unsafe trait UniformUnion<U1, U2>: Uniform<Sl>
+pub unsafe trait UniformUnion<U1, U2>: UniformInterface<Sl>
 where
-    U1: Uniform<Sl>,
-    U2: Uniform<Sl>,
+    U1: UniformInterface<Sl>,
+    U2: UniformInterface<Sl>,
 {
     fn lhs(self) -> U1;
     fn rhs(self) -> U2;
@@ -280,8 +280,8 @@ where
 
 unsafe impl<U1, U2> UniformUnion<U1, U2> for (U1, U2)
 where
-    U1: Uniform<Sl>,
-    U2: Uniform<Sl>,
+    U1: UniformInterface<Sl>,
+    U2: UniformInterface<Sl>,
 {
     fn lhs(self) -> U1 {
         self.0
@@ -295,7 +295,7 @@ where
 unsafe impl<U1, U2> UniformUnion<U1, (U1, U2)> for (U1, U2)
 where
     U1: UniformNonUnit,
-    U2: Uniform<Sl>,
+    U2: UniformInterface<Sl>,
 {
     fn lhs(self) -> U1 {
         self.0
@@ -309,7 +309,7 @@ where
 unsafe impl<U1, U2> UniformUnion<(U1, U2), U1> for (U1, U2)
 where
     U1: UniformNonUnit,
-    U2: Uniform<Sl>,
+    U2: UniformInterface<Sl>,
 {
     fn lhs(self) -> (U1, U2) {
         (self.0, self.1)

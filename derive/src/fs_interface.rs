@@ -43,8 +43,8 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     )?;
 
     Ok(quote! {
-        // Implement `Fragment<D>` for the struct.
-        unsafe impl #impl_generics ::posh::Fragment<#generics_view_type>
+        // Implement `FsInterface<D>` for the struct.
+        unsafe impl #impl_generics ::posh::FsInterface<#generics_view_type>
         for #ident #ty_generics
         #where_clause
         {
@@ -109,12 +109,12 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             }
         }
 
-        // Check that all field types implement `Fragment<D>`.
+        // Check that all field types implement `FsInterface<D>`.
         const _: fn() = || {
             fn check_field<D, T>()
             where
-                D: ::posh::FragmentDom,
-                T: ::posh::Fragment<D>,
+                D: ::posh::FsInterfaceDom,
+                T: ::posh::FsInterface<D>,
             {}
 
             fn check_struct #impl_generics(value: &#ident #ty_generics) #where_clause {

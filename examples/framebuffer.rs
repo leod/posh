@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use posh::{gl, sl, Block, BlockDom, Gl, Sl};
+use posh::{gl, sl, Block, BlockDom, Gl, Sl, UniformInterface, UniformInterfaceDom};
 
 // Shader interface
 
@@ -11,6 +11,19 @@ pub struct State<D: BlockDom> {
     flip: D::U32,
 }
 
+#[derive(Clone, Copy, Block)]
+#[repr(C)]
+pub struct PresentVertex<D: BlockDom> {
+    pub pos: D::Vec2,
+    pub tex_coords: D::Vec2,
+}
+
+#[derive(UniformInterface)]
+pub struct PresentUniforms<D: UniformInterfaceDom> {
+    pub state: D::Block<State<Sl>>,
+    pub scene: D::ColorSampler2d<sl::Vec4>,
+}
+
 // Shaders
 
 mod scene_pass {
@@ -18,16 +31,16 @@ mod scene_pass {
 
     use super::State;
 
-    pub fn vertex(_: (), vertex: sl::Vec2) -> sl::VertexOutput<sl::Vec2> {
+    pub fn vertex_stage(_: (), vertex: sl::Vec2) -> sl::VsOut<sl::Vec2> {
         let vertex = vertex - sl::vec2(0.5, 0.5);
 
-        sl::VertexOutput {
+        sl::VsOut {
             position: vertex.extend(0.0).extend(1.0),
             varying: vertex,
         }
     }
 
-    pub fn fragment(state: State<Sl>, varying: sl::Vec2) -> sl::Vec4 {
+    pub fn fragment_stage(state: State<Sl>, varying: sl::Vec2) -> sl::Vec4 {
         let rg = (varying + state.time).cos().powf(2.0);
 
         sl::vec4(rg.x, rg.y, 0.5, 1.0)
@@ -35,35 +48,22 @@ mod scene_pass {
 }
 
 mod present_pass {
-    use posh::{sl, Block, BlockDom, Sl, UniformDom};
+    use posh::{sl, Sl};
 
-    use super::State;
+    use super::{PresentUniforms, PresentVertex};
 
-    #[derive(Clone, Copy, Block)]
-    #[repr(C)]
-    pub struct Vertex<D: BlockDom> {
-        pub pos: D::Vec2,
-        pub tex_coords: D::Vec2,
-    }
-
-    #[derive(posh::Uniform)]
-    pub struct Uniform<D: UniformDom> {
-        pub state: D::Block<State<Sl>>,
-        pub scene: D::ColorSampler2d<sl::Vec4>,
-    }
-
-    pub fn vertex(_: (), vertex: Vertex<Sl>) -> sl::VertexOutput<sl::Vec2> {
-        sl::VertexOutput {
+    pub fn vertex_stage(_: (), vertex: PresentVertex<Sl>) -> sl::VsOut<sl::Vec2> {
+        sl::VsOut {
             position: vertex.pos.extend(0.0).extend(1.0),
             varying: vertex.tex_coords,
         }
     }
 
-    pub fn fragment(uniform: Uniform<Sl>, tex_coords: sl::Vec2) -> sl::Vec4 {
-        let flip = uniform.state.flip;
+    pub fn fragment_stage(uniforms: PresentUniforms<Sl>, tex_coords: sl::Vec2) -> sl::Vec4 {
+        let flip = uniforms.state.flip;
         let coords = sl::branch(flip.eq(0u32), tex_coords, -tex_coords);
 
-        uniform.scene.sample(coords)
+        uniforms.scene.sample(coords)
     }
 }
 
@@ -71,13 +71,13 @@ mod present_pass {
 
 struct Demo {
     scene_program: gl::Program<State<Sl>, sl::Vec2>,
-    present_program: gl::Program<present_pass::Uniform<Sl>, present_pass::Vertex<Sl>>,
+    present_program: gl::Program<PresentUniforms<Sl>, PresentVertex<Sl>>,
 
     state: gl::UniformBuffer<State<Sl>>,
     texture: gl::ColorTexture2d,
 
     triangle_vertices: gl::VertexBuffer<sl::Vec2>,
-    quad_vertices: gl::VertexBuffer<present_pass::Vertex<Sl>>,
+    quad_vertices: gl::VertexBuffer<PresentVertex<Sl>>,
     quad_elements: gl::ElementBuffer,
 
     start_time: Instant,
@@ -90,8 +90,10 @@ impl Demo {
         let image = gl::ColorImage::rgba_u8_zero([1024, 768]);
 
         Ok(Self {
-            scene_program: gl.create_program(scene_pass::vertex, scene_pass::fragment)?,
-            present_program: gl.create_program(present_pass::vertex, present_pass::fragment)?,
+            scene_program: gl
+                .create_program(scene_pass::vertex_stage, scene_pass::fragment_stage)?,
+            present_program: gl
+                .create_program(present_pass::vertex_stage, present_pass::fragment_stage)?,
             state: gl.create_uniform_buffer(State { time: 0.0, flip: 0 }, StreamDraw)?,
             texture: gl.create_color_texture_2d(image)?,
             triangle_vertices: gl.create_vertex_buffer(&triangle_vertices(), StaticDraw)?,
@@ -108,27 +110,29 @@ impl Demo {
         });
 
         self.scene_program.draw(
-            gl::Input {
-                uniform: &self.state.as_binding(),
-                vertex: &self.triangle_vertices.as_vertex_spec(gl::Mode::Triangles),
-                settings: &gl::Settings::default(),
+            gl::DrawInputs {
+                uniforms: &self.state.as_binding(),
+                vertex_spec: &self
+                    .triangle_vertices
+                    .as_vertex_spec(gl::PrimitiveMode::Triangles),
+                settings: &gl::DrawSettings::default(),
             },
             self.texture.as_color_attachment(),
         )?;
 
         self.present_program.draw(
-            gl::Input {
-                uniform: &present_pass::Uniform {
+            gl::DrawInputs {
+                uniforms: &PresentUniforms {
                     state: self.state.as_binding(),
                     scene: self
                         .texture
                         .as_color_sampler(gl::Sampler2dSettings::linear()),
                 },
-                vertex: &self
+                vertex_spec: &self
                     .quad_vertices
-                    .as_vertex_spec(gl::Mode::Triangles)
+                    .as_vertex_spec(gl::PrimitiveMode::Triangles)
                     .with_element_data(self.quad_elements.as_binding()),
-                settings: &gl::Settings::default(),
+                settings: &gl::DrawSettings::default(),
             },
             gl::Framebuffer::default(),
         )?;
@@ -143,21 +147,21 @@ fn triangle_vertices() -> Vec<gl::Vec2> {
     vec![[0.5f32, 1.0].into(), [0.0, 0.0].into(), [1.0, 0.0].into()]
 }
 
-fn quad_vertices() -> Vec<present_pass::Vertex<Gl>> {
+fn quad_vertices() -> Vec<PresentVertex<Gl>> {
     vec![
-        present_pass::Vertex {
+        PresentVertex {
             pos: [-1.0, -1.0].into(),
             tex_coords: [0.0, 0.0].into(),
         },
-        present_pass::Vertex {
+        PresentVertex {
             pos: [1.0, -1.0].into(),
             tex_coords: [1.0, 0.0].into(),
         },
-        present_pass::Vertex {
+        PresentVertex {
             pos: [1.0, 1.0].into(),
             tex_coords: [1.0, 1.0].into(),
         },
-        present_pass::Vertex {
+        PresentVertex {
             pos: [-1.0, 1.0].into(),
             tex_coords: [0.0, 1.0].into(),
         },

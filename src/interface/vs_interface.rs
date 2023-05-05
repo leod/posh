@@ -6,53 +6,53 @@ use super::{Block, BlockDom};
 
 /// A view of vertex data attributes.
 ///
-/// See [`Vertex`] for more details.
+/// See [`VsInterface`] for more details.
 #[sealed]
-pub trait VertexDom: BlockDom {
+pub trait VsInterfaceDom: BlockDom {
     /// A vertex block field.
     type Block<B: Block<Sl>>: VertexField<Self>;
 }
 
 #[sealed]
-impl VertexDom for Gl {
+impl VsInterfaceDom for Gl {
     type Block<B: Block<Sl>> = gl::VertexBufferBinding<B>;
 }
 
 #[sealed]
-impl VertexDom for Sl {
+impl VsInterfaceDom for Sl {
     type Block<B: Block<Sl>> = B;
 }
 
-/// Vertex shader input data.
+/// VsInterface shader input data.
 ///
 /// Defines vertex data that can be passed to vertex shaders in draw calls.
 ///
-/// `Vertex` declarations are generic in [`VertexDom`] and can be instantiated
+/// `VsInterface` declarations are generic in [`VsInterfaceDom`] and can be instantiated
 /// as their [`Sl`] view or their [`Gl`] view. The views have the following
 /// purpose respectively:
 ///
-/// 1. `Vertex<Sl>` is a view of vertex data as seen in shader definitions. Each
+/// 1. `VsInterface<Sl>` is a view of vertex data as seen in shader definitions. Each
 ///    field corresponds to a part of the current vertex value.
 ///
-/// 2. `Vertex<Gl>` is a view of vertex data in the graphics library. Each field
+/// 2. `VsInterface<Gl>` is a view of vertex data in the graphics library. Each field
 ///    is a vertex buffer binding.
 ///
 /// By convention, the generic view parameter is named `D`, with [`Sl`] as the
 /// default view.
 ///
 /// User-defined types should implement this trait with a [derive
-/// macro](`posh_derive::Vertex`). Types that implement `Block<Sl>`
-/// automatically implement `Vertex<Sl>` as well, so block data can be passed to
-/// shaders without having to declare a custom [`Vertex`] type.
+/// macro](`posh_derive::VsInterface`). Types that implement `Block<Sl>`
+/// automatically implement `VsInterface<Sl>` as well, so block data can be passed to
+/// shaders without having to declare a custom [`VsInterface`] type.
 ///
 /// # Example
 ///
-/// This example declares a custom [`Vertex`] type that provides `position` in
+/// This example declares a custom [`VsInterface`] type that provides `position` in
 /// one vertex buffer, while `normal` and `color` are specified in a second
 /// vertex buffer.
 ///
 /// ```
-/// use posh::{gl, sl, Block, BlockDom, Sl, Vertex, VertexDom};
+/// use posh::{gl, sl, Block, BlockDom, Sl, VsInterface, VsInterfaceDom};
 ///
 /// #[derive(Clone, Copy, Block)]
 /// #[repr(C)]
@@ -61,18 +61,18 @@ impl VertexDom for Sl {
 ///     color: D::Vec4,
 /// }
 ///
-/// #[derive(Clone, Copy, Vertex)]
-/// struct MyVertex<D: VertexDom = Sl> {
+/// #[derive(Clone, Copy, VsInterface)]
+/// struct MyVertex<D: VsInterfaceDom = Sl> {
 ///     position: D::Block<sl::Vec3>,
 ///     material: D::Block<Material>,
 /// }
 ///
-/// // A vertex shader that receives `MyVertex` as vertex input.
-/// fn my_vertex_shader(
+/// // A vertex stage that receives `MyVertex` as vertex input.
+/// fn my_vertex_stage(
 ///     uniforms: (),
 ///     vertex: MyVertex,
-/// ) -> sl::VertexOutput<sl::Vec4> {
-///     sl::VertexOutput {
+/// ) -> sl::VsOut<sl::Vec4> {
+///     sl::VsOut {
 ///         position: (vertex.position + vertex.material.normal * 1.3).extend(1.0),
 ///         varying: vertex.material.color,
 ///     }
@@ -82,17 +82,17 @@ impl VertexDom for Sl {
 /// # Safety
 ///
 /// TODO
-pub unsafe trait Vertex<D: VertexDom>: Sized {
+pub unsafe trait VsInterface<D: VsInterfaceDom>: Sized {
     /// The physical view of `Self`.
     ///
     /// This is the type through which the host provides vertex buffer bindings
     /// in draw calls.
-    type Gl: Vertex<Gl>;
+    type Gl: VsInterface<Gl>;
 
     /// The logical view of `Self`.
     ///
     /// This is the type through which shaders access vertex data.
-    type Sl: Vertex<Sl>;
+    type Sl: VsInterface<Sl>;
 
     #[doc(hidden)]
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl VertexVisitor<'a, D>);
@@ -103,7 +103,7 @@ pub unsafe trait Vertex<D: VertexDom>: Sized {
     }
 }
 
-unsafe impl<B: Block<Sl>> Vertex<Gl> for gl::VertexBufferBinding<B> {
+unsafe impl<B: Block<Sl>> VsInterface<Gl> for gl::VertexBufferBinding<B> {
     type Gl = gl::VertexBufferBinding<B>;
     type Sl = B::Sl;
 
@@ -112,7 +112,7 @@ unsafe impl<B: Block<Sl>> Vertex<Gl> for gl::VertexBufferBinding<B> {
     }
 }
 
-unsafe impl<B: Block<Sl>> Vertex<Sl> for B {
+unsafe impl<B: Block<Sl>> VsInterface<Sl> for B {
     type Gl = gl::VertexBufferBinding<B>;
     type Sl = B::Sl;
 
@@ -125,7 +125,7 @@ unsafe impl<B: Block<Sl>> Vertex<Sl> for B {
     }
 }
 
-unsafe impl<D: VertexDom> Vertex<D> for () {
+unsafe impl<D: VsInterfaceDom> VsInterface<D> for () {
     type Gl = ();
     type Sl = ();
 
@@ -134,10 +134,10 @@ unsafe impl<D: VertexDom> Vertex<D> for () {
     fn shader_input(_: &str) {}
 }
 
-unsafe impl<U, V> Vertex<Gl> for (U, V)
+unsafe impl<U, V> VsInterface<Gl> for (U, V)
 where
-    U: Vertex<Gl>,
-    V: Vertex<Gl>,
+    U: VsInterface<Gl>,
+    V: VsInterface<Gl>,
 {
     type Gl = (U, V);
     type Sl = (U::Sl, V::Sl);
@@ -148,10 +148,10 @@ where
     }
 }
 
-unsafe impl<U, V> Vertex<Sl> for (U, V)
+unsafe impl<U, V> VsInterface<Sl> for (U, V)
 where
-    U: Vertex<Sl>,
-    V: Vertex<Sl>,
+    U: VsInterface<Sl>,
+    V: VsInterface<Sl>,
 {
     type Gl = (U::Gl, V::Gl);
     type Sl = (U, V);
@@ -169,10 +169,10 @@ where
     }
 }
 
-/// Types that are allowed to occur in types that implement [`Vertex`].
+/// Types that are allowed to occur in types that implement [`VsInterface`].
 #[sealed]
 #[doc(hidden)]
-pub trait VertexField<D: VertexDom>: Sized {
+pub trait VertexField<D: VsInterfaceDom>: Sized {
     fn shader_input(_path: &str) -> Self {
         unimplemented!()
     }
@@ -188,6 +188,6 @@ impl<B: Block<Sl>> VertexField<Sl> for B {
     }
 }
 
-pub trait VertexVisitor<'a, D: VertexDom> {
+pub trait VertexVisitor<'a, D: VsInterfaceDom> {
     fn accept<B: Block<Sl>>(&mut self, path: &str, vertex: &'a D::Block<B>);
 }

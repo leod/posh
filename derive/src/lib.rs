@@ -1,11 +1,11 @@
 mod block;
 mod r#const;
-mod fragment;
-mod uniform;
+mod fs_interface;
+mod uniform_interface;
 mod utils;
 mod value;
 mod varying;
-mod vertex;
+mod vs_interface;
 
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput};
@@ -32,22 +32,23 @@ pub fn derive_consts(input: TokenStream) -> TokenStream {
     .into()
 }
 
-/// Derives `Fragment` for a struct that is generic in `FragmentDom`.
-#[proc_macro_derive(Fragment)]
-pub fn derive_fragment(input: TokenStream) -> TokenStream {
+/// Derives `FsInterface` for a struct that is generic in `FsInterfaceDom`.
+#[proc_macro_derive(FsInterface)]
+pub fn derive_fs_interface(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    match fragment::derive(input) {
+    match fs_interface::derive(input) {
         Ok(ts) => ts,
         Err(e) => e.to_compile_error(),
     }
     .into()
 }
 
-/// Derives `Uniform` for a struct that is generic in `UniformDom`.
-#[proc_macro_derive(Uniform)]
-pub fn derive_uniform_data(input: TokenStream) -> TokenStream {
+/// Derives `UniformInterface` for a struct that is generic in
+/// `UniformInterfaceDom`.
+#[proc_macro_derive(UniformInterface)]
+pub fn derive_uniform_interface(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    match uniform::derive(input) {
+    match uniform_interface::derive(input) {
         Ok(ts) => ts,
         Err(e) => e.to_compile_error(),
     }
@@ -76,11 +77,11 @@ pub fn derive_varying(input: TokenStream) -> TokenStream {
     .into()
 }
 
-/// Derives `Vertex` for a struct that is generic in `VertexDom`.
-#[proc_macro_derive(Vertex, attributes(vertex))]
-pub fn derive_vertex_data(input: TokenStream) -> TokenStream {
+/// Derives `VsInterface` for a struct that is generic in `VsInterfaceDom`.
+#[proc_macro_derive(VsInterface, attributes(vertex))]
+pub fn derive_vs_interface(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    match vertex::derive(input) {
+    match vs_interface::derive(input) {
         Ok(ts) => ts,
         Err(e) => e.to_compile_error(),
     }
