@@ -150,8 +150,8 @@ impl BlockDom for Sl {
 /// Plain-old vertex or uniform block data.
 ///
 /// Types that implement [`Block`] can be used as fields in types that implement
-/// [`VsInterface`] or [`UniformInterface`]. This allows them to be passed to shaders in draw
-/// calls.
+/// [`VsInterface`] or [`UniformInterface`]. This allows them to be passed to
+/// shaders in draw calls.
 ///
 /// `Block` declarations are generic in [`BlockDom`] and can be instantiated as
 /// their [`Sl`] view or their [`Gl`] view. The views have the following purpose
@@ -163,7 +163,7 @@ impl BlockDom for Sl {
 ///    the form of buffer bindings.
 ///
 /// By convention, the generic view parameter of `Block` declarations is named
-/// `D`, with [`Sl`] as the default view.
+/// `D`.
 ///
 /// User-defined types should implement this trait with the [derive
 /// macro](`posh_derive::Block`).
@@ -175,21 +175,21 @@ impl BlockDom for Sl {
 ///
 /// #[derive(Clone, Copy, Block)]
 /// #[repr(C)]
-/// struct SomeColor<D: BlockDom = Sl> {
+/// struct SomeColor<D: BlockDom> {
 ///     rainbow: D::U32,
 ///     thing: D::Vec2,
 /// }
 ///
 /// #[derive(Clone, Copy, Block)]
 /// #[repr(C)]
-/// struct MyVertex<D: BlockDom = Sl> {
+/// struct MyVertex<D: BlockDom> {
 ///     position: D::Vec3,
 ///     normal: D::Vec3,
 ///     color: SomeColor<D>,
 /// }
 ///
 /// // A function in the shading language that does something with `MyVertex`.
-/// fn my_extrude(vertex: MyVertex, offset: sl::F32) -> sl::Vec3 {
+/// fn my_extrude(vertex: MyVertex<Sl>, offset: sl::F32) -> sl::Vec3 {
 ///     vertex.position + vertex.normal * offset
 /// }
 /// ```

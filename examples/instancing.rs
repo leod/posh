@@ -12,27 +12,27 @@ const HEIGHT: u32 = 768;
 
 #[derive(Clone, Copy, Block)]
 #[repr(C)]
-struct Camera<D: BlockDom = Sl> {
+struct Camera<D: BlockDom> {
     world_to_view: D::Mat4,
     view_to_screen: D::Mat4,
 }
 
 #[derive(Clone, Copy, Block)]
 #[repr(C)]
-struct Instance<D: BlockDom = Sl> {
+struct Instance<D: BlockDom> {
     model_to_view: D::Mat4,
     color: D::Vec3,
 }
 
 #[derive(Copy, Clone, VsInterface)]
-struct VsInput<D: VsInterfaceDom = Sl> {
-    instance: D::Block<Instance>,
+struct VsInput<D: VsInterfaceDom> {
+    instance: D::Block<Instance<Sl>>,
     model_pos: D::Block<sl::Vec3>,
 }
 
 // Shader code
 
-fn vertex_stage(camera: Camera, vertex: VsInput) -> sl::VsOut<sl::Vec3> {
+fn vertex_stage(camera: Camera<Sl>, vertex: VsInput<Sl>) -> sl::VsOut<sl::Vec3> {
     sl::VsOut {
         position: camera.view_to_screen
             * camera.world_to_view
@@ -49,11 +49,11 @@ fn fragment_stage(_: (), varying: sl::Vec3) -> sl::Vec4 {
 // Host code
 
 struct Demo {
-    program: gl::Program<Camera, VsInput>,
+    program: gl::Program<Camera<Sl>, VsInput<Sl>>,
 
-    camera: gl::UniformBuffer<Camera>,
+    camera: gl::UniformBuffer<Camera<Sl>>,
 
-    instances: gl::VertexBuffer<Instance>,
+    instances: gl::VertexBuffer<Instance<Sl>>,
     teapot: gl::VertexBuffer<sl::Vec3>,
 }
 
