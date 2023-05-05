@@ -51,10 +51,10 @@ fn fragment_stage(_: (), varying: sl::Vec3) -> sl::Vec4 {
 struct Demo {
     program: gl::Program<Camera<Sl>, VsInput<Sl>>,
 
-    camera: gl::UniformBuffer<Camera<Sl>>,
+    camera: gl::UniformBuffer<Camera<Gl>>,
 
-    instances: gl::VertexBuffer<Instance<Sl>>,
-    teapot: gl::VertexBuffer<sl::Vec3>,
+    instances: gl::VertexBuffer<Instance<Gl>>,
+    teapot: gl::VertexBuffer<gl::Vec3>,
 }
 
 impl Demo {

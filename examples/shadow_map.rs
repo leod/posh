@@ -182,17 +182,17 @@ struct Demo {
     scene_program: gl::Program<SceneUniforms<Sl>, SceneVertex<Sl>>,
     debug_program: gl::Program<sl::ColorSampler2d<sl::F32>, ScreenVertex<Sl>>,
 
-    camera_buffer: gl::UniformBuffer<Camera<Sl>>,
-    light_buffer: gl::UniformBuffer<Light<Sl>>,
+    camera_buffer: gl::UniformBuffer<Camera<Gl>>,
+    light_buffer: gl::UniformBuffer<Light<Gl>>,
     light_depth_map: gl::DepthTexture2d,
 
-    scene_vertices: gl::VertexBuffer<SceneVertex<Sl>>,
+    scene_vertices: gl::VertexBuffer<SceneVertex<Gl>>,
     scene_elements: gl::ElementBuffer,
 
-    light_vertices: gl::VertexBuffer<SceneVertex<Sl>>,
+    light_vertices: gl::VertexBuffer<SceneVertex<Gl>>,
     light_elements: gl::ElementBuffer,
 
-    debug_vertices: gl::VertexBuffer<ScreenVertex<Sl>>,
+    debug_vertices: gl::VertexBuffer<ScreenVertex<Gl>>,
     debug_elements: gl::ElementBuffer,
 
     start_time: Instant,

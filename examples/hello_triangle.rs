@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use posh::{gl, sl, Block, BlockDom, Sl};
+use posh::{gl, sl, Block, BlockDom, Gl, Sl};
 
 // Shader interface
 
@@ -32,8 +32,8 @@ fn fragment_stage(globals: Globals<Sl>, varying: sl::Vec2) -> sl::Vec4 {
 struct Demo {
     program: gl::Program<Globals<Sl>, sl::Vec2>,
 
-    globals: gl::UniformBuffer<Globals<Sl>>,
-    vertices: gl::VertexBuffer<sl::Vec2>,
+    globals: gl::UniformBuffer<Globals<Gl>>,
+    vertices: gl::VertexBuffer<gl::Vec2>,
 
     start_time: Instant,
 }

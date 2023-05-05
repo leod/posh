@@ -2,7 +2,7 @@ use std::{marker::PhantomData, mem::size_of, rc::Rc};
 
 use crevice::std140::{AsStd140, Std140};
 
-use crate::{Block, Sl};
+use crate::{Block, Gl};
 
 use super::{raw, BufferError, BufferUsage};
 
@@ -22,7 +22,7 @@ pub struct UniformBufferBinding<B> {
     // TODO: UniformInterface buffer slicing.
 }
 
-impl<B: Block<Sl>> UniformBuffer<B> {
+impl<B: Block<Gl>> UniformBuffer<B> {
     pub(super) fn new(
         ctx: &raw::Context,
         data: &B::Gl,
@@ -52,7 +52,7 @@ impl<B: Block<Sl>> UniformBuffer<B> {
         self.raw.set(bytes);
     }
 
-    pub fn as_binding(&self) -> UniformBufferBinding<B> {
+    pub fn as_binding(&self) -> UniformBufferBinding<B::Sl> {
         UniformBufferBinding {
             raw: self.raw.clone(),
             _phantom: PhantomData,
