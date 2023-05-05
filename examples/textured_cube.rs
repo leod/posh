@@ -11,21 +11,21 @@ const HEIGHT: u32 = 768;
 
 #[derive(Clone, Copy, Block)]
 #[repr(C)]
-struct Camera<D: BlockDom = Sl> {
+struct Camera<D: BlockDom> {
     world_to_view: D::Mat4,
     view_to_screen: D::Mat4,
 }
 
 #[derive(Clone, Copy, Block)]
 #[repr(C)]
-struct Vertex<D: BlockDom = Sl> {
+struct Vertex<D: BlockDom> {
     pos: D::Vec3,
     tex_coords: D::Vec2,
 }
 
 #[derive(UniformInterface)]
-struct Uniforms<D: UniformInterfaceDom = Sl> {
-    camera: D::Block<Camera>,
+struct Uniforms<D: UniformInterfaceDom> {
+    camera: D::Block<Camera<Sl>>,
     time: D::Block<sl::F32>,
 }
 
@@ -35,7 +35,7 @@ fn zxy(v: sl::Vec3) -> sl::Vec3 {
     sl::vec3(v.z, v.x, v.y)
 }
 
-fn vertex_stage(uniforms: Uniforms, vertex: Vertex) -> sl::VsOut<sl::Vec2> {
+fn vertex_stage(uniforms: Uniforms<Sl>, vertex: Vertex<Sl>) -> sl::VsOut<sl::Vec2> {
     let camera = uniforms.camera;
 
     let vertex_pos = vertex
@@ -54,13 +54,13 @@ fn vertex_stage(uniforms: Uniforms, vertex: Vertex) -> sl::VsOut<sl::Vec2> {
 // Host code
 
 struct Demo {
-    program: gl::Program<(Uniforms, sl::ColorSampler2d), Vertex>,
+    program: gl::Program<(Uniforms<Sl>, sl::ColorSampler2d), Vertex<Sl>>,
 
-    camera: gl::UniformBuffer<Camera>,
+    camera: gl::UniformBuffer<Camera<Sl>>,
     time: gl::UniformBuffer<sl::F32>,
     texture: gl::ColorTexture2d<sl::Vec4>,
 
-    vertices: gl::VertexBuffer<Vertex>,
+    vertices: gl::VertexBuffer<Vertex<Sl>>,
     elements: gl::ElementBuffer,
 
     start_time: Instant,
