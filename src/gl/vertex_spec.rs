@@ -127,7 +127,7 @@ impl<'a> VertexVisitor<'a, Gl> for Counts {
         let len = binding.len();
 
         match binding.input_rate() {
-            VertexInputRate::VsInterface => {
+            VertexInputRate::Vertex => {
                 if let Some(num_vertices) = self.num_vertices {
                     assert!(num_vertices == len);
                 }
