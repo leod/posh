@@ -5,7 +5,7 @@
 
 use super::dag::{BuiltInType, SamplerType, Type};
 
-/// UniformBindings input definition.
+/// UniformInterface input definition.
 #[derive(Debug, Clone)]
 pub struct UniformBlockDef {
     /// The name of the uniform block.
@@ -29,7 +29,7 @@ pub struct UniformSamplerDef {
     pub texture_unit: usize,
 }
 
-/// VsBindings attribute definition.
+/// VsInterface attribute definition.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VertexAttributeDef {
     pub name: String,
@@ -40,7 +40,7 @@ pub struct VertexAttributeDef {
 /// The rate at which a particular vertex input advances.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum VertexInputRate {
-    VsBindings,
+    VsInterface,
     Instance,
 }
 
@@ -61,7 +61,7 @@ impl InterpolationQualifier {
     }
 }
 
-/// VsBindings input definition.
+/// VsInterface input definition.
 #[derive(Debug, Clone)]
 pub struct VertexBlockDef {
     pub attributes: Vec<VertexAttributeDef>,
@@ -80,12 +80,12 @@ pub struct ProgramDef {
     /// Samplers that the program needs.
     pub uniform_sampler_defs: Vec<UniformSamplerDef>,
 
-    /// VsBindings blocks that the program needs.
+    /// VsInterface blocks that the program needs.
     pub vertex_block_defs: Vec<VertexBlockDef>,
 
-    /// VsBindings shader source code.
+    /// VsInterface shader source code.
     pub vertex_shader_source: String,
 
-    /// FsBindings shader source code.
+    /// FsInterface shader source code.
     pub fragment_shader_source: String,
 }

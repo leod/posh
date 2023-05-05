@@ -3,22 +3,22 @@ use std::{marker::PhantomData, rc::Rc};
 use crate::{
     interface::UniformVisitor,
     sl::{self, ColorSample},
-    Block, FsBindings, Gl, Sl, UniformBindings, VsBindings,
+    Block, FsInterface, Gl, Sl, UniformInterface, VsInterface,
 };
 
 use super::{
-    raw, ColorSampler2d, ComparisonSampler2d, DrawError, Framebuffer, Settings,
+    raw, ColorSampler2d, ComparisonSampler2d, DrawError, DrawSettings, Framebuffer,
     UniformBufferBinding, VertexSpec,
 };
 
-pub struct Input<'a, U, V>
+pub struct DrawInputs<'a, U, V>
 where
-    U: UniformBindings<Sl>,
-    V: VsBindings<Sl>,
+    U: UniformInterface<Sl>,
+    V: VsInterface<Sl>,
 {
-    pub uniform: &'a U::Gl,
-    pub vertex: &'a VertexSpec<V>,
-    pub settings: &'a Settings,
+    pub uniforms: &'a U::Gl,
+    pub vertex_spec: &'a VertexSpec<V>,
+    pub settings: &'a DrawSettings,
 }
 
 pub struct Program<U, V, F = sl::Vec4> {
@@ -28,9 +28,9 @@ pub struct Program<U, V, F = sl::Vec4> {
 
 impl<U, V, F> Program<U, V, F>
 where
-    U: UniformBindings<Sl>,
-    V: VsBindings<Sl>,
-    F: FsBindings<Sl>,
+    U: UniformInterface<Sl>,
+    V: VsInterface<Sl>,
+    F: FsInterface<Sl>,
 {
     pub(super) fn unchecked_from_raw(raw: raw::Program) -> Self {
         Program {
@@ -41,13 +41,13 @@ where
 
     pub fn draw(
         &self,
-        input: Input<U, V>,
+        inputs: DrawInputs<U, V>,
         framebuffer: impl Into<Framebuffer<F>>,
     ) -> Result<(), DrawError> {
         // TODO: These allocations can be avoided once stable has allocators.
         // TODO: Remove hardcoded path names.
         let mut uniform_visitor = CollectUniforms::default();
-        input.uniform.visit("", &mut uniform_visitor);
+        inputs.uniforms.visit("", &mut uniform_visitor);
 
         // FIXME: Safety: check that all vertex buffers are large enough for the
         // values in the element buffer (if we have one).
@@ -56,9 +56,9 @@ where
             self.raw.draw(
                 &uniform_visitor.raw_uniform_buffers,
                 &uniform_visitor.raw_samplers,
-                &input.vertex.raw(),
+                &inputs.vertex_spec.raw(),
                 &framebuffer.into().raw(),
-                input.settings,
+                inputs.settings,
             )
         }?;
 

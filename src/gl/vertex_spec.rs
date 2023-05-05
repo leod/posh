@@ -4,14 +4,14 @@ use crate::{
     gl::{vertex_buffer::vertex_size, VertexBufferBinding},
     interface::VertexVisitor,
     sl::program_def::{VertexBlockDef, VertexInputRate},
-    Block, Gl, Sl, VsBindings,
+    Block, Gl, Sl, VsInterface,
 };
 
-use super::{raw, ElementBufferBinding, Mode};
+use super::{raw, ElementBufferBinding, PrimitiveMode};
 
 #[derive(Clone)]
-pub struct VertexSpec<V: VsBindings<Sl>> {
-    mode: Mode,
+pub struct VertexSpec<V: VsInterface<Sl>> {
+    mode: PrimitiveMode,
     vertex_data: V::Gl,
     vertex_range: Option<Range<usize>>,
     element_data: Option<ElementBufferBinding>,
@@ -19,7 +19,7 @@ pub struct VertexSpec<V: VsBindings<Sl>> {
 }
 
 impl VertexSpec<()> {
-    pub fn new(mode: Mode) -> Self {
+    pub fn new(mode: PrimitiveMode) -> Self {
         Self {
             mode,
             vertex_data: (),
@@ -31,8 +31,8 @@ impl VertexSpec<()> {
 
     pub fn with_vertex_data<V>(self, vertices: V) -> VertexSpec<V::Sl>
     where
-        V: VsBindings<Gl>,
-        V::Sl: VsBindings<Sl, Gl = V>,
+        V: VsInterface<Gl>,
+        V::Sl: VsInterface<Sl, Gl = V>,
     {
         let Counts {
             num_vertices,
@@ -57,7 +57,7 @@ impl VertexSpec<()> {
     }
 }
 
-impl<V: VsBindings<Sl>> VertexSpec<V> {
+impl<V: VsInterface<Sl>> VertexSpec<V> {
     pub fn with_vertex_range(mut self, vertex_range: Range<usize>) -> Self {
         // NOTE: The stored `vertex_range` is ignored if an element buffer is
         // passed as well.
@@ -92,7 +92,7 @@ impl<V: VsBindings<Sl>> VertexSpec<V> {
     }
 }
 
-fn raw_vertices<V: VsBindings<Gl>>(vertices: &V) -> Vec<raw::VertexBufferBinding> {
+fn raw_vertices<V: VsInterface<Gl>>(vertices: &V) -> Vec<raw::VertexBufferBinding> {
     // TODO: Reduce per-draw-call allocations.
     struct Visitor(Vec<raw::VertexBufferBinding>);
 
@@ -127,7 +127,7 @@ impl<'a> VertexVisitor<'a, Gl> for Counts {
         let len = binding.len();
 
         match binding.input_rate() {
-            VertexInputRate::VsBindings => {
+            VertexInputRate::VsInterface => {
                 if let Some(num_vertices) = self.num_vertices {
                     assert!(num_vertices == len);
                 }
@@ -143,7 +143,7 @@ impl<'a> VertexVisitor<'a, Gl> for Counts {
     }
 }
 
-fn get_counts<V: VsBindings<Gl>>(vertices: &V) -> Counts {
+fn get_counts<V: VsInterface<Gl>>(vertices: &V) -> Counts {
     // TODO: Remove hardcoded path names.
     let mut counts = Counts {
         num_vertices: None,

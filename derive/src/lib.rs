@@ -1,11 +1,11 @@
 mod block;
 mod r#const;
-mod fs_bindings;
-mod uniform_bindings;
+mod fs_interface;
+mod uniform_interface;
 mod utils;
 mod value;
 mod varying;
-mod vs_bindings;
+mod vs_interface;
 
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput};
@@ -32,23 +32,23 @@ pub fn derive_consts(input: TokenStream) -> TokenStream {
     .into()
 }
 
-/// Derives `FsBindings` for a struct that is generic in `FsBindingsDom`.
-#[proc_macro_derive(FsBindings)]
-pub fn derive_fs_bindings(input: TokenStream) -> TokenStream {
+/// Derives `FsInterface` for a struct that is generic in `FsInterfaceDom`.
+#[proc_macro_derive(FsInterface)]
+pub fn derive_fs_interface(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    match fs_bindings::derive(input) {
+    match fs_interface::derive(input) {
         Ok(ts) => ts,
         Err(e) => e.to_compile_error(),
     }
     .into()
 }
 
-/// Derives `UniformBindings` for a struct that is generic in
-/// `UniformBindingsDom`.
-#[proc_macro_derive(UniformBindings)]
-pub fn derive_uniform_data(input: TokenStream) -> TokenStream {
+/// Derives `UniformInterface` for a struct that is generic in
+/// `UniformInterfaceDom`.
+#[proc_macro_derive(UniformInterface)]
+pub fn derive_uniform_interface(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    match uniform_bindings::derive(input) {
+    match uniform_interface::derive(input) {
         Ok(ts) => ts,
         Err(e) => e.to_compile_error(),
     }
@@ -77,11 +77,11 @@ pub fn derive_varying(input: TokenStream) -> TokenStream {
     .into()
 }
 
-/// Derives `VsBindings` for a struct that is generic in `VsBindingsDom`.
-#[proc_macro_derive(VsBindings, attributes(vertex))]
-pub fn derive_vs_bindings(input: TokenStream) -> TokenStream {
+/// Derives `VsInterface` for a struct that is generic in `VsInterfaceDom`.
+#[proc_macro_derive(VsInterface, attributes(vertex))]
+pub fn derive_vs_interface(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    match vs_bindings::derive(input) {
+    match vs_interface::derive(input) {
         Ok(ts) => ts,
         Err(e) => e.to_compile_error(),
     }

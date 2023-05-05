@@ -114,16 +114,16 @@ pub fn associated_type_to_trait(ty: &str) -> Option<Path> {
 
     let vertex_tys = vec!["Block"];
 
-    let fragment_tys = vec!["Output"];
+    let fragment_tys = vec!["ColorAttachment"];
 
     // TODO: Update associated type list, or see if we can do without it by now.
 
     if block_tys.contains(&ty) {
         Some(parse_quote!(::posh::BlockDom))
     } else if vertex_tys.contains(&ty) {
-        Some(parse_quote!(::posh::VsBindingsDom))
+        Some(parse_quote!(::posh::VsInterfaceDom))
     } else if fragment_tys.contains(&ty) {
-        Some(parse_quote!(::posh::FsBindingsDom))
+        Some(parse_quote!(::posh::FsInterfaceDom))
     } else {
         None
     }
