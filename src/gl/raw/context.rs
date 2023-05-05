@@ -7,12 +7,12 @@ use crate::{
     sl::program_def::ProgramDef,
 };
 
-use super::{Buffer, Caps, ContextError, Image, Program, Settings, Texture2d, TextureError};
+use super::{Buffer, Caps, ContextError, DrawSettings, Image, Program, Texture2d, TextureError};
 
 pub(super) struct ContextShared {
     gl: glow::Context,
     caps: Caps,
-    draw_settings: Cell<Settings>,
+    draw_settings: Cell<DrawSettings>,
     draw_fbo: glow::Framebuffer,
     default_framebuffer_size: Cell<[u32; 2]>,
 }
@@ -34,7 +34,7 @@ impl ContextShared {
         &self.caps
     }
 
-    pub(super) fn set_draw_settings(&self, new: &Settings, framebuffer_size: [u32; 2]) {
+    pub(super) fn set_draw_settings(&self, new: &DrawSettings, framebuffer_size: [u32; 2]) {
         let gl = &self.gl;
 
         let current = self.draw_settings.get();
@@ -80,7 +80,7 @@ impl Context {
         let shared = Rc::new(ContextShared {
             gl,
             caps,
-            draw_settings: Cell::new(Settings::default()),
+            draw_settings: Cell::new(DrawSettings::default()),
             draw_fbo,
             default_framebuffer_size: Cell::new(default_framebuffer_size),
         });

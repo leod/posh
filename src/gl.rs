@@ -23,13 +23,13 @@ pub use context::Context;
 pub use element_buffer::{Element, ElementBuffer, ElementBufferBinding};
 pub use framebuffer::{ColorAttachment, DepthAttachment, Framebuffer};
 pub use mat::{Mat2, Mat3, Mat4};
-pub use program::{Input, Program};
+pub use program::{DrawInputs, Program};
 pub use raw::{
     BlendEquation, BlendFunc, Blending, BufferError, BufferUsage, Caps, Comparison, ContextError,
-    CreateError, CullFace, DrawError, ElementType, FramebufferError, ImageFormat,
-    ImageInternalFormat, Mode, ProgramError, ProgramValidationError, Rect, Sampler2dSettings,
-    SamplerMagFilter, SamplerMinFilter, SamplerWrap, Settings, StencilOp, StencilOps, StencilTest,
-    TextureError, VertexArrayError,
+    CreateError, CullFace, DrawError, DrawSettings, ElementType, FramebufferError, ImageFormat,
+    ImageInternalFormat, PrimitiveMode, ProgramError, ProgramValidationError, Rect,
+    Sampler2dSettings, SamplerMagFilter, SamplerMinFilter, SamplerWrap, StencilOp, StencilOps,
+    StencilTest, TextureError, VertexArrayError,
 };
 pub use texture::{ColorSampler2d, ColorTexture2d, ComparisonSampler2d, DepthTexture2d};
 pub use uniform_buffer::{UniformBuffer, UniformBufferBinding};

@@ -2,7 +2,7 @@ use std::time::Instant;
 
 use image::{io::Reader as ImageReader, EncodableLayout};
 
-use posh::{gl, sl, Block, BlockDom, Gl, Sl, UniformBindingsDom};
+use posh::{gl, sl, Block, BlockDom, Gl, Sl, UniformInterface, UniformInterfaceDom};
 
 const WIDTH: u32 = 1024;
 const HEIGHT: u32 = 768;
@@ -23,8 +23,8 @@ struct Vertex<D: BlockDom = Sl> {
     tex_coords: D::Vec2,
 }
 
-#[derive(posh::UniformBindings)]
-struct UniformBindings<D: UniformBindingsDom = Sl> {
+#[derive(UniformInterface)]
+struct Uniforms<D: UniformInterfaceDom = Sl> {
     camera: D::Block<Camera>,
     time: D::Block<sl::F32>,
 }
@@ -35,7 +35,7 @@ fn zxy(v: sl::Vec3) -> sl::Vec3 {
     sl::vec3(v.z, v.x, v.y)
 }
 
-fn vertex_shader(uniforms: UniformBindings, vertex: Vertex) -> sl::VsOut<sl::Vec2> {
+fn vertex_stage(uniforms: Uniforms, vertex: Vertex) -> sl::VsOut<sl::Vec2> {
     let camera = uniforms.camera;
 
     let vertex_pos = vertex
@@ -54,7 +54,7 @@ fn vertex_shader(uniforms: UniformBindings, vertex: Vertex) -> sl::VsOut<sl::Vec
 // Host code
 
 struct Demo {
-    program: gl::Program<(UniformBindings, sl::ColorSampler2d), Vertex>,
+    program: gl::Program<(Uniforms, sl::ColorSampler2d), Vertex>,
 
     camera: gl::UniformBuffer<Camera>,
     time: gl::UniformBuffer<sl::F32>,
@@ -81,7 +81,7 @@ impl Demo {
         );
 
         Ok(Self {
-            program: gl.create_program(vertex_shader, sl::ColorSampler2d::sample)?,
+            program: gl.create_program(vertex_stage, sl::ColorSampler2d::sample)?,
             camera: gl.create_uniform_buffer(Camera::default(), StaticDraw)?,
             time: gl.create_uniform_buffer(0.0, StreamDraw)?,
             texture: gl.create_color_texture_2d_with_mipmap(image)?,
@@ -96,20 +96,20 @@ impl Demo {
         self.time.set(time);
 
         self.program.draw(
-            gl::Input {
-                uniform: &(
-                    UniformBindings {
+            gl::DrawInputs {
+                uniforms: &(
+                    Uniforms {
                         camera: self.camera.as_binding(),
                         time: self.time.as_binding(),
                     },
                     self.texture
                         .as_color_sampler(gl::Sampler2dSettings::linear()),
                 ),
-                vertex: &self
+                vertex_spec: &self
                     .vertices
-                    .as_vertex_spec(gl::Mode::Triangles)
+                    .as_vertex_spec(gl::PrimitiveMode::Triangles)
                     .with_element_data(self.elements.as_binding()),
-                settings: &gl::Settings::default()
+                settings: &gl::DrawSettings::default()
                     .with_clear_color([0.1, 0.2, 0.3, 1.0])
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less),

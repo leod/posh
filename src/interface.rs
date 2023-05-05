@@ -1,11 +1,11 @@
 mod block;
-mod fragment;
-mod uniform;
-mod vertex;
+mod fs_interface;
+mod uniform_interface;
+mod vs_interface;
 
 pub use block::{Block, BlockDom};
-pub use fragment::{FragmentVisitor, FsBindings, FsBindingsDom};
-pub use uniform::{
-    UniformBindings, UniformBindingsDom, UniformNonUnit, UniformUnion, UniformVisitor,
+pub use fs_interface::{FragmentVisitor, FsInterface, FsInterfaceDom};
+pub use uniform_interface::{
+    UniformInterface, UniformInterfaceDom, UniformNonUnit, UniformUnion, UniformVisitor,
 };
-pub use vertex::{VertexField, VertexVisitor, VsBindings, VsBindingsDom};
+pub use vs_interface::{VertexField, VertexVisitor, VsInterface, VsInterfaceDom};

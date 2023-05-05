@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use crate::{
     interface::FragmentVisitor,
     sl::{self, ColorSample},
-    FsBindings, Gl, Sl,
+    FsInterface, Gl, Sl,
 };
 
 use super::{
@@ -66,7 +66,7 @@ impl From<DepthAttachment> for Framebuffer<()> {
 }
 
 #[derive(Clone)]
-enum FramebufferInternal<F: FsBindings<Sl>> {
+enum FramebufferInternal<F: FsInterface<Sl>> {
     Default,
     Depth(DepthAttachment),
     Color(F::Gl),
@@ -77,9 +77,9 @@ enum FramebufferInternal<F: FsBindings<Sl>> {
 }
 
 #[derive(Clone)]
-pub struct Framebuffer<F: FsBindings<Sl> = sl::Vec4>(FramebufferInternal<F>);
+pub struct Framebuffer<F: FsInterface<Sl> = sl::Vec4>(FramebufferInternal<F>);
 
-impl<F: FsBindings<Sl>> Framebuffer<F> {
+impl<F: FsInterface<Sl>> Framebuffer<F> {
     pub fn color(color: &F::Gl) -> Self {
         Framebuffer(FramebufferInternal::Color(color.clone()))
     }
@@ -123,13 +123,13 @@ impl Default for Framebuffer<sl::Vec4> {
     }
 }
 
-impl<'a, F: FsBindings<Sl>> From<&'a Framebuffer<F>> for Framebuffer<F> {
+impl<'a, F: FsInterface<Sl>> From<&'a Framebuffer<F>> for Framebuffer<F> {
     fn from(value: &'a Framebuffer<F>) -> Self {
         value.clone()
     }
 }
 
-fn raw_color_attachments<F: FsBindings<Gl>>(attachments: &F) -> Vec<raw::Attachment> {
+fn raw_color_attachments<F: FsInterface<Gl>>(attachments: &F) -> Vec<raw::Attachment> {
     struct Visitor(Vec<raw::Attachment>);
 
     impl<'a> FragmentVisitor<'a, Gl> for Visitor {

@@ -5,11 +5,11 @@ pub mod gl;
 pub mod sl;
 
 pub use interface::{
-    Block, BlockDom, FsBindings, FsBindingsDom, UniformBindings, UniformBindingsDom,
-    UniformNonUnit, UniformUnion, VsBindings, VsBindingsDom,
+    Block, BlockDom, FsInterface, FsInterfaceDom, UniformInterface, UniformInterfaceDom,
+    UniformNonUnit, UniformUnion, VsInterface, VsInterfaceDom,
 };
 
-pub use posh_derive::{Block, FsBindings, UniformBindings, VsBindings};
+pub use posh_derive::{Block, FsInterface, UniformInterface, VsInterface};
 
 pub use bytemuck;
 pub use crevice;

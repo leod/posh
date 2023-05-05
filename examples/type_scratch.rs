@@ -1,6 +1,6 @@
 use posh::{
     sl::{self, Value},
-    Block, BlockDom, Sl, UniformBindings, UniformBindingsDom, VsBindings, VsBindingsDom,
+    Block, BlockDom, Sl, UniformInterface, UniformInterfaceDom, VsInterface, VsInterfaceDom,
 };
 
 #[derive(Clone, Copy, Value)]
@@ -37,31 +37,31 @@ struct MyNestedVertex<D: BlockDom = Sl> {
     y: D::Vec2,
 }
 
-#[derive(Copy, Clone, VsBindings)]
-struct MyVertexIface<D: VsBindingsDom = Sl> {
+#[derive(Copy, Clone, VsInterface)]
+struct MyVertexIface<D: VsInterfaceDom = Sl> {
     vertex: D::Block<MyVertex>,
     instance: D::Block<MyNestedVertex>,
 }
 
-#[derive(UniformBindings)]
-struct MyUniformIface<D: UniformBindingsDom = Sl> {
+#[derive(UniformInterface)]
+struct MyUniformIface<D: UniformInterfaceDom = Sl> {
     uniform: D::Block<MyUniform1>,
 }
 
-#[derive(UniformBindings)]
-struct MyUniformIface2<D: UniformBindingsDom = Sl> {
+#[derive(UniformInterface)]
+struct MyUniformIface2<D: UniformInterfaceDom = Sl> {
     uniformxy: D::Block<MyUniform1>,
     bla: MyUniformIface<D>,
     zzz: D::Block<MyUniform1>,
 }
 
-#[derive(UniformBindings)]
-struct GenericUniformIface<U, D: UniformBindingsDom = Sl>
+#[derive(UniformInterface)]
+struct GenericUniformIface<U, D: UniformInterfaceDom = Sl>
 where
-    U: UniformBindings<Sl>,
+    U: UniformInterface<Sl>,
 {
     uniformxy: D::Block<MyUniform1>,
-    x: D::UniformBindings<U>,
+    x: D::UniformInterface<U>,
 }
 
 #[derive(sl::Const)]

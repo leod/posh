@@ -28,7 +28,7 @@ struct ColorVertex<D: BlockDom = Sl> {
     flag: D::I32,
 }
 
-fn vertex_shader(globals: Globals, vertex: ColorVertex) -> VsOut<sl::Vec4> {
+fn vertex_stage(globals: Globals, vertex: ColorVertex) -> VsOut<sl::Vec4> {
     let shift = globals.offset * globals.time;
     let shift = sl::branch(
         globals.invert.eq(2),
@@ -62,15 +62,15 @@ fn vertex_shader(globals: Globals, vertex: ColorVertex) -> VsOut<sl::Vec4> {
     }
 }
 
-fn fragment_shader(_: (), varying: sl::Vec4) -> sl::Vec4 {
+fn fragment_stage(_: (), varying: sl::Vec4) -> sl::Vec4 {
     varying * 3.0
 }
 
 fn main() {
     let program_def =
         posh::sl::transpile::transpile_to_program_def::<Globals, _, _, _, _, _, _, _, _, _>(
-            vertex_shader,
-            fragment_shader,
+            vertex_stage,
+            fragment_stage,
         );
 
     println!("{}", program_def.vertex_shader_source);

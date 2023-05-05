@@ -1,7 +1,8 @@
 use std::time::Instant;
 
 use posh::{
-    gl, sl, Block, BlockDom, FsBindings, FsBindingsDom, Gl, Sl, UniformBindings, UniformBindingsDom,
+    gl, sl, Block, BlockDom, FsInterface, FsInterfaceDom, Gl, Sl, UniformInterface,
+    UniformInterfaceDom,
 };
 
 const WIDTH: u32 = 1024;
@@ -17,21 +18,21 @@ pub struct Globals<D: BlockDom> {
     time: D::F32,
 }
 
-#[derive(Clone, Copy, UniformBindings)]
-pub struct SceneSamplers<D: UniformBindingsDom> {
+#[derive(Clone, Copy, UniformInterface)]
+pub struct SceneSamplers<D: UniformInterfaceDom> {
     albedo: D::ColorSampler2d<sl::Vec3>,
     world_normal: D::ColorSampler2d<sl::Vec3>,
     world_pos: D::ColorSampler2d<sl::Vec3>,
 }
 
-#[derive(Clone, Copy, FsBindings)]
-pub struct SceneFsBindings<D: FsBindingsDom> {
-    albedo: D::Output<sl::Vec3>,
-    world_normal: D::Output<sl::Vec3>,
-    world_pos: D::Output<sl::Vec3>,
+#[derive(Clone, Copy, FsInterface)]
+pub struct SceneAttachments<D: FsInterfaceDom> {
+    albedo: D::ColorAttachment<sl::Vec3>,
+    world_normal: D::ColorAttachment<sl::Vec3>,
+    world_pos: D::ColorAttachment<sl::Vec3>,
 }
 
-impl SceneFsBindings<Gl> {
+impl SceneAttachments<Gl> {
     fn as_scene_samplers(&self) -> SceneSamplers<Gl> {
         let settings = gl::Sampler2dSettings::linear();
 
@@ -51,7 +52,7 @@ mod scene_pass {
         Sl,
     };
 
-    use crate::SceneFsBindings;
+    use crate::SceneAttachments;
 
     use super::Globals;
 
@@ -100,7 +101,7 @@ mod scene_pass {
     pub fn vertex_stage(
         globals: Globals<Sl>,
         input: sl::VsIn<()>,
-    ) -> sl::VsOut<SceneFsBindings<Sl>> {
+    ) -> sl::VsOut<SceneAttachments<Sl>> {
         let vertex_id = input.vertex_id / 6 * 4 + CUBE_ELEMENTS.to_sl().get(input.vertex_id % 6);
 
         let object_pos = CUBE_POSITIONS
@@ -118,7 +119,7 @@ mod scene_pass {
 
         sl::VsOut {
             position: screen_pos,
-            varying: SceneFsBindings {
+            varying: SceneAttachments {
                 albedo: sl::vec3(1.0, 0.0, 0.0),
                 world_pos,
                 world_normal,
@@ -126,7 +127,7 @@ mod scene_pass {
         }
     }
 
-    pub fn fragment_stage(_: (), varying: SceneFsBindings<Sl>) -> SceneFsBindings<Sl> {
+    pub fn fragment_stage(_: (), varying: SceneAttachments<Sl>) -> SceneAttachments<Sl> {
         varying
     }
 }
@@ -148,7 +149,7 @@ mod present_pass {
         glam::vec2(1., -1.),
     ];
 
-    pub fn vertex(_: (), input: sl::VsIn<()>) -> sl::VsOut<sl::Vec2> {
+    pub fn vertex_stage(_: (), input: sl::VsIn<()>) -> sl::VsOut<sl::Vec2> {
         let position = SQUARE_POSITIONS.to_sl().get(input.vertex_id);
 
         sl::VsOut {
@@ -157,7 +158,7 @@ mod present_pass {
         }
     }
 
-    pub fn fragment(samplers: SceneSamplers<Sl>, uv: sl::Vec2) -> sl::Vec4 {
+    pub fn fragment_stage(samplers: SceneSamplers<Sl>, uv: sl::Vec2) -> sl::Vec4 {
         let albedo = samplers.albedo.sample(sl::vec2(uv.x * 3.0, uv.y));
         let world_normal = samplers
             .world_normal
@@ -180,11 +181,11 @@ mod present_pass {
 // Host code
 
 struct Demo {
-    scene_program: gl::Program<Globals<Sl>, (), SceneFsBindings<Sl>>,
+    scene_program: gl::Program<Globals<Sl>, (), SceneAttachments<Sl>>,
     present_program: gl::Program<SceneSamplers<Sl>, ()>,
 
     globals: gl::UniformBuffer<Globals<Sl>>,
-    scene_textures: SceneFsBindings<Gl>,
+    scene_attachments: SceneAttachments<Gl>,
     depth_texture: gl::DepthTexture2d,
 
     start_time: Instant,
@@ -201,7 +202,7 @@ impl Demo {
         let scene_texture =
             || gl.create_color_texture_2d(gl::ColorImage::rgb_u8_zero([WIDTH, HEIGHT]));
 
-        let scene_textures = SceneFsBindings {
+        let scene_attachments = SceneAttachments {
             albedo: scene_texture()?.as_color_attachment(),
             world_normal: scene_texture()?.as_color_attachment(),
             world_pos: scene_texture()?.as_color_attachment(),
@@ -210,9 +211,10 @@ impl Demo {
         Ok(Self {
             scene_program: gl
                 .create_program(scene_pass::vertex_stage, scene_pass::fragment_stage)?,
-            present_program: gl.create_program(present_pass::vertex, present_pass::fragment)?,
+            present_program: gl
+                .create_program(present_pass::vertex_stage, present_pass::fragment_stage)?,
             globals: gl.create_uniform_buffer(Globals::new(0.0), StreamDraw)?,
-            scene_textures,
+            scene_attachments,
             depth_texture: gl.create_depth_texture_2d(gl::DepthImage::f32_zero([WIDTH, HEIGHT]))?,
             start_time: Instant::now(),
         })
@@ -223,25 +225,27 @@ impl Demo {
         self.globals.set(Globals::new(time));
 
         self.scene_program.draw(
-            gl::Input {
-                uniform: &self.globals.as_binding(),
-                vertex: &gl::VertexSpec::new(gl::Mode::Triangles).with_vertex_range(0..36),
-                settings: &gl::Settings::default()
+            gl::DrawInputs {
+                uniforms: &self.globals.as_binding(),
+                vertex_spec: &gl::VertexSpec::new(gl::PrimitiveMode::Triangles)
+                    .with_vertex_range(0..36),
+                settings: &gl::DrawSettings::default()
                     .with_clear_color([0.0; 4])
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less),
             },
             gl::Framebuffer::color_and_depth(
-                &self.scene_textures,
+                &self.scene_attachments,
                 &self.depth_texture.as_depth_attachment(),
             ),
         )?;
 
         self.present_program.draw(
-            gl::Input {
-                uniform: &self.scene_textures.as_scene_samplers(),
-                vertex: &gl::VertexSpec::new(gl::Mode::Triangles).with_vertex_range(0..6),
-                settings: &gl::Settings::default(),
+            gl::DrawInputs {
+                uniforms: &self.scene_attachments.as_scene_samplers(),
+                vertex_spec: &gl::VertexSpec::new(gl::PrimitiveMode::Triangles)
+                    .with_vertex_range(0..6),
+                settings: &gl::DrawSettings::default(),
             },
             gl::Framebuffer::default(),
         )?;

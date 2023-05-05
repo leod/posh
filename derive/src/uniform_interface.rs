@@ -28,8 +28,8 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let field_strings = fields.strings();
 
     Ok(quote! {
-        // Implement `UniformBindings<D>` for the struct.
-        unsafe impl #impl_generics ::posh::UniformBindings<#generics_view_type>
+        // Implement `UniformInterface<D>` for the struct.
+        unsafe impl #impl_generics ::posh::UniformInterface<#generics_view_type>
         for #ident #ty_generics
         #where_clause
         {
@@ -53,7 +53,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
                 Self {
                     #(
                         #field_idents:
-                            <#field_types as ::posh::UniformBindings<#generics_view_type>>::
+                            <#field_types as ::posh::UniformInterface<#generics_view_type>>::
                                 shader_input(
                                     &::posh::internal::join_ident_path(path, #field_strings),
                                 ),
@@ -67,12 +67,12 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         #where_clause_init
         {}
 
-        // Check that all field types implement `UniformBindings<D>`.
+        // Check that all field types implement `UniformInterface<D>`.
         const _: fn() = || {
             fn check_field<D, U>()
             where
-                D: ::posh::UniformBindingsDom,
-                U: ::posh::UniformBindings<D>,
+                D: ::posh::UniformInterfaceDom,
+                U: ::posh::UniformInterface<D>,
             {}
 
             fn check_struct #impl_generics(value: &#ident #ty_generics) #where_clause {
