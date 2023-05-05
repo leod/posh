@@ -40,7 +40,7 @@ pub struct VertexAttributeDef {
 /// The rate at which a particular vertex input advances.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum VertexInputRate {
-    VsInterface,
+    Vertex,
     Instance,
 }
 
