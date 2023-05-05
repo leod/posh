@@ -73,11 +73,11 @@ struct Demo {
     scene_program: gl::Program<State<Sl>, sl::Vec2>,
     present_program: gl::Program<PresentUniforms<Sl>, PresentVertex<Sl>>,
 
-    state: gl::UniformBuffer<State<Sl>>,
+    state: gl::UniformBuffer<State<Gl>>,
     texture: gl::ColorTexture2d,
 
-    triangle_vertices: gl::VertexBuffer<sl::Vec2>,
-    quad_vertices: gl::VertexBuffer<PresentVertex<Sl>>,
+    triangle_vertices: gl::VertexBuffer<gl::Vec2>,
+    quad_vertices: gl::VertexBuffer<PresentVertex<Gl>>,
     quad_elements: gl::ElementBuffer,
 
     start_time: Instant,

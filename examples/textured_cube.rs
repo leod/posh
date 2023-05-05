@@ -56,11 +56,11 @@ fn vertex_stage(uniforms: Uniforms<Sl>, vertex: Vertex<Sl>) -> sl::VsOut<sl::Vec
 struct Demo {
     program: gl::Program<(Uniforms<Sl>, sl::ColorSampler2d), Vertex<Sl>>,
 
-    camera: gl::UniformBuffer<Camera<Sl>>,
-    time: gl::UniformBuffer<sl::F32>,
+    camera: gl::UniformBuffer<Camera<Gl>>,
+    time: gl::UniformBuffer<f32>,
     texture: gl::ColorTexture2d<sl::Vec4>,
 
-    vertices: gl::VertexBuffer<Vertex<Sl>>,
+    vertices: gl::VertexBuffer<Vertex<Gl>>,
     elements: gl::ElementBuffer,
 
     start_time: Instant,
