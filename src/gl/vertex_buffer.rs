@@ -71,9 +71,9 @@ impl<B: Block<Sl>> VertexBufferBinding<B> {
     }
 
     pub fn len(&self) -> usize {
-        assert_eq!(self.raw.len() % size_of::<B>(), 0);
+        assert_eq!(self.raw.len() % size_of::<B::Gl>(), 0);
 
-        self.raw.len() / size_of::<B>()
+        self.raw.len() / size_of::<B::Gl>()
     }
 
     pub fn is_empty(&self) -> bool {
