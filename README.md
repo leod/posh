@@ -1,10 +1,13 @@
 # posh
 
 `posh` is a type-safe OpenGL ES 3.0 wrapper library with the aim of making graphics programming enjoyable.
+`posh` consists of a graphics library (`posh::gl`) and a shading language (`posh::sl`), which are tightly integrated in a single crate.
 
-## Example
+## Status
 
-TODO
+`posh` is in an early alpha stage.
+Use with caution.
+Contributions are welcome!
 
 ## Scope
 
