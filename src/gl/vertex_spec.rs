@@ -103,7 +103,7 @@ fn raw_vertices<V: VsInterface<Gl>>(vertices: &V) -> Vec<raw::VertexBufferBindin
                     attributes: B::vertex_attribute_defs(path),
                 },
                 input_rate: binding.input_rate(),
-                stride: size_of::<B>(),
+                stride: size_of::<B::Gl>(),
             });
         }
     }
