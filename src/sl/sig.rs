@@ -42,6 +42,9 @@ pub struct VsOut<W> {
     pub varying: W,
 }
 
+#[derive(Debug, Clone)]
+pub struct Derivatives(pub(super) ());
+
 /// Per-fragment input given to a fragment shader.
 #[derive(Debug, Clone)]
 pub struct FsIn<W> {
@@ -49,7 +52,7 @@ pub struct FsIn<W> {
     pub fragment_coord: Vec4,
     pub front_facing: Bool,
     pub point_coord: Vec2,
-    pub(crate) _private: (),
+    pub derivatives: Derivatives,
 }
 
 /// Per-fragment output computed by a fragment shader.

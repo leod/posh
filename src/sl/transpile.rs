@@ -17,6 +17,7 @@ use super::{
     program_def::{ProgramDef, UniformBlockDef, UniformSamplerDef, VertexBlockDef},
     ColorSample, ColorSampler2d, ComparisonSampler2d, Const, FsIn, FsOut, FullVsOut, Object,
     Varying, Vec4, VsIn, VsOut, I32,
+    Derivatives,
 };
 
 /// Types that can be used as vertex input for a vertex shader.
@@ -285,7 +286,7 @@ where
             fragment_coord: value_arg("gl_FragCoord"),
             front_facing: value_arg("gl_FrontFacing"),
             point_coord: value_arg("gl_PointCoord"),
-            _private: (),
+            derivatives: Derivatives(()),
         };
         let output = fragment_shader(consts, uniforms, InW::from(input)).into();
 
