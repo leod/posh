@@ -125,6 +125,7 @@ fn bind_attachments(
 
     unsafe { gl.draw_buffers(&draw_buffers) };
 
+    #[cfg(debug_assertions)]
     check_framebuffer_completeness(gl).map_err(FramebufferError::Incomplete)?;
 
     #[cfg(debug_assertions)]
