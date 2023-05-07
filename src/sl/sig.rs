@@ -42,7 +42,7 @@ pub struct VsOut<W> {
     pub varying: W,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Derivatives(pub(super) ());
 
 /// Per-fragment input given to a fragment shader.
