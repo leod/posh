@@ -31,7 +31,7 @@ pub use {
     primitives::{all, and, any, branch, branches, or},
     sampler::{ColorSample, ColorSampler2d, ComparisonSampler2d, Sample},
     scalar::{Bool, F32, I32, U32},
-    sig::{Const, FsIn, FsOut, FullVsOut, VsIn, VsOut},
+    sig::{Const, Derivatives, FsIn, FsOut, FullVsOut, VsIn, VsOut},
     varying::Varying,
     vec::{
         bvec2, bvec3, bvec4, ivec2, ivec3, ivec4, uvec2, uvec3, uvec4, vec2, vec3, vec4, BVec2,
