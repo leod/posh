@@ -207,15 +207,15 @@ macro_rules! impl_gen_type {
                 super::primitives::built_in_3("smoothstep", edge0.to_sl(), edge1.to_sl(), self)
             }
 
-            pub fn dfdx<W>(self, _: super::FsIn<W>) -> Self {
+            pub fn dfdx(self, _: super::Derivatives) -> Self {
                 super::primitives::built_in_1("dFdx", self)
             }
 
-            pub fn dfdy<W>(self, _: super::FsIn<W>) -> Self {
+            pub fn dfdy(self, _: super::Derivatives) -> Self {
                 super::primitives::built_in_1("dFdy", self)
             }
 
-            pub fn fwidth<W>(self, _: super::FsIn<W>) -> Self {
+            pub fn fwidth(self, _: super::Derivatives) -> Self {
                 super::primitives::built_in_1("fwidth", self)
             }
         }
