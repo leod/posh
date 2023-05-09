@@ -59,9 +59,31 @@ mod present_pass {
         }
     }
 
+    fn dither(p: sl::Vec2, alpha: sl::F32) -> sl::Bool {
+        let thresh = sl::mat4(
+            sl::vec4(1., 13., 4., 16.),
+            sl::vec4(9., 5., 12., 8.),
+            sl::vec4(3., 15., 2., 14.),
+            sl::vec4(11., 7., 10., 6.),
+        ) / 17.0;
+
+        thresh.get(p.x.as_u32() % 4).get(p.y.as_u32() % 4).ge(alpha)
+    }
+
     pub fn fragment_stage(uniforms: PresentUniforms<Sl>, input: sl::FsIn<sl::Vec2>) -> sl::Vec4 {
         let flip = uniforms.state.flip;
-        let coords = sl::branch(flip.eq(0u32), input.varying, input.discard::<sl::Vec2>());
+        let coords = sl::branch(
+            flip.eq(0u32),
+            sl::branch(
+                dither(
+                    input.fragment_coord.xy(),
+                    (uniforms.state.time * 0.3).cos().powf(2.0),
+                ),
+                input.discard::<sl::Vec2>(),
+                input.varying,
+            ),
+            input.varying,
+        );
 
         uniforms.scene.sample(coords)
     }
@@ -132,7 +154,7 @@ impl Demo {
                     .quad_vertices
                     .as_vertex_spec(gl::PrimitiveMode::Triangles)
                     .with_element_data(self.quad_elements.as_binding()),
-                settings: &gl::DrawSettings::default(),
+                settings: &gl::DrawSettings::default().with_clear_color([0.0, 0.0, 0.0, 1.0]),
             },
             gl::Framebuffer::default(),
         )?;
