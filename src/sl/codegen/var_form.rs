@@ -127,6 +127,7 @@ impl VarForm {
                 no: Box::new(map_succ(no)),
                 ty,
             },
+            Expr::Discard { ty } => SimplifiedExpr::Discard { ty },
         }
     }
 
@@ -135,8 +136,9 @@ impl VarForm {
 
         match expr {
             Branch { .. } => true,
-            Arg { .. } | ScalarLiteral { .. } => false,
+            Discard { .. } => true,
             ArrayLiteral { .. } => true,
+            Arg { .. } | ScalarLiteral { .. } => false,
             Field { base, .. } => {
                 let base = &self.simplified_exprs[&ExprKey::from(base)];
 

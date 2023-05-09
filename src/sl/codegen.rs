@@ -4,7 +4,7 @@ mod struct_registry;
 mod var_form;
 
 use std::{
-    fmt::{Display, Formatter, Result, Write},
+    fmt::{self, Display, Formatter, Write},
     rc::Rc,
 };
 
@@ -45,7 +45,7 @@ impl<'a> WriteFuncContext<'a> {
 struct Indent(usize);
 
 impl Display for Indent {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         for _ in 0..self.0 {
             f.write_str("    ")?;
         }
@@ -60,7 +60,7 @@ pub fn write_shader_stage(
     sampler_defs: &[UniformSamplerDef],
     attributes: impl Iterator<Item = (String, String, Type)>,
     outputs: &[(&str, Rc<Expr>)],
-) -> Result {
+) -> fmt::Result {
     let roots: Vec<_> = outputs.iter().map(|(_, root)| root.clone()).collect();
     let struct_registry = StructRegistry::new(&roots, block_defs.iter().map(|def| &def.ty));
     let var_form = VarForm::new(&struct_registry, &roots);
@@ -121,7 +121,7 @@ fn write_var(
     ctx: WriteFuncContext,
     var_id: VarId,
     var_init: &VarInit,
-) -> Result {
+) -> Result<bool, fmt::Error> {
     use VarInit::*;
 
     let indent = ctx.indent();
@@ -130,7 +130,9 @@ fn write_var(
         Expr(expr) => {
             let ty_name = type_name(ctx.struct_registry, &expr.ty());
 
-            writeln!(f, "{indent}{ty_name} {var_id} = {expr};")
+            writeln!(f, "{indent}{ty_name} {var_id} = {expr};")?;
+
+            Ok(true)
         }
         Branch {
             cond,
@@ -150,9 +152,9 @@ fn write_var(
                 let yes_scope = ctx.scope_form.scope(*yes_id);
                 let result = yes_scope.result.unwrap();
 
-                write_scope(f, ctx, yes_scope)?;
-
-                writeln!(f, "{indent}{var_id} = {result};")?;
+                if write_scope(f, ctx, yes_scope)? {
+                    writeln!(f, "{indent}{var_id} = {result};")?;
+                }
             }
 
             writeln!(f, "{indent}}} else {{")?;
@@ -164,27 +166,38 @@ fn write_var(
                 let no_scope = ctx.scope_form.scope(*no_id);
                 let result = no_scope.result.unwrap();
 
-                write_scope(f, ctx, no_scope)?;
-
-                writeln!(f, "{indent}{var_id} = {result};")?;
+                if write_scope(f, ctx, no_scope)? {
+                    writeln!(f, "{indent}{var_id} = {result};")?;
+                }
             }
 
             writeln!(f, "{indent}}}")?;
 
-            Ok(())
+            Ok(true)
+        }
+        Discard => {
+            writeln!(f, "{indent}discard;")?;
+
+            Ok(false)
         }
     }
 }
 
-fn write_scope(f: &mut impl Write, ctx: WriteFuncContext, scope: &Scope) -> Result {
+fn write_scope(
+    f: &mut impl Write,
+    ctx: WriteFuncContext,
+    scope: &Scope,
+) -> Result<bool, fmt::Error> {
     for (var_id, var_init) in &scope.vars {
-        write_var(f, ctx.clone(), *var_id, var_init)?;
+        if !write_var(f, ctx.clone(), *var_id, var_init)? {
+            return Ok(false);
+        }
     }
 
-    Ok(())
+    Ok(true)
 }
 
-fn write_struct_defs(f: &mut impl Write, struct_reg: &StructRegistry) -> Result {
+fn write_struct_defs(f: &mut impl Write, struct_reg: &StructRegistry) -> fmt::Result {
     for (name, ty) in struct_reg.defs() {
         writeln!(f, "struct {name} {{")?;
 
