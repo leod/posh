@@ -1,6 +1,6 @@
 use crate::{Block, Gl};
 
-use super::{Bool, Vec2, Vec4, F32, U32};
+use super::{dag::Expr, Bool, Value, Vec2, Vec4, F32, U32};
 
 /// Constants that can be passed to a shader at shader build time.
 ///
@@ -53,6 +53,14 @@ pub struct FsIn<W> {
     pub front_facing: Bool,
     pub point_coord: Vec2,
     pub derivatives: Derivatives,
+}
+
+impl<W> FsIn<W> {
+    pub fn discard<V: Value>(self) -> V {
+        let ty = V::ty();
+
+        V::from_expr(Expr::Discard { ty })
+    }
 }
 
 /// Per-fragment output computed by a fragment shader.

@@ -59,9 +59,9 @@ mod present_pass {
         }
     }
 
-    pub fn fragment_stage(uniforms: PresentUniforms<Sl>, tex_coords: sl::Vec2) -> sl::Vec4 {
+    pub fn fragment_stage(uniforms: PresentUniforms<Sl>, input: sl::FsIn<sl::Vec2>) -> sl::Vec4 {
         let flip = uniforms.state.flip;
-        let coords = sl::branch(flip.eq(0u32), tex_coords, -tex_coords);
+        let coords = sl::branch(flip.eq(0u32), input.varying, input.discard::<sl::Vec2>());
 
         uniforms.scene.sample(coords)
     }
@@ -171,6 +171,8 @@ fn quad_vertices() -> Vec<PresentVertex<Gl>> {
 // SDL glue
 
 fn main() {
+    simple_logger::init().unwrap();
+
     let sdl = sdl2::init().unwrap();
     let video = sdl.video().unwrap();
 

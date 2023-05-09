@@ -63,6 +63,9 @@ pub enum SimplifiedExpr {
         no: Box<SimplifiedExpr>,
         ty: Type,
     },
+    Discard {
+        ty: Type,
+    },
 }
 
 impl SimplifiedExpr {
@@ -79,6 +82,7 @@ impl SimplifiedExpr {
             Branch { ty, .. } => ty.clone(),
             Subscript { ty, .. } => ty.clone(),
             Var { ty, .. } => ty.clone(),
+            Discard { ty, .. } => ty.clone(),
         }
     }
 }
@@ -133,6 +137,7 @@ impl Display for SimplifiedExpr {
             Branch { cond, yes, no, .. } => write!(f, "({cond} ? {yes} : {no})"),
             Subscript { base, index, .. } => write!(f, "{base}[{index}]"),
             Var { id, .. } => write!(f, "{id}"),
+            Discard { .. } => write!(f, "discard"),
         }
     }
 }
