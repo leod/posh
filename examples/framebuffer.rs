@@ -72,18 +72,20 @@ mod present_pass {
 
     pub fn fragment_stage(uniforms: PresentUniforms<Sl>, input: sl::FsIn<sl::Vec2>) -> sl::Vec4 {
         let flip = uniforms.state.flip;
-        let coords = sl::branch(
-            flip.eq(0u32),
-            sl::branch(
-                dither(
+        let coords = sl::Branch {
+            cond: flip.eq(0u32),
+            yes: sl::Branch {
+                cond: dither(
                     input.fragment_coord.xy(),
                     (uniforms.state.time * 0.3).cos().powf(2.0),
                 ),
-                input.discard::<sl::Vec2>(),
-                input.varying,
-            ),
-            input.varying,
-        );
+                yes: input.discard(),
+                no: input.varying,
+            }
+            .value(),
+            no: input.varying,
+        }
+        .value();
 
         uniforms.scene.sample(coords)
     }

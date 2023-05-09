@@ -36,6 +36,18 @@ pub fn branch<V: Value>(
     V::from_expr(expr)
 }
 
+pub struct Branch<V> {
+    pub cond: Bool,
+    pub yes: V,
+    pub no: V,
+}
+
+impl<V: ToSl> Branch<V> {
+    pub fn value(self) -> V::Output {
+        branch(self.cond, self.yes.to_sl(), self.no.to_sl())
+    }
+}
+
 pub fn branches<V, B1, V1, V2>(
     if_branches: impl IntoIterator<Item = (B1, V1)>,
     else_branch: V2,
