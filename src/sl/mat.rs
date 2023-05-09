@@ -6,7 +6,7 @@ use std::{
 use super::{
     dag::{BinaryOp, BuiltInType, Expr, Type, UnaryOp},
     primitives::{binary, built_in_1, built_in_2, common_field_base, field, unary, value_arg},
-    Bool, Object, ToSl, Value, ValueNonArray, Vec2, Vec3, Vec4, F32,
+    Bool, Object, ToSl, Value, ValueNonArray, Vec2, Vec3, Vec4, F32, U32,
 };
 
 /// A two-by-two floating-point matrix.
@@ -95,6 +95,17 @@ macro_rules! impl_value {
 
             pub fn ne(self, right: impl ToSl<Output = Self>) -> Bool {
                 <Self as Value>::ne(self, right)
+            }
+
+            pub fn get(self, index: impl ToSl<Output = U32>) -> Vec4 {
+                // FIXME: Prevent out-of-bounds access.
+                let base = self.expr();
+                let index = index.to_sl().expr();
+                let ty = Vec4::ty();
+
+                let expr = Expr::Subscript { base, index, ty };
+
+                Vec4::from_expr(expr)
             }
         }
     };

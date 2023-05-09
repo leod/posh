@@ -19,7 +19,7 @@ unsafe impl<U: Const, V: Const> Const for (U, V) {}
 unsafe impl<T: Const, const N: usize> Const for [T; N] {}
 
 /// Per-vertex input given to a vertex shader.
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct VsIn<V> {
     pub vertex: V,
     pub vertex_id: U32,
@@ -28,7 +28,7 @@ pub struct VsIn<V> {
 }
 
 /// Per-vertex output computed by a vertex shader.
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct FullVsOut<W> {
     pub position: Vec4,
     pub varying: W,
@@ -36,7 +36,7 @@ pub struct FullVsOut<W> {
 }
 
 /// Per-vertex position and varying output computed by a vertex shader.
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct VsOut<W> {
     pub position: Vec4,
     pub varying: W,
@@ -46,7 +46,7 @@ pub struct VsOut<W> {
 pub struct Derivatives(pub(super) ());
 
 /// Per-fragment input given to a fragment shader.
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct FsIn<W> {
     pub varying: W,
     pub fragment_coord: Vec4,
@@ -64,7 +64,7 @@ impl<W> FsIn<W> {
 }
 
 /// Per-fragment output computed by a fragment shader.
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct FsOut<F> {
     pub fragment: F,
     pub fragment_depth: Option<F32>,
