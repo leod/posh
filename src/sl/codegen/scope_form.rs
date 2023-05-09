@@ -18,6 +18,7 @@ pub enum VarInit<'a> {
         no_id: ScopeId,
         ty: &'a Type,
     },
+    Discard,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -106,6 +107,7 @@ impl<'a> ScopeForm<'a> {
 
                     VarInit::Expr(var_expr)
                 }
+                Discard { .. } => VarInit::Discard,
             };
 
             scope_form
@@ -199,5 +201,6 @@ fn unscoped_successors(expr: &SimplifiedExpr, f: &mut impl FnMut(VarId)) {
         Var { id, .. } => {
             f(*id);
         }
+        Discard { .. } => {}
     }
 }

@@ -6,10 +6,7 @@ use crate::{
     FsInterface, Gl, Sl,
 };
 
-use super::{
-    raw::{self},
-    ColorSampler2d, Sampler2dSettings,
-};
+use super::{raw, ColorSampler2d, Sampler2dSettings};
 
 #[derive(Clone)]
 pub struct ColorAttachment<S = sl::Vec4> {

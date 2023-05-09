@@ -100,6 +100,17 @@ macro_rules! impl_value {
             pub fn ne(self, right: impl ToSl<Output = Self>) -> Bool {
                 <Self as Value>::ne(self, right)
             }
+
+            pub fn get(self, index: impl ToSl<Output = U32>) -> F32 {
+                // FIXME: Prevent out-of-bounds access.
+                let base = self.expr();
+                let index = index.to_sl().expr();
+                let ty = F32::ty();
+
+                let expr = Expr::Subscript { base, index, ty };
+
+                F32::from_expr(expr)
+            }
         }
     };
 }

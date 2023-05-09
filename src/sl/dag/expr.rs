@@ -92,6 +92,9 @@ pub enum Expr {
         no: Rc<Expr>,
         ty: Type,
     },
+    Discard {
+        ty: Type,
+    },
 }
 
 impl Expr {
@@ -110,6 +113,7 @@ impl Expr {
             Field { ty, .. } => ty.clone(),
             Subscript { ty, .. } => ty.clone(),
             Branch { ty, .. } => ty.clone(),
+            Discard { ty, .. } => ty.clone(),
         }
     }
 
@@ -159,6 +163,7 @@ impl Expr {
                 f(yes);
                 f(no);
             }
+            Discard { .. } => {}
         }
     }
 }
