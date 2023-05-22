@@ -12,12 +12,12 @@ struct Globals<D: BlockDom> {
 
 // Shader code
 
-fn vertex_stage(_: (), vertex: sl::Vec2) -> sl::VsOut<sl::Vec2> {
-    let pos = vertex - sl::vec2(0.5, 0.5);
+fn vertex_stage(globals: Globals<Sl>, vertex: sl::Vec2) -> sl::VsOut<sl::Vec2> {
+    let position = sl::Vec2::from_angle(globals.time).rotate(vertex);
 
     sl::VsOut {
-        position: sl::vec4(pos.x, pos.y, 0.0, 1.0),
-        varying: pos,
+        position: sl::vec4(position.x, position.y, 0.0, 1.0),
+        varying: vertex,
     }
 }
 
@@ -43,7 +43,11 @@ impl Demo {
         use gl::BufferUsage::*;
 
         let globals = Globals { time: 0.0 };
-        let vertices = vec![[0.5f32, 1.0].into(), [0.0, 0.0].into(), [1.0, 0.0].into()];
+        let vertices = vec![
+            [0.0f32, 1.0].into(),
+            [-0.5, -0.5].into(),
+            [0.5, -0.5].into(),
+        ];
 
         Ok(Self {
             program: gl.create_program(vertex_stage, fragment_stage)?,
