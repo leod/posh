@@ -12,17 +12,17 @@ struct Globals<D: BlockDom> {
 
 // Shader code
 
-fn vertex_stage(globals: Globals<Sl>, vertex: sl::Vec2) -> sl::VsOut<sl::Vec2> {
+fn vertex_stage(globals: Globals<Sl>, vertex: sl::Vec2) -> sl::VsOutput<sl::Vec2> {
     let position = sl::Vec2::from_angle(globals.time).rotate(vertex);
 
-    sl::VsOut {
-        position: sl::vec4(position.x, position.y, 0.0, 1.0),
-        varying: vertex,
+    sl::VsOutput {
+        clip_position: sl::vec4(position.x, position.y, 0.0, 1.0),
+        interpolant: vertex,
     }
 }
 
-fn fragment_stage(globals: Globals<Sl>, varying: sl::Vec2) -> sl::Vec4 {
-    let rg = (varying + globals.time).cos().powf(2.0);
+fn fragment_stage(globals: Globals<Sl>, interpolant: sl::Vec2) -> sl::Vec4 {
+    let rg = (interpolant + globals.time).cos().powf(2.0);
 
     sl::vec4(rg.x, rg.y, 0.5, 1.0)
 }

@@ -31,17 +31,17 @@ mod scene_pass {
 
     use super::State;
 
-    pub fn vertex_stage(_: (), vertex: sl::Vec2) -> sl::VsOut<sl::Vec2> {
+    pub fn vertex_stage(_: (), vertex: sl::Vec2) -> sl::VsOutput<sl::Vec2> {
         let vertex = vertex - sl::vec2(0.5, 0.5);
 
-        sl::VsOut {
-            position: vertex.extend(0.0).extend(1.0),
-            varying: vertex,
+        sl::VsOutput {
+            clip_position: vertex.extend(0.0).extend(1.0),
+            interpolant: vertex,
         }
     }
 
-    pub fn fragment_stage(state: State<Sl>, varying: sl::Vec2) -> sl::Vec4 {
-        let rg = (varying + state.time).cos().powf(2.0);
+    pub fn fragment_stage(state: State<Sl>, interpolant: sl::Vec2) -> sl::Vec4 {
+        let rg = (interpolant + state.time).cos().powf(2.0);
 
         sl::vec4(rg.x, rg.y, 0.5, 1.0)
     }
@@ -52,10 +52,10 @@ mod present_pass {
 
     use super::{PresentUniforms, PresentVertex};
 
-    pub fn vertex_stage(_: (), vertex: PresentVertex<Sl>) -> sl::VsOut<sl::Vec2> {
-        sl::VsOut {
-            position: vertex.pos.extend(0.0).extend(1.0),
-            varying: vertex.tex_coords,
+    pub fn vertex_stage(_: (), vertex: PresentVertex<Sl>) -> sl::VsOutput<sl::Vec2> {
+        sl::VsOutput {
+            clip_position: vertex.pos.extend(0.0).extend(1.0),
+            interpolant: vertex.tex_coords,
         }
     }
 
@@ -70,7 +70,7 @@ mod present_pass {
         thresh.get(p.x.as_u32() % 4).get(p.y.as_u32() % 4).ge(alpha)
     }
 
-    pub fn fragment_stage(uniforms: PresentUniforms<Sl>, input: sl::FsIn<sl::Vec2>) -> sl::Vec4 {
+    pub fn fragment_stage(uniforms: PresentUniforms<Sl>, input: sl::FsInput<sl::Vec2>) -> sl::Vec4 {
         let flip = uniforms.state.flip;
         let coords = sl::branch(
             flip.eq(0u32),
@@ -80,9 +80,9 @@ mod present_pass {
                     (uniforms.state.time * 0.3).cos().powf(2.0),
                 ),
                 input.discard::<sl::Vec2>(),
-                input.varying,
+                input.interpolant,
             ),
-            input.varying,
+            input.interpolant,
         );
 
         uniforms.scene.sample(coords)

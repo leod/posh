@@ -35,7 +35,7 @@ fn zxy(v: sl::Vec3) -> sl::Vec3 {
     sl::vec3(v.z, v.x, v.y)
 }
 
-fn vertex_stage(uniforms: Uniforms<Sl>, vertex: Vertex<Sl>) -> sl::VsOut<sl::Vec2> {
+fn vertex_stage(uniforms: Uniforms<Sl>, vertex: Vertex<Sl>) -> sl::VsOutput<sl::Vec2> {
     let camera = uniforms.camera;
 
     let vertex_pos = vertex
@@ -45,9 +45,9 @@ fn vertex_stage(uniforms: Uniforms<Sl>, vertex: Vertex<Sl>) -> sl::VsOut<sl::Vec
         .extend(vertex.pos.z);
     let position = camera.view_to_screen * camera.world_to_view * zxy(vertex_pos).extend(1.0);
 
-    sl::VsOut {
-        varying: vertex.tex_coords,
-        position,
+    sl::VsOutput {
+        clip_position: position,
+        interpolant: vertex.tex_coords,
     }
 }
 

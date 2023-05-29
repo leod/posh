@@ -15,68 +15,67 @@ use super::{
     dag::{Expr, SamplerType, Type},
     primitives::value_arg,
     program_def::{ProgramDef, UniformBlockDef, UniformSamplerDef, VertexBlockDef},
-    ColorSample, ColorSampler2d, ComparisonSampler2d, Const, FsIn, FsOut, FullVsOut, Object,
-    Varying, Vec4, VsIn, VsOut, I32,
-    Derivatives,
+    ColorSample, ColorSampler2d, ComparisonSampler2d, Const, Derivatives, FsInput, FsOutput,
+    FullVsOutput, Interpolant, Object, Vec4, VsInput, VsOutput, I32,
 };
 
 /// Types that can be used as vertex input for a vertex shader.
-pub trait FromVsIn {
-    type VsInterface: VsInterface<Sl>;
+pub trait FromVsInput {
+    type V: VsInterface<Sl>;
 
-    fn from(input: VsIn<Self::VsInterface>) -> Self;
+    fn from(input: VsInput<Self::V>) -> Self;
 }
 
-impl<V: VsInterface<Sl>> FromVsIn for VsIn<V> {
-    type VsInterface = V;
+impl<V: VsInterface<Sl>> FromVsInput for VsInput<V> {
+    type V = V;
 
     fn from(input: Self) -> Self {
         input
     }
 }
 
-impl<V: VsInterface<Sl>> FromVsIn for V {
-    type VsInterface = Self;
+impl<V: VsInterface<Sl>> FromVsInput for V {
+    type V = Self;
 
-    fn from(input: VsIn<Self>) -> Self {
+    fn from(input: VsInput<Self>) -> Self {
         input.vertex
     }
 }
 
 /// Types that can be used as vertex output for a vertex shader.
 pub trait IntoFullVsOut {
-    type Varying: Varying;
+    type Interpolant: Interpolant;
 
-    fn into(self) -> FullVsOut<Self::Varying>;
+    fn into(self) -> FullVsOutput<Self::Interpolant>;
 }
 
-impl<W: Varying> IntoFullVsOut for FullVsOut<W> {
-    type Varying = W;
+impl<W: Interpolant> IntoFullVsOut for FullVsOutput<W> {
+    type Interpolant = W;
 
     fn into(self) -> Self {
         self
     }
 }
 
-impl<V: Varying> IntoFullVsOut for VsOut<V> {
-    type Varying = V;
+impl<V: Interpolant> IntoFullVsOut for VsOutput<V> {
+    type Interpolant = V;
 
-    fn into(self) -> FullVsOut<V> {
-        FullVsOut {
-            position: self.position,
-            varying: self.varying,
+    fn into(self) -> FullVsOutput<V> {
+        FullVsOutput {
+            clip_position: self.clip_position,
+            interpolant: self.interpolant,
             point_size: None,
         }
     }
 }
 
 impl IntoFullVsOut for Vec4 {
-    type Varying = ();
+    type Interpolant = ();
 
-    fn into(self) -> FullVsOut<()> {
-        FullVsOut {
-            position: self,
-            varying: (),
+    fn into(self) -> FullVsOutput<()> {
+        FullVsOutput {
+            clip_position: self,
+            interpolant: (),
             point_size: None,
         }
     }
@@ -84,24 +83,24 @@ impl IntoFullVsOut for Vec4 {
 
 /// Types that can be used as fragment input for a fragment shader.
 pub trait FromFsIn {
-    type Varying: Varying;
+    type Interpolant: Interpolant;
 
-    fn from(input: FsIn<Self::Varying>) -> Self;
+    fn from(input: FsInput<Self::Interpolant>) -> Self;
 }
 
-impl<W: Varying> FromFsIn for FsIn<W> {
-    type Varying = W;
+impl<W: Interpolant> FromFsIn for FsInput<W> {
+    type Interpolant = W;
 
     fn from(input: Self) -> Self {
         input
     }
 }
 
-impl<W: Varying> FromFsIn for W {
-    type Varying = Self;
+impl<W: Interpolant> FromFsIn for W {
+    type Interpolant = Self;
 
-    fn from(input: FsIn<Self>) -> Self {
-        input.varying
+    fn from(input: FsInput<Self>) -> Self {
+        input.interpolant
     }
 }
 
@@ -109,10 +108,10 @@ impl<W: Varying> FromFsIn for W {
 pub trait IntoFsOut {
     type FsInterface: FsInterface<Sl>;
 
-    fn into(self) -> FsOut<Self::FsInterface>;
+    fn into(self) -> FsOutput<Self::FsInterface>;
 }
 
-impl<F: FsInterface<Sl>> IntoFsOut for FsOut<F> {
+impl<F: FsInterface<Sl>> IntoFsOut for FsOutput<F> {
     type FsInterface = F;
 
     fn into(self) -> Self {
@@ -123,11 +122,10 @@ impl<F: FsInterface<Sl>> IntoFsOut for FsOut<F> {
 impl<F: FsInterface<Sl>> IntoFsOut for F {
     type FsInterface = Self;
 
-    fn into(self) -> FsOut<Self> {
-        FsOut {
+    fn into(self) -> FsOutput<Self> {
+        FsOutput {
             fragment: self,
             fragment_depth: None,
-            discard: None,
         }
     }
 }
@@ -147,10 +145,10 @@ where
     U: UniformUnion<U1, U2>,
     V: VsInterface<Sl>,
     F: FsInterface<Sl>,
-    W: Varying,
-    InV: FromVsIn<VsInterface = V>,
-    OutW: IntoFullVsOut<Varying = W>,
-    InW: FromFsIn<Varying = W>,
+    W: Interpolant,
+    InV: FromVsInput<V = V>,
+    OutW: IntoFullVsOut<Interpolant = W>,
+    InW: FromFsIn<Interpolant = W>,
     OutF: IntoFsOut<FsInterface = F>,
 {
     transpile_to_program_def_with_consts_impl(
@@ -176,10 +174,10 @@ where
     U: UniformUnion<U1, U2>,
     V: VsInterface<Sl>,
     F: FsInterface<Sl>,
-    W: Varying,
-    InV: FromVsIn<VsInterface = V>,
-    OutW: IntoFullVsOut<Varying = W>,
-    InW: FromFsIn<Varying = W>,
+    W: Interpolant,
+    InV: FromVsInput<V = V>,
+    OutW: IntoFullVsOut<Interpolant = W>,
+    InW: FromFsIn<Interpolant = W>,
     OutF: IntoFsOut<FsInterface = F>,
 {
     transpile_to_program_def_with_consts_impl(
@@ -199,10 +197,10 @@ where
     U: UniformInterface<Sl>,
     V: VsInterface<Sl>,
     F: FsInterface<Sl>,
-    W: Varying,
-    InV: FromVsIn<VsInterface = V>,
-    OutW: IntoFullVsOut<Varying = W>,
-    InW: FromFsIn<Varying = W>,
+    W: Interpolant,
+    InV: FromVsInput<V = V>,
+    OutW: IntoFullVsOut<Interpolant = W>,
+    InW: FromFsIn<Interpolant = W>,
     OutF: IntoFsOut<FsInterface = F>,
 {
     // TODO: Remove hardcoded path names.
@@ -217,7 +215,7 @@ where
     };
 
     let (vertex_block_defs, varying_outputs, vertex_shader_source) = {
-        let input = || VsIn {
+        let input = || VsInput {
             vertex: V::shader_input("vertex_input"),
             vertex_id: value_arg::<I32>("gl_VertexID").as_u32(),
             instance_id: value_arg::<I32>("gl_InstanceID").as_u32(),
@@ -225,7 +223,7 @@ where
         };
         let output = vertex_shader(consts, uniforms, InV::from(input())).into();
 
-        let varying_outputs = output.varying.shader_outputs("vertex_output");
+        let varying_outputs = output.interpolant.shader_outputs("vertex_output");
         let vertex_block_defs = {
             // TODO: Remove hardcoded path names.
             let mut visitor = CollectVertexBlocks::default();
@@ -252,7 +250,7 @@ where
                     (kind, name.clone(), expr.ty())
                 }),
             );
-        let exprs = once(("gl_Position", output.position.expr()))
+        let exprs = once(("gl_Position", output.clip_position.expr()))
             .chain(
                 varying_outputs
                     .iter()
@@ -281,8 +279,8 @@ where
     let uniforms = U::shader_input("uniforms");
 
     let fragment_shader_source = {
-        let input = FsIn {
-            varying: W::shader_input("vertex_output"),
+        let input = FsInput {
+            interpolant: W::shader_input("vertex_output"),
             fragment_coord: value_arg("gl_FragCoord"),
             front_facing: value_arg("gl_FrontFacing"),
             point_coord: value_arg("gl_PointCoord"),

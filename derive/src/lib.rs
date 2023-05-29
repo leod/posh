@@ -1,10 +1,10 @@
 mod block;
 mod r#const;
 mod fs_interface;
+mod interpolant;
 mod uniform_interface;
 mod utils;
 mod value;
-mod varying;
 mod vs_interface;
 
 use proc_macro::TokenStream;
@@ -43,6 +43,17 @@ pub fn derive_fs_interface(input: TokenStream) -> TokenStream {
     .into()
 }
 
+/// Derives `Interpolant` for a struct.
+#[proc_macro_derive(Interpolant)]
+pub fn derive_varying(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    match interpolant::derive(input) {
+        Ok(ts) => ts,
+        Err(e) => e.to_compile_error(),
+    }
+    .into()
+}
+
 /// Derives `UniformInterface` for a struct that is generic in
 /// `UniformInterfaceDom`.
 #[proc_macro_derive(UniformInterface)]
@@ -60,17 +71,6 @@ pub fn derive_uniform_interface(input: TokenStream) -> TokenStream {
 pub fn derive_value(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match value::derive(input) {
-        Ok(ts) => ts,
-        Err(e) => e.to_compile_error(),
-    }
-    .into()
-}
-
-/// Derives `Varying` for a struct.
-#[proc_macro_derive(Varying)]
-pub fn derive_varying(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    match varying::derive(input) {
         Ok(ts) => ts,
         Err(e) => e.to_compile_error(),
     }

@@ -62,15 +62,15 @@ mod flat_pass {
 
     use super::{Camera, SceneVertex};
 
-    pub fn vertex_stage(camera: Camera<Sl>, vertex: SceneVertex<Sl>) -> sl::VsOut<sl::Vec3> {
-        sl::VsOut {
-            position: camera.world_to_clip(vertex.world_pos),
-            varying: vertex.color,
+    pub fn vertex_stage(camera: Camera<Sl>, vertex: SceneVertex<Sl>) -> sl::VsOutput<sl::Vec3> {
+        sl::VsOutput {
+            clip_position: camera.world_to_clip(vertex.world_pos),
+            interpolant: vertex.color,
         }
     }
 
-    pub fn fragment_stage(_: (), varying: sl::Vec3) -> sl::Vec4 {
-        varying.extend(1.0)
+    pub fn fragment_stage(_: (), color: sl::Vec3) -> sl::Vec4 {
+        color.extend(1.0)
     }
 }
 
@@ -93,8 +93,8 @@ mod scene_pass {
 
     use super::{SceneUniforms, SceneVertex};
 
-    #[derive(Clone, Copy, sl::Value, sl::Varying)]
-    pub struct Varying {
+    #[derive(Clone, Copy, sl::Value, sl::Interpolant)]
+    pub struct Interpolant {
         vertex: SceneVertex<Sl>,
         light_clip_pos: sl::Vec4,
     }
@@ -102,21 +102,21 @@ mod scene_pass {
     pub fn vertex_stage(
         SceneUniforms { light, camera, .. }: SceneUniforms<Sl>,
         vertex: SceneVertex<Sl>,
-    ) -> sl::VsOut<Varying> {
+    ) -> sl::VsOutput<Interpolant> {
         const EXTRUDE: f32 = 0.1;
 
         let light_clip_pos = light
             .camera
             .world_to_clip(vertex.world_pos + vertex.world_normal * EXTRUDE);
 
-        let output = Varying {
+        let output = Interpolant {
             vertex,
             light_clip_pos,
         };
 
-        sl::VsOut {
-            position: camera.world_to_clip(vertex.world_pos),
-            varying: output,
+        sl::VsOutput {
+            clip_position: camera.world_to_clip(vertex.world_pos),
+            interpolant: output,
         }
     }
 
@@ -142,14 +142,14 @@ mod scene_pass {
             light_depth_map,
             ..
         }: SceneUniforms<Sl>,
-        varying: Varying,
+        interpolant: Interpolant,
     ) -> sl::Vec4 {
-        let light_dir = (light.world_pos - varying.vertex.world_pos).normalize();
-        let diffuse = light.color * varying.vertex.world_normal.dot(light_dir).max(0.0);
+        let light_dir = (light.world_pos - interpolant.vertex.world_pos).normalize();
+        let diffuse = light.color * interpolant.vertex.world_normal.dot(light_dir).max(0.0);
 
-        let shadow = sample_shadow(light_depth_map, varying.light_clip_pos);
+        let shadow = sample_shadow(light_depth_map, interpolant.light_clip_pos);
 
-        let color = (light.ambient + shadow * diffuse) * varying.vertex.color;
+        let color = (light.ambient + shadow * diffuse) * interpolant.vertex.color;
 
         color.extend(1.0)
     }
@@ -160,10 +160,10 @@ mod debug_pass {
 
     use crate::ScreenVertex;
 
-    pub fn vertex_stage(_: (), vertex: ScreenVertex<Sl>) -> sl::VsOut<sl::Vec2> {
-        sl::VsOut {
-            varying: vertex.tex_coords,
-            position: vertex.pos.extend(0.0).extend(1.0),
+    pub fn vertex_stage(_: (), vertex: ScreenVertex<Sl>) -> sl::VsOutput<sl::Vec2> {
+        sl::VsOutput {
+            interpolant: vertex.tex_coords,
+            clip_position: vertex.pos.extend(0.0).extend(1.0),
         }
     }
 

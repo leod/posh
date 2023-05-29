@@ -73,7 +73,7 @@ impl VsInterfaceDom for Sl {
 /// ) -> sl::VsOut<sl::Vec4> {
 ///     sl::VsOut {
 ///         position: (vertex.position + vertex.material.normal * 1.3).extend(1.0),
-///         varying: vertex.material.color,
+///         interpolant: vertex.material.color,
 ///     }
 /// }
 /// ```

@@ -77,9 +77,9 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             }
         }
 
-        // Implement `Varying` for the `Sl` view of the struct.
-        // TODO: This can go away once we unify `Value` and `Varying`.
-        unsafe impl ::posh::sl::Varying for #ident #ty_generics_sl {
+        // Implement `Interpolant` for the `Sl` view of the struct.
+        // TODO: This can go away once we unify `Value` and `Interpolant`.
+        unsafe impl ::posh::sl::Interpolant for #ident #ty_generics_sl {
             fn shader_outputs(&self, path: &str) -> Vec<(
                 ::std::string::String,
                 ::posh::sl::program_def::InterpolationQualifier,
@@ -89,7 +89,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 
                 #(
                     result.extend(
-                        <#field_types_sl as ::posh::sl::Varying>::shader_outputs(
+                        <#field_types_sl as ::posh::sl::Interpolant>::shader_outputs(
                             &self.#field_idents,
                             &::posh::internal::join_ident_path(path, #field_strings)
                         )
@@ -102,7 +102,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             fn shader_input(path: &str) -> Self {
                 Self {
                     #(
-                        #field_idents: <#field_types_sl as ::posh::sl::Varying>::
+                        #field_idents: <#field_types_sl as ::posh::sl::Interpolant>::
                             shader_input(&::posh::internal::join_ident_path(path, #field_strings)),
                     )*
                 }
@@ -124,10 +124,10 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             }
         };
 
-        // Check that all field types in `Sl` implement `Varying`.
-        // TODO: This can go away once we unify `Value` and `Varying`.
+        // Check that all field types in `Sl` implement `Interpolant`.
+        // TODO: This can go away once we unify `Value` and `Interpolant`.
         const _: fn() = || {
-            fn check_field<V: ::posh::sl::Varying>() {}
+            fn check_field<V: ::posh::sl::Interpolant>() {}
 
             fn check_struct #impl_generics() #where_clause {
                 #(

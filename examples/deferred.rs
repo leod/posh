@@ -100,8 +100,8 @@ mod scene_pass {
 
     pub fn vertex_stage(
         globals: Globals<Sl>,
-        input: sl::VsIn<()>,
-    ) -> sl::VsOut<SceneAttachments<Sl>> {
+        input: sl::VsInput<()>,
+    ) -> sl::VsOutput<SceneAttachments<Sl>> {
         let vertex_id = input.vertex_id / 6 * 4 + CUBE_ELEMENTS.to_sl().get(input.vertex_id % 6);
 
         let object_pos = CUBE_POSITIONS
@@ -117,9 +117,9 @@ mod scene_pass {
         // TODO: Fix world normal calculation.
         let world_normal = CUBE_NORMALS.to_sl().get((vertex_id / 4) % 6);
 
-        sl::VsOut {
-            position: screen_pos,
-            varying: SceneAttachments {
+        sl::VsOutput {
+            clip_position: screen_pos,
+            interpolant: SceneAttachments {
                 albedo: sl::vec3(1.0, 0.0, 0.0),
                 world_pos,
                 world_normal,
@@ -127,8 +127,8 @@ mod scene_pass {
         }
     }
 
-    pub fn fragment_stage(_: (), varying: SceneAttachments<Sl>) -> SceneAttachments<Sl> {
-        varying
+    pub fn fragment_stage(_: (), interpolant: SceneAttachments<Sl>) -> SceneAttachments<Sl> {
+        interpolant
     }
 }
 
@@ -149,12 +149,12 @@ mod present_pass {
         glam::vec2(1., -1.),
     ];
 
-    pub fn vertex_stage(_: (), input: sl::VsIn<()>) -> sl::VsOut<sl::Vec2> {
+    pub fn vertex_stage(_: (), input: sl::VsInput<()>) -> sl::VsOutput<sl::Vec2> {
         let position = SQUARE_POSITIONS.to_sl().get(input.vertex_id);
 
-        sl::VsOut {
-            position: position.extend(0.0).extend(1.0),
-            varying: (position + 1.0) / 2.0,
+        sl::VsOutput {
+            clip_position: position.extend(0.0).extend(1.0),
+            interpolant: (position + 1.0) / 2.0,
         }
     }
 

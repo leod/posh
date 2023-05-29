@@ -7,8 +7,8 @@ use crate::{Block, Sl};
 use super::{
     dag::{BuiltInType, Expr, SamplerType, Trace, Type},
     primitives::built_in_2,
-    IVec2, IVec3, IVec4, Object, ToSl, UVec2, UVec3, UVec4, Value, Varying, Vec2, Vec3, Vec4, F32,
-    I32, U32,
+    IVec2, IVec3, IVec4, Interpolant, Object, ToSl, UVec2, UVec3, UVec4, Value, Vec2, Vec3, Vec4,
+    F32, I32, U32,
 };
 
 // FIXME: These traits desperately need to move to `interface`.
@@ -25,7 +25,7 @@ pub trait Sample {
 }
 
 #[sealed]
-pub trait ColorSample: Value + Varying + Sample {}
+pub trait ColorSample: Value + Interpolant + Sample {}
 
 macro_rules! impl_color_sample {
     ($sample:ident, $ty:ident, |$vec4_name:ident: $vec4:ident| $from_vec4:expr) => {

@@ -3,8 +3,8 @@ use std::rc::Rc;
 use crate::{
     sl::{
         transpile::{transpile_to_program_def, transpile_to_program_def_with_consts},
-        transpile::{FromFsIn, FromVsIn, IntoFsOut, IntoFullVsOut},
-        ColorSample, Const, Varying,
+        transpile::{FromFsIn, FromVsInput, IntoFsOut, IntoFullVsOut},
+        ColorSample, Const, Interpolant,
     },
     Block, FsInterface, Gl, Sl, UniformInterface, UniformUnion, VsInterface,
 };
@@ -115,10 +115,10 @@ impl Context {
         U2: UniformInterface<Sl>,
         V: VsInterface<Sl>,
         F: FsInterface<Sl>,
-        W: Varying,
-        InV: FromVsIn<VsInterface = V>,
-        OutW: IntoFullVsOut<Varying = W>,
-        InW: FromFsIn<Varying = W>,
+        W: Interpolant,
+        InV: FromVsInput<V = V>,
+        OutW: IntoFullVsOut<Interpolant = W>,
+        InW: FromFsIn<Interpolant = W>,
         OutF: IntoFsOut<FsInterface = F>,
     {
         let program_def = transpile_to_program_def::<U, _, _, _, _, _, _, _, _, _>(
@@ -147,10 +147,10 @@ impl Context {
         U2: UniformInterface<Sl>,
         V: VsInterface<Sl>,
         F: FsInterface<Sl>,
-        W: Varying,
-        InV: FromVsIn<VsInterface = V>,
-        OutW: IntoFullVsOut<Varying = W>,
-        InW: FromFsIn<Varying = W>,
+        W: Interpolant,
+        InV: FromVsInput<V = V>,
+        OutW: IntoFullVsOut<Interpolant = W>,
+        InW: FromFsIn<Interpolant = W>,
         OutF: IntoFsOut<FsInterface = F>,
     {
         let program_def = transpile_to_program_def_with_consts::<_, U, _, _, _, _, _, _, _, _, _>(
