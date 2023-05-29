@@ -1,5 +1,5 @@
 use posh::{
-    sl::{self, VsOut},
+    sl::{self, VsOutput},
     Block, BlockDom, Sl,
 };
 
@@ -28,7 +28,7 @@ struct ColorVertex<D: BlockDom> {
     flag: D::I32,
 }
 
-fn vertex_stage(globals: Globals<Sl>, vertex: ColorVertex<Sl>) -> VsOut<sl::Vec4> {
+fn vertex_stage(globals: Globals<Sl>, vertex: ColorVertex<Sl>) -> VsOutput<sl::Vec4> {
     let shift = globals.offset * globals.time;
     let shift = sl::branch(
         globals.invert.eq(2),
@@ -52,18 +52,18 @@ fn vertex_stage(globals: Globals<Sl>, vertex: ColorVertex<Sl>) -> VsOut<sl::Vec4
         sl::vec2(0.5, 0.6),
     ]);
 
-    VsOut {
-        varying: sl::Vec4::splat(0.0)
+    VsOutput {
+        interpolant: sl::Vec4::splat(0.0)
             + offsets
                 .get(globals.invert.as_u32() + 3)
                 .extend(1.0)
                 .extend(2.0),
-        position: globals.projection * globals.camera * position.extend(1.0).extend(1.0),
+        clip_position: globals.projection * globals.camera * position.extend(1.0).extend(1.0),
     }
 }
 
-fn fragment_stage(_: (), varying: sl::Vec4) -> sl::Vec4 {
-    varying * 3.0
+fn fragment_stage(_: (), interpolant: sl::Vec4) -> sl::Vec4 {
+    interpolant * 3.0
 }
 
 fn main() {

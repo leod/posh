@@ -8,7 +8,7 @@ use super::{
 /// Data passed from a vertex stage to a fragment stage.
 ///
 /// The interface of this trait is a private implementation detail.
-pub unsafe trait Varying: Value {
+pub unsafe trait Interpolant: Value {
     #[doc(hidden)]
     fn shader_outputs(&self, path: &str) -> Vec<(String, InterpolationQualifier, Rc<Expr>)>;
 
@@ -16,7 +16,7 @@ pub unsafe trait Varying: Value {
     fn shader_input(path: &str) -> Self;
 }
 
-unsafe impl Varying for () {
+unsafe impl Interpolant for () {
     fn shader_outputs(&self, _: &str) -> Vec<(String, InterpolationQualifier, Rc<Expr>)> {
         Vec::new()
     }
@@ -24,9 +24,9 @@ unsafe impl Varying for () {
     fn shader_input(_: &str) -> Self {}
 }
 
-macro_rules! impl_varying {
+macro_rules! impl_interpolant {
     ($ty:ident, $interp:ident) => {
-        unsafe impl Varying for $ty {
+        unsafe impl Interpolant for $ty {
             fn shader_outputs(
                 &self,
                 path: &str,
@@ -45,22 +45,22 @@ macro_rules! impl_varying {
     };
 }
 
-impl_varying!(F32, Smooth);
-impl_varying!(Vec2, Smooth);
-impl_varying!(Vec3, Smooth);
-impl_varying!(Vec4, Smooth);
-impl_varying!(Mat2, Smooth);
-impl_varying!(Mat3, Smooth);
-impl_varying!(Mat4, Smooth);
+impl_interpolant!(F32, Smooth);
+impl_interpolant!(Vec2, Smooth);
+impl_interpolant!(Vec3, Smooth);
+impl_interpolant!(Vec4, Smooth);
+impl_interpolant!(Mat2, Smooth);
+impl_interpolant!(Mat3, Smooth);
+impl_interpolant!(Mat4, Smooth);
 
 // GLSL ES 3.0: 4.3.6 Output Variables
 // > Vertex shader outputs that are, or contain, signed or unsigned integers or
 // > integer vectors must be qualified with the interpolation qualifier flat
-impl_varying!(I32, Flat);
-impl_varying!(IVec2, Flat);
-impl_varying!(IVec3, Flat);
-impl_varying!(IVec4, Flat);
-impl_varying!(U32, Flat);
-impl_varying!(UVec2, Flat);
-impl_varying!(UVec3, Flat);
-impl_varying!(UVec4, Flat);
+impl_interpolant!(I32, Flat);
+impl_interpolant!(IVec2, Flat);
+impl_interpolant!(IVec3, Flat);
+impl_interpolant!(IVec4, Flat);
+impl_interpolant!(U32, Flat);
+impl_interpolant!(UVec2, Flat);
+impl_interpolant!(UVec3, Flat);
+impl_interpolant!(UVec4, Flat);

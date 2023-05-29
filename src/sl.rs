@@ -7,11 +7,11 @@ mod gen_type;
 #[macro_use]
 mod scalar;
 mod array;
+mod interpolant;
 mod mat;
 mod sampler;
 mod sig;
 mod tuple;
-mod varying;
 mod vec;
 
 pub(crate) mod codegen;
@@ -27,19 +27,19 @@ use dag::{Expr, StructType, Type};
 
 pub use {
     array::{array, Array},
+    interpolant::Interpolant,
     mat::{mat2, mat3, mat4, Mat2, Mat3, Mat4},
     primitives::{all, and, any, branch, branches, or},
     sampler::{ColorSample, ColorSampler2d, ComparisonSampler2d, Sample},
     scalar::{Bool, F32, I32, U32},
-    sig::{Const, Derivatives, FsIn, FsOut, FullVsOut, VsIn, VsOut},
-    varying::Varying,
+    sig::{Const, Derivatives, FsInput, FsOutput, FullVsOutput, VsInput, VsOutput},
     vec::{
         bvec2, bvec3, bvec4, ivec2, ivec3, ivec4, uvec2, uvec3, uvec4, vec2, vec3, vec4, BVec2,
         BVec3, BVec4, IVec2, IVec3, IVec4, UVec2, UVec3, UVec4, Vec2, Vec3, Vec4,
     },
 };
 
-pub use posh_derive::{Const, Value, Varying};
+pub use posh_derive::{Const, Interpolant, Value};
 
 use self::dag::BinaryOp;
 

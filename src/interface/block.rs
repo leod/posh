@@ -207,7 +207,7 @@ pub unsafe trait Block<D: BlockDom>: sl::ToSl {
     /// The logical view of `Self`.
     ///
     /// This is the type through which shaders access block data.
-    type Sl: Block<Sl> + sl::Varying + sl::ToSl<Output = Self::Sl>;
+    type Sl: Block<Sl> + sl::Interpolant + sl::ToSl<Output = Self::Sl>;
 
     #[doc(hidden)]
     fn uniform_input(_path: &str) -> Self {

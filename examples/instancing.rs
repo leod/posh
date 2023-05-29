@@ -32,18 +32,18 @@ struct VsInput<D: VsInterfaceDom> {
 
 // Shader code
 
-fn vertex_stage(camera: Camera<Sl>, vertex: VsInput<Sl>) -> sl::VsOut<sl::Vec3> {
-    sl::VsOut {
-        position: camera.view_to_screen
+fn vertex_stage(camera: Camera<Sl>, vertex: VsInput<Sl>) -> sl::VsOutput<sl::Vec3> {
+    sl::VsOutput {
+        clip_position: camera.view_to_screen
             * camera.world_to_view
             * vertex.instance.model_to_view
             * vertex.model_pos.extend(1.0),
-        varying: vertex.instance.color,
+        interpolant: vertex.instance.color,
     }
 }
 
-fn fragment_stage(_: (), varying: sl::Vec3) -> sl::Vec4 {
-    varying.extend(1.0)
+fn fragment_stage(_: (), color: sl::Vec3) -> sl::Vec4 {
+    color.extend(1.0)
 }
 
 // Host code
