@@ -58,7 +58,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         #value_impl
 
         // Implement `ToSl` for all views of the struct.
-        impl #impl_generics ::posh::sl::ToSl for #ident #ty_generics
+        impl #impl_generics ::posh::ToSl for #ident #ty_generics
         #where_clause
         {
             type Output = #ident #ty_generics_sl;
@@ -66,7 +66,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             fn to_sl(self) -> Self::Output {
                 Self::Output {
                     #(
-                        #field_idents: ::posh::sl::ToSl::to_sl(self.#field_idents)
+                        #field_idents: ::posh::ToSl::to_sl(self.#field_idents)
                     ),*
                 }
             }

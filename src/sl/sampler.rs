@@ -2,13 +2,13 @@ use std::rc::Rc;
 
 use sealed::sealed;
 
-use crate::{Block, Sl};
+use crate::{Block, Sl, ToSl};
 
 use super::{
     dag::{BuiltInType, Expr, SamplerType, Trace, Type},
     primitives::built_in_2,
-    IVec2, IVec3, IVec4, Interpolant, Object, ToSl, UVec2, UVec3, UVec4, Value, Vec2, Vec3, Vec4,
-    F32, I32, U32,
+    IVec2, IVec3, IVec4, Interpolant, Object, UVec2, UVec3, UVec4, Value, Vec2, Vec3, Vec4, F32,
+    I32, U32,
 };
 
 // FIXME: These traits desperately need to move to `interface`.

@@ -1,9 +1,11 @@
 use std::{marker::PhantomData, rc::Rc};
 
+use crate::ToSl;
+
 use super::{
     dag::{ArrayType, Expr, Trace, Type},
     primitives::value_arg,
-    Object, ToSl, Value, ValueNonArray, U32,
+    Object, Value, ValueNonArray, U32,
 };
 
 /// An array value in the shading language.

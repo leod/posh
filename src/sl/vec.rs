@@ -3,12 +3,14 @@ use std::{
     rc::Rc,
 };
 
+use crate::ToSl;
+
 use super::{
     dag::{BinaryOp, BuiltInType, Expr, Type, UnaryOp},
     primitives::{
         binary, built_in_1, built_in_2, cast, common_field_base, field, unary, value_arg,
     },
-    Bool, Mat2, Mat3, Mat4, Object, ToSl, Value, ValueNonArray, F32, I32, U32,
+    Bool, Mat2, Mat3, Mat4, Object, Value, ValueNonArray, F32, I32, U32,
 };
 
 // Implements `Object` and `Value` for `$vec`.
@@ -427,7 +429,7 @@ macro_rules! impl_vec4 {
     (
         $vec:ident,
         $mint:ty,
-        $bvec:ident, 
+        $bvec:ident,
         $vec_lower:ident,
         $scalar:ident,
         $vec2:ident,
