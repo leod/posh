@@ -9,7 +9,7 @@ macro_rules! impl_gen_type {
                 self.dot(self)
             }
 
-            pub fn distance(self, y: impl super::ToSl<Output = Self>) -> Self {
+            pub fn distance(self, y: impl crate::ToSl<Output = Self>) -> Self {
                 super::primitives::built_in_2("distance", self, y.to_sl())
             }
 
@@ -41,15 +41,15 @@ macro_rules! impl_gen_type {
                 super::primitives::built_in_1("acos", self)
             }
 
-            pub fn atan2(self, x: impl super::ToSl<Output = Self>) -> Self {
+            pub fn atan2(self, x: impl crate::ToSl<Output = Self>) -> Self {
                 super::primitives::built_in_2("atan", self, x.to_sl())
             }
 
-            pub fn powf_cwise(self, y: impl super::ToSl<Output = Self>) -> Self {
+            pub fn powf_cwise(self, y: impl crate::ToSl<Output = Self>) -> Self {
                 super::primitives::built_in_2("pow", self, y.to_sl())
             }
 
-            pub fn powf(self, y: impl super::ToSl<Output = super::F32>) -> Self {
+            pub fn powf(self, y: impl crate::ToSl<Output = super::F32>) -> Self {
                 self.powf_cwise(Self::ONE * y.to_sl())
             }
 
@@ -125,54 +125,54 @@ macro_rules! impl_gen_type {
                 super::primitives::built_in_1("atanh", self)
             }
 
-            pub fn dot(self, y: impl super::ToSl<Output = Self>) -> super::F32 {
+            pub fn dot(self, y: impl crate::ToSl<Output = Self>) -> super::F32 {
                 super::primitives::built_in_2("dot", self, y.to_sl())
             }
 
-            pub fn min(self, y: impl super::ToSl<Output = Self>) -> Self {
+            pub fn min(self, y: impl crate::ToSl<Output = Self>) -> Self {
                 super::primitives::built_in_2("min", self, y.to_sl())
             }
 
-            pub fn max(self, y: impl super::ToSl<Output = Self>) -> Self {
+            pub fn max(self, y: impl crate::ToSl<Output = Self>) -> Self {
                 super::primitives::built_in_2("max", self, y.to_sl())
             }
 
-            pub fn modulus_cwise(self, y: impl super::ToSl<Output = Self>) -> Self {
+            pub fn modulus_cwise(self, y: impl crate::ToSl<Output = Self>) -> Self {
                 super::primitives::built_in_2("mod", self, y.to_sl())
             }
 
-            pub fn modulus(self, y: impl super::ToSl<Output = F32>) -> Self {
+            pub fn modulus(self, y: impl crate::ToSl<Output = F32>) -> Self {
                 super::primitives::built_in_2("mod", self, y.to_sl())
             }
 
             pub fn clamp(
                 self,
-                min: impl super::ToSl<Output = Self>,
-                max: impl super::ToSl<Output = Self>,
+                min: impl crate::ToSl<Output = Self>,
+                max: impl crate::ToSl<Output = Self>,
             ) -> Self {
                 super::primitives::built_in_3("clamp", self, min.to_sl(), max.to_sl())
             }
 
             pub fn lerp(
                 self,
-                rhs: impl super::ToSl<Output = Self>,
-                s: impl super::ToSl<Output = F32>,
+                rhs: impl crate::ToSl<Output = Self>,
+                s: impl crate::ToSl<Output = F32>,
             ) -> Self {
                 super::primitives::built_in_3("mix", self, rhs.to_sl(), s.to_sl())
             }
 
             pub fn lerp_cwise(
                 self,
-                rhs: impl super::ToSl<Output = Self>,
-                s: impl super::ToSl<Output = Self>,
+                rhs: impl crate::ToSl<Output = Self>,
+                s: impl crate::ToSl<Output = Self>,
             ) -> Self {
                 super::primitives::built_in_3("mix", self, rhs.to_sl(), s.to_sl())
             }
 
             pub fn select(
-                mask: impl super::ToSl<Output = $tyb>,
-                if_true: impl super::ToSl<Output = Self>,
-                if_false: impl super::ToSl<Output = Self>,
+                mask: impl crate::ToSl<Output = $tyb>,
+                if_true: impl crate::ToSl<Output = Self>,
+                if_false: impl crate::ToSl<Output = Self>,
             ) -> Self {
                 super::primitives::built_in_3(
                     "mix",
@@ -182,27 +182,27 @@ macro_rules! impl_gen_type {
                 )
             }
 
-            pub fn step_cwise(self, edge: impl super::ToSl<Output = Self>) -> Self {
+            pub fn step_cwise(self, edge: impl crate::ToSl<Output = Self>) -> Self {
                 super::primitives::built_in_2("step", edge.to_sl(), self)
             }
 
             /// Returns 1.0 if `self >= edge` and 0.0 otherwise.
-            pub fn step(self, edge: impl super::ToSl<Output = F32>) -> Self {
+            pub fn step(self, edge: impl crate::ToSl<Output = F32>) -> Self {
                 super::primitives::built_in_2("step", edge.to_sl(), self)
             }
 
             pub fn smoothstep_cwise(
                 self,
-                edge0: impl super::ToSl<Output = Self>,
-                edge1: impl super::ToSl<Output = Self>,
+                edge0: impl crate::ToSl<Output = Self>,
+                edge1: impl crate::ToSl<Output = Self>,
             ) -> Self {
                 super::primitives::built_in_3("smoothstep", edge0.to_sl(), edge1.to_sl(), self)
             }
 
             pub fn smoothstep(
                 self,
-                edge0: impl super::ToSl<Output = F32>,
-                edge1: impl super::ToSl<Output = F32>,
+                edge0: impl crate::ToSl<Output = F32>,
+                edge1: impl crate::ToSl<Output = F32>,
             ) -> Self {
                 super::primitives::built_in_3("smoothstep", edge0.to_sl(), edge1.to_sl(), self)
             }

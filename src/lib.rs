@@ -27,6 +27,15 @@ pub struct Gl;
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Sl;
 
+/// A conversion to a [`Value`] in the shading language.
+///
+/// This is useful for converting literals to the shading language.
+pub trait ToSl: Copy {
+    type Output: sl::Value;
+
+    fn to_sl(self) -> Self::Output;
+}
+
 // Hidden unstable symbols, needed for `posh-derive`.
 #[doc(hidden)]
 pub mod internal {

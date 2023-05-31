@@ -16,7 +16,7 @@ mod vertex_spec;
 use bytemuck::{Pod, Zeroable};
 use crevice::std140::AsStd140;
 
-use crate::sl::{self, ToSl};
+use crate::{sl, ToSl};
 
 pub use self::image::{ColorImage, DepthImage};
 pub use context::Context;

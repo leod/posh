@@ -25,6 +25,8 @@ use std::{collections::BTreeMap, rc::Rc};
 
 use dag::{Expr, StructType, Type};
 
+use crate::ToSl;
+
 pub use {
     array::{array, Array},
     interpolant::Interpolant,
@@ -117,13 +119,4 @@ pub fn unique_struct_type<T: Struct>(ty: fn() -> StructType) -> Rc<StructType> {
     });
 
     ty
-}
-
-/// A conversion to a [`Value`] in the shading language.
-///
-/// This is useful for converting literals to the shading language.
-pub trait ToSl: Copy {
-    type Output: Value;
-
-    fn to_sl(self) -> Self::Output;
 }

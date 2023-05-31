@@ -1,9 +1,11 @@
 use std::rc::Rc;
 
+use crate::ToSl;
+
 use super::{
     dag::{Expr, StructType, Type},
     primitives::{field, simplify_struct_literal, value_arg},
-    unique_struct_type, Object, Struct, ToSl, Value, ValueNonArray,
+    unique_struct_type, Object, Struct, Value, ValueNonArray,
 };
 
 macro_rules! impl_value {

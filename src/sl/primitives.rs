@@ -1,8 +1,10 @@
 use std::rc::Rc;
 
+use crate::ToSl;
+
 use super::{
     dag::{BinaryOp, Expr, FuncDef, StructType, Type, UnaryOp},
-    Bool, Object, ToSl, Value,
+    Bool, Object, Value,
 };
 
 pub fn and(left: impl ToSl<Output = Bool>, right: impl ToSl<Output = Bool>) -> Bool {

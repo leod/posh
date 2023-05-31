@@ -47,10 +47,7 @@ impl SceneAttachments<Gl> {
 // Shaders
 
 mod scene_pass {
-    use posh::{
-        sl::{self, ToSl},
-        Sl,
-    };
+    use posh::{sl, Sl, ToSl};
 
     use crate::SceneAttachments;
 
@@ -133,10 +130,7 @@ mod scene_pass {
 }
 
 mod present_pass {
-    use posh::{
-        sl::{self, ToSl},
-        Sl,
-    };
+    use posh::{sl, Sl, ToSl};
 
     use crate::SceneSamplers;
 

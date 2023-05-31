@@ -5,7 +5,7 @@ use sealed::sealed;
 use crate::{
     gl,
     sl::{self, program_def::VertexAttributeDef},
-    Gl, Sl,
+    Gl, Sl, ToSl,
 };
 
 /// A view of block attributes.
@@ -16,17 +16,17 @@ pub trait BlockDom: Copy {
     /// A floating-point value.
     ///
     /// Has [`f32`] as its physical view and [`sl::F32`] as its logical view.
-    type F32: Block<Self> + sl::ToSl<Output = sl::F32>;
+    type F32: Block<Self> + ToSl<Output = sl::F32>;
 
     /// A signed integer value.
     ///
     /// Has [`i32`] as its physical view and [`sl::I32`] as its logical view.
-    type I32: Block<Self> + sl::ToSl<Output = sl::I32>;
+    type I32: Block<Self> + ToSl<Output = sl::I32>;
 
     /// An unsigned integer value.
     ///
     /// Has [`u32`] as its physical view and [`sl::U32`] as its logical view.
-    type U32: Block<Self> + sl::ToSl<Output = sl::U32>;
+    type U32: Block<Self> + ToSl<Output = sl::U32>;
 
     /// A boolean value.
     ///
@@ -34,79 +34,79 @@ pub trait BlockDom: Copy {
     /// logical view.
     ///
     /// TODO: Bool in `Block`. Need to special case vertex attributes.
-    //type Bool: Block<Self> + sl::ToSl<Output = sl::Bool>;
+    //type Bool: Block<Self> + ToSl<Output = sl::Bool>;
 
     /// A two-crate::dimensional floating-point vector.
     ///
     /// Has [`gl::Vec2`](crate::gl::Vec2) as its physical view and [`sl::Vec2`]
     /// as its logical view.
-    type Vec2: Block<Self> + sl::ToSl<Output = sl::Vec2>;
+    type Vec2: Block<Self> + ToSl<Output = sl::Vec2>;
 
     /// A three-dimensional floating-point vector.
     ///
     /// Has [`gl::Vec3`](crate::gl::Vec3) as its physical view and [`sl::Vec3`]
     /// as its logical view.
-    type Vec3: Block<Self> + sl::ToSl<Output = sl::Vec3>;
+    type Vec3: Block<Self> + ToSl<Output = sl::Vec3>;
 
     /// A four-dimensional floating-point vector.
     ///
     /// Has [`gl::Vec4`](crate::gl::Vec4) as its physical view and [`sl::Vec4`]
     /// as its logical view.
-    type Vec4: Block<Self> + sl::ToSl<Output = sl::Vec4>;
+    type Vec4: Block<Self> + ToSl<Output = sl::Vec4>;
 
     /// A two-dimensional signed integer vector.
     ///
     /// Has [`gl::IVec2`](crate::gl::IVec2) as its physical view and
     /// [`sl::IVec2`] as its logical view.
-    type IVec2: Block<Self> + sl::ToSl<Output = sl::IVec2>;
+    type IVec2: Block<Self> + ToSl<Output = sl::IVec2>;
 
     /// A three-dimensional signed integer vector.
     ///
     /// Has [`gl::IVec3`](crate::gl::IVec3) as its physical view and
     /// [`sl::IVec3`] as its logical view.
-    type IVec3: Block<Self> + sl::ToSl<Output = sl::IVec3>;
+    type IVec3: Block<Self> + ToSl<Output = sl::IVec3>;
 
     /// A four-dimensional signed integer vector.
     ///
     /// Has [`gl::IVec4`](crate::gl::IVec4) as its physical view and
     /// [`sl::IVec4`] as its logical view.
-    type IVec4: Block<Self> + sl::ToSl<Output = sl::IVec4>;
+    type IVec4: Block<Self> + ToSl<Output = sl::IVec4>;
 
     /// A two-dimensional unsigned integer vector.
     ///
     /// Has [`gl::UVec2`](crate::gl::UVec2) as its physical view and
     /// [`sl::UVec2`] as its logical view.
-    type UVec2: Block<Self> + sl::ToSl<Output = sl::UVec2>;
+    type UVec2: Block<Self> + ToSl<Output = sl::UVec2>;
 
     /// A three-dimensional unsigned integer vector.
     ///
     /// Has [`gl::UVec3`](crate::gl::UVec3) as its physical view and
     /// [`sl::UVec3`] as its logical view.
-    type UVec3: Block<Self> + sl::ToSl<Output = sl::UVec3>;
+    type UVec3: Block<Self> + ToSl<Output = sl::UVec3>;
 
     /// A four-dimensional unsigned integer vector.
     ///
     /// Has [`gl::UVec4`](crate::gl::UVec4) as its physical view and
     /// [`sl::UVec4`] as its logical view.
-    type UVec4: Block<Self> + sl::ToSl<Output = sl::UVec4>;
+    type UVec4: Block<Self> + ToSl<Output = sl::UVec4>;
 
     /// A two-by-two floating-point matrix.
     ///
     /// Has [`gl::Mat2`](crate::gl::Mat2) as its physical view and [`sl::Mat2`]
     /// as its logical view.
-    type Mat2: Block<Self> + sl::ToSl<Output = sl::Mat2>;
+    type Mat2: Block<Self> + ToSl<Output = sl::Mat2>;
 
     /// A three-by-three floating-point matrix.
     ///
     /// Has [`gl::Mat3`](crate::gl::Mat3) as its physical view and [`sl::Mat3`]
     /// as its logical view.
-    type Mat3: Block<Self> + sl::ToSl<Output = sl::Mat3>;
+    type Mat3: Block<Self> + ToSl<Output = sl::Mat3>;
 
     /// A four-by-four floating-point matrix.
     ///
     /// Has [`gl::Mat4`](crate::gl::Mat4) as its physical view and [`sl::Mat4`]
     /// as its logical view.
-    type Mat4: Block<Self> + sl::ToSl<Output = sl::Mat4>;
+    type Mat4: Block<Self> + ToSl<Output = sl::Mat4>;
 }
 
 #[sealed]
@@ -197,17 +197,17 @@ impl BlockDom for Sl {
 /// # Safety
 ///
 /// TODO
-pub unsafe trait Block<D: BlockDom>: sl::ToSl {
+pub unsafe trait Block<D: BlockDom>: ToSl {
     /// The physical view of `Self`.
     ///
     /// This is the type through which the host provides block data in draw
     /// calls.
-    type Gl: Block<Gl> + AsStd140 + Pod + sl::ToSl<Output = Self::Sl>;
+    type Gl: Block<Gl> + AsStd140 + Pod + ToSl<Output = Self::Sl>;
 
     /// The logical view of `Self`.
     ///
     /// This is the type through which shaders access block data.
-    type Sl: Block<Sl> + sl::Interpolant + sl::ToSl<Output = Self::Sl>;
+    type Sl: Block<Sl> + sl::Interpolant + ToSl<Output = Self::Sl>;
 
     #[doc(hidden)]
     fn uniform_input(_path: &str) -> Self {
