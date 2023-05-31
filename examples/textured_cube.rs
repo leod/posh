@@ -96,8 +96,8 @@ impl Demo {
         self.time.set(time);
 
         self.program.draw(
-            gl::DrawInputs {
-                uniforms: &(
+            &gl::DrawInputs {
+                uniforms: (
                     Uniforms {
                         camera: self.camera.as_binding(),
                         time: self.time.as_binding(),
@@ -105,11 +105,11 @@ impl Demo {
                     self.texture
                         .as_color_sampler(gl::Sampler2dSettings::linear()),
                 ),
-                vertex_spec: &self
+                vertex_spec: self
                     .vertices
                     .as_vertex_spec(gl::PrimitiveMode::Triangles)
                     .with_element_data(self.elements.as_binding()),
-                settings: &gl::DrawSettings::default()
+                settings: gl::DrawSettings::default()
                     .with_clear_color([0.1, 0.2, 0.3, 1.0])
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less),

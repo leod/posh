@@ -135,29 +135,29 @@ impl Demo {
         });
 
         self.scene_program.draw(
-            gl::DrawInputs {
-                uniforms: &self.state.as_binding(),
-                vertex_spec: &self
+            &gl::DrawInputs {
+                uniforms: self.state.as_binding(),
+                vertex_spec: self
                     .triangle_vertices
                     .as_vertex_spec(gl::PrimitiveMode::Triangles),
-                settings: &gl::DrawSettings::default(),
+                settings: gl::DrawSettings::default(),
             },
             self.texture.as_color_attachment(),
         )?;
 
         self.present_program.draw(
-            gl::DrawInputs {
-                uniforms: &PresentUniforms {
+            &gl::DrawInputs {
+                uniforms: PresentUniforms {
                     state: self.state.as_binding(),
                     scene: self
                         .texture
                         .as_color_sampler(gl::Sampler2dSettings::linear()),
                 },
-                vertex_spec: &self
+                vertex_spec: self
                     .quad_vertices
                     .as_vertex_spec(gl::PrimitiveMode::Triangles)
                     .with_element_data(self.quad_elements.as_binding()),
-                settings: &gl::DrawSettings::default().with_clear_color([0.0, 0.0, 0.0, 1.0]),
+                settings: gl::DrawSettings::default().with_clear_color([0.0, 0.0, 0.0, 1.0]),
             },
             gl::Framebuffer::default(),
         )?;

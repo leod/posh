@@ -219,11 +219,11 @@ impl Demo {
         self.globals.set(Globals::new(time));
 
         self.scene_program.draw(
-            gl::DrawInputs {
-                uniforms: &self.globals.as_binding(),
-                vertex_spec: &gl::VertexSpec::new(gl::PrimitiveMode::Triangles)
+            &gl::DrawInputs {
+                uniforms: self.globals.as_binding(),
+                vertex_spec: gl::VertexSpec::new(gl::PrimitiveMode::Triangles)
                     .with_vertex_range(0..36),
-                settings: &gl::DrawSettings::default()
+                settings: gl::DrawSettings::default()
                     .with_clear_color([0.0; 4])
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less),
@@ -235,11 +235,11 @@ impl Demo {
         )?;
 
         self.present_program.draw(
-            gl::DrawInputs {
-                uniforms: &self.scene_attachments.as_scene_samplers(),
-                vertex_spec: &gl::VertexSpec::new(gl::PrimitiveMode::Triangles)
+            &gl::DrawInputs {
+                uniforms: self.scene_attachments.as_scene_samplers(),
+                vertex_spec: gl::VertexSpec::new(gl::PrimitiveMode::Triangles)
                     .with_vertex_range(0..6),
-                settings: &gl::DrawSettings::default(),
+                settings: gl::DrawSettings::default(),
             },
             gl::Framebuffer::default(),
         )?;

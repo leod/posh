@@ -5,7 +5,7 @@ use super::{
     Mat2, Mat3, Mat4, Object, UVec2, UVec3, UVec4, Value, Vec2, Vec3, Vec4, F32, I32, U32,
 };
 
-/// Data passed from a vertex stage to a fragment stage.
+/// Data passed from a vertex shader to a fragment shader.
 ///
 /// The interface of this trait is a private implementation detail.
 pub unsafe trait Interpolant: Value {

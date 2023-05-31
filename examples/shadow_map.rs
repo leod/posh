@@ -249,10 +249,10 @@ impl Demo {
             .with_element_data(self.scene_elements.as_binding());
 
         self.depth_program.draw(
-            gl::DrawInputs {
-                uniforms: &self.light_buffer.as_binding(),
-                vertex_spec: &scene_vertex_spec,
-                settings: &gl::DrawSettings::default()
+            &gl::DrawInputs {
+                uniforms: self.light_buffer.as_binding(),
+                vertex_spec: scene_vertex_spec.clone(),
+                settings: gl::DrawSettings::default()
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less)
                     .with_cull_face(gl::CullFace::Back),
@@ -261,8 +261,8 @@ impl Demo {
         )?;
 
         self.scene_program.draw(
-            gl::DrawInputs {
-                uniforms: &SceneUniforms {
+            &gl::DrawInputs {
+                uniforms: SceneUniforms {
                     camera: self.camera_buffer.as_binding(),
                     light: self.light_buffer.as_binding(),
                     light_depth_map: self.light_depth_map.as_comparison_sampler(
@@ -270,8 +270,8 @@ impl Demo {
                         gl::Comparison::Less,
                     ),
                 },
-                vertex_spec: &scene_vertex_spec,
-                settings: &gl::DrawSettings::default()
+                vertex_spec: scene_vertex_spec,
+                settings: gl::DrawSettings::default()
                     .with_clear_color(glam::Vec4::ONE.into())
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less)
@@ -281,13 +281,13 @@ impl Demo {
         )?;
 
         self.flat_program.draw(
-            gl::DrawInputs {
-                uniforms: &self.camera_buffer.as_binding(),
-                vertex_spec: &self
+            &gl::DrawInputs {
+                uniforms: self.camera_buffer.as_binding(),
+                vertex_spec: self
                     .light_vertices
                     .as_vertex_spec(gl::PrimitiveMode::Triangles)
                     .with_element_data(self.light_elements.as_binding()),
-                settings: &gl::DrawSettings::default()
+                settings: gl::DrawSettings::default()
                     .with_depth_test(gl::Comparison::Less)
                     .with_cull_face(gl::CullFace::Back),
             },
@@ -295,15 +295,15 @@ impl Demo {
         )?;
 
         self.debug_program.draw(
-            gl::DrawInputs {
-                uniforms: &self
+            &gl::DrawInputs {
+                uniforms: self
                     .light_depth_map
                     .as_color_sampler(gl::Sampler2dSettings::default()),
-                vertex_spec: &self
+                vertex_spec: self
                     .debug_vertices
                     .as_vertex_spec(gl::PrimitiveMode::Triangles)
                     .with_element_data(self.debug_elements.as_binding()),
-                settings: &gl::DrawSettings::default(),
+                settings: gl::DrawSettings::default(),
             },
             gl::Framebuffer::default(),
         )?;
