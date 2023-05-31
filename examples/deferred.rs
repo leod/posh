@@ -95,7 +95,7 @@ mod scene_pass {
         sl::vec3(v.z, v.x, v.y)
     }
 
-    pub fn vertex_stage(
+    pub fn vertex_shader(
         globals: Globals<Sl>,
         input: sl::VsInput<()>,
     ) -> sl::VsOutput<SceneAttachments<Sl>> {
@@ -124,7 +124,7 @@ mod scene_pass {
         }
     }
 
-    pub fn fragment_stage(_: (), interpolant: SceneAttachments<Sl>) -> SceneAttachments<Sl> {
+    pub fn fragment_shader(_: (), interpolant: SceneAttachments<Sl>) -> SceneAttachments<Sl> {
         interpolant
     }
 }
@@ -143,7 +143,7 @@ mod present_pass {
         glam::vec2(1., -1.),
     ];
 
-    pub fn vertex_stage(_: (), input: sl::VsInput<()>) -> sl::VsOutput<sl::Vec2> {
+    pub fn vertex_shader(_: (), input: sl::VsInput<()>) -> sl::VsOutput<sl::Vec2> {
         let position = SQUARE_POSITIONS.to_sl().get(input.vertex_id);
 
         sl::VsOutput {
@@ -152,7 +152,7 @@ mod present_pass {
         }
     }
 
-    pub fn fragment_stage(samplers: SceneSamplers<Sl>, uv: sl::Vec2) -> sl::Vec4 {
+    pub fn fragment_shader(samplers: SceneSamplers<Sl>, uv: sl::Vec2) -> sl::Vec4 {
         let albedo = samplers.albedo.sample(sl::vec2(uv.x * 3.0, uv.y));
         let world_normal = samplers
             .world_normal
@@ -204,9 +204,9 @@ impl Demo {
 
         Ok(Self {
             scene_program: gl
-                .create_program(scene_pass::vertex_stage, scene_pass::fragment_stage)?,
+                .create_program(scene_pass::vertex_shader, scene_pass::fragment_shader)?,
             present_program: gl
-                .create_program(present_pass::vertex_stage, present_pass::fragment_stage)?,
+                .create_program(present_pass::vertex_shader, present_pass::fragment_shader)?,
             globals: gl.create_uniform_buffer(Globals::new(0.0), StreamDraw)?,
             scene_attachments,
             depth_texture: gl.create_depth_texture_2d(gl::DepthImage::f32_zero([WIDTH, HEIGHT]))?,

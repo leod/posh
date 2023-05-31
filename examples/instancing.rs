@@ -32,7 +32,7 @@ struct VsInput<D: VsInterfaceDom> {
 
 // Shader code
 
-fn vertex_stage(camera: Camera<Sl>, vertex: VsInput<Sl>) -> sl::VsOutput<sl::Vec3> {
+fn vertex_shader(camera: Camera<Sl>, vertex: VsInput<Sl>) -> sl::VsOutput<sl::Vec3> {
     sl::VsOutput {
         clip_position: camera.view_to_screen
             * camera.world_to_view
@@ -42,7 +42,7 @@ fn vertex_stage(camera: Camera<Sl>, vertex: VsInput<Sl>) -> sl::VsOutput<sl::Vec
     }
 }
 
-fn fragment_stage(_: (), color: sl::Vec3) -> sl::Vec4 {
+fn fragment_shader(_: (), color: sl::Vec3) -> sl::Vec4 {
     color.extend(1.0)
 }
 
@@ -62,7 +62,7 @@ impl Demo {
         use gl::BufferUsage::*;
 
         Ok(Self {
-            program: gl.create_program(vertex_stage, fragment_stage)?,
+            program: gl.create_program(vertex_shader, fragment_shader)?,
             camera: gl.create_uniform_buffer(Camera::default(), StaticDraw)?,
             instances: gl.create_vertex_buffer(&instances(0.0), StaticDraw)?,
             teapot: gl.create_vertex_buffer(&teapot_positions(), StaticDraw)?,
