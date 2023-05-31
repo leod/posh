@@ -8,12 +8,13 @@ use posh::{gl, sl, Block, BlockDom, Gl, Sl};
 #[repr(C)]
 struct Globals<D: BlockDom> {
     time: D::F32,
+    size: D::Vec2,
 }
 
 // Shader code
 
 fn vertex_stage(globals: Globals<Sl>, vertex: sl::Vec2) -> sl::VsOutput<sl::Vec2> {
-    let position = sl::Vec2::from_angle(globals.time).rotate(vertex);
+    let position = sl::Vec2::from_angle(globals.time).rotate(vertex * globals.size);
 
     sl::VsOutput {
         clip_position: sl::vec4(position.x, position.y, 0.0, 1.0),
@@ -42,7 +43,10 @@ impl Demo {
     pub fn new(gl: gl::Context) -> Result<Self, gl::CreateError> {
         use gl::BufferUsage::*;
 
-        let globals = Globals { time: 0.0 };
+        let globals = Globals {
+            time: 0.0,
+            size: [0.0, 0.0].into(),
+        };
         let vertices = vec![
             [0.0f32, 1.0].into(),
             [-0.5, -0.5].into(),
@@ -60,6 +64,7 @@ impl Demo {
     pub fn draw(&self) -> Result<(), gl::DrawError> {
         self.globals.set(Globals {
             time: Instant::now().duration_since(self.start_time).as_secs_f32(),
+            size: [1.0, 1.0].into(),
         });
 
         self.program.draw(
