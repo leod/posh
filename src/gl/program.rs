@@ -11,14 +11,14 @@ use super::{
     UniformBufferBinding, VertexSpec,
 };
 
-pub struct DrawInputs<'a, U, V>
+pub struct DrawInputs<U, V>
 where
     U: UniformInterface<Sl>,
     V: VsInterface<Sl>,
 {
-    pub uniforms: &'a U::Gl,
-    pub vertex_spec: &'a VertexSpec<V>,
-    pub settings: &'a DrawSettings,
+    pub uniforms: U::Gl,
+    pub vertex_spec: VertexSpec<V>,
+    pub settings: DrawSettings,
 }
 
 pub struct Program<U, V, F = sl::Vec4> {
@@ -41,7 +41,7 @@ where
 
     pub fn draw(
         &self,
-        inputs: DrawInputs<U, V>,
+        inputs: &DrawInputs<U, V>,
         framebuffer: impl Into<Framebuffer<F>>,
     ) -> Result<(), DrawError> {
         // TODO: These allocations can be avoided once stable has allocators.
@@ -58,7 +58,7 @@ where
                 &uniform_visitor.raw_samplers,
                 &inputs.vertex_spec.raw(),
                 &framebuffer.into().raw(),
-                inputs.settings,
+                &inputs.settings,
             )
         }?;
 

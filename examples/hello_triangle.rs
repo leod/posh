@@ -68,10 +68,10 @@ impl Demo {
         });
 
         self.program.draw(
-            gl::DrawInputs {
-                uniforms: &self.globals.as_binding(),
-                vertex_spec: &self.vertices.as_vertex_spec(gl::PrimitiveMode::Triangles),
-                settings: &gl::DrawSettings::default().with_clear_color([0.1, 0.2, 0.3, 1.0]),
+            &gl::DrawInputs {
+                uniforms: self.globals.as_binding(),
+                vertex_spec: self.vertices.as_vertex_spec(gl::PrimitiveMode::Triangles),
+                settings: gl::DrawSettings::default().with_clear_color([0.1, 0.2, 0.3, 1.0]),
             },
             gl::Framebuffer::default(),
         )
