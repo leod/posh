@@ -13,7 +13,7 @@ struct Globals<D: BlockDom> {
 
 // Shader code
 
-fn vertex_stage(globals: Globals<Sl>, vertex: sl::Vec2) -> sl::VsOutput<sl::Vec2> {
+fn vertex_shader(globals: Globals<Sl>, vertex: sl::Vec2) -> sl::VsOutput<sl::Vec2> {
     let position = sl::Vec2::from_angle(globals.time).rotate(vertex * globals.size);
 
     sl::VsOutput {
@@ -22,7 +22,7 @@ fn vertex_stage(globals: Globals<Sl>, vertex: sl::Vec2) -> sl::VsOutput<sl::Vec2
     }
 }
 
-fn fragment_stage(globals: Globals<Sl>, interpolant: sl::Vec2) -> sl::Vec4 {
+fn fragment_shader(globals: Globals<Sl>, interpolant: sl::Vec2) -> sl::Vec4 {
     let rg = (interpolant + globals.time).cos().powf(2.0);
 
     sl::vec4(rg.x, rg.y, 0.5, 1.0)
@@ -54,7 +54,7 @@ impl Demo {
         ];
 
         Ok(Self {
-            program: gl.create_program(vertex_stage, fragment_stage)?,
+            program: gl.create_program(vertex_shader, fragment_shader)?,
             globals: gl.create_uniform_buffer(globals, StreamDraw)?,
             vertices: gl.create_vertex_buffer(&vertices, StaticDraw)?,
             start_time: Instant::now(),

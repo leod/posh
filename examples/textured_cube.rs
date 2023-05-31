@@ -35,7 +35,7 @@ fn zxy(v: sl::Vec3) -> sl::Vec3 {
     sl::vec3(v.z, v.x, v.y)
 }
 
-fn vertex_stage(uniforms: Uniforms<Sl>, vertex: Vertex<Sl>) -> sl::VsOutput<sl::Vec2> {
+fn vertex_shader(uniforms: Uniforms<Sl>, vertex: Vertex<Sl>) -> sl::VsOutput<sl::Vec2> {
     let camera = uniforms.camera;
 
     let vertex_pos = vertex
@@ -81,7 +81,7 @@ impl Demo {
         );
 
         Ok(Self {
-            program: gl.create_program(vertex_stage, sl::ColorSampler2d::sample)?,
+            program: gl.create_program(vertex_shader, sl::ColorSampler2d::sample)?,
             camera: gl.create_uniform_buffer(Camera::default(), StaticDraw)?,
             time: gl.create_uniform_buffer(0.0, StreamDraw)?,
             texture: gl.create_color_texture_2d_with_mipmap(image)?,

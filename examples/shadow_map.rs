@@ -62,14 +62,14 @@ mod flat_pass {
 
     use super::{Camera, SceneVertex};
 
-    pub fn vertex_stage(camera: Camera<Sl>, vertex: SceneVertex<Sl>) -> sl::VsOutput<sl::Vec3> {
+    pub fn vertex_shader(camera: Camera<Sl>, vertex: SceneVertex<Sl>) -> sl::VsOutput<sl::Vec3> {
         sl::VsOutput {
             clip_position: camera.world_to_clip(vertex.world_pos),
             interpolant: vertex.color,
         }
     }
 
-    pub fn fragment_stage(_: (), color: sl::Vec3) -> sl::Vec4 {
+    pub fn fragment_shader(_: (), color: sl::Vec3) -> sl::Vec4 {
         color.extend(1.0)
     }
 }
@@ -79,11 +79,11 @@ mod depth_pass {
 
     use super::{Light, SceneVertex};
 
-    pub fn vertex_stage(light: Light<Sl>, vertex: SceneVertex<Sl>) -> sl::Vec4 {
+    pub fn vertex_shader(light: Light<Sl>, vertex: SceneVertex<Sl>) -> sl::Vec4 {
         light.camera.world_to_clip(vertex.world_pos)
     }
 
-    pub fn fragment_stage(_: (), _: ()) -> () {
+    pub fn fragment_shader(_: (), _: ()) -> () {
         ()
     }
 }
@@ -99,7 +99,7 @@ mod scene_pass {
         light_clip_pos: sl::Vec4,
     }
 
-    pub fn vertex_stage(
+    pub fn vertex_shader(
         SceneUniforms { light, camera, .. }: SceneUniforms<Sl>,
         vertex: SceneVertex<Sl>,
     ) -> sl::VsOutput<Interpolant> {
@@ -136,7 +136,7 @@ mod scene_pass {
         )
     }
 
-    pub fn fragment_stage(
+    pub fn fragment_shader(
         SceneUniforms {
             light,
             light_depth_map,
@@ -163,14 +163,14 @@ mod debug_pass {
 
     use crate::ScreenVertex;
 
-    pub fn vertex_stage(_: (), vertex: ScreenVertex<Sl>) -> sl::VsOutput<sl::Vec2> {
+    pub fn vertex_shader(_: (), vertex: ScreenVertex<Sl>) -> sl::VsOutput<sl::Vec2> {
         sl::VsOutput {
             interpolant: vertex.tex_coords,
             clip_position: vertex.pos.extend(0.0).extend(1.0),
         }
     }
 
-    pub fn fragment_stage(sampler: sl::ColorSampler2d<sl::F32>, tex_coords: sl::Vec2) -> sl::Vec4 {
+    pub fn fragment_shader(sampler: sl::ColorSampler2d<sl::F32>, tex_coords: sl::Vec2) -> sl::Vec4 {
         let depth = sampler.sample(tex_coords);
 
         sl::Vec4::splat(depth)
@@ -208,13 +208,14 @@ impl Demo {
         let light_depth_image = gl::DepthImage::f32_zero([DEPTH_MAP_SIZE, DEPTH_MAP_SIZE]);
 
         Ok(Demo {
-            flat_program: gl.create_program(flat_pass::vertex_stage, flat_pass::fragment_stage)?,
+            flat_program: gl
+                .create_program(flat_pass::vertex_shader, flat_pass::fragment_shader)?,
             depth_program: gl
-                .create_program(depth_pass::vertex_stage, depth_pass::fragment_stage)?,
+                .create_program(depth_pass::vertex_shader, depth_pass::fragment_shader)?,
             scene_program: gl
-                .create_program(scene_pass::vertex_stage, scene_pass::fragment_stage)?,
+                .create_program(scene_pass::vertex_shader, scene_pass::fragment_shader)?,
             debug_program: gl
-                .create_program(debug_pass::vertex_stage, debug_pass::fragment_stage)?,
+                .create_program(debug_pass::vertex_shader, debug_pass::fragment_shader)?,
 
             camera_buffer: gl.create_uniform_buffer(Camera::default(), StaticDraw)?,
             light_buffer: gl.create_uniform_buffer(Light::new(0.0, 0.0), StreamDraw)?,

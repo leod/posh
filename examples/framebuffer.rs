@@ -31,7 +31,7 @@ mod scene_pass {
 
     use super::State;
 
-    pub fn vertex_stage(_: (), vertex: sl::Vec2) -> sl::VsOutput<sl::Vec2> {
+    pub fn vertex_shader(_: (), vertex: sl::Vec2) -> sl::VsOutput<sl::Vec2> {
         let vertex = vertex - sl::vec2(0.5, 0.5);
 
         sl::VsOutput {
@@ -40,7 +40,7 @@ mod scene_pass {
         }
     }
 
-    pub fn fragment_stage(state: State<Sl>, interpolant: sl::Vec2) -> sl::Vec4 {
+    pub fn fragment_shader(state: State<Sl>, interpolant: sl::Vec2) -> sl::Vec4 {
         let rg = (interpolant + state.time).cos().powf(2.0);
 
         sl::vec4(rg.x, rg.y, 0.5, 1.0)
@@ -52,7 +52,7 @@ mod present_pass {
 
     use super::{PresentUniforms, PresentVertex};
 
-    pub fn vertex_stage(_: (), vertex: PresentVertex<Sl>) -> sl::VsOutput<sl::Vec2> {
+    pub fn vertex_shader(_: (), vertex: PresentVertex<Sl>) -> sl::VsOutput<sl::Vec2> {
         sl::VsOutput {
             clip_position: vertex.pos.extend(0.0).extend(1.0),
             interpolant: vertex.tex_coords,
@@ -70,7 +70,10 @@ mod present_pass {
         thresh.get(p.x.as_u32() % 4).get(p.y.as_u32() % 4).ge(alpha)
     }
 
-    pub fn fragment_stage(uniforms: PresentUniforms<Sl>, input: sl::FsInput<sl::Vec2>) -> sl::Vec4 {
+    pub fn fragment_shader(
+        uniforms: PresentUniforms<Sl>,
+        input: sl::FsInput<sl::Vec2>,
+    ) -> sl::Vec4 {
         let flip = uniforms.state.flip;
         let coords = sl::branch(
             flip.eq(0u32),
@@ -113,9 +116,9 @@ impl Demo {
 
         Ok(Self {
             scene_program: gl
-                .create_program(scene_pass::vertex_stage, scene_pass::fragment_stage)?,
+                .create_program(scene_pass::vertex_shader, scene_pass::fragment_shader)?,
             present_program: gl
-                .create_program(present_pass::vertex_stage, present_pass::fragment_stage)?,
+                .create_program(present_pass::vertex_shader, present_pass::fragment_shader)?,
             state: gl.create_uniform_buffer(State { time: 0.0, flip: 0 }, StreamDraw)?,
             texture: gl.create_color_texture_2d(image)?,
             triangle_vertices: gl.create_vertex_buffer(&triangle_vertices(), StaticDraw)?,
