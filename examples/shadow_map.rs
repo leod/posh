@@ -142,14 +142,17 @@ mod scene_pass {
             light_depth_map,
             ..
         }: SceneUniforms<Sl>,
-        interpolant: Interpolant,
+        Interpolant {
+            vertex,
+            light_clip_pos,
+        }: Interpolant,
     ) -> sl::Vec4 {
-        let light_dir = (light.world_pos - interpolant.vertex.world_pos).normalize();
-        let diffuse = light.color * interpolant.vertex.world_normal.dot(light_dir).max(0.0);
+        let light_dir = (light.world_pos - vertex.world_pos).normalize();
+        let diffuse = light.color * vertex.world_normal.dot(light_dir).max(0.0);
 
-        let shadow = sample_shadow(light_depth_map, interpolant.light_clip_pos);
+        let shadow = sample_shadow(light_depth_map, light_clip_pos);
 
-        let color = (light.ambient + shadow * diffuse) * interpolant.vertex.color;
+        let color = (light.ambient + shadow * diffuse) * vertex.color;
 
         color.extend(1.0)
     }
