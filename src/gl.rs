@@ -23,7 +23,7 @@ pub use context::Context;
 pub use element_buffer::{Element, ElementBuffer, ElementBufferBinding};
 pub use framebuffer::{ColorAttachment, DepthAttachment, Framebuffer};
 pub use mat::{Mat2, Mat3, Mat4};
-pub use program::{DrawInputs, Program};
+pub use program::Program;
 pub use raw::{
     BlendEquation, BlendFunc, Blending, BufferError, BufferUsage, Caps, Comparison, ContextError,
     CreateError, CullFace, DrawError, DrawSettings, ElementType, FramebufferError, ImageFormat,

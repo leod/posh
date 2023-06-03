@@ -76,7 +76,7 @@ mod present_pass {
     ) -> sl::Vec4 {
         let flip = uniforms.state.flip;
         let coords = sl::branch(
-            flip.eq(0u32),
+            flip.eq(1u32),
             sl::branch(
                 dither(
                     input.fragment_coord.xy(),
@@ -134,33 +134,26 @@ impl Demo {
             flip,
         });
 
-        self.scene_program.draw(
-            &gl::DrawInputs {
-                uniforms: self.state.as_binding(),
-                vertex_spec: self
-                    .triangle_vertices
+        self.scene_program
+            .with_uniforms(self.state.as_binding())
+            .with_framebuffer(self.texture.as_color_attachment())
+            .draw(
+                self.triangle_vertices
                     .as_vertex_spec(gl::PrimitiveMode::Triangles),
-                settings: gl::DrawSettings::default(),
-            },
-            self.texture.as_color_attachment(),
-        )?;
+            )?;
 
-        self.present_program.draw(
-            &gl::DrawInputs {
-                uniforms: PresentUniforms {
-                    state: self.state.as_binding(),
-                    scene: self
-                        .texture
-                        .as_color_sampler(gl::Sampler2dSettings::linear()),
-                },
-                vertex_spec: self
-                    .quad_vertices
+        self.present_program
+            .with_uniforms(PresentUniforms {
+                state: self.state.as_binding(),
+                scene: self
+                    .texture
+                    .as_color_sampler(gl::Sampler2dSettings::linear()),
+            })
+            .draw(
+                self.quad_vertices
                     .as_vertex_spec(gl::PrimitiveMode::Triangles)
                     .with_element_data(self.quad_elements.as_binding()),
-                settings: gl::DrawSettings::default().with_clear_color([0.0, 0.0, 0.0, 1.0]),
-            },
-            gl::Framebuffer::default(),
-        )?;
+            )?;
 
         Ok(())
     }
@@ -206,7 +199,7 @@ fn main() {
     gl_attr.set_context_version(3, 0);
 
     let window = video
-        .window("Press F to flip the triangle (amaze!)", 1024, 768)
+        .window("Press F to dither (amaze!)", 1024, 768)
         .opengl()
         .build()
         .unwrap();

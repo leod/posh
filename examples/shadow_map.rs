@@ -248,65 +248,57 @@ impl Demo {
             .as_vertex_spec(gl::PrimitiveMode::Triangles)
             .with_element_data(self.scene_elements.as_binding());
 
-        self.depth_program.draw(
-            &gl::DrawInputs {
-                uniforms: self.light_buffer.as_binding(),
-                vertex_spec: scene_vertex_spec.clone(),
-                settings: gl::DrawSettings::default()
+        self.depth_program
+            .with_uniforms(self.light_buffer.as_binding())
+            .with_framebuffer(self.light_depth_map.as_depth_attachment())
+            .with_settings(
+                gl::DrawSettings::default()
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less)
                     .with_cull_face(gl::CullFace::Back),
-            },
-            self.light_depth_map.as_depth_attachment(),
-        )?;
+            )
+            .draw(scene_vertex_spec.clone())?;
 
-        self.scene_program.draw(
-            &gl::DrawInputs {
-                uniforms: SceneUniforms {
-                    camera: self.camera_buffer.as_binding(),
-                    light: self.light_buffer.as_binding(),
-                    light_depth_map: self.light_depth_map.as_comparison_sampler(
-                        gl::Sampler2dSettings::linear(),
-                        gl::Comparison::Less,
-                    ),
-                },
-                vertex_spec: scene_vertex_spec,
-                settings: gl::DrawSettings::default()
+        self.scene_program
+            .with_uniforms(SceneUniforms {
+                camera: self.camera_buffer.as_binding(),
+                light: self.light_buffer.as_binding(),
+                light_depth_map: self
+                    .light_depth_map
+                    .as_comparison_sampler(gl::Sampler2dSettings::linear(), gl::Comparison::Less),
+            })
+            .with_settings(
+                gl::DrawSettings::default()
                     .with_clear_color(glam::Vec4::ONE.into())
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less)
                     .with_cull_face(gl::CullFace::Back),
-            },
-            gl::Framebuffer::default(),
-        )?;
+            )
+            .draw(scene_vertex_spec.clone())?;
 
-        self.flat_program.draw(
-            &gl::DrawInputs {
-                uniforms: self.camera_buffer.as_binding(),
-                vertex_spec: self
-                    .light_vertices
-                    .as_vertex_spec(gl::PrimitiveMode::Triangles)
-                    .with_element_data(self.light_elements.as_binding()),
-                settings: gl::DrawSettings::default()
+        self.flat_program
+            .with_uniforms(self.camera_buffer.as_binding())
+            .with_settings(
+                gl::DrawSettings::default()
                     .with_depth_test(gl::Comparison::Less)
                     .with_cull_face(gl::CullFace::Back),
-            },
-            gl::Framebuffer::default(),
-        )?;
+            )
+            .draw(
+                self.light_vertices
+                    .as_vertex_spec(gl::PrimitiveMode::Triangles)
+                    .with_element_data(self.light_elements.as_binding()),
+            )?;
 
-        self.debug_program.draw(
-            &gl::DrawInputs {
-                uniforms: self
-                    .light_depth_map
+        self.debug_program
+            .with_uniforms(
+                self.light_depth_map
                     .as_color_sampler(gl::Sampler2dSettings::default()),
-                vertex_spec: self
-                    .debug_vertices
+            )
+            .draw(
+                self.debug_vertices
                     .as_vertex_spec(gl::PrimitiveMode::Triangles)
                     .with_element_data(self.debug_elements.as_binding()),
-                settings: gl::DrawSettings::default(),
-            },
-            gl::Framebuffer::default(),
-        )?;
+            )?;
 
         Ok(())
     }
