@@ -95,27 +95,28 @@ impl Demo {
         let time = Instant::now().duration_since(self.start_time).as_secs_f32();
         self.time.set(time);
 
-        self.program.draw(
-            &gl::DrawInputs {
-                uniforms: (
-                    Uniforms {
-                        camera: self.camera.as_binding(),
-                        time: self.time.as_binding(),
-                    },
-                    self.texture
-                        .as_color_sampler(gl::Sampler2dSettings::linear()),
-                ),
-                vertex_spec: self
-                    .vertices
-                    .as_vertex_spec(gl::PrimitiveMode::Triangles)
-                    .with_element_data(self.elements.as_binding()),
-                settings: gl::DrawSettings::default()
+        self.program
+            .with_uniforms((
+                Uniforms {
+                    camera: self.camera.as_binding(),
+                    time: self.time.as_binding(),
+                },
+                self.texture
+                    .as_color_sampler(gl::Sampler2dSettings::linear()),
+            ))
+            .with_settings(
+                gl::DrawSettings::default()
                     .with_clear_color([0.1, 0.2, 0.3, 1.0])
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less),
-            },
-            gl::Framebuffer::default(),
-        )
+            )
+            .draw(
+                self.vertices
+                    .as_vertex_spec(gl::PrimitiveMode::Triangles)
+                    .with_element_data(self.elements.as_binding()),
+            )?;
+
+        Ok(())
     }
 }
 

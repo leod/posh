@@ -27,12 +27,6 @@ impl<S> ColorAttachment<S> {
     }
 }
 
-impl<'a, S: ColorSample> From<&'a ColorAttachment<S>> for Framebuffer<S> {
-    fn from(value: &'a ColorAttachment<S>) -> Self {
-        Framebuffer(FramebufferInternal::Color(value.clone()))
-    }
-}
-
 impl<S: ColorSample> From<ColorAttachment<S>> for Framebuffer<S> {
     fn from(value: ColorAttachment<S>) -> Self {
         Framebuffer(FramebufferInternal::Color(value))
@@ -47,12 +41,6 @@ pub struct DepthAttachment {
 impl DepthAttachment {
     pub(super) fn from_raw(raw: raw::Attachment) -> Self {
         Self { raw }
-    }
-}
-
-impl<'a> From<&'a DepthAttachment> for Framebuffer<()> {
-    fn from(value: &'a DepthAttachment) -> Self {
-        Framebuffer(FramebufferInternal::Depth(value.clone()))
     }
 }
 
@@ -77,15 +65,12 @@ enum FramebufferInternal<F: FsInterface<Sl>> {
 pub struct Framebuffer<F: FsInterface<Sl> = sl::Vec4>(FramebufferInternal<F>);
 
 impl<F: FsInterface<Sl>> Framebuffer<F> {
-    pub fn color(color: &F::Gl) -> Self {
-        Framebuffer(FramebufferInternal::Color(color.clone()))
+    pub fn color(color: F::Gl) -> Self {
+        Framebuffer(FramebufferInternal::Color(color))
     }
 
-    pub fn color_and_depth(color: &F::Gl, depth: &DepthAttachment) -> Self {
-        Framebuffer(FramebufferInternal::ColorDepth {
-            color: color.clone(),
-            depth: depth.clone(),
-        })
+    pub fn color_depth(color: F::Gl, depth: DepthAttachment) -> Self {
+        Framebuffer(FramebufferInternal::ColorDepth { color, depth })
     }
 
     pub fn raw(&self) -> raw::Framebuffer {
@@ -109,20 +94,14 @@ impl<F: FsInterface<Sl>> Framebuffer<F> {
 }
 
 impl Framebuffer<()> {
-    pub fn depth(depth: &DepthAttachment) -> Self {
-        Framebuffer(FramebufferInternal::Depth(depth.clone()))
+    pub fn depth(depth: DepthAttachment) -> Self {
+        Framebuffer(FramebufferInternal::Depth(depth))
     }
 }
 
 impl Default for Framebuffer<sl::Vec4> {
     fn default() -> Self {
         Framebuffer(FramebufferInternal::Default)
-    }
-}
-
-impl<'a, F: FsInterface<Sl>> From<&'a Framebuffer<F>> for Framebuffer<F> {
-    fn from(value: &'a Framebuffer<F>) -> Self {
-        value.clone()
     }
 }
 
