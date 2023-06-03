@@ -1,7 +1,7 @@
 use bytemuck::{Pod, Zeroable};
 use crevice::std140::AsStd140;
 
-use crate::sl::{self, ToSl};
+use crate::{sl, ToSl};
 
 use super::{Vec2, Vec3, Vec4};
 

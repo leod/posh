@@ -47,10 +47,7 @@ impl SceneAttachments<Gl> {
 // Shaders
 
 mod scene_pass {
-    use posh::{
-        sl::{self, ToSl},
-        Sl,
-    };
+    use posh::{sl, Sl, ToSl};
 
     use crate::SceneAttachments;
 
@@ -98,10 +95,10 @@ mod scene_pass {
         sl::vec3(v.z, v.x, v.y)
     }
 
-    pub fn vertex_stage(
+    pub fn vertex_shader(
         globals: Globals<Sl>,
-        input: sl::VsIn<()>,
-    ) -> sl::VsOut<SceneAttachments<Sl>> {
+        input: sl::VsInput<()>,
+    ) -> sl::VsOutput<SceneAttachments<Sl>> {
         let vertex_id = input.vertex_id / 6 * 4 + CUBE_ELEMENTS.to_sl().get(input.vertex_id % 6);
 
         let object_pos = CUBE_POSITIONS
@@ -117,9 +114,9 @@ mod scene_pass {
         // TODO: Fix world normal calculation.
         let world_normal = CUBE_NORMALS.to_sl().get((vertex_id / 4) % 6);
 
-        sl::VsOut {
-            position: screen_pos,
-            varying: SceneAttachments {
+        sl::VsOutput {
+            clip_position: screen_pos,
+            interpolant: SceneAttachments {
                 albedo: sl::vec3(1.0, 0.0, 0.0),
                 world_pos,
                 world_normal,
@@ -127,16 +124,13 @@ mod scene_pass {
         }
     }
 
-    pub fn fragment_stage(_: (), varying: SceneAttachments<Sl>) -> SceneAttachments<Sl> {
-        varying
+    pub fn fragment_shader(_: (), interpolant: SceneAttachments<Sl>) -> SceneAttachments<Sl> {
+        interpolant
     }
 }
 
 mod present_pass {
-    use posh::{
-        sl::{self, ToSl},
-        Sl,
-    };
+    use posh::{sl, Sl, ToSl};
 
     use crate::SceneSamplers;
 
@@ -149,16 +143,16 @@ mod present_pass {
         glam::vec2(1., -1.),
     ];
 
-    pub fn vertex_stage(_: (), input: sl::VsIn<()>) -> sl::VsOut<sl::Vec2> {
+    pub fn vertex_shader(_: (), input: sl::VsInput<()>) -> sl::VsOutput<sl::Vec2> {
         let position = SQUARE_POSITIONS.to_sl().get(input.vertex_id);
 
-        sl::VsOut {
-            position: position.extend(0.0).extend(1.0),
-            varying: (position + 1.0) / 2.0,
+        sl::VsOutput {
+            clip_position: position.extend(0.0).extend(1.0),
+            interpolant: (position + 1.0) / 2.0,
         }
     }
 
-    pub fn fragment_stage(samplers: SceneSamplers<Sl>, uv: sl::Vec2) -> sl::Vec4 {
+    pub fn fragment_shader(samplers: SceneSamplers<Sl>, uv: sl::Vec2) -> sl::Vec4 {
         let albedo = samplers.albedo.sample(sl::vec2(uv.x * 3.0, uv.y));
         let world_normal = samplers
             .world_normal
@@ -210,9 +204,9 @@ impl Demo {
 
         Ok(Self {
             scene_program: gl
-                .create_program(scene_pass::vertex_stage, scene_pass::fragment_stage)?,
+                .create_program(scene_pass::vertex_shader, scene_pass::fragment_shader)?,
             present_program: gl
-                .create_program(present_pass::vertex_stage, present_pass::fragment_stage)?,
+                .create_program(present_pass::vertex_shader, present_pass::fragment_shader)?,
             globals: gl.create_uniform_buffer(Globals::new(0.0), StreamDraw)?,
             scene_attachments,
             depth_texture: gl.create_depth_texture_2d(gl::DepthImage::f32_zero([WIDTH, HEIGHT]))?,
@@ -225,11 +219,11 @@ impl Demo {
         self.globals.set(Globals::new(time));
 
         self.scene_program.draw(
-            gl::DrawInputs {
-                uniforms: &self.globals.as_binding(),
-                vertex_spec: &gl::VertexSpec::new(gl::PrimitiveMode::Triangles)
+            &gl::DrawInputs {
+                uniforms: self.globals.as_binding(),
+                vertex_spec: gl::VertexSpec::new(gl::PrimitiveMode::Triangles)
                     .with_vertex_range(0..36),
-                settings: &gl::DrawSettings::default()
+                settings: gl::DrawSettings::default()
                     .with_clear_color([0.0; 4])
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less),
@@ -241,11 +235,11 @@ impl Demo {
         )?;
 
         self.present_program.draw(
-            gl::DrawInputs {
-                uniforms: &self.scene_attachments.as_scene_samplers(),
-                vertex_spec: &gl::VertexSpec::new(gl::PrimitiveMode::Triangles)
+            &gl::DrawInputs {
+                uniforms: self.scene_attachments.as_scene_samplers(),
+                vertex_spec: gl::VertexSpec::new(gl::PrimitiveMode::Triangles)
                     .with_vertex_range(0..6),
-                settings: &gl::DrawSettings::default(),
+                settings: gl::DrawSettings::default(),
             },
             gl::Framebuffer::default(),
         )?;

@@ -32,18 +32,18 @@ struct VsInput<D: VsInterfaceDom> {
 
 // Shader code
 
-fn vertex_stage(camera: Camera<Sl>, vertex: VsInput<Sl>) -> sl::VsOut<sl::Vec3> {
-    sl::VsOut {
-        position: camera.view_to_screen
+fn vertex_shader(camera: Camera<Sl>, vertex: VsInput<Sl>) -> sl::VsOutput<sl::Vec3> {
+    sl::VsOutput {
+        clip_position: camera.view_to_screen
             * camera.world_to_view
             * vertex.instance.model_to_view
             * vertex.model_pos.extend(1.0),
-        varying: vertex.instance.color,
+        interpolant: vertex.instance.color,
     }
 }
 
-fn fragment_stage(_: (), varying: sl::Vec3) -> sl::Vec4 {
-    varying.extend(1.0)
+fn fragment_shader(_: (), color: sl::Vec3) -> sl::Vec4 {
+    color.extend(1.0)
 }
 
 // Host code
@@ -62,7 +62,7 @@ impl Demo {
         use gl::BufferUsage::*;
 
         Ok(Self {
-            program: gl.create_program(vertex_stage, fragment_stage)?,
+            program: gl.create_program(vertex_shader, fragment_shader)?,
             camera: gl.create_uniform_buffer(Camera::default(), StaticDraw)?,
             instances: gl.create_vertex_buffer(&instances(0.0), StaticDraw)?,
             teapot: gl.create_vertex_buffer(&teapot_positions(), StaticDraw)?,
@@ -71,15 +71,15 @@ impl Demo {
 
     pub fn draw(&self) -> Result<(), gl::DrawError> {
         self.program.draw(
-            gl::DrawInputs {
-                uniforms: &self.camera.as_binding(),
-                vertex_spec: &gl::VertexSpec::new(gl::PrimitiveMode::Triangles).with_vertex_data(
+            &gl::DrawInputs {
+                uniforms: self.camera.as_binding(),
+                vertex_spec: gl::VertexSpec::new(gl::PrimitiveMode::Triangles).with_vertex_data(
                     VsInput {
                         instance: self.instances.as_binding().with_instancing(),
                         model_pos: self.teapot.as_binding(),
                     },
                 ),
-                settings: &gl::DrawSettings::default()
+                settings: gl::DrawSettings::default()
                     .with_clear_color([0.1, 0.2, 0.3, 1.0])
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less),

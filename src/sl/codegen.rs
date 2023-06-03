@@ -10,16 +10,16 @@ use std::{
 
 use crate::sl::dag::ArrayType;
 
+use super::{
+    dag::{Expr, Type},
+    program_def::{UniformBlockDef, UniformSamplerDef},
+};
+
 use self::{
     scope_form::{Scope, ScopeForm, VarInit},
     simplified_expr::VarId,
     struct_registry::StructRegistry,
     var_form::VarForm,
-};
-
-use super::{
-    dag::{Expr, Type},
-    program_def::{UniformBlockDef, UniformSamplerDef},
 };
 
 #[derive(Debug, Clone)]

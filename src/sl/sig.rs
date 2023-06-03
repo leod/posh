@@ -20,7 +20,7 @@ unsafe impl<T: Const, const N: usize> Const for [T; N] {}
 
 /// Per-vertex input given to a vertex shader.
 #[derive(Debug, Copy, Clone)]
-pub struct VsIn<V> {
+pub struct VsInput<V> {
     pub vertex: V,
     pub vertex_id: U32,
     pub instance_id: U32,
@@ -29,17 +29,17 @@ pub struct VsIn<V> {
 
 /// Per-vertex output computed by a vertex shader.
 #[derive(Debug, Copy, Clone)]
-pub struct FullVsOut<W> {
-    pub position: Vec4,
-    pub varying: W,
+pub struct FullVsOutput<W> {
+    pub clip_position: Vec4,
+    pub interpolant: W,
     pub point_size: Option<F32>,
 }
 
-/// Per-vertex position and varying output computed by a vertex shader.
+/// Per-vertex position and interpolant output computed by a vertex shader.
 #[derive(Debug, Copy, Clone)]
-pub struct VsOut<W> {
-    pub position: Vec4,
-    pub varying: W,
+pub struct VsOutput<W> {
+    pub clip_position: Vec4,
+    pub interpolant: W,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -47,15 +47,15 @@ pub struct Derivatives(pub(super) ());
 
 /// Per-fragment input given to a fragment shader.
 #[derive(Debug, Copy, Clone)]
-pub struct FsIn<W> {
-    pub varying: W,
+pub struct FsInput<W> {
+    pub interpolant: W,
     pub fragment_coord: Vec4,
     pub front_facing: Bool,
     pub point_coord: Vec2,
     pub derivatives: Derivatives,
 }
 
-impl<W> FsIn<W> {
+impl<W> FsInput<W> {
     pub fn discard<V: Value>(self) -> V {
         let ty = V::ty();
 
@@ -65,8 +65,7 @@ impl<W> FsIn<W> {
 
 /// Per-fragment output computed by a fragment shader.
 #[derive(Debug, Copy, Clone)]
-pub struct FsOut<F> {
+pub struct FsOutput<F> {
     pub fragment: F,
     pub fragment_depth: Option<F32>,
-    pub discard: Option<Bool>,
 }

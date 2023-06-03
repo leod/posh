@@ -6,8 +6,9 @@ use std::{
 use super::{
     dag::{BinaryOp, BuiltInType, Expr, Type, UnaryOp},
     primitives::{binary, built_in_1, built_in_2, common_field_base, field, unary, value_arg},
-    Bool, Object, ToSl, Value, ValueNonArray, Vec2, Vec3, Vec4, F32, U32,
+    Bool, Object, Value, ValueNonArray, Vec2, Vec3, Vec4, F32, U32,
 };
+use crate::ToSl;
 
 /// A two-by-two floating-point matrix.
 #[derive(Debug, Copy, Clone)]

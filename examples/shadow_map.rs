@@ -62,15 +62,15 @@ mod flat_pass {
 
     use super::{Camera, SceneVertex};
 
-    pub fn vertex_stage(camera: Camera<Sl>, vertex: SceneVertex<Sl>) -> sl::VsOut<sl::Vec3> {
-        sl::VsOut {
-            position: camera.world_to_clip(vertex.world_pos),
-            varying: vertex.color,
+    pub fn vertex_shader(camera: Camera<Sl>, vertex: SceneVertex<Sl>) -> sl::VsOutput<sl::Vec3> {
+        sl::VsOutput {
+            clip_position: camera.world_to_clip(vertex.world_pos),
+            interpolant: vertex.color,
         }
     }
 
-    pub fn fragment_stage(_: (), varying: sl::Vec3) -> sl::Vec4 {
-        varying.extend(1.0)
+    pub fn fragment_shader(_: (), color: sl::Vec3) -> sl::Vec4 {
+        color.extend(1.0)
     }
 }
 
@@ -79,11 +79,11 @@ mod depth_pass {
 
     use super::{Light, SceneVertex};
 
-    pub fn vertex_stage(light: Light<Sl>, vertex: SceneVertex<Sl>) -> sl::Vec4 {
+    pub fn vertex_shader(light: Light<Sl>, vertex: SceneVertex<Sl>) -> sl::Vec4 {
         light.camera.world_to_clip(vertex.world_pos)
     }
 
-    pub fn fragment_stage(_: (), _: ()) -> () {
+    pub fn fragment_shader(_: (), _: ()) -> () {
         ()
     }
 }
@@ -93,30 +93,30 @@ mod scene_pass {
 
     use super::{SceneUniforms, SceneVertex};
 
-    #[derive(Clone, Copy, sl::Value, sl::Varying)]
-    pub struct Varying {
+    #[derive(Clone, Copy, sl::Value, sl::Interpolant)]
+    pub struct Interpolant {
         vertex: SceneVertex<Sl>,
         light_clip_pos: sl::Vec4,
     }
 
-    pub fn vertex_stage(
+    pub fn vertex_shader(
         SceneUniforms { light, camera, .. }: SceneUniforms<Sl>,
         vertex: SceneVertex<Sl>,
-    ) -> sl::VsOut<Varying> {
+    ) -> sl::VsOutput<Interpolant> {
         const EXTRUDE: f32 = 0.1;
 
         let light_clip_pos = light
             .camera
             .world_to_clip(vertex.world_pos + vertex.world_normal * EXTRUDE);
 
-        let output = Varying {
+        let output = Interpolant {
             vertex,
             light_clip_pos,
         };
 
-        sl::VsOut {
-            position: camera.world_to_clip(vertex.world_pos),
-            varying: output,
+        sl::VsOutput {
+            clip_position: camera.world_to_clip(vertex.world_pos),
+            interpolant: output,
         }
     }
 
@@ -136,20 +136,23 @@ mod scene_pass {
         )
     }
 
-    pub fn fragment_stage(
+    pub fn fragment_shader(
         SceneUniforms {
             light,
             light_depth_map,
             ..
         }: SceneUniforms<Sl>,
-        varying: Varying,
+        Interpolant {
+            vertex,
+            light_clip_pos,
+        }: Interpolant,
     ) -> sl::Vec4 {
-        let light_dir = (light.world_pos - varying.vertex.world_pos).normalize();
-        let diffuse = light.color * varying.vertex.world_normal.dot(light_dir).max(0.0);
+        let light_dir = (light.world_pos - vertex.world_pos).normalize();
+        let diffuse = light.color * vertex.world_normal.dot(light_dir).max(0.0);
 
-        let shadow = sample_shadow(light_depth_map, varying.light_clip_pos);
+        let shadow = sample_shadow(light_depth_map, light_clip_pos);
 
-        let color = (light.ambient + shadow * diffuse) * varying.vertex.color;
+        let color = (light.ambient + shadow * diffuse) * vertex.color;
 
         color.extend(1.0)
     }
@@ -160,14 +163,14 @@ mod debug_pass {
 
     use crate::ScreenVertex;
 
-    pub fn vertex_stage(_: (), vertex: ScreenVertex<Sl>) -> sl::VsOut<sl::Vec2> {
-        sl::VsOut {
-            varying: vertex.tex_coords,
-            position: vertex.pos.extend(0.0).extend(1.0),
+    pub fn vertex_shader(_: (), vertex: ScreenVertex<Sl>) -> sl::VsOutput<sl::Vec2> {
+        sl::VsOutput {
+            interpolant: vertex.tex_coords,
+            clip_position: vertex.pos.extend(0.0).extend(1.0),
         }
     }
 
-    pub fn fragment_stage(sampler: sl::ColorSampler2d<sl::F32>, tex_coords: sl::Vec2) -> sl::Vec4 {
+    pub fn fragment_shader(sampler: sl::ColorSampler2d<sl::F32>, tex_coords: sl::Vec2) -> sl::Vec4 {
         let depth = sampler.sample(tex_coords);
 
         sl::Vec4::splat(depth)
@@ -205,13 +208,14 @@ impl Demo {
         let light_depth_image = gl::DepthImage::f32_zero([DEPTH_MAP_SIZE, DEPTH_MAP_SIZE]);
 
         Ok(Demo {
-            flat_program: gl.create_program(flat_pass::vertex_stage, flat_pass::fragment_stage)?,
+            flat_program: gl
+                .create_program(flat_pass::vertex_shader, flat_pass::fragment_shader)?,
             depth_program: gl
-                .create_program(depth_pass::vertex_stage, depth_pass::fragment_stage)?,
+                .create_program(depth_pass::vertex_shader, depth_pass::fragment_shader)?,
             scene_program: gl
-                .create_program(scene_pass::vertex_stage, scene_pass::fragment_stage)?,
+                .create_program(scene_pass::vertex_shader, scene_pass::fragment_shader)?,
             debug_program: gl
-                .create_program(debug_pass::vertex_stage, debug_pass::fragment_stage)?,
+                .create_program(debug_pass::vertex_shader, debug_pass::fragment_shader)?,
 
             camera_buffer: gl.create_uniform_buffer(Camera::default(), StaticDraw)?,
             light_buffer: gl.create_uniform_buffer(Light::new(0.0, 0.0), StreamDraw)?,
@@ -245,10 +249,10 @@ impl Demo {
             .with_element_data(self.scene_elements.as_binding());
 
         self.depth_program.draw(
-            gl::DrawInputs {
-                uniforms: &self.light_buffer.as_binding(),
-                vertex_spec: &scene_vertex_spec,
-                settings: &gl::DrawSettings::default()
+            &gl::DrawInputs {
+                uniforms: self.light_buffer.as_binding(),
+                vertex_spec: scene_vertex_spec.clone(),
+                settings: gl::DrawSettings::default()
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less)
                     .with_cull_face(gl::CullFace::Back),
@@ -257,8 +261,8 @@ impl Demo {
         )?;
 
         self.scene_program.draw(
-            gl::DrawInputs {
-                uniforms: &SceneUniforms {
+            &gl::DrawInputs {
+                uniforms: SceneUniforms {
                     camera: self.camera_buffer.as_binding(),
                     light: self.light_buffer.as_binding(),
                     light_depth_map: self.light_depth_map.as_comparison_sampler(
@@ -266,8 +270,8 @@ impl Demo {
                         gl::Comparison::Less,
                     ),
                 },
-                vertex_spec: &scene_vertex_spec,
-                settings: &gl::DrawSettings::default()
+                vertex_spec: scene_vertex_spec,
+                settings: gl::DrawSettings::default()
                     .with_clear_color(glam::Vec4::ONE.into())
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less)
@@ -277,13 +281,13 @@ impl Demo {
         )?;
 
         self.flat_program.draw(
-            gl::DrawInputs {
-                uniforms: &self.camera_buffer.as_binding(),
-                vertex_spec: &self
+            &gl::DrawInputs {
+                uniforms: self.camera_buffer.as_binding(),
+                vertex_spec: self
                     .light_vertices
                     .as_vertex_spec(gl::PrimitiveMode::Triangles)
                     .with_element_data(self.light_elements.as_binding()),
-                settings: &gl::DrawSettings::default()
+                settings: gl::DrawSettings::default()
                     .with_depth_test(gl::Comparison::Less)
                     .with_cull_face(gl::CullFace::Back),
             },
@@ -291,15 +295,15 @@ impl Demo {
         )?;
 
         self.debug_program.draw(
-            gl::DrawInputs {
-                uniforms: &self
+            &gl::DrawInputs {
+                uniforms: self
                     .light_depth_map
                     .as_color_sampler(gl::Sampler2dSettings::default()),
-                vertex_spec: &self
+                vertex_spec: self
                     .debug_vertices
                     .as_vertex_spec(gl::PrimitiveMode::Triangles)
                     .with_element_data(self.debug_elements.as_binding()),
-                settings: &gl::DrawSettings::default(),
+                settings: gl::DrawSettings::default(),
             },
             gl::Framebuffer::default(),
         )?;

@@ -66,14 +66,14 @@ impl VsInterfaceDom for Sl {
 ///     material: D::Block<Material<Sl>>,
 /// }
 ///
-/// // A vertex stage that receives `MyVertex` as vertex input.
-/// fn my_vertex_stage(
+/// // A vertex shader that receives `MyVertex` as vertex input.
+/// fn my_vertex_shader(
 ///     uniforms: (),
 ///     vertex: MyVertex<Sl>,
-/// ) -> sl::VsOut<sl::Vec4> {
-///     sl::VsOut {
-///         position: (vertex.position + vertex.material.normal * 1.3).extend(1.0),
-///         varying: vertex.material.color,
+/// ) -> sl::VsOutput<sl::Vec4> {
+///     sl::VsOutput {
+///         clip_position: (vertex.position + vertex.material.normal * 1.3).extend(1.0),
+///         interpolant: vertex.material.color,
 ///     }
 /// }
 /// ```

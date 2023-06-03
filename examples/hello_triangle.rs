@@ -8,21 +8,22 @@ use posh::{gl, sl, Block, BlockDom, Gl, Sl};
 #[repr(C)]
 struct Globals<D: BlockDom> {
     time: D::F32,
+    size: D::Vec2,
 }
 
 // Shader code
 
-fn vertex_stage(_: (), vertex: sl::Vec2) -> sl::VsOut<sl::Vec2> {
-    let pos = vertex - sl::vec2(0.5, 0.5);
+fn vertex_shader(globals: Globals<Sl>, vertex: sl::Vec2) -> sl::VsOutput<sl::Vec2> {
+    let position = sl::Vec2::from_angle(globals.time).rotate(vertex * globals.size);
 
-    sl::VsOut {
-        position: sl::vec4(pos.x, pos.y, 0.0, 1.0),
-        varying: pos,
+    sl::VsOutput {
+        clip_position: sl::vec4(position.x, position.y, 0.0, 1.0),
+        interpolant: vertex,
     }
 }
 
-fn fragment_stage(globals: Globals<Sl>, varying: sl::Vec2) -> sl::Vec4 {
-    let rg = (varying + globals.time).cos().powf(2.0);
+fn fragment_shader(globals: Globals<Sl>, interpolant: sl::Vec2) -> sl::Vec4 {
+    let rg = (interpolant + globals.time).cos().powf(2.0);
 
     sl::vec4(rg.x, rg.y, 0.5, 1.0)
 }
@@ -42,11 +43,18 @@ impl Demo {
     pub fn new(gl: gl::Context) -> Result<Self, gl::CreateError> {
         use gl::BufferUsage::*;
 
-        let globals = Globals { time: 0.0 };
-        let vertices = vec![[0.5f32, 1.0].into(), [0.0, 0.0].into(), [1.0, 0.0].into()];
+        let globals = Globals {
+            time: 0.0,
+            size: [0.0, 0.0].into(),
+        };
+        let vertices = vec![
+            [0.0f32, 1.0].into(),
+            [-0.5, -0.5].into(),
+            [0.5, -0.5].into(),
+        ];
 
         Ok(Self {
-            program: gl.create_program(vertex_stage, fragment_stage)?,
+            program: gl.create_program(vertex_shader, fragment_shader)?,
             globals: gl.create_uniform_buffer(globals, StreamDraw)?,
             vertices: gl.create_vertex_buffer(&vertices, StaticDraw)?,
             start_time: Instant::now(),
@@ -56,13 +64,14 @@ impl Demo {
     pub fn draw(&self) -> Result<(), gl::DrawError> {
         self.globals.set(Globals {
             time: Instant::now().duration_since(self.start_time).as_secs_f32(),
+            size: [1.0, 1.0].into(),
         });
 
         self.program.draw(
-            gl::DrawInputs {
-                uniforms: &self.globals.as_binding(),
-                vertex_spec: &self.vertices.as_vertex_spec(gl::PrimitiveMode::Triangles),
-                settings: &gl::DrawSettings::default().with_clear_color([0.1, 0.2, 0.3, 1.0]),
+            &gl::DrawInputs {
+                uniforms: self.globals.as_binding(),
+                vertex_spec: self.vertices.as_vertex_spec(gl::PrimitiveMode::Triangles),
+                settings: gl::DrawSettings::default().with_clear_color([0.1, 0.2, 0.3, 1.0]),
             },
             gl::Framebuffer::default(),
         )

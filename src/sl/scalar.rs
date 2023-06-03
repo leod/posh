@@ -3,10 +3,12 @@ use std::{
     rc::Rc,
 };
 
+use crate::ToSl;
+
 use super::{
     dag::{BinaryOp, Expr, Trace, Type, UnaryOp},
     primitives::{binary, cast, unary, value_arg},
-    Object, ToSl, Value, ValueNonArray,
+    Object, Value, ValueNonArray,
 };
 
 // Maps from logical scalar type to physical scalar type.

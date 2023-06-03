@@ -106,7 +106,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         #value_impl
 
         // Implement `ToSl` for the struct.
-        impl #impl_generics ::posh::sl::ToSl for #ident #where_clause {
+        impl #impl_generics ::posh::ToSl for #ident #where_clause {
             type Output = Self;
 
             fn to_sl(self) -> Self {

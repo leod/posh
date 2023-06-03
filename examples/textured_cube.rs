@@ -35,7 +35,7 @@ fn zxy(v: sl::Vec3) -> sl::Vec3 {
     sl::vec3(v.z, v.x, v.y)
 }
 
-fn vertex_stage(uniforms: Uniforms<Sl>, vertex: Vertex<Sl>) -> sl::VsOut<sl::Vec2> {
+fn vertex_shader(uniforms: Uniforms<Sl>, vertex: Vertex<Sl>) -> sl::VsOutput<sl::Vec2> {
     let camera = uniforms.camera;
 
     let vertex_pos = vertex
@@ -45,9 +45,9 @@ fn vertex_stage(uniforms: Uniforms<Sl>, vertex: Vertex<Sl>) -> sl::VsOut<sl::Vec
         .extend(vertex.pos.z);
     let position = camera.view_to_screen * camera.world_to_view * zxy(vertex_pos).extend(1.0);
 
-    sl::VsOut {
-        varying: vertex.tex_coords,
-        position,
+    sl::VsOutput {
+        clip_position: position,
+        interpolant: vertex.tex_coords,
     }
 }
 
@@ -81,7 +81,7 @@ impl Demo {
         );
 
         Ok(Self {
-            program: gl.create_program(vertex_stage, sl::ColorSampler2d::sample)?,
+            program: gl.create_program(vertex_shader, sl::ColorSampler2d::sample)?,
             camera: gl.create_uniform_buffer(Camera::default(), StaticDraw)?,
             time: gl.create_uniform_buffer(0.0, StreamDraw)?,
             texture: gl.create_color_texture_2d_with_mipmap(image)?,
@@ -96,8 +96,8 @@ impl Demo {
         self.time.set(time);
 
         self.program.draw(
-            gl::DrawInputs {
-                uniforms: &(
+            &gl::DrawInputs {
+                uniforms: (
                     Uniforms {
                         camera: self.camera.as_binding(),
                         time: self.time.as_binding(),
@@ -105,11 +105,11 @@ impl Demo {
                     self.texture
                         .as_color_sampler(gl::Sampler2dSettings::linear()),
                 ),
-                vertex_spec: &self
+                vertex_spec: self
                     .vertices
                     .as_vertex_spec(gl::PrimitiveMode::Triangles)
                     .with_element_data(self.elements.as_binding()),
-                settings: &gl::DrawSettings::default()
+                settings: gl::DrawSettings::default()
                     .with_clear_color([0.1, 0.2, 0.3, 1.0])
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less),
