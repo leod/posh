@@ -18,21 +18,17 @@ struct Globals<D: BlockDom> {
 
 // Shader code
 
-const VERTICES: [glam::Vec2; 6] = [
-    glam::vec2(1.0, 1.0),
-    glam::vec2(1.0, -1.0),
-    glam::vec2(-1.0, 1.0),
-    glam::vec2(-1.0, 1.0),
-    glam::vec2(-1.0, -1.0),
-    glam::vec2(1.0, -1.0),
+const VERTICES: [glam::Vec4; 6] = [
+    glam::vec4(1.0, 1.0, 0.0, 1.0),
+    glam::vec4(1.0, -1.0, 0.0, 1.0),
+    glam::vec4(-1.0, 1.0, 0.0, 1.0),
+    glam::vec4(-1.0, 1.0, 0.0, 1.0),
+    glam::vec4(-1.0, -1.0, 0.0, 1.0),
+    glam::vec4(1.0, -1.0, 0.0, 1.0),
 ];
 
 fn vertex_shader(_: (), input: sl::VsInput<()>) -> sl::Vec4 {
-    VERTICES
-        .to_sl()
-        .get(input.vertex_id)
-        .extend(0.0)
-        .extend(1.0)
+    VERTICES.to_sl().get(input.vertex_id)
 }
 
 fn palette(t: sl::F32) -> sl::Vec3 {
@@ -45,25 +41,25 @@ fn palette(t: sl::F32) -> sl::Vec3 {
 }
 
 fn fragment_shader(Globals { time, resolution }: Globals<Sl>, input: sl::FsInput<()>) -> sl::Vec4 {
-    let uv0 = (input.fragment_coord.xy() * 2.0 - resolution.as_vec2()) / resolution.y.as_f32();
+    let uv = (input.fragment_coord.xy() * 2.0 - resolution.as_vec2()) / resolution.y.as_f32();
+    let color = sl::Vec3::ZERO;
+    let len = uv.length();
 
-    let mut uv = uv0;
-    let mut final_color = sl::Vec3::ZERO;
+    (0..4)
+        .fold((uv, color), |(uv, color), i| {
+            let uv = (uv * 1.5).fract() - 0.5;
 
-    for i in 0..4 {
-        uv = (uv * 1.5).fract() - 0.5;
+            let d = uv.length() * (-len).exp();
+            let d = (d * 8.0 + time).sin() / 8.0;
+            let d = d.abs();
+            let d = (0.01f32 / d).powf(1.2);
 
-        let col = palette(uv0.length() + (i as f32).to_sl() * 0.4 + time * 0.4);
+            let add = d * palette(len + ((i as f32).to_sl() + time) * 0.4);
 
-        let d = uv.length() * (-uv0.length()).exp();
-        let d = (d * 8.0 + time).sin() / 8.0;
-        let d = d.abs();
-        let d = (0.01f32 / d).powf(1.2);
-
-        final_color = final_color + col * d;
-    }
-
-    final_color.extend(1.0)
+            (uv, color + add)
+        })
+        .1
+        .extend(1.0)
 }
 
 // Host code
@@ -121,7 +117,7 @@ fn main() {
     gl_attr.set_context_version(3, 0);
 
     let window = video
-        .window("Hello triangle!", SCREEN_WIDTH, SCREEN_HEIGHT)
+        .window("Shadertoy example", SCREEN_WIDTH, SCREEN_HEIGHT)
         .opengl()
         .build()
         .unwrap();
