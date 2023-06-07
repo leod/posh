@@ -66,11 +66,35 @@ fn fragment_shader(_: (), interpolant: sl::Vec4) -> sl::Vec4 {
     interpolant * 3.0
 }
 
+#[derive(Copy, Clone, Block)]
+#[repr(C)]
+struct MyVertex<D: BlockDom> {
+    position: D::Vec4,
+    color: D::Vec4,
+}
+
+fn vertex_shader_2(mode: sl::U32, vertex: MyVertex<Sl>) -> sl::VsOutput<MyVertex<Sl>> {
+    let shifted_position = vertex.position + 2.0;
+
+    let sin_position = shifted_position.sin();
+    let complex_vertex = MyVertex::<Sl> {
+        position: sin_position.cos().powf(2.0),
+        color: sin_position,
+    };
+
+    let interpolant = sl::branch(mode.eq(42u32), vertex, complex_vertex);
+
+    sl::VsOutput {
+        clip_position: vertex.position,
+        interpolant,
+    }
+}
+
 fn main() {
     let program_def =
-        posh::sl::transpile::transpile_to_program_def::<Globals<Sl>, _, _, _, _, _, _, _, _, _>(
-            vertex_shader,
-            fragment_shader,
+        posh::sl::transpile::transpile_to_program_def::<sl::U32, _, _, _, _, _, _, _, _, _>(
+            vertex_shader_2,
+            |_: (), _: MyVertex<Sl>| sl::Vec4::ZERO,
         );
 
     println!("{}", program_def.vertex_shader_source);

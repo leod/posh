@@ -66,13 +66,13 @@ impl Context {
 
     pub fn create_uniform_buffer<B>(
         &self,
-        data: B::Gl,
+        data: impl Into<B::Gl>,
         usage: BufferUsage,
     ) -> Result<UniformBuffer<B>, BufferError>
     where
         B: Block<Gl>,
     {
-        UniformBuffer::new(&self.raw, &data, usage)
+        UniformBuffer::new(&self.raw, &data.into(), usage)
     }
 
     pub fn create_color_texture_2d<S: ColorSample>(
