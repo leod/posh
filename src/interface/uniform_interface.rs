@@ -94,12 +94,12 @@ unsafe impl<D: UniformInterfaceDom> UniformInterface<D> for () {
     fn shader_input(_: &str) -> Self {}
 }
 
-unsafe impl<U: Block<Sl, Sl = U>> UniformInterface<Gl> for gl::UniformBufferBinding<U> {
-    type Gl = gl::UniformBufferBinding<U>;
-    type Sl = U;
+unsafe impl<B: Block<Sl, Sl = B>> UniformInterface<Gl> for gl::UniformBufferBinding<B> {
+    type Gl = gl::UniformBufferBinding<B>;
+    type Sl = B;
 
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl UniformVisitor<'a, Gl>) {
-        visitor.accept_block::<U::Sl>(path, self);
+        visitor.accept_block::<B::Sl>(path, self);
     }
 }
 

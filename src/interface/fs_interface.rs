@@ -38,7 +38,7 @@ pub unsafe trait FsInterface<D: FsInterfaceDom>: Clone {
     /// The logical view of `Self`.
     ///
     /// This is the type through which fragment shaders output fragment data.
-    type Sl: FsInterface<Sl> + sl::Value + sl::Interpolant + ToSl<Output = Self::Sl>;
+    type Sl: FsInterface<Sl> + sl::Interpolant + ToSl<Output = Self::Sl>;
 
     #[doc(hidden)]
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl FragmentVisitor<'a, D>);
