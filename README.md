@@ -5,6 +5,32 @@
 
 If you want to learn more about the concepts used by `posh`, check out our [blog post](https://leod.github.io/rust/gamedev/posh/2023/06/04/posh.html).
 
+Here's the typical shape of `posh` code. Shaders are written in normal Rust code, so their type signature naturally becomes part of the program that is used for performing type-safe draw calls.
+```rust
+use posh::{gl, sl};
+
+// ... define custom shader interface types U, V, W, and F ...
+
+fn vertex_shader(uniform: U, vertex: V) -> sl::VsOutput<W> {
+    // ... compute `sl::VsOutput { clip_position, interpolant }` ...
+}
+
+fn fragment_shader(uniform: U, interpolant: W) -> F {
+    // ... compute F ...
+}
+
+let program: gl::Program<U, V, F> = gl.create_program(
+    vertex_shader,
+    fragment_shader,
+)?;
+
+program
+    .with_uniforms(/* uniform bindings matching U */)
+    .with_framebuffer(/* framebuffer matching F */)
+    .with_settings(/* draw settings */)
+    .draw(/* vertex specification matching V */)?;
+```
+
 ## Status
 
 `posh` is in an early alpha stage.
