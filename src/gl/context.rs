@@ -66,7 +66,7 @@ impl Context {
 
     pub fn create_uniform_buffer<B>(
         &self,
-        data: impl Into<B::Gl>,
+        data: B::Gl,
         usage: BufferUsage,
     ) -> Result<UniformBuffer<B>, BufferError>
     where
