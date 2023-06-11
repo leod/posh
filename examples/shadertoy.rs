@@ -42,23 +42,22 @@ fn palette(t: sl::F32) -> sl::Vec3 {
 
 fn fragment_shader(Globals { time, resolution }: Globals<Sl>, input: sl::FsInput<()>) -> sl::Vec4 {
     let uv = (input.fragment_coord.xy() * 2.0 - resolution.as_vec2()) / resolution.y.as_f32();
-    let color = sl::Vec3::ZERO;
     let len = uv.length();
 
     (0..4)
-        .fold((uv, color), |(uv, color), i| {
-            let uv = (uv * 1.5).fract() - 0.5;
-
+        .scan(uv, |uv, i| {
+            *uv = (*uv * 1.5).fract() - 0.5;
+            Some((i, *uv))
+        })
+        .map(|(i, uv)| {
             let d = uv.length() * (-len).exp();
             let d = (d * 8.0 + time).sin() / 8.0;
             let d = d.abs();
             let d = (0.01f32 / d).powf(1.2);
 
-            let add = d * palette(len + ((i as f32).to_sl() + time) * 0.4);
-
-            (uv, color + add)
+            d * palette(len + ((i as f32).to_sl() + time) * 0.4)
         })
-        .1
+        .sum::<sl::Vec3>()
         .extend(1.0)
 }
 

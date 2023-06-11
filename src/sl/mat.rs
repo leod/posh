@@ -1,4 +1,5 @@
 use std::{
+    iter::{Product, Sum},
     ops::{Add, Div, Mul, Neg, Sub},
     rc::Rc,
 };
@@ -190,6 +191,24 @@ macro_rules! impl_mat {
         impl Default for $mat {
             fn default() -> Self {
                 Self::IDENTITY
+            }
+        }
+
+        impl Sum for $mat {
+            fn sum<I>(iter: I) -> Self
+            where
+                I: Iterator<Item = Self>,
+            {
+                iter.fold(Self::ZERO, Self::add)
+            }
+        }
+
+        impl Product for $mat {
+            fn product<I>(iter: I) -> Self
+            where
+                I: Iterator<Item = Self>,
+            {
+                iter.fold(Self::IDENTITY, Self::mul)
             }
         }
 
