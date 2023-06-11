@@ -1,4 +1,5 @@
 use std::{
+    iter::{Product, Sum},
     ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Neg, Not, Rem, Shl, Shr, Sub},
     rc::Rc,
 };
@@ -122,6 +123,24 @@ macro_rules! impl_numeric_ops {
 
             fn neg(self) -> Self {
                 unary(UnaryOp::Neg, self)
+            }
+        }
+
+        impl Sum for $scalar {
+            fn sum<I>(iter: I) -> Self
+            where
+                I: Iterator<Item = Self>,
+            {
+                iter.fold(Self::ZERO, Self::add)
+            }
+        }
+
+        impl Product for $scalar {
+            fn product<I>(iter: I) -> Self
+            where
+                I: Iterator<Item = Self>,
+            {
+                iter.fold(Self::ONE, Self::mul)
             }
         }
 
