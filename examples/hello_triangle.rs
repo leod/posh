@@ -4,17 +4,17 @@ use posh::{gl, sl, Block, BlockDom, Gl, Sl};
 
 // Shader interface
 
-#[derive(Clone, Copy, Block)]
+#[derive(Clone, Copy, Default, Block)]
 #[repr(C)]
 struct Globals<D: BlockDom> {
     time: D::F32,
-    size: D::Vec2,
+    triangle_size: D::Vec2,
 }
 
 // Shader code
 
 fn vertex_shader(globals: Globals<Sl>, vertex: sl::Vec2) -> sl::VsOutput<sl::Vec2> {
-    let position = sl::Vec2::from_angle(globals.time).rotate(vertex * globals.size);
+    let position = sl::Vec2::from_angle(globals.time).rotate(vertex * globals.triangle_size);
 
     sl::VsOutput {
         clip_position: sl::vec4(position.x, position.y, 0.0, 1.0),
@@ -43,10 +43,6 @@ impl Demo {
     pub fn new(gl: gl::Context) -> Result<Self, gl::CreateError> {
         use gl::BufferUsage::*;
 
-        let globals = Globals {
-            time: 0.0,
-            size: [0.0, 0.0].into(),
-        };
         let vertices = vec![
             [0.0f32, 1.0].into(),
             [-0.5, -0.5].into(),
@@ -55,7 +51,7 @@ impl Demo {
 
         Ok(Self {
             program: gl.create_program(vertex_shader, fragment_shader)?,
-            globals: gl.create_uniform_buffer(globals, StreamDraw)?,
+            globals: gl.create_uniform_buffer(Default::default(), StreamDraw)?,
             vertices: gl.create_vertex_buffer(&vertices, StaticDraw)?,
             start_time: Instant::now(),
         })
@@ -64,7 +60,7 @@ impl Demo {
     pub fn draw(&self) -> Result<(), gl::DrawError> {
         self.globals.set(Globals {
             time: Instant::now().duration_since(self.start_time).as_secs_f32(),
-            size: [1.0, 1.0].into(),
+            triangle_size: [1.0, 1.0].into(),
         });
 
         self.program
