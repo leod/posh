@@ -123,7 +123,7 @@ impl Context {
 
         let raw = self.raw.create_program(program_def)?;
 
-        Ok(Program::unchecked_from_raw(raw))
+        Ok(Program::unchecked_from_raw(Rc::new(raw)))
     }
 
     pub fn create_program_with_consts<U, VSig, VFunc, FSig, FFunc>(
@@ -150,7 +150,7 @@ impl Context {
 
         let raw = self.raw.create_program(program_def)?;
 
-        Ok(Program::unchecked_from_raw(raw))
+        Ok(Program::unchecked_from_raw(Rc::new(raw)))
     }
 
     pub fn set_default_framebuffer_size(&self, size: [u32; 2]) {

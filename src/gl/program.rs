@@ -257,9 +257,9 @@ where
     V: VsInterface<Sl>,
     F: FsInterface<Sl>,
 {
-    pub(super) fn unchecked_from_raw(raw: raw::Program) -> Self {
+    pub(super) fn unchecked_from_raw(raw: Rc<raw::Program>) -> Self {
         Program {
-            raw: Rc::new(raw),
+            raw,
             _phantom: PhantomData,
         }
     }
