@@ -217,12 +217,39 @@ pub enum CreateError {
 /// An error that occurred while drawing.
 #[derive(Debug, Clone, Error)]
 pub enum DrawError {
-    #[error("framebuffer error: {0}")]
-    Framebuffer(#[from] FramebufferError),
-
     #[error("create error: {0}")]
     Create(#[from] CreateError),
 
     #[error("general OpenGL error: {0}")]
     Error(String),
+}
+
+impl From<BufferError> for DrawError {
+    fn from(value: BufferError) -> Self {
+        Self::Create(value.into())
+    }
+}
+
+impl From<ProgramError> for DrawError {
+    fn from(value: ProgramError) -> Self {
+        Self::Create(value.into())
+    }
+}
+
+impl From<TextureError> for DrawError {
+    fn from(value: TextureError) -> Self {
+        Self::Create(value.into())
+    }
+}
+
+impl From<FramebufferError> for DrawError {
+    fn from(value: FramebufferError) -> Self {
+        Self::Create(value.into())
+    }
+}
+
+impl From<VertexArrayError> for DrawError {
+    fn from(value: VertexArrayError) -> Self {
+        Self::Create(value.into())
+    }
 }

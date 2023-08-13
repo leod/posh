@@ -17,9 +17,9 @@ where
     V: VsInterface<Sl>,
     F: FsInterface<Sl>,
 {
-    raw: Rc<raw::Program>,
-    settings: DrawSettings,
-    _phantom: PhantomData<(U, V, F)>,
+    pub(crate) raw: Rc<raw::Program>,
+    pub(crate) settings: DrawSettings,
+    pub(crate) _phantom: PhantomData<(U, V, F)>,
 }
 
 impl<U, V, F> DrawBuilder<U, V, F>
@@ -77,8 +77,8 @@ where
     V: VsInterface<Sl>,
     F: FsInterface<Sl>,
 {
-    inner: DrawBuilder<U, V, F>,
-    uniforms: U::Gl,
+    pub(crate) inner: DrawBuilder<U, V, F>,
+    pub(crate) uniforms: U::Gl,
 }
 
 impl<U, V, F> DrawBuilderWithUniforms<U, V, F>
@@ -262,6 +262,10 @@ where
             raw,
             _phantom: PhantomData,
         }
+    }
+
+    pub(super) fn raw(&self) -> &Rc<raw::Program> {
+        &self.raw
     }
 
     #[must_use]

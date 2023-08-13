@@ -1,30 +1,146 @@
-use std::rc::Rc;
+use std::{
+    any::{type_name, TypeId},
+    cell::RefCell,
+    collections::hash_map,
+    marker::PhantomData,
+    rc::Rc,
+};
+
+use fxhash::FxHashMap;
 
 use crate::{
     sl::{
         transpile::{transpile_to_program_def, transpile_to_program_def_with_consts},
         ColorSample, FsFunc, FsSig, VsFunc, VsSig,
     },
-    Block, Gl, UniformUnion,
+    Block, Gl, Sl, UniformInterface, UniformUnion,
 };
 
 use super::{
+    program::{DrawBuilder, DrawBuilderWithUniforms},
     raw, BufferError, BufferUsage, Caps, ColorImage, ColorTexture2d, ContextError, DepthImage,
     DepthTexture2d, Element, ElementBuffer, Program, ProgramError, TextureError, UniformBuffer,
     VertexBuffer,
 };
 
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+struct ProgramCacheKey {
+    vertex_shader: TypeId,
+    fragment_shader: TypeId,
+    uniform_union: TypeId,
+}
+
+#[derive(Default)]
+pub(crate) struct ProgramCache(FxHashMap<ProgramCacheKey, Rc<raw::Program>>);
+
+impl ProgramCache {
+    pub fn get<U, VSig, VFunc, FSig, FFunc>(
+        &mut self,
+        raw: &raw::Context,
+        vertex_shader: VFunc,
+        fragment_shader: FFunc,
+    ) -> Result<Program<U, VSig::V, FSig::F>, ProgramError>
+    where
+        U: UniformUnion<VSig::U, FSig::U> + 'static,
+        VSig: VsSig<C = ()>,
+        VFunc: VsFunc<VSig>,
+        FSig: FsSig<C = (), W = VSig::W>,
+        FFunc: FsFunc<FSig>,
+    {
+        let key = ProgramCacheKey {
+            vertex_shader: TypeId::of::<VFunc>(),
+            fragment_shader: TypeId::of::<FFunc>(),
+            uniform_union: TypeId::of::<U>(),
+        };
+
+        let raw = match self.0.entry(key) {
+            hash_map::Entry::Occupied(entry) => entry.get().clone(),
+            hash_map::Entry::Vacant(entry) => {
+                let program_def = transpile_to_program_def::<U, VSig, VFunc, FSig, FFunc>(
+                    vertex_shader,
+                    fragment_shader,
+                );
+
+                log::info!(
+                    "Caching vertex shader for `{}`:\n{}",
+                    type_name::<VFunc>(),
+                    program_def.vertex_shader_source
+                );
+                log::info!(
+                    "Caching fragment shader for `{}`:\n{}",
+                    type_name::<FFunc>(),
+                    program_def.fragment_shader_source
+                );
+
+                let raw = raw.create_program(program_def)?;
+
+                entry.insert(Rc::new(raw)).clone()
+            }
+        };
+
+        Ok(Program::unchecked_from_raw(raw))
+    }
+}
+
+pub struct CacheDrawBuilder<'a, VSig, VFunc, FSig, FFunc> {
+    gl: &'a Context,
+    vertex_shader: VFunc,
+    fragment_shader: FFunc,
+    _phantom: PhantomData<(VSig, FSig)>,
+}
+
+impl<'a, VSig, VFunc, FSig, FFunc> CacheDrawBuilder<'a, VSig, VFunc, FSig, FFunc>
+where
+    VSig: VsSig<C = ()>,
+    VFunc: VsFunc<VSig>,
+    FSig: FsSig<C = (), W = VSig::W>,
+    FFunc: FsFunc<FSig>,
+{
+    pub fn with_uniforms<U>(
+        self,
+        uniforms: U,
+    ) -> Result<DrawBuilderWithUniforms<U::Sl, VSig::V, FSig::F>, ProgramError>
+    where
+        U: UniformInterface<Gl>,
+        U::Sl: UniformUnion<VSig::U, FSig::U> + UniformInterface<Sl, Gl = U> + 'static,
+    {
+        let program = self
+            .gl
+            .program_cache
+            .borrow_mut()
+            .get::<U::Sl, VSig, VFunc, FSig, FFunc>(
+                &self.gl.raw,
+                self.vertex_shader,
+                self.fragment_shader,
+            )?;
+
+        let inner = DrawBuilder {
+            raw: program.raw().clone(),
+            settings: Default::default(),
+            _phantom: PhantomData,
+        };
+
+        Ok(DrawBuilderWithUniforms { inner, uniforms })
+    }
+
+    // TODO: Also needs `with_framebuffer` and `with_settings`.
+}
+
 /// The graphics context, which is used for creating GPU objects.
 #[derive(Clone)]
 pub struct Context {
     raw: Rc<raw::Context>,
+    program_cache: Rc<RefCell<ProgramCache>>,
 }
 
 impl Context {
     pub fn new(gl: glow::Context) -> Result<Self, ContextError> {
         let raw = raw::Context::new(gl)?;
 
-        Ok(Self { raw: Rc::new(raw) })
+        Ok(Self {
+            raw: Rc::new(raw),
+            program_cache: Default::default(),
+        })
     }
 
     pub fn caps(&self) -> &Caps {
@@ -71,7 +187,7 @@ impl Context {
     where
         B: Block<Gl>,
     {
-        UniformBuffer::new(&self.raw, &data.into(), usage)
+        UniformBuffer::new(&self.raw, &data, usage)
     }
 
     pub fn create_color_texture_2d<S: ColorSample>(
@@ -151,6 +267,25 @@ impl Context {
         let raw = self.raw.create_program(program_def)?;
 
         Ok(Program::unchecked_from_raw(Rc::new(raw)))
+    }
+
+    pub fn get_program<VSig, VFunc, FSig, FFunc>(
+        &self,
+        vertex_shader: VFunc,
+        fragment_shader: FFunc,
+    ) -> CacheDrawBuilder<'_, VSig, VFunc, FSig, FFunc>
+    where
+        VSig: VsSig<C = ()>,
+        VFunc: VsFunc<VSig>,
+        FSig: FsSig<C = (), W = VSig::W>,
+        FFunc: FsFunc<FSig>,
+    {
+        CacheDrawBuilder {
+            gl: self,
+            vertex_shader,
+            fragment_shader,
+            _phantom: PhantomData,
+        }
     }
 
     pub fn set_default_framebuffer_size(&self, size: [u32; 2]) {
