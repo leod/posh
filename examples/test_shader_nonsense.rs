@@ -91,11 +91,10 @@ fn vertex_shader_2(mode: sl::U32, vertex: MyVertex<Sl>) -> sl::VsOutput<MyVertex
 }
 
 fn main() {
-    let program_def =
-        posh::sl::transpile::transpile_to_program_def::<sl::U32, _, _, _, _, _, _, _, _, _>(
-            vertex_shader_2,
-            |_: (), _: MyVertex<Sl>| sl::Vec4::ZERO,
-        );
+    let program_def = posh::sl::transpile::transpile_to_program_def::<sl::U32, _, _, _, _>(
+        vertex_shader_2,
+        |_: (), _: MyVertex<Sl>| sl::Vec4::ZERO,
+    );
 
     println!("{}", program_def.vertex_shader_source);
     println!("{}", program_def.fragment_shader_source);

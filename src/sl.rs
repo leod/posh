@@ -34,7 +34,10 @@ pub use {
     primitives::{all, and, any, branch, branches, or},
     sampler::{ColorSample, ColorSampler2d, ComparisonSampler2d, Sample},
     scalar::{Bool, F32, I32, U32},
-    sig::{Const, Derivatives, FsInput, FsOutput, FullVsOutput, VsInput, VsOutput},
+    sig::{
+        Const, Derivatives, FromFsInput, FromVsInput, FsFunc, FsInput, FsSig, FullFsOutput,
+        FullVsOutput, IntoFullFsOutput, IntoFullVsOutput, VsFunc, VsInput, VsOutput, VsSig,
+    },
     vec::{
         bvec2, bvec3, bvec4, ivec2, ivec3, ivec4, uvec2, uvec3, uvec4, vec2, vec3, vec4, BVec2,
         BVec3, BVec4, IVec2, IVec3, IVec4, UVec2, UVec3, UVec4, Vec2, Vec3, Vec4,

@@ -143,7 +143,7 @@ mod present_pass {
         glam::vec2(1., -1.),
     ];
 
-    pub fn vertex_shader(_: (), input: sl::VsInput<()>) -> sl::VsOutput<sl::Vec2> {
+    pub fn vertex_shader(input: sl::VsInput<()>) -> sl::VsOutput<sl::Vec2> {
         let position = SQUARE_POSITIONS.to_sl().get(input.vertex_id);
 
         sl::VsOutput {

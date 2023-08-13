@@ -86,7 +86,7 @@ pub struct VertexSpec {
 }
 
 impl VertexSpec {
-    pub fn is_compatible(&self, vertex_block_defs: &[VertexBlockDef]) -> bool {
+    pub fn is_compatible(&self, _vertex_block_defs: &[VertexBlockDef]) -> bool {
         // TODO: Check vertex stream compatibility. This is already ensured by
         // the typed interface on top of `raw`, but `raw` should be correct by
         // iself.

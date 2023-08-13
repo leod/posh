@@ -27,7 +27,7 @@ const VERTICES: [glam::Vec4; 6] = [
     glam::vec4(1.0, -1.0, 0.0, 1.0),
 ];
 
-fn vertex_shader(_: (), input: sl::VsInput<()>) -> sl::Vec4 {
+fn vertex_shader(input: sl::VsInput<()>) -> sl::Vec4 {
     VERTICES.to_sl().get(input.vertex_id)
 }
 
