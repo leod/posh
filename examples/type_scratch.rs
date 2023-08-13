@@ -1,4 +1,5 @@
 use posh::{
+    gl::ColorSampler2d,
     sl::{self, Value},
     Block, BlockDom, Sl, UniformInterface, UniformInterfaceDom, VsInterface, VsInterfaceDom,
 };
@@ -46,6 +47,7 @@ struct MyVertexIface<D: VsInterfaceDom = Sl> {
 #[derive(UniformInterface)]
 struct MyUniformIface<D: UniformInterfaceDom = Sl> {
     uniform: D::Block<MyUniform1>,
+    samplers: [D::ColorSampler2d<sl::Vec4>; 3],
 }
 
 #[derive(UniformInterface)]

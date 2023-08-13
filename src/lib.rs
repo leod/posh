@@ -50,6 +50,8 @@ pub mod internal {
 
     #[doc(hidden)]
     pub fn join_ident_path(lhs: &str, rhs: &str) -> String {
+        // FIXME: There is probably a chance that this produces duplicate
+        // symbol names.
         format!("{lhs}_{rhs}")
     }
 }

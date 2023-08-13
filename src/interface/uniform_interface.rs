@@ -1,3 +1,5 @@
+use std::array;
+
 use sealed::sealed;
 
 use crate::{gl, internal::join_ident_path, sl, Gl, Sl};
@@ -20,6 +22,9 @@ pub trait UniformInterfaceDom: Copy {
 
     /// A nested uniform interface field.
     type UniformInterface<U: UniformInterface<Sl>>: UniformInterface<Self>;
+
+    /// An array field.
+    type Array<U: UniformInterface<Sl>, const N: usize>: UniformInterface<Self>;
 }
 
 #[sealed]
@@ -28,6 +33,7 @@ impl UniformInterfaceDom for Gl {
     type ColorSampler2d<S: sl::ColorSample> = gl::ColorSampler2d<S>;
     type ComparisonSampler2d = gl::ComparisonSampler2d;
     type UniformInterface<R: UniformInterface<Sl>> = R::Gl;
+    type Array<U: UniformInterface<Sl>, const N: usize> = [U::Gl; N];
 }
 
 #[sealed]
@@ -36,6 +42,7 @@ impl UniformInterfaceDom for Sl {
     type ColorSampler2d<S: sl::ColorSample> = sl::ColorSampler2d<S>;
     type ComparisonSampler2d = sl::ComparisonSampler2d;
     type UniformInterface<R: UniformInterface<Sl>> = R;
+    type Array<U: UniformInterface<Sl>, const N: usize> = [U; N];
 }
 
 /// UniformInterface data.
@@ -192,6 +199,28 @@ where
             U::shader_input(&join_ident_path(path, "a")),
             V::shader_input(&join_ident_path(path, "b")),
         )
+    }
+}
+
+// TODO: Allowing arrays of `UniformInterface`s might NOT be a good idea.
+// As far as I understand, it might preclude us from allowing arrays of `Block`,
+// due to conflicting implementations
+unsafe impl<U, D, const N: usize> UniformInterface<D> for [U; N]
+where
+    D: UniformInterfaceDom,
+    U: UniformInterface<D>,
+{
+    type Gl = [U::Gl; N];
+    type Sl = [U::Sl; N];
+
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl UniformVisitor<'a, D>) {
+        for i in 0..N {
+            self[i].visit(&join_ident_path(path, &i.to_string()), visitor);
+        }
+    }
+
+    fn shader_input(path: &str) -> Self {
+        array::from_fn(|i| U::shader_input(&join_ident_path(path, &i.to_string())))
     }
 }
 
