@@ -167,29 +167,16 @@ unsafe impl UniformInterface<Sl> for sl::ComparisonSampler2d {
     }
 }
 
-unsafe impl<U, V> UniformInterface<Gl> for (U, V)
+unsafe impl<U, V, D> UniformInterface<D> for (U, V)
 where
-    U: UniformInterface<Gl>,
-    V: UniformInterface<Gl>,
-{
-    type Gl = (U, V);
-    type Sl = (U::Sl, V::Sl);
-
-    fn visit<'a>(&'a self, path: &str, visitor: &mut impl UniformVisitor<'a, Gl>) {
-        self.0.visit(&join_ident_path(path, "a"), visitor);
-        self.1.visit(&join_ident_path(path, "b"), visitor);
-    }
-}
-
-unsafe impl<U, V> UniformInterface<Sl> for (U, V)
-where
-    U: UniformInterface<Sl>,
-    V: UniformInterface<Sl>,
+    U: UniformInterface<D>,
+    V: UniformInterface<D>,
+    D: UniformInterfaceDom,
 {
     type Gl = (U::Gl, V::Gl);
-    type Sl = (U, V);
+    type Sl = (U::Sl, V::Sl);
 
-    fn visit<'a>(&'a self, path: &str, visitor: &mut impl UniformVisitor<'a, Sl>) {
+    fn visit<'a>(&'a self, path: &str, visitor: &mut impl UniformVisitor<'a, D>) {
         self.0.visit(&join_ident_path(path, "a"), visitor);
         self.1.visit(&join_ident_path(path, "b"), visitor);
     }
@@ -204,11 +191,11 @@ where
 
 // TODO: Allowing arrays of `UniformInterface`s might NOT be a good idea.
 // As far as I understand, it might preclude us from allowing arrays of `Block`,
-// due to conflicting implementations
+// due to conflicting implementations.
 unsafe impl<U, D, const N: usize> UniformInterface<D> for [U; N]
 where
-    D: UniformInterfaceDom,
     U: UniformInterface<D>,
+    D: UniformInterfaceDom,
 {
     type Gl = [U::Gl; N];
     type Sl = [U::Sl; N];
