@@ -31,7 +31,7 @@ mod scene_pass {
 
     use super::State;
 
-    pub fn vertex_shader(_: (), vertex: sl::Vec2) -> sl::VsOutput<sl::Vec2> {
+    pub fn vertex_shader(vertex: sl::Vec2) -> sl::VsOutput<sl::Vec2> {
         let vertex = vertex - sl::vec2(0.5, 0.5);
 
         sl::VsOutput {
@@ -52,7 +52,7 @@ mod present_pass {
 
     use super::{PresentUniforms, PresentVertex};
 
-    pub fn vertex_shader(_: (), vertex: PresentVertex<Sl>) -> sl::VsOutput<sl::Vec2> {
+    pub fn vertex_shader(vertex: PresentVertex<Sl>) -> sl::VsOutput<sl::Vec2> {
         sl::VsOutput {
             clip_position: vertex.pos.extend(0.0).extend(1.0),
             interpolant: vertex.tex_coords,

@@ -249,6 +249,28 @@ macro_rules! impl_vs_func {
                 self(uniforms, <$v_in>::from_vs_input(input)).into_full_vs_output()
             }
         }
+
+        impl<$v, $w> VsSig for fn($v_in) -> $w_out
+        where
+            V: VsInterface<Sl>,
+            W: Interpolant,
+        {
+            type C = ();
+            type U = ();
+            type V = $v;
+            type W = $w;
+        }
+
+        impl<$v, $w, Func> VsFunc<fn($v_in) -> $w_out> for Func
+        where
+            V: VsInterface<Sl>,
+            W: Interpolant,
+            Func: Fn($v_in) -> $w_out,
+        {
+            fn call(self, _: &(), _: (), input: VsInput<$v>) -> FullVsOutput<$w> {
+                self(<$v_in>::from_vs_input(input)).into_full_vs_output()
+            }
+        }
     };
     ($v:ident, $v_in:ty) => {
         impl<C, U, $v> VsSig for fn(&C, U, $v_in) -> Vec4
@@ -294,6 +316,26 @@ macro_rules! impl_vs_func {
         {
             fn call(self, _: &(), uniforms: U, input: VsInput<$v>) -> FullVsOutput<()> {
                 self(uniforms, <$v_in>::from_vs_input(input)).into_full_vs_output()
+            }
+        }
+
+        impl<$v> VsSig for fn($v_in) -> Vec4
+        where
+            V: VsInterface<Sl>,
+        {
+            type C = ();
+            type U = ();
+            type V = $v;
+            type W = ();
+        }
+
+        impl<$v, Func> VsFunc<fn($v_in) -> Vec4> for Func
+        where
+            V: VsInterface<Sl>,
+            Func: Fn($v_in) -> Vec4,
+        {
+            fn call(self, _: &(), _: (), input: VsInput<$v>) -> FullVsOutput<()> {
+                self(<$v_in>::from_vs_input(input)).into_full_vs_output()
             }
         }
     };
@@ -372,6 +414,28 @@ macro_rules! impl_fs_func {
         {
             fn call(self, _: &(), uniforms: U, input: FsInput<$w>) -> FullFsOutput<$f> {
                 self(uniforms, <$w_in>::from_fs_input(input)).into_full_fs_output()
+            }
+        }
+
+        impl<$w, $f> FsSig for fn($w_in) -> $f_out
+        where
+            W: Interpolant,
+            F: FsInterface<Sl>,
+        {
+            type C = ();
+            type U = ();
+            type W = $w;
+            type F = $f;
+        }
+
+        impl<$w, $f, Func> FsFunc<fn($w_in) -> $f_out> for Func
+        where
+            W: Interpolant,
+            F: FsInterface<Sl>,
+            Func: Fn($w_in) -> $f_out,
+        {
+            fn call(self, _: &(), _: (), input: FsInput<$w>) -> FullFsOutput<$f> {
+                self(<$w_in>::from_fs_input(input)).into_full_fs_output()
             }
         }
     };

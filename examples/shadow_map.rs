@@ -69,7 +69,7 @@ mod flat_pass {
         }
     }
 
-    pub fn fragment_shader(_: (), color: sl::Vec3) -> sl::Vec4 {
+    pub fn fragment_shader(color: sl::Vec3) -> sl::Vec4 {
         color.extend(1.0)
     }
 }
@@ -83,7 +83,7 @@ mod depth_pass {
         light.camera.world_to_clip(vertex.world_pos)
     }
 
-    pub fn fragment_shader(_: (), _: ()) -> () {
+    pub fn fragment_shader(_: ()) -> () {
         ()
     }
 }
@@ -163,7 +163,7 @@ mod debug_pass {
 
     use crate::ScreenVertex;
 
-    pub fn vertex_shader(_: (), vertex: ScreenVertex<Sl>) -> sl::VsOutput<sl::Vec2> {
+    pub fn vertex_shader(vertex: ScreenVertex<Sl>) -> sl::VsOutput<sl::Vec2> {
         sl::VsOutput {
             interpolant: vertex.tex_coords,
             clip_position: vertex.pos.extend(0.0).extend(1.0),

@@ -42,7 +42,7 @@ fn vertex_shader(camera: Camera<Sl>, vertex: VsInput<Sl>) -> sl::VsOutput<sl::Ve
     }
 }
 
-fn fragment_shader(_: (), color: sl::Vec3) -> sl::Vec4 {
+fn fragment_shader(color: sl::Vec3) -> sl::Vec4 {
     color.extend(1.0)
 }
 
