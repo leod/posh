@@ -19,11 +19,14 @@ use crevice::std140::AsStd140;
 use crate::{sl, ToSl};
 
 pub use self::image::{ColorImage, DepthImage};
-pub use context::Context;
+pub use context::{CacheDrawBuilder, Context};
 pub use element_buffer::{Element, ElementBuffer, ElementBufferBinding};
 pub use framebuffer::{ColorAttachment, DepthAttachment, Framebuffer};
 pub use mat::{Mat2, Mat3, Mat4};
-pub use program::Program;
+pub use program::{
+    DrawBuilder, DrawBuilderWithFramebuffer, DrawBuilderWithUniforms,
+    DrawBuilderWithUniformsAndFramebuffer, Program,
+};
 pub use raw::{
     BlendEquation, BlendFunc, Blending, BufferError, BufferUsage, Caps, Comparison, ContextError,
     CreateError, CullFace, DrawError, DrawSettings, ElementType, FramebufferError, ImageFormat,
