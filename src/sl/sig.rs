@@ -189,7 +189,7 @@ pub trait VsSig {
 }
 
 /// Function types that define a vertex shader.
-pub trait VsFunc<Sig: VsSig> {
+pub trait VsFunc<Sig: VsSig>: 'static {
     fn call(
         self,
         consts: &Sig::C,
@@ -219,7 +219,7 @@ macro_rules! impl_vs_func {
             U: UniformInterface<Sl>,
             V: VsInterface<Sl>,
             W: Interpolant,
-            Func: Fn(&C, U, $v_in) -> $w_out,
+            Func: Fn(&C, U, $v_in) -> $w_out + 'static,
         {
             fn call(self, consts: &C, uniforms: U, input: VsInput<$v>) -> FullVsOutput<$w> {
                 self(consts, uniforms, <$v_in>::from_vs_input(input)).into_full_vs_output()
@@ -243,7 +243,7 @@ macro_rules! impl_vs_func {
             U: UniformInterface<Sl>,
             V: VsInterface<Sl>,
             W: Interpolant,
-            Func: Fn(U, $v_in) -> $w_out,
+            Func: Fn(U, $v_in) -> $w_out + 'static,
         {
             fn call(self, _: &(), uniforms: U, input: VsInput<$v>) -> FullVsOutput<$w> {
                 self(uniforms, <$v_in>::from_vs_input(input)).into_full_vs_output()
@@ -265,7 +265,7 @@ macro_rules! impl_vs_func {
         where
             V: VsInterface<Sl>,
             W: Interpolant,
-            Func: Fn($v_in) -> $w_out,
+            Func: Fn($v_in) -> $w_out + 'static,
         {
             fn call(self, _: &(), _: (), input: VsInput<$v>) -> FullVsOutput<$w> {
                 self(<$v_in>::from_vs_input(input)).into_full_vs_output()
@@ -290,7 +290,7 @@ macro_rules! impl_vs_func {
             C: Const,
             U: UniformInterface<Sl>,
             V: VsInterface<Sl>,
-            Func: Fn(&C, U, $v_in) -> Vec4,
+            Func: Fn(&C, U, $v_in) -> Vec4 + 'static,
         {
             fn call(self, consts: &C, uniforms: U, input: VsInput<$v>) -> FullVsOutput<()> {
                 self(consts, uniforms, <$v_in>::from_vs_input(input)).into_full_vs_output()
@@ -312,7 +312,7 @@ macro_rules! impl_vs_func {
         where
             U: UniformInterface<Sl>,
             V: VsInterface<Sl>,
-            Func: Fn(U, $v_in) -> Vec4,
+            Func: Fn(U, $v_in) -> Vec4 + 'static,
         {
             fn call(self, _: &(), uniforms: U, input: VsInput<$v>) -> FullVsOutput<()> {
                 self(uniforms, <$v_in>::from_vs_input(input)).into_full_vs_output()
@@ -332,7 +332,7 @@ macro_rules! impl_vs_func {
         impl<$v, Func> VsFunc<fn($v_in) -> Vec4> for Func
         where
             V: VsInterface<Sl>,
-            Func: Fn($v_in) -> Vec4,
+            Func: Fn($v_in) -> Vec4 + 'static,
         {
             fn call(self, _: &(), _: (), input: VsInput<$v>) -> FullVsOutput<()> {
                 self(<$v_in>::from_vs_input(input)).into_full_vs_output()
@@ -356,7 +356,7 @@ pub trait FsSig {
 }
 
 /// Function types that define a fragment shader.
-pub trait FsFunc<Sig: FsSig> {
+pub trait FsFunc<Sig: FsSig>: 'static {
     fn call(
         self,
         consts: &Sig::C,
@@ -386,7 +386,7 @@ macro_rules! impl_fs_func {
             U: UniformInterface<Sl>,
             W: Interpolant,
             F: FsInterface<Sl>,
-            Func: Fn(&C, U, $w_in) -> $f_out,
+            Func: Fn(&C, U, $w_in) -> $f_out + 'static,
         {
             fn call(self, consts: &C, uniforms: U, input: FsInput<$w>) -> FullFsOutput<$f> {
                 self(consts, uniforms, <$w_in>::from_fs_input(input)).into_full_fs_output()
@@ -410,7 +410,7 @@ macro_rules! impl_fs_func {
             U: UniformInterface<Sl>,
             W: Interpolant,
             F: FsInterface<Sl>,
-            Func: Fn(U, $w_in) -> $f_out,
+            Func: Fn(U, $w_in) -> $f_out + 'static,
         {
             fn call(self, _: &(), uniforms: U, input: FsInput<$w>) -> FullFsOutput<$f> {
                 self(uniforms, <$w_in>::from_fs_input(input)).into_full_fs_output()
@@ -432,7 +432,7 @@ macro_rules! impl_fs_func {
         where
             W: Interpolant,
             F: FsInterface<Sl>,
-            Func: Fn($w_in) -> $f_out,
+            Func: Fn($w_in) -> $f_out + 'static,
         {
             fn call(self, _: &(), _: (), input: FsInput<$w>) -> FullFsOutput<$f> {
                 self(<$w_in>::from_fs_input(input)).into_full_fs_output()

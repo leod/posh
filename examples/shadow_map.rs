@@ -180,10 +180,7 @@ mod debug_pass {
 // Host code
 
 struct Demo {
-    flat_program: gl::Program<Camera<Sl>, SceneVertex<Sl>>,
-    depth_program: gl::Program<Light<Sl>, SceneVertex<Sl>, ()>,
-    scene_program: gl::Program<SceneUniforms<Sl>, SceneVertex<Sl>>,
-    debug_program: gl::Program<sl::ColorSampler2d<sl::F32>, ScreenVertex<Sl>>,
+    gl: gl::Context,
 
     camera_buffer: gl::UniformBuffer<Camera<Gl>>,
     light_buffer: gl::UniformBuffer<Light<Gl>>,
@@ -208,14 +205,7 @@ impl Demo {
         let light_depth_image = gl::DepthImage::f32_zero([DEPTH_MAP_SIZE, DEPTH_MAP_SIZE]);
 
         Ok(Demo {
-            flat_program: gl
-                .create_program(flat_pass::vertex_shader, flat_pass::fragment_shader)?,
-            depth_program: gl
-                .create_program(depth_pass::vertex_shader, depth_pass::fragment_shader)?,
-            scene_program: gl
-                .create_program(scene_pass::vertex_shader, scene_pass::fragment_shader)?,
-            debug_program: gl
-                .create_program(debug_pass::vertex_shader, debug_pass::fragment_shader)?,
+            gl: gl.clone(),
 
             camera_buffer: gl.create_uniform_buffer(Camera::default(), StaticDraw)?,
             light_buffer: gl.create_uniform_buffer(Light::new(0.0, 0.0), StreamDraw)?,
@@ -248,8 +238,9 @@ impl Demo {
             .as_vertex_spec(gl::PrimitiveMode::Triangles)
             .with_element_data(self.scene_elements.as_binding());
 
-        self.depth_program
-            .with_uniforms(self.light_buffer.as_binding())
+        self.gl
+            .get_program(depth_pass::vertex_shader, depth_pass::fragment_shader)
+            .with_uniforms(self.light_buffer.as_binding())?
             .with_framebuffer(self.light_depth_map.as_depth_attachment())
             .with_settings(
                 gl::DrawSettings::default()
@@ -259,14 +250,15 @@ impl Demo {
             )
             .draw(scene_vertex_spec.clone())?;
 
-        self.scene_program
+        self.gl
+            .get_program(scene_pass::vertex_shader, scene_pass::fragment_shader)
             .with_uniforms(SceneUniforms {
                 camera: self.camera_buffer.as_binding(),
                 light: self.light_buffer.as_binding(),
                 light_depth_map: self
                     .light_depth_map
                     .as_comparison_sampler(gl::Sampler2dSettings::linear(), gl::Comparison::Less),
-            })
+            })?
             .with_settings(
                 gl::DrawSettings::default()
                     .with_clear_color(glam::Vec4::ONE.into())
@@ -276,8 +268,9 @@ impl Demo {
             )
             .draw(scene_vertex_spec.clone())?;
 
-        self.flat_program
-            .with_uniforms(self.camera_buffer.as_binding())
+        self.gl
+            .get_program(flat_pass::vertex_shader, flat_pass::fragment_shader)
+            .with_uniforms(self.camera_buffer.as_binding())?
             .with_settings(
                 gl::DrawSettings::default()
                     .with_depth_test(gl::Comparison::Less)
@@ -289,11 +282,12 @@ impl Demo {
                     .with_element_data(self.light_elements.as_binding()),
             )?;
 
-        self.debug_program
+        self.gl
+            .get_program(debug_pass::vertex_shader, debug_pass::fragment_shader)
             .with_uniforms(
                 self.light_depth_map
                     .as_color_sampler(gl::Sampler2dSettings::default()),
-            )
+            )?
             .draw(
                 self.debug_vertices
                     .as_vertex_spec(gl::PrimitiveMode::Triangles)
