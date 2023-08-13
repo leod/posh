@@ -7,7 +7,7 @@ use std::{iter::once, rc::Rc};
 
 use crate::{
     interface::{FragmentVisitor, UniformUnion, UniformVisitor, VertexVisitor},
-    Block, FsInterface, Sl, UniformInterface, VsInterface,
+    Block, FsInterface, Sl, VsInterface,
 };
 
 use super::{
@@ -15,146 +15,31 @@ use super::{
     dag::{Expr, SamplerType, Type},
     primitives::value_arg,
     program_def::{ProgramDef, UniformBlockDef, UniformSamplerDef, VertexBlockDef},
-    ColorSample, ColorSampler2d, ComparisonSampler2d, Const, Derivatives, FsInput, FsOutput,
-    FullVsOutput, Interpolant, Object, Vec4, VsInput, VsOutput, I32,
+    sig::{FromFsInput, FromVsInput, VsFunc, VsSig},
+    ColorSample, ColorSampler2d, ComparisonSampler2d, Derivatives, FsFunc, FsInput, FsSig,
+    Interpolant, IntoFullFsOutput, IntoFullVsOutput, Object, VsInput, I32,
 };
-
-/// Types that can be used as vertex input for a vertex shader.
-pub trait FromVsInput {
-    type V: VsInterface<Sl>;
-
-    fn from(input: VsInput<Self::V>) -> Self;
-}
-
-impl<V: VsInterface<Sl>> FromVsInput for VsInput<V> {
-    type V = V;
-
-    fn from(input: Self) -> Self {
-        input
-    }
-}
-
-impl<V: VsInterface<Sl>> FromVsInput for V {
-    type V = Self;
-
-    fn from(input: VsInput<Self>) -> Self {
-        input.vertex
-    }
-}
-
-/// Types that can be used as vertex output for a vertex shader.
-pub trait IntoFullVsOut {
-    type Interpolant: Interpolant;
-
-    fn into(self) -> FullVsOutput<Self::Interpolant>;
-}
-
-impl<W: Interpolant> IntoFullVsOut for FullVsOutput<W> {
-    type Interpolant = W;
-
-    fn into(self) -> Self {
-        self
-    }
-}
-
-impl<V: Interpolant> IntoFullVsOut for VsOutput<V> {
-    type Interpolant = V;
-
-    fn into(self) -> FullVsOutput<V> {
-        FullVsOutput {
-            clip_position: self.clip_position,
-            interpolant: self.interpolant,
-            point_size: None,
-        }
-    }
-}
-
-impl IntoFullVsOut for Vec4 {
-    type Interpolant = ();
-
-    fn into(self) -> FullVsOutput<()> {
-        FullVsOutput {
-            clip_position: self,
-            interpolant: (),
-            point_size: None,
-        }
-    }
-}
-
-/// Types that can be used as fragment input for a fragment shader.
-pub trait FromFsIn {
-    type Interpolant: Interpolant;
-
-    fn from(input: FsInput<Self::Interpolant>) -> Self;
-}
-
-impl<W: Interpolant> FromFsIn for FsInput<W> {
-    type Interpolant = W;
-
-    fn from(input: Self) -> Self {
-        input
-    }
-}
-
-impl<W: Interpolant> FromFsIn for W {
-    type Interpolant = Self;
-
-    fn from(input: FsInput<Self>) -> Self {
-        input.interpolant
-    }
-}
-
-/// Types that can be used as fragment output for a fragment shader.
-pub trait IntoFsOut {
-    type FsInterface: FsInterface<Sl>;
-
-    fn into(self) -> FsOutput<Self::FsInterface>;
-}
-
-impl<F: FsInterface<Sl>> IntoFsOut for FsOutput<F> {
-    type FsInterface = F;
-
-    fn into(self) -> Self {
-        self
-    }
-}
-
-impl<F: FsInterface<Sl>> IntoFsOut for F {
-    type FsInterface = Self;
-
-    fn into(self) -> FsOutput<Self> {
-        FsOutput {
-            fragment: self,
-            fragment_depth: None,
-        }
-    }
-}
 
 /// Transpiles a vertex shader and a fragment shader to GLSL source code.
 ///
 /// This is used internally by `posh` in order to create
 /// [`Program`](crate::gl::Program)s. It is exposed for the purpose of
 /// inspecting generated shader source code.
-pub fn transpile_to_program_def<U, U1, U2, V, F, W, InV, OutW, InW, OutF>(
-    vertex_shader: fn(U1, InV) -> OutW,
-    fragment_shader: fn(U2, InW) -> OutF,
+pub fn transpile_to_program_def<U, VSig, VFunc, FSig, FFunc>(
+    vertex_shader: VFunc,
+    fragment_shader: FFunc,
 ) -> ProgramDef
 where
-    U1: UniformInterface<Sl>,
-    U2: UniformInterface<Sl>,
-    U: UniformUnion<U1, U2>,
-    V: VsInterface<Sl>,
-    F: FsInterface<Sl>,
-    W: Interpolant,
-    InV: FromVsInput<V = V>,
-    OutW: IntoFullVsOut<Interpolant = W>,
-    InW: FromFsIn<Interpolant = W>,
-    OutF: IntoFsOut<FsInterface = F>,
+    U: UniformUnion<VSig::U, FSig::U>,
+    VSig: VsSig<C = ()>,
+    VFunc: VsFunc<VSig>,
+    FSig: FsSig<C = (), W = VSig::W>,
+    FFunc: FsFunc<FSig>,
 {
-    transpile_to_program_def_with_consts_impl(
+    transpile_to_program_def_with_consts::<U, VSig, VFunc, FSig, FFunc>(
         &(),
-        |(), uniforms: U, input| vertex_shader(uniforms.lhs(), input),
-        |(), uniforms: U, input| fragment_shader(uniforms.rhs(), input),
+        vertex_shader,
+        fragment_shader,
     )
 }
 
@@ -162,46 +47,17 @@ where
 /// source code.
 ///
 /// See also [`transpile_to_program_def`].
-pub fn transpile_to_program_def_with_consts<C, U, U1, U2, V, F, W, InV, OutW, InW, OutF>(
-    consts: &C,
-    vertex_shader: fn(&C, U1, InV) -> OutW,
-    fragment_shader: fn(&C, U2, InW) -> OutF,
+pub fn transpile_to_program_def_with_consts<U, VSig, VFunc, FSig, FFunc>(
+    consts: &VSig::C,
+    vertex_shader: VFunc,
+    fragment_shader: FFunc,
 ) -> ProgramDef
 where
-    C: Const,
-    U1: UniformInterface<Sl>,
-    U2: UniformInterface<Sl>,
-    U: UniformUnion<U1, U2>,
-    V: VsInterface<Sl>,
-    F: FsInterface<Sl>,
-    W: Interpolant,
-    InV: FromVsInput<V = V>,
-    OutW: IntoFullVsOut<Interpolant = W>,
-    InW: FromFsIn<Interpolant = W>,
-    OutF: IntoFsOut<FsInterface = F>,
-{
-    transpile_to_program_def_with_consts_impl(
-        consts,
-        |consts, uniforms: U, input| vertex_shader(consts, uniforms.lhs(), input),
-        |consts, uniforms: U, input| fragment_shader(consts, uniforms.rhs(), input),
-    )
-}
-
-fn transpile_to_program_def_with_consts_impl<C, U, V, F, W, InV, OutW, InW, OutF>(
-    consts: &C,
-    vertex_shader: impl FnOnce(&C, U, InV) -> OutW,
-    fragment_shader: impl FnOnce(&C, U, InW) -> OutF,
-) -> ProgramDef
-where
-    C: Const,
-    U: UniformInterface<Sl>,
-    V: VsInterface<Sl>,
-    F: FsInterface<Sl>,
-    W: Interpolant,
-    InV: FromVsInput<V = V>,
-    OutW: IntoFullVsOut<Interpolant = W>,
-    InW: FromFsIn<Interpolant = W>,
-    OutF: IntoFsOut<FsInterface = F>,
+    U: UniformUnion<VSig::U, FSig::U>,
+    VSig: VsSig,
+    VFunc: VsFunc<VSig>,
+    FSig: FsSig<C = VSig::C, W = VSig::W>,
+    FFunc: FsFunc<FSig>,
 {
     // TODO: Remove hardcoded path names.
     let uniforms = U::shader_input("uniforms");
@@ -216,12 +72,14 @@ where
 
     let (vertex_block_defs, varying_outputs, vertex_shader_source) = {
         let input = || VsInput {
-            vertex: V::shader_input("vertex_input"),
+            vertex: <VSig as VsSig>::V::shader_input("vertex_input"),
             vertex_id: value_arg::<I32>("gl_VertexID").as_u32(),
             instance_id: value_arg::<I32>("gl_InstanceID").as_u32(),
             _private: (),
         };
-        let output = vertex_shader(consts, uniforms, InV::from(input())).into();
+        let output = vertex_shader
+            .call(consts, uniforms.lhs(), FromVsInput::from_vs_input(input()))
+            .into_full_vs_output();
 
         let varying_outputs = output.interpolant.shader_outputs("vertex_output");
         let vertex_block_defs = {
@@ -280,13 +138,15 @@ where
 
     let fragment_shader_source = {
         let input = FsInput {
-            interpolant: W::shader_input("vertex_output"),
+            interpolant: <VSig as VsSig>::W::shader_input("vertex_output"),
             fragment_coord: value_arg("gl_FragCoord"),
             front_facing: value_arg("gl_FrontFacing"),
             point_coord: value_arg("gl_PointCoord"),
             derivatives: Derivatives(()),
         };
-        let output = fragment_shader(consts, uniforms, InW::from(input)).into();
+        let output = fragment_shader
+            .call(consts, uniforms.rhs(), FromFsInput::from_fs_input(input))
+            .into_full_fs_output();
 
         // TODO: Remove hardcoded path names.
         let mut visitor = CollectOutputs::default();

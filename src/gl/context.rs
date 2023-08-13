@@ -3,8 +3,8 @@ use std::rc::Rc;
 use crate::{
     sl::{
         transpile::{transpile_to_program_def, transpile_to_program_def_with_consts},
-        transpile::{FromFsIn, FromVsInput, IntoFsOut, IntoFullVsOut},
-        ColorSample, Const, Interpolant,
+        ColorSample, Const, FromFsInput, FromVsInput, FsFunc, FsSig, Interpolant, IntoFullFsOutput,
+        IntoFullVsOutput, VsFunc, VsSig,
     },
     Block, FsInterface, Gl, Sl, UniformInterface, UniformUnion, VsInterface,
 };
@@ -104,27 +104,20 @@ impl Context {
         Ok(DepthTexture2d::from_raw(raw))
     }
 
-    pub fn create_program<U, U1, U2, V, F, W, InV, OutW, InW, OutF>(
+    pub fn create_program<U, VSig, VFunc, FSig, FFunc>(
         &self,
-        vertex_shader: fn(U1, InV) -> OutW,
-        fragment_shader: fn(U2, InW) -> OutF,
-    ) -> Result<Program<U, V, F>, ProgramError>
+        vertex_shader: VFunc,
+        fragment_shader: FFunc,
+    ) -> Result<Program<U, VSig::V, FSig::F>, ProgramError>
     where
-        U: UniformUnion<U1, U2>,
-        U1: UniformInterface<Sl>,
-        U2: UniformInterface<Sl>,
-        V: VsInterface<Sl>,
-        F: FsInterface<Sl>,
-        W: Interpolant,
-        InV: FromVsInput<V = V>,
-        OutW: IntoFullVsOut<Interpolant = W>,
-        InW: FromFsIn<Interpolant = W>,
-        OutF: IntoFsOut<FsInterface = F>,
+        U: UniformUnion<VSig::U, FSig::U>,
+        VSig: VsSig<C = ()>,
+        VFunc: VsFunc<VSig>,
+        FSig: FsSig<C = (), W = VSig::W>,
+        FFunc: FsFunc<FSig>,
     {
-        let program_def = transpile_to_program_def::<U, _, _, _, _, _, _, _, _, _>(
-            vertex_shader,
-            fragment_shader,
-        );
+        let program_def =
+            transpile_to_program_def::<U, VSig, VFunc, FSig, FFunc>(vertex_shader, fragment_shader);
 
         log::info!("Vertex shader:\n{}", program_def.vertex_shader_source);
         log::info!("Fragment shader:\n{}", program_def.fragment_shader_source);
@@ -134,26 +127,20 @@ impl Context {
         Ok(Program::unchecked_from_raw(raw))
     }
 
-    pub fn create_program_with_consts<C, U, U1, U2, V, F, W, InV, OutW, InW, OutF>(
+    pub fn create_program_with_consts<U, VSig, VFunc, FSig, FFunc>(
         &self,
-        consts: &C,
-        vertex_shader: fn(&C, U1, InV) -> OutW,
-        fragment_shader: fn(&C, U2, InW) -> OutF,
-    ) -> Result<Program<U, V, F>, ProgramError>
+        consts: &VSig::C,
+        vertex_shader: VFunc,
+        fragment_shader: FFunc,
+    ) -> Result<Program<U, VSig::V, FSig::F>, ProgramError>
     where
-        C: Const,
-        U: UniformUnion<U1, U2>,
-        U1: UniformInterface<Sl>,
-        U2: UniformInterface<Sl>,
-        V: VsInterface<Sl>,
-        F: FsInterface<Sl>,
-        W: Interpolant,
-        InV: FromVsInput<V = V>,
-        OutW: IntoFullVsOut<Interpolant = W>,
-        InW: FromFsIn<Interpolant = W>,
-        OutF: IntoFsOut<FsInterface = F>,
+        U: UniformUnion<VSig::U, FSig::U>,
+        VSig: VsSig,
+        VFunc: VsFunc<VSig>,
+        FSig: FsSig<C = VSig::C, W = VSig::W>,
+        FFunc: FsFunc<FSig>,
     {
-        let program_def = transpile_to_program_def_with_consts::<_, U, _, _, _, _, _, _, _, _, _>(
+        let program_def = transpile_to_program_def_with_consts::<U, VSig, VFunc, FSig, FFunc>(
             consts,
             vertex_shader,
             fragment_shader,
