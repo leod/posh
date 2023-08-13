@@ -238,6 +238,8 @@ where
 {
 }
 
+impl<U, const N: usize> UniformNonUnit for [U; N] where U: UniformInterface<Sl> {}
+
 /// A union of two uniform data types.
 ///
 /// # Safety
