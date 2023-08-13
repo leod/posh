@@ -3,10 +3,9 @@ use std::rc::Rc;
 use crate::{
     sl::{
         transpile::{transpile_to_program_def, transpile_to_program_def_with_consts},
-        ColorSample, Const, FromFsInput, FromVsInput, FsFunc, FsSig, Interpolant, IntoFullFsOutput,
-        IntoFullVsOutput, VsFunc, VsSig,
+        ColorSample, FsFunc, FsSig, VsFunc, VsSig,
     },
-    Block, FsInterface, Gl, Sl, UniformInterface, UniformUnion, VsInterface,
+    Block, Gl, UniformUnion,
 };
 
 use super::{
