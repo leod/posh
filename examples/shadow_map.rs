@@ -74,20 +74,6 @@ mod flat_pass {
     }
 }
 
-mod depth_pass {
-    use posh::{sl, Sl};
-
-    use super::{Light, SceneVertex};
-
-    pub fn vertex_shader(light: Light<Sl>, vertex: SceneVertex<Sl>) -> sl::Vec4 {
-        light.camera.world_to_clip(vertex.world_pos)
-    }
-
-    pub fn fragment_shader(_: ()) -> () {
-        ()
-    }
-}
-
 mod scene_pass {
     use posh::{sl, Sl};
 
@@ -239,7 +225,12 @@ impl Demo {
             .with_element_data(self.scene_elements.as_binding());
 
         self.gl
-            .get_program(depth_pass::vertex_shader, depth_pass::fragment_shader)
+            .get_program(
+                |light: Light<Sl>, vertex: SceneVertex<Sl>| {
+                    light.camera.world_to_clip(vertex.world_pos)
+                },
+                |()| (),
+            )
             .with_uniforms(self.light_buffer.as_binding())?
             .with_framebuffer(self.light_depth_map.as_depth_attachment())
             .with_settings(
