@@ -336,3 +336,5 @@ where
         self.0
     }
 }
+
+// TODO: More tuple implementations for `UniformInterface`.

@@ -168,6 +168,8 @@ where
     }
 }
 
+// TODO: More tuple implementations for `VsInterface`.
+
 /// Types that are allowed to occur in types that implement [`VsInterface`].
 #[sealed]
 #[doc(hidden)]
