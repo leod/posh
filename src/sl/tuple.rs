@@ -10,22 +10,18 @@ use super::{
 
 macro_rules! impl_value {
     ($($name: ident),*) => {
-        impl<$($name: Value),*> Object for ($($name),*) {
+        impl<$($name: Value,)*> Object for ($($name,)*) {
             fn ty() -> Type {
                 Type::Struct(Self::struct_type())
             }
 
             fn expr(&self) -> Rc<Expr> {
                 #[allow(non_snake_case)]
-                let ($($name),*) = self;
+                let ($($name,)*) = self;
 
                 simplify_struct_literal(
                     Self::struct_type(),
-                    &[
-                        $(
-                            $name.expr()
-                        ),*
-                    ])
+                    &[$($name.expr()),*])
             }
 
             fn from_arg(path: &str) -> Self {
@@ -33,60 +29,45 @@ macro_rules! impl_value {
             }
         }
 
-        impl<$($name: Value),*> Value for ($($name),*) {
+        impl<$($name: Value,)*> Value for ($($name,)*) {
             #[allow(clippy::unused_unit)]
             fn from_expr(expr: Expr) -> Self {
                 #[allow(unused)]
                 let base = Rc::new(expr);
 
-                (
-                    $(
-                        field(base.clone(), stringify!($name))
-                    ),*
-                )
+                ($(field(base.clone(), stringify!($name))),*)
             }
         }
 
-        impl<$($name: Value),*> ValueNonArray for ($($name),*) {}
+        impl<$($name: Value,)*> ValueNonArray for ($($name,)*) {}
 
-        impl<$($name: Value),*> Struct for ($($name),*) {
+        impl<$($name: Value,)*> Struct for ($($name,)*) {
             fn struct_type() -> Rc<StructType> {
                 unique_struct_type::<Self>(
                     || StructType {
                         name: "tuple".to_string(),
                         fields: vec![
-                            $(
-                                (stringify!($name).to_string(), <$name as Object>::ty())
-                            ),*
+                            $((stringify!($name).to_string(), <$name as Object>::ty()),)*
                         ],
                     }
                 )
             }
         }
 
-        impl<$($name: ToSl),*> ToSl for ($($name),*) {
+        impl<$($name: ToSl,)*> ToSl for ($($name,)*) {
             type Output = (
-                $(
-                    <$name as ToSl>::Output
-                ),*
+                $(<$name as ToSl>::Output,)*
             );
 
             #[allow(clippy::unused_unit)]
             fn to_sl(self) -> Self::Output {
                 #[allow(non_snake_case)]
-                let ($($name),*) = self;
+                let ($($name,)*) = self;
 
-                (
-                    $(
-                        $name.to_sl()
-                    ),*
-                )
+                ($($name.to_sl(),)*)
             }
         }
     };
 }
 
-impl_value!();
-impl_value!(A, B);
-impl_value!(A, B, C);
-impl_value!(A, B, C, D);
+smaller_tuples_too!(impl_value, T0, T1, T2, T3, T4, T5, T6, T7);
