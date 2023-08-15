@@ -69,6 +69,8 @@ unsafe impl<S: sl::ColorSample> FsInterface<Sl> for S {
     }
 }
 
+// TODO: Tuple implementations for `FsInterface`.
+
 #[doc(hidden)]
 pub trait FragmentVisitor<'a, D: FsInterfaceDom> {
     fn accept<S: sl::ColorSample>(&mut self, path: &str, attachment: &'a D::ColorAttachment<S>);
