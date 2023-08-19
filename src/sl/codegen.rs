@@ -75,9 +75,11 @@ pub fn write_shader_stage(
     writeln!(f, "#version 300 es")?;
     writeln!(f)?;
 
+    // TODO: Make precision configurable.
     writeln!(f, "precision highp float;")?;
     writeln!(f, "precision highp int;")?;
     writeln!(f, "precision highp sampler2DShadow;")?;
+    writeln!(f, "precision highp sampler2D;")?;
     writeln!(f)?;
 
     write_struct_defs(f, &struct_registry)?;
