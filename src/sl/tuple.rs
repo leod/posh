@@ -8,7 +8,7 @@ use super::{
     unique_struct_type, Object, Struct, Value, ValueNonArray,
 };
 
-macro_rules! impl_value {
+macro_rules! tuple_impl {
     ($($name: ident),*) => {
         impl<$($name: Value,)*> Object for ($($name,)*) {
             fn ty() -> Type {
@@ -21,11 +21,7 @@ macro_rules! impl_value {
 
                 simplify_struct_literal(
                     Self::struct_type(),
-                    &[
-                        $(
-                            $name.expr()
-                        ),*
-                    ])
+                    &[$($name.expr()),*])
             }
 
             fn from_arg(path: &str) -> Self {
@@ -39,11 +35,7 @@ macro_rules! impl_value {
                 #[allow(unused)]
                 let base = Rc::new(expr);
 
-                (
-                    $(
-                        field(base.clone(), stringify!($name))
-                    ),*
-                )
+                ($(field(base.clone(), stringify!($name))),*)
             }
         }
 
@@ -78,4 +70,4 @@ macro_rules! impl_value {
     };
 }
 
-smaller_tuples_too!(impl_value, T0, T1, T2, T3, T4, T5, T6, T7);
+smaller_tuples_too!(tuple_impl, T0, T1, T2, T3, T4, T5, T6, T7);
