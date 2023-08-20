@@ -20,9 +20,10 @@ impl Program {
     pub(super) fn new(ctx: Rc<ContextShared>, def: ProgramDef) -> Result<Self, ProgramError> {
         validate_program_def(&def)?;
 
+        let gl = ctx.gl();
+
         check_gl_error(gl, "before creating program").map_err(ProgramError::Unexpected)?;
 
-        let gl = ctx.gl();
         let id = unsafe { gl.create_program() }.map_err(ProgramError::ProgramCreation)?;
         let program = Program {
             ctx: ctx.clone(),
