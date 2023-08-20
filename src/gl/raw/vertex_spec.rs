@@ -291,10 +291,10 @@ impl VertexSpec {
             }
         }
 
-        // TODO: Remove overly conservative unbinding.
-        self.unbind(ctx);
-
         #[cfg(debug_assertions)]
         check_gl_error(gl, "").expect("OpenGL error in VertexStream::draw()");
+
+        // TODO: Remove overly conservative unbinding.
+        self.unbind(ctx);
     }
 }
