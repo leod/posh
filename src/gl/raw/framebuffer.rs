@@ -129,7 +129,7 @@ fn bind_attachments(
     check_framebuffer_completeness(gl).map_err(FramebufferError::Incomplete)?;
 
     #[cfg(debug_assertions)]
-    check_gl_error(gl).map_err(FramebufferError::Unexpected)?;
+    check_gl_error(gl, "after binding attachments").map_err(FramebufferError::Unexpected)?;
 
     Ok(())
 }

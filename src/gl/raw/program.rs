@@ -20,6 +20,8 @@ impl Program {
     pub(super) fn new(ctx: Rc<ContextShared>, def: ProgramDef) -> Result<Self, ProgramError> {
         validate_program_def(&def)?;
 
+        check_gl_error(gl, "before creating program").map_err(ProgramError::Unexpected)?;
+
         let gl = ctx.gl();
         let id = unsafe { gl.create_program() }.map_err(ProgramError::ProgramCreation)?;
         let program = Program {
@@ -27,6 +29,8 @@ impl Program {
             def,
             id,
         };
+
+        check_gl_error(gl, "after creating program").map_err(ProgramError::Unexpected)?;
 
         // Compile and attach shaders.
         let vertex_shader = Shader::new(
@@ -36,12 +40,16 @@ impl Program {
         )?
         .attach(program.id);
 
+        check_gl_error(gl, "after compiling vertex shader").map_err(ProgramError::Unexpected)?;
+
         let fragment_shader = Shader::new(
             ctx.clone(),
             glow::FRAGMENT_SHADER,
             &program.def.fragment_shader_source,
         )?
         .attach(program.id);
+
+        check_gl_error(gl, "after compiling fragment shader").map_err(ProgramError::Unexpected)?;
 
         // Bind vertex attributes. This needs to be done before linking the
         // program.
@@ -69,6 +77,8 @@ impl Program {
             }
         }
 
+        check_gl_error(gl, "after binding vertex attributes").map_err(ProgramError::Unexpected)?;
+
         // Link the program.
         let link_status = unsafe {
             gl.link_program(program.id);
@@ -78,6 +88,8 @@ impl Program {
             // thereby potentially slow down compilation.
             gl.get_program_link_status(program.id)
         };
+
+        check_gl_error(gl, "after linking the program").map_err(ProgramError::Unexpected)?;
 
         if !link_status {
             let vertex_shader_info = unsafe { gl.get_shader_info_log(vertex_shader.shader.id) };
@@ -110,6 +122,8 @@ impl Program {
             }
         }
 
+        check_gl_error(gl, "after setting texture units").map_err(ProgramError::Unexpected)?;
+
         unsafe {
             gl.use_program(None);
         }
@@ -131,7 +145,8 @@ impl Program {
             }
         }
 
-        check_gl_error(gl).map_err(ProgramError::Unexpected)?;
+        check_gl_error(gl, "after setting uniform block locations")
+            .map_err(ProgramError::Unexpected)?;
 
         Ok(program)
     }
@@ -229,7 +244,7 @@ impl Program {
         framebuffer.unbind(&self.ctx);
 
         #[cfg(debug_assertions)]
-        check_gl_error(gl).map_err(DrawError::Error)?;
+        check_gl_error(gl, "after draw").map_err(DrawError::Error)?;
 
         Ok(())
     }

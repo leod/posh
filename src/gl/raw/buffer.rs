@@ -57,7 +57,7 @@ impl Buffer {
 
         buffer.set(data);
 
-        check_gl_error(gl).map_err(BufferError::Unexpected)?;
+        check_gl_error(gl, "after new buffer").map_err(BufferError::Unexpected)?;
 
         Ok(buffer)
     }
@@ -96,7 +96,7 @@ impl Buffer {
         self.len.set(data.len());
 
         #[cfg(debug_assertions)]
-        check_gl_error(gl).expect("OpenGL error after Buffer::set");
+        check_gl_error(gl, "after buffer set").expect("OpenGL error after Buffer::set");
     }
 }
 

@@ -124,7 +124,7 @@ impl Texture2d {
 
         // Check for errors *after* passing ownership of the texture to
         // `shared` so that it will be cleaned up if there is an error.
-        check_gl_error(gl).map_err(TextureError::Unexpected)?;
+        check_gl_error(gl, "after new texture").map_err(TextureError::Unexpected)?;
 
         Ok(texture)
     }
@@ -155,7 +155,7 @@ impl Texture2d {
             gl.bind_texture(glow::TEXTURE_2D, None);
         }
 
-        check_gl_error(gl).map_err(TextureError::Unexpected)?;
+        check_gl_error(gl, "after new texture with mipmaps").map_err(TextureError::Unexpected)?;
 
         Ok(texture)
     }
@@ -210,7 +210,7 @@ impl Texture2d {
 
         // This might be triggered if `rect` is outside of the texture image
         // bounds.
-        check_gl_error(gl).map_err(TextureError::Unexpected)?;
+        check_gl_error(gl, "after texture set").map_err(TextureError::Unexpected)?;
 
         Ok(())
     }
@@ -226,7 +226,7 @@ impl Texture2d {
         set_comparison(gl, glow::TEXTURE_2D, comparison);
 
         #[cfg(debug_assertions)]
-        check_gl_error(gl).unwrap();
+        check_gl_error(gl, "after texture settings").unwrap();
     }
 }
 

@@ -1,7 +1,7 @@
 use glow::HasContext;
 use thiserror::Error;
 
-pub(super) fn check_gl_error(gl: &glow::Context) -> Result<(), String> {
+pub(super) fn check_gl_error(gl: &glow::Context, name: &str) -> Result<(), String> {
     let error_info = unsafe { gl.get_error() };
 
     if error_info == glow::NO_ERROR {
@@ -20,7 +20,7 @@ pub(super) fn check_gl_error(gl: &glow::Context) -> Result<(), String> {
             _ => format!("unknown OpenGL error: {error_info}"),
         };
 
-        Err(s)
+        Err(format!("{s} ({name})"))
     }
 }
 
@@ -118,7 +118,7 @@ pub(super) fn check_framebuffer_completeness(
 
         // OpenGL ES 3.0.6: 4.4.4.2 Whole Framebuffer Completeness
         // > If *CheckFramebufferStatus* generates an error, zero is returned.
-        0 => check_gl_error(gl).map_err(Error),
+        0 => check_gl_error(gl, "framebuffer completeness status").map_err(Error),
 
         // This should not be reachable.
         error => Err(Unknown(error)),

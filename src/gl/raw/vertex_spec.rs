@@ -165,7 +165,7 @@ impl VertexSpec {
         }
 
         #[cfg(debug_assertions)]
-        check_gl_error(gl).expect("OpenGL error after VertexSpec::bind()");
+        check_gl_error(gl, "").expect("OpenGL error after VertexSpec::bind()");
     }
 
     fn unbind(&self, ctx: &ContextShared) {
@@ -195,7 +195,7 @@ impl VertexSpec {
         }
 
         #[cfg(debug_assertions)]
-        check_gl_error(gl).expect("OpenGL error after VertexSpec::unbind()");
+        check_gl_error(gl, "").expect("OpenGL error after VertexSpec::unbind()");
     }
 
     pub(super) fn draw(&self, ctx: &ContextShared) {
@@ -295,6 +295,6 @@ impl VertexSpec {
         self.unbind(ctx);
 
         #[cfg(debug_assertions)]
-        check_gl_error(gl).expect("OpenGL error in VertexStream::draw()");
+        check_gl_error(gl, "").expect("OpenGL error in VertexStream::draw()");
     }
 }
