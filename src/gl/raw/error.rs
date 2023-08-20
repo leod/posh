@@ -30,7 +30,7 @@ pub enum ContextError {
     #[error("could not create main vertex array object: {0}")]
     ObjectCreation(String),
 
-    #[error("unexpected error: {0}")]
+    #[error("unexpected error while creating context: {0}")]
     Unexpected(String),
 }
 
@@ -40,7 +40,7 @@ pub enum BufferError {
     #[error("could not create buffer object: {0}")]
     ObjectCreation(String),
 
-    #[error("unexpected error: {0}")]
+    #[error("unexpected error while creating buffer: {0}")]
     Unexpected(String),
 }
 
@@ -59,7 +59,7 @@ pub enum TextureError {
     #[error("invalid data size: expected {expected} bytes, but got {got}")]
     DataSizeMismatch { expected: usize, got: usize },
 
-    #[error("unexpected error: {0}")]
+    #[error("unexpected error while creating texture: {0}")]
     Unexpected(String),
 }
 
@@ -72,7 +72,7 @@ pub enum VertexArrayError {
     #[error("invalid vertex attribute: {0}")]
     InvalidVertexAttribute(String),
 
-    #[error("unexpected error: {0}")]
+    #[error("unexpected error while creating vertex array: {0}")]
     Unexpected(String),
 }
 
@@ -149,7 +149,7 @@ pub enum FramebufferError {
     #[error("framebuffer is incomplete unexpectedly: {0}")]
     Incomplete(FramebufferIncompleteError),
 
-    #[error("unexpected error: {0}")]
+    #[error("unexpected error while creating framebuffer: {0}")]
     Unexpected(String),
 }
 
@@ -191,7 +191,7 @@ pub enum ProgramError {
     #[error("invalid vertex attribute: {0}")]
     InvalidVertexAttribute(String),
 
-    #[error("unexpected error: {0}")]
+    #[error("unexpected error while creating program: {0}")]
     Unexpected(String),
 }
 
