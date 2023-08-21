@@ -1,6 +1,9 @@
-// From <https://www.shadertoy.com/view/mtyGWy>, created by kishimisu in 2023-05-20.
+// Converted from <https://www.shadertoy.com/view/mtyGWy>, created by kishimisu
+// on 2023-05-20.
 
-use std::time::Instant;
+mod utils;
+
+use instant::Instant;
 
 use posh::{gl, sl, Block, BlockDom, Gl, Sl, ToSl};
 
@@ -85,7 +88,7 @@ impl Demo {
         })
     }
 
-    pub fn draw(&self) -> Result<(), gl::DrawError> {
+    pub fn draw(&mut self) -> Result<(), gl::DrawError> {
         self.globals.set(Globals {
             time: Instant::now().duration_since(self.start_time).as_secs_f32(),
             resolution: [SCREEN_WIDTH, SCREEN_HEIGHT].into(),
@@ -103,43 +106,17 @@ impl Demo {
     }
 }
 
-// SDL glue
+// Platform glue
 
 fn main() {
-    simple_logger::init().unwrap();
+    utils::run_demo("Shadertoy", Demo::new, Demo::draw);
+}
 
-    let sdl = sdl2::init().unwrap();
-    let video = sdl.video().unwrap();
+#[cfg(target_family = "wasm")]
+#[wasm_bindgen::prelude::wasm_bindgen(start)]
+pub async fn run() {
+    utils::init_wasm().await;
 
-    let gl_attr = video.gl_attr();
-    gl_attr.set_context_profile(sdl2::video::GLProfile::GLES);
-    gl_attr.set_context_version(3, 0);
-
-    let window = video
-        .window("Shadertoy example", SCREEN_WIDTH, SCREEN_HEIGHT)
-        .opengl()
-        .build()
-        .unwrap();
-
-    let _gl_context = window.gl_create_context().unwrap();
-    let gl = unsafe {
-        glow::Context::from_loader_function(|s| video.gl_get_proc_address(s) as *const _)
-    };
-    let gl = gl::Context::new(gl).unwrap();
-    let demo = Demo::new(gl).unwrap();
-
-    let mut event_loop = sdl.event_pump().unwrap();
-
-    loop {
-        for event in event_loop.poll_iter() {
-            use sdl2::event::Event::*;
-
-            if matches!(event, Quit { .. }) {
-                return;
-            }
-        }
-
-        demo.draw().unwrap();
-        window.gl_swap_window();
-    }
+    #[allow(clippy::main_recursion)]
+    main();
 }

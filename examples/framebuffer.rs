@@ -1,4 +1,6 @@
-use std::time::Instant;
+mod utils;
+
+use instant::Instant;
 
 use posh::{gl, sl, Block, BlockDom, Gl, Sl, UniformInterface, UniformInterfaceDom};
 
@@ -128,11 +130,11 @@ impl Demo {
         })
     }
 
-    pub fn draw(&self, flip: u32) -> Result<(), gl::DrawError> {
-        self.state.set(State {
-            time: Instant::now().duration_since(self.start_time).as_secs_f32(),
-            flip,
-        });
+    pub fn draw(&mut self) -> Result<(), gl::DrawError> {
+        let time = Instant::now().duration_since(self.start_time).as_secs_f32();
+        let flip = ((time / 5.0) as usize % 2) as u32;
+
+        self.state.set(State { time, flip });
 
         self.scene_program
             .with_uniforms(self.state.as_binding())
@@ -186,53 +188,21 @@ fn quad_vertices() -> Vec<PresentVertex<Gl>> {
     ]
 }
 
-// SDL glue
+// Platform glue
 
 fn main() {
-    simple_logger::init().unwrap();
+    utils::run_demo(
+        "Framebuffer and dithering (toggling every 5s)",
+        Demo::new,
+        Demo::draw,
+    );
+}
 
-    let sdl = sdl2::init().unwrap();
-    let video = sdl.video().unwrap();
+#[cfg(target_family = "wasm")]
+#[wasm_bindgen::prelude::wasm_bindgen(start)]
+pub async fn run() {
+    utils::init_wasm().await;
 
-    let gl_attr = video.gl_attr();
-    gl_attr.set_context_profile(sdl2::video::GLProfile::GLES);
-    gl_attr.set_context_version(3, 0);
-
-    let window = video
-        .window("Press F to dither (amaze!)", 1024, 768)
-        .opengl()
-        .build()
-        .unwrap();
-
-    let _gl_context = window.gl_create_context().unwrap();
-    let gl = unsafe {
-        glow::Context::from_loader_function(|s| video.gl_get_proc_address(s) as *const _)
-    };
-    let gl = gl::Context::new(gl).unwrap();
-    let demo = Demo::new(gl).unwrap();
-
-    let mut event_loop = sdl.event_pump().unwrap();
-    let mut flip = 0;
-
-    loop {
-        for event in event_loop.poll_iter() {
-            use sdl2::{event::Event::*, keyboard::Keycode};
-
-            match event {
-                Quit { .. } => return,
-                KeyDown {
-                    keycode: Some(Keycode::F),
-                    ..
-                } => flip = 1,
-                KeyUp {
-                    keycode: Some(Keycode::F),
-                    ..
-                } => flip = 0,
-                _ => {}
-            }
-        }
-
-        demo.draw(flip).unwrap();
-        window.gl_swap_window();
-    }
+    #[allow(clippy::main_recursion)]
+    main();
 }
