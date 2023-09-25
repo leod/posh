@@ -100,6 +100,18 @@ impl<'a> ColorImage<'a, sl::Vec4> {
         }
     }
 
+    pub fn rgba_f16_zero(size: [u32; 2]) -> Self {
+        ColorImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::F16,
+                internal_format: ImageInternalFormat::RgbaF16,
+                data: None,
+            },
+            _phantom: PhantomData,
+        }
+    }
+
     pub fn rgba_f32_zero(size: [u32; 2]) -> Self {
         ColorImage {
             raw: raw::Image {
@@ -198,6 +210,18 @@ impl<'a> ColorImage<'a, sl::Vec3> {
         }
     }
 
+    pub fn rgb_f16_zero(size: [u32; 2]) -> Self {
+        ColorImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::F16,
+                internal_format: ImageInternalFormat::RgbF16,
+                data: None,
+            },
+            _phantom: PhantomData,
+        }
+    }
+
     pub fn rgb_f32_zero(size: [u32; 2]) -> Self {
         ColorImage {
             raw: raw::Image {
@@ -272,6 +296,18 @@ impl<'a> ColorImage<'a, sl::Vec2> {
         }
     }
 
+    pub fn rg_f16_zero(size: [u32; 2]) -> Self {
+        ColorImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::F16,
+                internal_format: ImageInternalFormat::RgF16,
+                data: None,
+            },
+            _phantom: PhantomData,
+        }
+    }
+
     pub fn rg_f32_zero(size: [u32; 2]) -> Self {
         ColorImage {
             raw: raw::Image {
@@ -340,6 +376,18 @@ impl<'a> ColorImage<'a, sl::F32> {
                 size,
                 ty: ImageComponentType::I8,
                 internal_format: ImageInternalFormat::RI8Snorm,
+                data: None,
+            },
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn r_f16_zero(size: [u32; 2]) -> Self {
+        ColorImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::F16,
+                internal_format: ImageInternalFormat::RF16,
                 data: None,
             },
             _phantom: PhantomData,

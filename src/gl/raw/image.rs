@@ -55,6 +55,7 @@ impl ImageFormat {
 pub enum ImageComponentType {
     U8,
     I8,
+    F16,
     F32,
 }
 
@@ -65,6 +66,7 @@ impl ImageComponentType {
         match self {
             U8 => glow::UNSIGNED_BYTE,
             I8 => glow::BYTE,
+            F16 => glow::HALF_FLOAT,
             F32 => glow::FLOAT,
         }
     }
@@ -75,6 +77,7 @@ impl ImageComponentType {
         match self {
             U8 => 1,
             I8 => 1,
+            F16 => 2,
             F32 => 4,
         }
     }
@@ -85,16 +88,20 @@ pub enum ImageInternalFormat {
     RgbaU8,
     RgbaU8Gamma,
     RgbaI8Snorm,
+    RgbaF16,
     RgbaF32,
     RgbU8,
     RgbU8Gamma,
     RgbI8Snorm,
+    RgbF16,
     RgbF32,
     RgU8,
     RgI8Snorm,
+    RgF16,
     RgF32,
     RU8,
     RI8Snorm,
+    RF16,
     RF32,
     DepthF32,
 }
@@ -107,16 +114,20 @@ impl ImageInternalFormat {
             RgbaU8 => glow::RGBA8,
             RgbaU8Gamma => glow::SRGB8_ALPHA8,
             RgbaI8Snorm => glow::RGBA8_SNORM,
+            RgbaF16 => glow::RGBA16F,
             RgbaF32 => glow::RGBA32F,
             RgbU8 => glow::RGB8,
             RgbU8Gamma => glow::SRGB8,
             RgbI8Snorm => glow::RGB8_SNORM,
+            RgbF16 => glow::RGB16F,
             RgbF32 => glow::RGB32F,
             RgU8 => glow::RG8,
             RgI8Snorm => glow::RG8_SNORM,
+            RgF16 => glow::RG16F,
             RgF32 => glow::RG32F,
             RU8 => glow::R8,
             RI8Snorm => glow::R8_SNORM,
+            RF16 => glow::R16F,
             RF32 => glow::R32F,
             DepthF32 => glow::DEPTH_COMPONENT32F,
         }
@@ -126,14 +137,15 @@ impl ImageInternalFormat {
         use ImageInternalFormat::*;
 
         match self {
-            RgbaU8 | RgbaU8Gamma | RgbaI8Snorm | RgbaF32 => ImageFormat::Rgba,
-            RgbU8 | RgbU8Gamma | RgbI8Snorm | RgbF32 => ImageFormat::Rgb,
-            RgU8 | RgI8Snorm | RgF32 => ImageFormat::Rg,
-            RU8 | RI8Snorm | RF32 => ImageFormat::R,
+            RgbaU8 | RgbaU8Gamma | RgbaI8Snorm | RgbaF16 | RgbaF32 => ImageFormat::Rgba,
+            RgbU8 | RgbU8Gamma | RgbI8Snorm | RgbF16 | RgbF32 => ImageFormat::Rgb,
+            RgU8 | RgI8Snorm | RgF16 | RgF32 => ImageFormat::Rg,
+            RU8 | RI8Snorm | RF16 | RF32 => ImageFormat::R,
             DepthF32 => ImageFormat::Depth,
         }
     }
 
+    // FIXME: Remove this and infer it, similar to `to_format`.
     pub fn matches_type(self, ty: ImageComponentType) -> bool {
         use ImageInternalFormat::*;
 
@@ -141,6 +153,7 @@ impl ImageInternalFormat {
             RgbaU8 | RgbU8 | RgU8 | RU8 => ty == ImageComponentType::U8,
             RgbaU8Gamma | RgbU8Gamma => ty == ImageComponentType::U8,
             RgbaI8Snorm | RgbI8Snorm | RgI8Snorm | RI8Snorm => ty == ImageComponentType::I8,
+            RgbaF16 | RgbF16 | RgF16 | RF16 => ty == ImageComponentType::F16,
             RgbaF32 | RgbF32 | RgF32 | RF32 => ty == ImageComponentType::F32,
             DepthF32 => ty == ImageComponentType::F32,
         }
@@ -157,6 +170,11 @@ impl ImageInternalFormat {
                 false
             }
             RgbaI8Snorm | RgbI8Snorm | RgI8Snorm | RI8Snorm => false,
+            RgbaF16 | RgbF16 | RgF16 | RF16 => {
+                // FIXME: This should rely on caps. Default OpenGL ES 3.0 does
+                // not support rendering to half color textures!
+                true
+            }
             RgbaF32 | RgF32 | RF32 => {
                 // FIXME: This should rely on caps. Default OpenGL ES 3.0 does
                 // not support rendering to float color textures!
