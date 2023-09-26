@@ -132,3 +132,6 @@ pub async fn init_wasm() {
         }
     }
 }
+
+#[allow(dead_code)]
+fn main() {}
