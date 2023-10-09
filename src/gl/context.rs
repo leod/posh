@@ -288,6 +288,10 @@ impl Context {
         }
     }
 
+    pub fn default_framebuffer_size(&self) -> [u32; 2] {
+        self.raw.default_framebuffer_size()
+    }
+
     pub fn set_default_framebuffer_size(&self, size: [u32; 2]) {
         self.raw.set_default_framebuffer_size(size);
     }
