@@ -11,7 +11,7 @@ log = "0.4.17"
 thiserror = "1.0.38"
 bytemuck = { git = "https://github.com/leod/bytemuck", branch = "specify_crate_in_derive", features = ["derive"] }
 crevice = { git = "https://github.com/leod/crevice", branch = "specify_crate_in_derive" }
-glow = "0.11.2"
+glow = "0.13.0"
 mint = { version = "0.5.9", optional = true }
 glam = { version = "0.24.2", optional = true }
 fxhash = "0.2"
@@ -24,7 +24,7 @@ members = ["derive", "run-wasm"]
 default = ["glam", "mint"]
 
 [dev-dependencies]
-glam = { version = "0.24.2" }
+glam = "0.24.2"
 image = "0.24.5"
 nanorand = "0.7.0"
 simple_logger = "4.1.0"
