@@ -30,11 +30,7 @@ pub use posh_derive::{Block, FsInterface, UniformInterface, VsInterface};
 
 pub use bytemuck;
 pub use crevice;
-#[cfg(feature = "glam")]
-pub use glam;
 pub use glow;
-#[cfg(feature = "mint")]
-pub use mint;
 
 /// The graphics library's view of shader inputs and outputs.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
