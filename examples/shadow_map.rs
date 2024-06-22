@@ -228,7 +228,7 @@ impl Demo {
                 },
                 |()| (),
             )
-            .with_uniforms(self.light_buffer.as_binding())?
+            .with_uniforms(self.light_buffer.as_binding())
             .with_framebuffer(self.light_depth_map.as_depth_attachment())
             .with_settings(
                 gl::DrawSettings::default()
@@ -246,7 +246,7 @@ impl Demo {
                 light_depth_map: self
                     .light_depth_map
                     .as_comparison_sampler(gl::Sampler2dSettings::linear(), gl::Comparison::Less),
-            })?
+            })
             .with_settings(
                 gl::DrawSettings::default()
                     .with_clear_color(glam::Vec4::ONE.into())
@@ -258,7 +258,7 @@ impl Demo {
 
         self.gl
             .program(flat_pass::vertex_shader, flat_pass::fragment_shader)
-            .with_uniforms(self.camera_buffer.as_binding())?
+            .with_uniforms(self.camera_buffer.as_binding())
             .with_settings(
                 gl::DrawSettings::default()
                     .with_depth_test(gl::Comparison::Less)
@@ -275,7 +275,7 @@ impl Demo {
             .with_uniforms(
                 self.light_depth_map
                     .as_color_sampler(gl::Sampler2dSettings::default()),
-            )?
+            )
             .draw(
                 self.debug_vertices
                     .as_vertex_spec(gl::PrimitiveMode::Triangles)

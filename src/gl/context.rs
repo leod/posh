@@ -18,9 +18,9 @@ use crate::{
 
 use super::{
     program::{DrawBuilder, DrawBuilderWithUniforms},
-    raw, BufferError, BufferUsage, Caps, ColorImage, ColorTexture2d, ContextError, DepthImage,
-    DepthTexture2d, Element, ElementBuffer, Program, ProgramError, TextureError, UniformBuffer,
-    VertexBuffer,
+    raw, BufferError, BufferUsage, Caps, ColorImage, ColorTexture2d, ContextError, CreateError,
+    DepthImage, DepthTexture2d, DrawError, Element, ElementBuffer, Program, ProgramError,
+    TextureError, UniformBuffer, VertexBuffer,
 };
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -96,10 +96,7 @@ where
     FSig: FsSig<C = (), W = VSig::W>,
     FFunc: FsFunc<FSig>,
 {
-    pub fn with_uniforms<U>(
-        self,
-        uniforms: U,
-    ) -> Result<DrawBuilderWithUniforms<U::Sl, VSig::V, FSig::F>, ProgramError>
+    pub fn with_uniforms<U>(self, uniforms: U) -> DrawBuilderWithUniforms<U::Sl, VSig::V, FSig::F>
     where
         U: UniformInterface<Gl>,
         U::Sl: UniformUnion<VSig::U, FSig::U> + UniformInterface<Sl, Gl = U> + 'static,
@@ -112,15 +109,17 @@ where
                 &self.gl.raw,
                 self.vertex_shader,
                 self.fragment_shader,
-            )?;
+            );
 
         let inner = DrawBuilder {
-            raw: program.raw().clone(),
+            raw: program
+                .map(|program| program.raw().clone())
+                .map_err(|e| DrawError::Create(CreateError::Program(e))),
             settings: Default::default(),
             _phantom: PhantomData,
         };
 
-        Ok(DrawBuilderWithUniforms { inner, uniforms })
+        DrawBuilderWithUniforms { inner, uniforms }
     }
 
     // TODO: Also needs `with_framebuffer` and `with_settings`.
