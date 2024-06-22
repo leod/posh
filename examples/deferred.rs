@@ -232,11 +232,11 @@ impl Demo {
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less),
             )
-            .draw(gl::VertexSpec::new(gl::PrimitiveMode::Triangles).with_vertex_range(0..36))?;
+            .draw(gl::PrimitiveMode::Triangles.as_vertex_spec_with_range(0..36))?;
 
         self.present_program
             .with_uniforms(self.scene_attachments.as_scene_samplers())
-            .draw(gl::VertexSpec::new(gl::PrimitiveMode::Triangles).with_vertex_range(0..6))?;
+            .draw(gl::PrimitiveMode::Triangles.as_vertex_spec_with_range(0..6))?;
 
         Ok(())
     }

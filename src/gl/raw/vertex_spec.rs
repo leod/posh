@@ -63,6 +63,13 @@ impl PrimitiveMode {
             TriangleFan => glow::TRIANGLE_FAN,
         }
     }
+
+    pub fn as_vertex_spec_with_range(
+        self,
+        vertex_range: Range<usize>,
+    ) -> crate::gl::VertexSpec<()> {
+        crate::gl::VertexSpec::new(self).with_vertex_range(vertex_range)
+    }
 }
 
 // TODO: VertexBlockDef should eventually be split into program definition and
