@@ -77,18 +77,13 @@ mod present_pass {
         input: sl::FsInput<sl::Vec2>,
     ) -> sl::Vec4 {
         let flip = uniforms.state.flip;
-        let coords = sl::branch(
-            flip.eq(1u32),
-            sl::branch(
-                dither(
-                    input.fragment_coord.xy(),
-                    (uniforms.state.time * 0.3).cos().powf(2.0),
-                ),
-                input.discard::<sl::Vec2>(),
-                input.interpolant,
-            ),
-            input.interpolant,
-        );
+        let dithered_coords = dither(
+            input.fragment_coord.xy(),
+            (uniforms.state.time * 0.3).cos().powf(2.0),
+        )
+        .branch(input.discard::<sl::Vec2>(), input.interpolant);
+
+        let coords = flip.eq(1u32).branch(dithered_coords, input.interpolant);
 
         uniforms.scene.sample(coords)
     }

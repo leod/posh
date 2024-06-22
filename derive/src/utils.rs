@@ -165,7 +165,9 @@ pub fn specialize_field_types(
             }
 
             let Some(trait_path) = associated_type_to_trait(&i.path.segments[1].ident.to_string())
-            else { return; };
+            else {
+                return;
+            };
 
             i.qself = Some(QSelf {
                 lt_token: Token![<](first_segment.span()),

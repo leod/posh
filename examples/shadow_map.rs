@@ -116,11 +116,7 @@ mod scene_pass {
 
         let is_inside = sl::all([uvw.x.ge(0.0), uvw.x.le(1.0), uvw.y.ge(0.0), uvw.y.le(1.0)]);
 
-        sl::branch(
-            is_inside,
-            light_depth_map.sample_compare(uvw.xy(), uvw.z),
-            0.0,
-        )
+        is_inside.branch(light_depth_map.sample_compare(uvw.xy(), uvw.z), 0.0)
     }
 
     pub fn fragment_shader(

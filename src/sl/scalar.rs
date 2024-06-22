@@ -338,6 +338,25 @@ impl Bool {
     pub fn as_u32(self) -> U32 {
         cast(self)
     }
+
+    pub fn branch<V: Value>(self, yes: impl ToSl<Output = V>, no: impl ToSl<Output = V>) -> V {
+        let ty = V::ty();
+        let cond = self.to_sl().expr();
+        let yes = yes.to_sl().expr();
+        let no = no.to_sl().expr();
+
+        let expr = Expr::Branch { ty, cond, yes, no };
+
+        V::from_expr(expr)
+    }
+
+    pub fn and(self, right: impl ToSl<Output = Self>) -> Self {
+        binary(self, BinaryOp::And, right)
+    }
+
+    pub fn or(self, right: impl ToSl<Output = Self>) -> Self {
+        binary(self, BinaryOp::Or, right)
+    }
 }
 
 impl Not for Bool {
