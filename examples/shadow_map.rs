@@ -222,13 +222,13 @@ impl Demo {
             .with_element_data(self.scene_elements.as_binding());
 
         self.gl
-            .get_program(
+            .program(
                 |light: Light<Sl>, vertex: SceneVertex<Sl>| {
                     light.camera.world_to_clip(vertex.world_pos)
                 },
                 |()| (),
             )
-            .with_uniforms(self.light_buffer.as_binding())?
+            .with_uniforms(self.light_buffer.as_binding())
             .with_framebuffer(self.light_depth_map.as_depth_attachment())
             .with_settings(
                 gl::DrawSettings::default()
@@ -239,14 +239,14 @@ impl Demo {
             .draw(scene_vertex_spec.clone())?;
 
         self.gl
-            .get_program(scene_pass::vertex_shader, scene_pass::fragment_shader)
+            .program(scene_pass::vertex_shader, scene_pass::fragment_shader)
             .with_uniforms(SceneUniforms {
                 camera: self.camera_buffer.as_binding(),
                 light: self.light_buffer.as_binding(),
                 light_depth_map: self
                     .light_depth_map
                     .as_comparison_sampler(gl::Sampler2dSettings::linear(), gl::Comparison::Less),
-            })?
+            })
             .with_settings(
                 gl::DrawSettings::default()
                     .with_clear_color(glam::Vec4::ONE.into())
@@ -257,8 +257,8 @@ impl Demo {
             .draw(scene_vertex_spec.clone())?;
 
         self.gl
-            .get_program(flat_pass::vertex_shader, flat_pass::fragment_shader)
-            .with_uniforms(self.camera_buffer.as_binding())?
+            .program(flat_pass::vertex_shader, flat_pass::fragment_shader)
+            .with_uniforms(self.camera_buffer.as_binding())
             .with_settings(
                 gl::DrawSettings::default()
                     .with_depth_test(gl::Comparison::Less)
@@ -271,11 +271,11 @@ impl Demo {
             )?;
 
         self.gl
-            .get_program(debug_pass::vertex_shader, debug_pass::fragment_shader)
+            .program(debug_pass::vertex_shader, debug_pass::fragment_shader)
             .with_uniforms(
                 self.light_depth_map
                     .as_color_sampler(gl::Sampler2dSettings::default()),
-            )?
+            )
             .draw(
                 self.debug_vertices
                     .as_vertex_spec(gl::PrimitiveMode::Triangles)

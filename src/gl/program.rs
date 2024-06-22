@@ -11,13 +11,15 @@ use super::{
     UniformBufferBinding, VertexSpec,
 };
 
+type RawProgram = Result<Rc<raw::Program>, DrawError>;
+
 pub struct DrawBuilder<U, V, F>
 where
     U: UniformInterface<Sl>,
     V: VsInterface<Sl>,
     F: FsInterface<Sl>,
 {
-    pub(crate) raw: Rc<raw::Program>,
+    pub(crate) raw: RawProgram,
     pub(crate) settings: DrawSettings,
     pub(crate) _phantom: PhantomData<(U, V, F)>,
 }
@@ -232,8 +234,10 @@ where
         // FIXME: Safety: check that all vertex buffers are large enough for the
         // values in the element buffer (if we have one).
 
+        let raw = self.inner.raw.clone()?;
+
         unsafe {
-            self.inner.raw.draw(
+            raw.draw(
                 &uniform_visitor.raw_uniform_buffers,
                 &uniform_visitor.raw_samplers,
                 &vertex_spec.raw(),
@@ -271,7 +275,7 @@ where
     #[must_use]
     pub fn with_settings(&self, settings: DrawSettings) -> DrawBuilder<U, V, F> {
         DrawBuilder {
-            raw: self.raw.clone(),
+            raw: Ok(self.raw.clone()),
             settings,
             _phantom: PhantomData,
         }
