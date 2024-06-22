@@ -231,7 +231,7 @@ impl Demo {
             .with_uniforms(self.light_buffer.as_binding())
             .with_framebuffer(self.light_depth_map.as_depth_attachment())
             .with_settings(
-                gl::DrawSettings::default()
+                gl::DrawSettings::new()
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less)
                     .with_cull_face(gl::CullFace::Back),
@@ -248,7 +248,7 @@ impl Demo {
                     .as_comparison_sampler(gl::Sampler2dSettings::linear(), gl::Comparison::Less),
             })
             .with_settings(
-                gl::DrawSettings::default()
+                gl::DrawSettings::new()
                     .with_clear_color(glam::Vec4::ONE.into())
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less)
@@ -260,7 +260,7 @@ impl Demo {
             .program(flat_pass::vertex_shader, flat_pass::fragment_shader)
             .with_uniforms(self.camera_buffer.as_binding())
             .with_settings(
-                gl::DrawSettings::default()
+                gl::DrawSettings::new()
                     .with_depth_test(gl::Comparison::Less)
                     .with_cull_face(gl::CullFace::Back),
             )

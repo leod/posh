@@ -227,7 +227,7 @@ impl Demo {
                 self.depth_texture.as_depth_attachment(),
             ))
             .with_settings(
-                gl::DrawSettings::default()
+                gl::DrawSettings::new()
                     .with_clear_color([0.0; 4])
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less),

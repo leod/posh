@@ -284,7 +284,7 @@ where
     #[must_use]
     pub fn with_uniforms(&self, uniforms: U::Gl) -> DrawBuilderWithUniforms<U, V, F> {
         DrawBuilderWithUniforms {
-            inner: self.with_settings(DrawSettings::default()),
+            inner: self.with_settings(DrawSettings::new()),
             uniforms,
         }
     }
@@ -295,7 +295,7 @@ where
         framebuffer: impl Into<Framebuffer<F>>,
     ) -> DrawBuilderWithFramebuffer<U, V, F> {
         DrawBuilderWithFramebuffer {
-            inner: self.with_settings(DrawSettings::default()),
+            inner: self.with_settings(DrawSettings::new()),
             framebuffer: framebuffer.into(),
         }
     }
@@ -309,8 +309,7 @@ where
         &self,
         vertex_spec: VertexSpec<V>,
     ) -> Result<DrawBuilder<(), V, sl::Vec4>, DrawError> {
-        self.with_settings(DrawSettings::default())
-            .draw(vertex_spec)
+        self.with_settings(DrawSettings::new()).draw(vertex_spec)
     }
 }
 

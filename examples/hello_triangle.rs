@@ -67,7 +67,7 @@ impl Demo {
 
         self.program
             .with_uniforms(self.globals.as_binding())
-            .with_settings(gl::DrawSettings::default().with_clear_color([0.1, 0.2, 0.3, 1.0]))
+            .with_settings(gl::DrawSettings::new().with_clear_color([0.1, 0.2, 0.3, 1.0]))
             .draw(self.vertices.as_vertex_spec(gl::PrimitiveMode::Triangles))?;
 
         Ok(())

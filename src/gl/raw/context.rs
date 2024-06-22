@@ -80,7 +80,7 @@ impl Context {
         let shared = Rc::new(ContextShared {
             gl,
             caps,
-            draw_settings: Cell::new(DrawSettings::default()),
+            draw_settings: Cell::new(DrawSettings::new()),
             draw_fbo,
             default_framebuffer_size: Cell::new(default_framebuffer_size),
         });
