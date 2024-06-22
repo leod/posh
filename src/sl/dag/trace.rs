@@ -22,10 +22,6 @@ impl Trace {
         Trace::Id(id)
     }
 
-    pub(crate) const fn c(f: fn() -> Rc<Expr>) -> Self {
-        Trace::Const(f)
-    }
-
     pub fn expr(&self) -> Rc<Expr> {
         use Trace::*;
 
@@ -33,6 +29,14 @@ impl Trace {
             Id(id) => REGISTRY.with(|reg| reg.borrow().get(*id)),
             Const(f) => f(),
         }
+    }
+
+    pub(crate) const fn c(f: fn() -> Rc<Expr>) -> Self {
+        Trace::Const(f)
+    }
+
+    pub(crate) fn clear_cache() {
+        REGISTRY.with(|reg| *reg.borrow_mut() = Registry::default());
     }
 }
 

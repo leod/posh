@@ -12,7 +12,7 @@ use crate::{
 
 use super::{
     codegen,
-    dag::{Expr, SamplerType, Type},
+    dag::{Expr, SamplerType, Trace, Type},
     primitives::value_arg,
     program_def::{ProgramDef, UniformBlockDef, UniformSamplerDef, VertexBlockDef},
     sig::{FromFsInput, FromVsInput, VsFunc, VsSig},
@@ -189,6 +189,8 @@ where
 
         source
     };
+
+    Trace::clear_cache();
 
     ProgramDef {
         uniform_block_defs,
