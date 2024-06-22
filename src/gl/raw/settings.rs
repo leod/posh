@@ -348,6 +348,10 @@ impl Default for DrawSettings {
 }
 
 impl DrawSettings {
+    pub fn new() -> Self {
+        Default::default()
+    }
+
     pub(super) fn set_delta(
         &self,
         gl: &glow::Context,

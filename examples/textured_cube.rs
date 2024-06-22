@@ -105,7 +105,7 @@ impl Demo {
                     .as_color_sampler(gl::Sampler2dSettings::linear()),
             ))
             .with_settings(
-                gl::DrawSettings::default()
+                gl::DrawSettings::new()
                     .with_clear_color([0.1, 0.2, 0.3, 1.0])
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less),
