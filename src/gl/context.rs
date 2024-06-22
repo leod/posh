@@ -269,7 +269,7 @@ impl Context {
         Ok(Program::unchecked_from_raw(Rc::new(raw)))
     }
 
-    pub fn get_program<VSig, VFunc, FSig, FFunc>(
+    pub fn program<VSig, VFunc, FSig, FFunc>(
         &self,
         vertex_shader: VFunc,
         fragment_shader: FFunc,

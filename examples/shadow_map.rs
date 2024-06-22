@@ -222,7 +222,7 @@ impl Demo {
             .with_element_data(self.scene_elements.as_binding());
 
         self.gl
-            .get_program(
+            .program(
                 |light: Light<Sl>, vertex: SceneVertex<Sl>| {
                     light.camera.world_to_clip(vertex.world_pos)
                 },
@@ -239,7 +239,7 @@ impl Demo {
             .draw(scene_vertex_spec.clone())?;
 
         self.gl
-            .get_program(scene_pass::vertex_shader, scene_pass::fragment_shader)
+            .program(scene_pass::vertex_shader, scene_pass::fragment_shader)
             .with_uniforms(SceneUniforms {
                 camera: self.camera_buffer.as_binding(),
                 light: self.light_buffer.as_binding(),
@@ -257,7 +257,7 @@ impl Demo {
             .draw(scene_vertex_spec.clone())?;
 
         self.gl
-            .get_program(flat_pass::vertex_shader, flat_pass::fragment_shader)
+            .program(flat_pass::vertex_shader, flat_pass::fragment_shader)
             .with_uniforms(self.camera_buffer.as_binding())?
             .with_settings(
                 gl::DrawSettings::default()
@@ -271,7 +271,7 @@ impl Demo {
             )?;
 
         self.gl
-            .get_program(debug_pass::vertex_shader, debug_pass::fragment_shader)
+            .program(debug_pass::vertex_shader, debug_pass::fragment_shader)
             .with_uniforms(
                 self.light_depth_map
                     .as_color_sampler(gl::Sampler2dSettings::default()),
