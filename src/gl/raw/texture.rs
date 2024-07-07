@@ -86,6 +86,20 @@ impl Texture2d {
         let slice = data.as_slice()?;
 
         let gl = ctx.gl();
+
+        // OpenGL expects each row of image data to have a specific alignment.
+        // The default row alignment is 4. However, in our case, we tightly pack
+        // image data, so we specify a row alignment is 1.
+        //
+        // Note that this alignment refers to the image data that we provide for
+        // the upload. It does not affect how the image is stored on the GPU.
+        //
+        // See also:
+        // <https://www.khronos.org/opengl/wiki/Pixel_Transfer#Pixel_layout>.
+        unsafe {
+            gl.pixel_store_i32(glow::UNPACK_ALIGNMENT, 1);
+        }
+
         let id = unsafe { gl.create_texture() }.map_err(TextureError::ObjectCreation)?;
 
         unsafe { gl.bind_texture(glow::TEXTURE_2D, Some(id)) };
