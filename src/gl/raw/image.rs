@@ -43,7 +43,7 @@ impl ImageFormat {
             RgInteger => 2,
             RedInteger => 1,
             Depth => 1,
-            DepthStencil => 2,
+            DepthStencil => 1,
         }
     }
 }
@@ -55,6 +55,8 @@ impl ImageFormat {
 pub enum ImageComponentType {
     U8,
     I8,
+    U16,
+    U24U8,
     F16,
     F32,
 }
@@ -66,6 +68,8 @@ impl ImageComponentType {
         match self {
             U8 => glow::UNSIGNED_BYTE,
             I8 => glow::BYTE,
+            U16 => glow::UNSIGNED_SHORT,
+            U24U8 => glow::UNSIGNED_INT_24_8,
             F16 => glow::HALF_FLOAT,
             F32 => glow::FLOAT,
         }
@@ -77,6 +81,8 @@ impl ImageComponentType {
         match self {
             U8 => 1,
             I8 => 1,
+            U16 => 2,
+            U24U8 => 4,
             F16 => 2,
             F32 => 4,
         }
@@ -103,7 +109,9 @@ pub enum ImageInternalFormat {
     RI8Snorm,
     RF16,
     RF32,
+    DepthU16,
     DepthF32,
+    DepthU24StencilU8,
 }
 
 impl ImageInternalFormat {
@@ -129,7 +137,9 @@ impl ImageInternalFormat {
             RI8Snorm => glow::R8_SNORM,
             RF16 => glow::R16F,
             RF32 => glow::R32F,
+            DepthU16 => glow::DEPTH_COMPONENT16,
             DepthF32 => glow::DEPTH_COMPONENT32F,
+            DepthU24StencilU8 => glow::DEPTH24_STENCIL8,
         }
     }
 
@@ -141,7 +151,9 @@ impl ImageInternalFormat {
             RgbU8 | RgbU8Gamma | RgbI8Snorm | RgbF16 | RgbF32 => ImageFormat::Rgb,
             RgU8 | RgI8Snorm | RgF16 | RgF32 => ImageFormat::Rg,
             RU8 | RI8Snorm | RF16 | RF32 => ImageFormat::R,
+            DepthU16 => ImageFormat::Depth,
             DepthF32 => ImageFormat::Depth,
+            DepthU24StencilU8 => ImageFormat::DepthStencil,
         }
     }
 
@@ -155,7 +167,9 @@ impl ImageInternalFormat {
             RgbaI8Snorm | RgbI8Snorm | RgI8Snorm | RI8Snorm => ty == ImageComponentType::I8,
             RgbaF16 | RgbF16 | RgF16 | RF16 => ty == ImageComponentType::F16,
             RgbaF32 | RgbF32 | RgF32 | RF32 => ty == ImageComponentType::F32,
+            DepthU16 => ty == ImageComponentType::U16,
             DepthF32 => ty == ImageComponentType::F32,
+            DepthU24StencilU8 => ty == ImageComponentType::U24U8,
         }
     }
 
@@ -181,7 +195,9 @@ impl ImageInternalFormat {
                 true
             }
             RgbF32 => false,
+            DepthU16 => false,
             DepthF32 => false,
+            DepthU24StencilU8 => false,
         }
     }
 
@@ -191,15 +207,22 @@ impl ImageInternalFormat {
         // FIXME: This should rely on caps (maybe).
 
         match self {
+            DepthU16 => true,
             DepthF32 => true,
+            DepthU24StencilU8 => true,
             _ => false,
         }
     }
 
     pub fn is_stencil_renderable(&self) -> bool {
+        use ImageInternalFormat::*;
+
         // FIXME: This should rely on caps (maybe).
 
-        false
+        match self {
+            DepthU24StencilU8 => true,
+            _ => false,
+        }
     }
 }
 
