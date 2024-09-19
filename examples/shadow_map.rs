@@ -185,7 +185,8 @@ impl Demo {
     pub fn new(gl: gl::Context) -> Result<Self, gl::CreateError> {
         use gl::BufferUsage::{StaticDraw, StreamDraw};
 
-        let light_depth_image = gl::DepthImage::f32_zero([DEPTH_MAP_SIZE, DEPTH_MAP_SIZE]);
+        let light_depth_image =
+            gl::DepthImage::u24_depth_u8_stencil_zero([DEPTH_MAP_SIZE, DEPTH_MAP_SIZE]);
 
         Ok(Demo {
             gl: gl.clone(),

@@ -429,12 +429,45 @@ impl<'a> DepthImage<'a> {
         }
     }
 
+    pub fn u16_slice(size: [u32; 2], data: &'a [u16]) -> Self {
+        DepthImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::U16,
+                internal_format: ImageInternalFormat::DepthU16,
+                data: Some(bytemuck::cast_slice(data)),
+            },
+        }
+    }
+
     pub fn f32_zero(size: [u32; 2]) -> Self {
         DepthImage {
             raw: raw::Image {
                 size,
                 ty: ImageComponentType::F32,
                 internal_format: ImageInternalFormat::DepthF32,
+                data: None,
+            },
+        }
+    }
+
+    pub fn u16_zero(size: [u32; 2]) -> Self {
+        DepthImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::U16,
+                internal_format: ImageInternalFormat::DepthU16,
+                data: None,
+            },
+        }
+    }
+
+    pub fn u24_depth_u8_stencil_zero(size: [u32; 2]) -> Self {
+        DepthImage {
+            raw: raw::Image {
+                size,
+                ty: ImageComponentType::U24U8,
+                internal_format: ImageInternalFormat::DepthU24StencilU8,
                 data: None,
             },
         }
