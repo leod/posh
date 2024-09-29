@@ -163,14 +163,11 @@ mod present_pass {
             .world_pos
             .sample(sl::vec2((uv.x - 1.0) * 3.0, uv.y));
 
-        sl::branches(
-            [
-                (uv.x.lt(1.0 / 3.0), albedo),
-                (uv.x.lt(2.0 / 3.0), world_normal),
-            ],
-            world_pos,
-        )
-        .extend(1.0)
+        uv.x.lt(1.0 / 3.0)
+            .then(albedo)
+            .else_then(uv.x.lt(2.0 / 3.0), world_normal)
+            .otherwise(world_pos)
+            .extend(1.0)
     }
 }
 

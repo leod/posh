@@ -7,9 +7,10 @@ use std::{
 use crate::ToSl;
 
 use super::{
+    branches,
     dag::{BinaryOp, Expr, Trace, Type, UnaryOp},
     primitives::{binary, cast, unary, value_arg},
-    Object, Value, ValueNonArray,
+    FsInput, Object, Value, ValueNonArray,
 };
 
 // Maps from logical scalar type to physical scalar type.
@@ -350,6 +351,16 @@ impl Bool {
         V::from_expr(expr)
     }
 
+    pub fn then<V: Value>(self, yes: impl ToSl<Output = V>) -> Branches<V> {
+        Branches {
+            arms: vec![(self, yes.to_sl())],
+        }
+    }
+
+    pub fn then_discard<V: Value, W>(self, input: FsInput<W>) -> Branches<V> {
+        self.then(input.discard::<V>())
+    }
+
     pub fn and(self, right: impl ToSl<Output = Self>) -> Self {
         binary(self, BinaryOp::And, right)
     }
@@ -364,5 +375,33 @@ impl Not for Bool {
 
     fn not(self) -> Self {
         unary(UnaryOp::Not, self)
+    }
+}
+
+pub struct Branches<V> {
+    arms: Vec<(Bool, V)>,
+}
+
+impl<V> Branches<V>
+where
+    V: Value,
+{
+    pub fn else_then(self, cond: impl ToSl<Output = Bool>, value: impl ToSl<Output = V>) -> Self {
+        let mut arms = self.arms;
+        arms.push((cond.to_sl(), value.to_sl()));
+
+        Self { arms }
+    }
+
+    pub fn else_then_discard<W>(self, cond: impl ToSl<Output = Bool>, input: FsInput<W>) -> Self {
+        self.else_then(cond, input.discard::<V>())
+    }
+
+    pub fn otherwise(self, default: impl ToSl<Output = V>) -> V {
+        branches(self.arms, default)
+    }
+
+    pub fn otherwise_discard<W>(self, input: FsInput<W>) -> V {
+        self.otherwise(input.discard::<V>())
     }
 }
