@@ -51,6 +51,13 @@ impl DepthAttachment {
     pub(super) fn from_raw(raw: raw::Attachment) -> Self {
         Self { raw }
     }
+
+    pub fn with_color<F: FsInterface<Sl>>(&self, color: F::Gl) -> Framebuffer<F> {
+        Framebuffer(FramebufferInternal::ColorDepth {
+            color,
+            depth: self.clone(),
+        })
+    }
 }
 
 impl From<DepthAttachment> for Framebuffer<()> {
