@@ -81,9 +81,13 @@ mod present_pass {
             input.fragment_coord.xy(),
             (uniforms.state.time * 0.3).cos().powf(2.0),
         )
-        .branch(input.discard::<sl::Vec2>(), input.interpolant);
+        .then_discard(input)
+        .otherwise(input.interpolant);
 
-        let coords = flip.eq(1u32).branch(dithered_coords, input.interpolant);
+        let coords = flip
+            .eq(1u32)
+            .then(dithered_coords)
+            .otherwise(input.interpolant);
 
         uniforms.scene.sample(coords)
     }
