@@ -38,12 +38,12 @@ mod scene_pass {
 
         sl::VsOutput {
             clip_pos: vertex.extend(0.0).extend(1.0),
-            interpolant: vertex,
+            interp: vertex,
         }
     }
 
-    pub fn fragment_shader(state: State<Sl>, interpolant: sl::Vec2) -> sl::Vec4 {
-        let rg = (interpolant + state.time).cos().powf(2.0);
+    pub fn fragment_shader(state: State<Sl>, interp: sl::Vec2) -> sl::Vec4 {
+        let rg = (interp + state.time).cos().powf(2.0);
 
         sl::vec4(rg.x, rg.y, 0.5, 1.0)
     }
@@ -57,7 +57,7 @@ mod present_pass {
     pub fn vertex_shader(vertex: PresentVertex<Sl>) -> sl::VsOutput<sl::Vec2> {
         sl::VsOutput {
             clip_pos: vertex.pos.extend(0.0).extend(1.0),
-            interpolant: vertex.tex_coords,
+            interp: vertex.tex_coords,
         }
     }
 
@@ -82,12 +82,9 @@ mod present_pass {
             (uniforms.state.time * 0.3).cos().powf(2.0),
         )
         .then_discard(input)
-        .otherwise(input.interpolant);
+        .otherwise(input.interp);
 
-        let coords = flip
-            .eq(1u32)
-            .then(dithered_coords)
-            .otherwise(input.interpolant);
+        let coords = flip.eq(1u32).then(dithered_coords).otherwise(input.interp);
 
         uniforms.scene.sample(coords)
     }

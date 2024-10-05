@@ -31,15 +31,15 @@ pub struct VsInput<V> {
 #[derive(Debug, Copy, Clone)]
 pub struct FullVsOutput<W> {
     pub clip_pos: Vec4,
-    pub interpolant: W,
+    pub interp: W,
     pub point_size: Option<F32>,
 }
 
-/// Per-vertex position and interpolant output computed by a vertex shader.
+/// Per-vertex position and interp output computed by a vertex shader.
 #[derive(Debug, Copy, Clone)]
 pub struct VsOutput<W> {
     pub clip_pos: Vec4,
-    pub interpolant: W,
+    pub interp: W,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -48,7 +48,7 @@ pub struct Derivatives(pub(super) ());
 /// Per-fragment input given to a fragment shader.
 #[derive(Debug, Copy, Clone)]
 pub struct FsInput<W> {
-    pub interpolant: W,
+    pub interp: W,
     pub fragment_coord: Vec4,
     pub front_facing: Bool,
     pub point_coord: Vec2,
@@ -114,7 +114,7 @@ impl<V: Interpolant> IntoFullVsOutput for VsOutput<V> {
     fn into_full_vs_output(self) -> FullVsOutput<V> {
         FullVsOutput {
             clip_pos: self.clip_pos,
-            interpolant: self.interpolant,
+            interp: self.interp,
             point_size: None,
         }
     }
@@ -126,7 +126,7 @@ impl IntoFullVsOutput for Vec4 {
     fn into_full_vs_output(self) -> FullVsOutput<()> {
         FullVsOutput {
             clip_pos: self,
-            interpolant: (),
+            interp: (),
             point_size: None,
         }
     }
@@ -151,7 +151,7 @@ impl<W: Interpolant> FromFsInput for W {
     type W = Self;
 
     fn from_fs_input(input: FsInput<Self>) -> Self {
-        input.interpolant
+        input.interp
     }
 }
 

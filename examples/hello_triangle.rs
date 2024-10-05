@@ -20,12 +20,12 @@ fn vertex_shader(globals: Globals<Sl>, vertex: sl::Vec2) -> sl::VsOutput<sl::Vec
 
     sl::VsOutput {
         clip_pos: sl::vec4(position.x, position.y, 0.0, 1.0),
-        interpolant: vertex,
+        interp: vertex,
     }
 }
 
-fn fragment_shader(globals: Globals<Sl>, interpolant: sl::Vec2) -> sl::Vec4 {
-    let rg = (interpolant + globals.time).cos().powf(2.0);
+fn fragment_shader(globals: Globals<Sl>, interp: sl::Vec2) -> sl::Vec4 {
+    let rg = (interp + globals.time).cos().powf(2.0);
 
     sl::vec4(rg.x, rg.y, 0.5, 1.0)
 }

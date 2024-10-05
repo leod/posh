@@ -81,7 +81,7 @@ where
             .call(consts, uniforms.lhs(), FromVsInput::from_vs_input(input()))
             .into_full_vs_output();
 
-        let varying_outputs = output.interpolant.shader_outputs("vertex_output");
+        let varying_outputs = output.interp.shader_outputs("vertex_output");
         let vertex_block_defs = {
             // TODO: Remove hardcoded path names.
             let mut visitor = CollectVertexBlocks::default();
@@ -138,7 +138,7 @@ where
 
     let fragment_shader_source = {
         let input = FsInput {
-            interpolant: <VSig as VsSig>::W::shader_input("vertex_output"),
+            interp: <VSig as VsSig>::W::shader_input("vertex_output"),
             fragment_coord: value_arg("gl_FragCoord"),
             front_facing: value_arg("gl_FrontFacing"),
             point_coord: value_arg("gl_PointCoord"),

@@ -38,7 +38,7 @@ fn vertex_shader(camera: Camera<Sl>, vertex: VsInput<Sl>) -> sl::VsOutput<sl::Ve
             * camera.world_to_view
             * vertex.instance.model_to_view
             * vertex.model_pos.extend(1.0),
-        interpolant: vertex.instance.color,
+        interp: vertex.instance.color,
     }
 }
 

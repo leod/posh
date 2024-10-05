@@ -73,7 +73,7 @@ impl VsInterfaceDom for Sl {
 /// ) -> sl::VsOutput<sl::Vec4> {
 ///     sl::VsOutput {
 ///         clip_pos: (vertex.position + vertex.material.normal * 1.3).extend(1.0),
-///         interpolant: vertex.material.color,
+///         interp: vertex.material.color,
 ///     }
 /// }
 /// ```

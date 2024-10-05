@@ -115,7 +115,7 @@ mod scene_pass {
 
         sl::VsOutput {
             clip_pos: screen_pos,
-            interpolant: SceneAttachments {
+            interp: SceneAttachments {
                 albedo: sl::vec3(1.0, 0.0, 0.0),
                 world_pos,
                 world_normal,
@@ -123,8 +123,8 @@ mod scene_pass {
         }
     }
 
-    pub fn fragment_shader(_: (), interpolant: SceneAttachments<Sl>) -> SceneAttachments<Sl> {
-        interpolant
+    pub fn fragment_shader(_: (), interp: SceneAttachments<Sl>) -> SceneAttachments<Sl> {
+        interp
     }
 }
 
@@ -147,7 +147,7 @@ mod present_pass {
 
         sl::VsOutput {
             clip_pos: position.extend(0.0).extend(1.0),
-            interpolant: (position + 1.0) / 2.0,
+            interp: (position + 1.0) / 2.0,
         }
     }
 

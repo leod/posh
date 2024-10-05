@@ -47,7 +47,7 @@ fn vertex_shader(uniforms: Uniforms<Sl>, vertex: Vertex<Sl>) -> sl::VsOutput<sl:
 
     sl::VsOutput {
         clip_pos: position,
-        interpolant: vertex.tex_coords,
+        interp: vertex.tex_coords,
     }
 }
 

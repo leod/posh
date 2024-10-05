@@ -45,7 +45,7 @@ pub fn derive_fs_interface(input: TokenStream) -> TokenStream {
 
 /// Derives `Interpolant` for a struct.
 #[proc_macro_derive(Interpolant)]
-pub fn derive_varying(input: TokenStream) -> TokenStream {
+pub fn derive_interpolant(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match interpolant::derive(input) {
         Ok(ts) => ts,
@@ -54,8 +54,7 @@ pub fn derive_varying(input: TokenStream) -> TokenStream {
     .into()
 }
 
-/// Derives `Uniform` for a struct that is generic in
-/// `UniformDom`.
+/// Derives `Uniform` for a struct that is generic in `UniformDom`.
 #[proc_macro_derive(Uniform)]
 pub fn derive_uniform_interface(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
