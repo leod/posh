@@ -219,7 +219,7 @@ impl Demo {
 
         self.scene_program
             .with_uniforms(self.globals.as_binding())
-            .with_framebuffer(gl::Framebuffer::color_depth(
+            .with_framebuffer(gl::Framebuffer::new_color_depth(
                 self.scene_attachments.clone(),
                 self.depth_texture.as_depth_attachment(),
             ))

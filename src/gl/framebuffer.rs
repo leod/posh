@@ -27,6 +27,15 @@ impl<S> ColorAttachment<S> {
     }
 }
 
+impl<S: ColorSample> ColorAttachment<S> {
+    pub fn with_depth(&self, depth: DepthAttachment) -> Framebuffer<S> {
+        Framebuffer(FramebufferInternal::ColorDepth {
+            color: self.clone(),
+            depth,
+        })
+    }
+}
+
 impl<S: ColorSample> From<ColorAttachment<S>> for Framebuffer<S> {
     fn from(value: ColorAttachment<S>) -> Self {
         Framebuffer(FramebufferInternal::Color(value))
@@ -65,11 +74,11 @@ enum FramebufferInternal<F: FsInterface<Sl>> {
 pub struct Framebuffer<F: FsInterface<Sl> = sl::Vec4>(FramebufferInternal<F>);
 
 impl<F: FsInterface<Sl>> Framebuffer<F> {
-    pub fn color(color: F::Gl) -> Self {
+    pub fn new_color(color: F::Gl) -> Self {
         Framebuffer(FramebufferInternal::Color(color))
     }
 
-    pub fn color_depth(color: F::Gl, depth: DepthAttachment) -> Self {
+    pub fn new_color_depth(color: F::Gl, depth: DepthAttachment) -> Self {
         Framebuffer(FramebufferInternal::ColorDepth { color, depth })
     }
 
@@ -94,7 +103,7 @@ impl<F: FsInterface<Sl>> Framebuffer<F> {
 }
 
 impl Framebuffer<()> {
-    pub fn depth(depth: DepthAttachment) -> Self {
+    pub fn new_depth(depth: DepthAttachment) -> Self {
         Framebuffer(FramebufferInternal::Depth(depth))
     }
 }
