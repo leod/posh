@@ -3,7 +3,7 @@ use std::{marker::PhantomData, rc::Rc};
 use crate::{
     interface::UniformVisitor,
     sl::{self, ColorSample},
-    Block, FsInterface, Gl, Sl, UniformInterface, VsInterface,
+    Block, FsInterface, Gl, Sl, Uniform, VsInterface,
 };
 
 use super::{
@@ -15,7 +15,7 @@ type RawProgram = Result<Rc<raw::Program>, DrawError>;
 
 pub struct DrawBuilder<U, V, F>
 where
-    U: UniformInterface<Sl>,
+    U: Uniform<Sl>,
     V: VsInterface<Sl>,
     F: FsInterface<Sl>,
 {
@@ -26,7 +26,7 @@ where
 
 impl<U, V, F> DrawBuilder<U, V, F>
 where
-    U: UniformInterface<Sl>,
+    U: Uniform<Sl>,
     V: VsInterface<Sl>,
     F: FsInterface<Sl>,
 {
@@ -75,7 +75,7 @@ where
 
 pub struct DrawBuilderWithUniforms<U, V, F>
 where
-    U: UniformInterface<Sl>,
+    U: Uniform<Sl>,
     V: VsInterface<Sl>,
     F: FsInterface<Sl>,
 {
@@ -85,7 +85,7 @@ where
 
 impl<U, V, F> DrawBuilderWithUniforms<U, V, F>
 where
-    U: UniformInterface<Sl>,
+    U: Uniform<Sl>,
     V: VsInterface<Sl>,
     F: FsInterface<Sl>,
 {
@@ -116,7 +116,7 @@ where
 
 impl<U, V> DrawBuilderWithUniforms<U, V, sl::Vec4>
 where
-    U: UniformInterface<Sl>,
+    U: Uniform<Sl>,
     V: VsInterface<Sl>,
 {
     pub fn draw(self, vertex_spec: VertexSpec<V>) -> Result<Self, DrawError> {
@@ -135,7 +135,7 @@ where
 
 pub struct DrawBuilderWithFramebuffer<U, V, F>
 where
-    U: UniformInterface<Sl>,
+    U: Uniform<Sl>,
     V: VsInterface<Sl>,
     F: FsInterface<Sl>,
 {
@@ -145,7 +145,7 @@ where
 
 impl<U, V, F> DrawBuilderWithFramebuffer<U, V, F>
 where
-    U: UniformInterface<Sl>,
+    U: Uniform<Sl>,
     V: VsInterface<Sl>,
     F: FsInterface<Sl>,
 {
@@ -192,7 +192,7 @@ where
 
 pub struct DrawBuilderWithUniformsAndFramebuffer<U, V, F>
 where
-    U: UniformInterface<Sl>,
+    U: Uniform<Sl>,
     V: VsInterface<Sl>,
     F: FsInterface<Sl>,
 {
@@ -203,7 +203,7 @@ where
 
 impl<U, V, F> DrawBuilderWithUniformsAndFramebuffer<U, V, F>
 where
-    U: UniformInterface<Sl>,
+    U: Uniform<Sl>,
     V: VsInterface<Sl>,
     F: FsInterface<Sl>,
 {
@@ -257,7 +257,7 @@ pub struct Program<U, V, F = sl::Vec4> {
 
 impl<U, V, F> Program<U, V, F>
 where
-    U: UniformInterface<Sl>,
+    U: Uniform<Sl>,
     V: VsInterface<Sl>,
     F: FsInterface<Sl>,
 {

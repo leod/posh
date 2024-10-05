@@ -19,7 +19,7 @@ pub struct UniformBuffer<B> {
 pub struct UniformBufferBinding<B> {
     raw: Rc<raw::Buffer>,
     _phantom: PhantomData<B>,
-    // TODO: UniformInterface buffer slicing.
+    // TODO: Uniform buffer slicing.
 }
 
 impl<B: Block<Gl>> UniformBuffer<B> {

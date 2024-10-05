@@ -3,8 +3,7 @@ mod utils;
 use instant::Instant;
 
 use posh::{
-    gl, sl, Block, BlockDom, FsInterface, FsInterfaceDom, Gl, Sl, UniformInterface,
-    UniformInterfaceDom,
+    gl, sl, Block, BlockDom, FsInterface, FsInterfaceDom, Gl, Sl, Uniform, UniformDom,
 };
 
 const WIDTH: u32 = 1024;
@@ -20,8 +19,8 @@ pub struct Globals<D: BlockDom> {
     time: D::F32,
 }
 
-#[derive(Clone, Copy, UniformInterface)]
-pub struct SceneSamplers<D: UniformInterfaceDom> {
+#[derive(Clone, Copy, Uniform)]
+pub struct SceneSamplers<D: UniformDom> {
     albedo: D::ColorSampler2d<sl::Vec3>,
     world_normal: D::ColorSampler2d<sl::Vec3>,
     world_pos: D::ColorSampler2d<sl::Vec3>,

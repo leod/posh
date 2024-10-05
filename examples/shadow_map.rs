@@ -3,7 +3,7 @@ mod utils;
 use instant::Instant;
 use nanorand::{Rng, WyRand};
 
-use posh::{gl, sl, Block, BlockDom, Gl, Sl, UniformInterface, UniformInterfaceDom};
+use posh::{gl, sl, Block, BlockDom, Gl, Sl, Uniform, UniformDom};
 
 const SCREEN_WIDTH: u32 = 1920;
 const SCREEN_HEIGHT: u32 = 1080;
@@ -42,8 +42,8 @@ pub struct SceneVertex<D: BlockDom> {
     pub color: D::Vec3,
 }
 
-#[derive(Clone, UniformInterface)]
-pub struct SceneUniforms<D: UniformInterfaceDom> {
+#[derive(Clone, Uniform)]
+pub struct SceneUniforms<D: UniformDom> {
     pub camera: D::Block<Camera<Sl>>,
     pub light: D::Block<Light<Sl>>,
     pub light_depth_map: D::ComparisonSampler2d,

@@ -2,7 +2,7 @@ use std::time::Instant;
 
 use image::{io::Reader as ImageReader, EncodableLayout};
 
-use posh::{gl, sl, Block, BlockDom, Gl, Sl, UniformInterface, UniformInterfaceDom};
+use posh::{gl, sl, Block, BlockDom, Gl, Sl, Uniform, UniformDom};
 
 const WIDTH: u32 = 1024;
 const HEIGHT: u32 = 768;
@@ -23,8 +23,8 @@ struct Vertex<D: BlockDom> {
     tex_coords: D::Vec2,
 }
 
-#[derive(UniformInterface)]
-struct Uniforms<D: UniformInterfaceDom> {
+#[derive(Uniform)]
+struct Uniforms<D: UniformDom> {
     camera: D::Block<Camera<Sl>>,
     time: D::Block<sl::F32>,
 }

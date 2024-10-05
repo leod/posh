@@ -22,11 +22,11 @@ pub mod gl;
 pub mod sl;
 
 pub use interface::{
-    Block, BlockDom, FsInterface, FsInterfaceDom, UniformInterface, UniformInterfaceDom,
+    Block, BlockDom, FsInterface, FsInterfaceDom, Uniform, UniformDom,
     UniformNonUnit, UniformUnion, VsInterface, VsInterfaceDom,
 };
 
-pub use posh_derive::{Block, FsInterface, UniformInterface, VsInterface};
+pub use posh_derive::{Block, FsInterface, Uniform, VsInterface};
 
 pub use bytemuck;
 pub use crevice;

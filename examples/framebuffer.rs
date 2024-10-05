@@ -2,7 +2,7 @@ mod utils;
 
 use instant::Instant;
 
-use posh::{gl, sl, Block, BlockDom, Gl, Sl, UniformInterface, UniformInterfaceDom};
+use posh::{gl, sl, Block, BlockDom, Gl, Sl, Uniform, UniformDom};
 
 // Shader interface
 
@@ -20,8 +20,8 @@ pub struct PresentVertex<D: BlockDom> {
     pub tex_coords: D::Vec2,
 }
 
-#[derive(UniformInterface)]
-pub struct PresentUniforms<D: UniformInterfaceDom> {
+#[derive(Uniform)]
+pub struct PresentUniforms<D: UniformDom> {
     pub state: D::Block<State<Sl>>,
     pub scene: D::ColorSampler2d<sl::Vec4>,
 }
@@ -146,9 +146,7 @@ impl Demo {
         self.present_program
             .with_uniforms(PresentUniforms {
                 state: self.state.as_binding(),
-                scene: self
-                    .texture
-                    .as_color_sampler(gl::Sampler2dParams::linear()),
+                scene: self.texture.as_color_sampler(gl::Sampler2dParams::linear()),
             })
             .draw(
                 self.quad_vertices
