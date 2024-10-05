@@ -231,8 +231,8 @@ impl Demo {
             )
             .with_uniforms(self.light_buffer.as_binding())
             .with_framebuffer(self.light_depth_map.as_depth_attachment())
-            .with_settings(
-                gl::DrawSettings::new()
+            .with_params(
+                gl::DrawParams::new()
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less)
                     .with_cull_face(gl::CullFace::Back),
@@ -246,10 +246,10 @@ impl Demo {
                 light: self.light_buffer.as_binding(),
                 light_depth_map: self
                     .light_depth_map
-                    .as_comparison_sampler(gl::Sampler2dSettings::linear(), gl::Comparison::Less),
+                    .as_comparison_sampler(gl::Sampler2dParams::linear(), gl::Comparison::Less),
             })
-            .with_settings(
-                gl::DrawSettings::new()
+            .with_params(
+                gl::DrawParams::new()
                     .with_clear_color(glam::Vec4::ONE.into())
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less)
@@ -260,8 +260,8 @@ impl Demo {
         self.gl
             .program(flat_pass::vertex_shader, flat_pass::fragment_shader)
             .with_uniforms(self.camera_buffer.as_binding())
-            .with_settings(
-                gl::DrawSettings::new()
+            .with_params(
+                gl::DrawParams::new()
                     .with_depth_test(gl::Comparison::Less)
                     .with_cull_face(gl::CullFace::Back),
             )
@@ -275,7 +275,7 @@ impl Demo {
             .program(debug_pass::vertex_shader, debug_pass::fragment_shader)
             .with_uniforms(
                 self.light_depth_map
-                    .as_color_sampler(gl::Sampler2dSettings::default()),
+                    .as_color_sampler(gl::Sampler2dParams::default()),
             )
             .draw(
                 self.debug_vertices

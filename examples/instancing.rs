@@ -72,8 +72,8 @@ impl Demo {
     pub fn draw(&self) -> Result<(), gl::DrawError> {
         self.program
             .with_uniforms(self.camera.as_binding())
-            .with_settings(
-                gl::DrawSettings::new()
+            .with_params(
+                gl::DrawParams::new()
                     .with_clear_color([0.1, 0.2, 0.3, 1.0])
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less),

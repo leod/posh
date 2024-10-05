@@ -27,7 +27,7 @@ let program: gl::Program<U, V, F> = gl.create_program(
 program
     .with_uniforms(/* uniform bindings matching U */)
     .with_framebuffer(/* framebuffer matching F */)
-    .with_settings(/* draw settings */)
+    .with_params(/* draw params */)
     .draw(/* vertex specification matching V */)?;
 ```
 

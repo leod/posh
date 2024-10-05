@@ -101,11 +101,10 @@ impl Demo {
                     camera: self.camera.as_binding(),
                     time: self.time.as_binding(),
                 },
-                self.texture
-                    .as_color_sampler(gl::Sampler2dSettings::linear()),
+                self.texture.as_color_sampler(gl::Sampler2dParams::linear()),
             ))
-            .with_settings(
-                gl::DrawSettings::new()
+            .with_params(
+                gl::DrawParams::new()
                     .with_clear_color([0.1, 0.2, 0.3, 1.0])
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less),

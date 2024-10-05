@@ -115,14 +115,14 @@ where
             raw: program
                 .map(|program| program.raw().clone())
                 .map_err(|e| DrawError::Create(CreateError::Program(e))),
-            settings: Default::default(),
+            params: Default::default(),
             _phantom: PhantomData,
         };
 
         DrawBuilderWithUniforms { inner, uniforms }
     }
 
-    // TODO: Also needs `with_framebuffer` and `with_settings`.
+    // TODO: Also needs `with_framebuffer` and `with_params`.
 }
 
 /// The graphics context, which is used for creating GPU objects.

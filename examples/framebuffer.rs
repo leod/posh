@@ -148,7 +148,7 @@ impl Demo {
                 state: self.state.as_binding(),
                 scene: self
                     .texture
-                    .as_color_sampler(gl::Sampler2dSettings::linear()),
+                    .as_color_sampler(gl::Sampler2dParams::linear()),
             })
             .draw(
                 self.quad_vertices

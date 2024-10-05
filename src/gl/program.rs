@@ -7,7 +7,7 @@ use crate::{
 };
 
 use super::{
-    raw, ColorSampler2d, ComparisonSampler2d, DrawError, DrawSettings, Framebuffer,
+    raw, ColorSampler2d, ComparisonSampler2d, DrawError, DrawParams, Framebuffer,
     UniformBufferBinding, VertexSpec,
 };
 
@@ -20,7 +20,7 @@ where
     F: FsInterface<Sl>,
 {
     pub(crate) raw: RawProgram,
-    pub(crate) settings: DrawSettings,
+    pub(crate) params: DrawParams,
     pub(crate) _phantom: PhantomData<(U, V, F)>,
 }
 
@@ -31,8 +31,8 @@ where
     F: FsInterface<Sl>,
 {
     #[must_use]
-    pub fn with_settings(mut self, settings: DrawSettings) -> Self {
-        self.settings = settings;
+    pub fn with_params(mut self, params: DrawParams) -> Self {
+        self.params = params;
         self
     }
 
@@ -90,8 +90,8 @@ where
     F: FsInterface<Sl>,
 {
     #[must_use]
-    pub fn with_settings(mut self, settings: DrawSettings) -> Self {
-        self.inner.settings = settings;
+    pub fn with_params(mut self, params: DrawParams) -> Self {
+        self.inner.params = params;
         self
     }
 
@@ -150,8 +150,8 @@ where
     F: FsInterface<Sl>,
 {
     #[must_use]
-    pub fn with_settings(mut self, settings: DrawSettings) -> Self {
-        self.inner.settings = settings;
+    pub fn with_params(mut self, params: DrawParams) -> Self {
+        self.inner.params = params;
         self
     }
 
@@ -208,8 +208,8 @@ where
     F: FsInterface<Sl>,
 {
     #[must_use]
-    pub fn with_settings(mut self, settings: DrawSettings) -> Self {
-        self.inner.settings = settings;
+    pub fn with_params(mut self, params: DrawParams) -> Self {
+        self.inner.params = params;
         self
     }
 
@@ -242,7 +242,7 @@ where
                 &uniform_visitor.raw_samplers,
                 &vertex_spec.raw(),
                 &self.framebuffer.raw(),
-                &self.inner.settings,
+                &self.inner.params,
             )
         }?;
 
@@ -273,10 +273,10 @@ where
     }
 
     #[must_use]
-    pub fn with_settings(&self, settings: DrawSettings) -> DrawBuilder<U, V, F> {
+    pub fn with_params(&self, params: DrawParams) -> DrawBuilder<U, V, F> {
         DrawBuilder {
             raw: Ok(self.raw.clone()),
-            settings,
+            params,
             _phantom: PhantomData,
         }
     }
@@ -284,7 +284,7 @@ where
     #[must_use]
     pub fn with_uniforms(&self, uniforms: U::Gl) -> DrawBuilderWithUniforms<U, V, F> {
         DrawBuilderWithUniforms {
-            inner: self.with_settings(DrawSettings::new()),
+            inner: self.with_params(DrawParams::new()),
             uniforms,
         }
     }
@@ -295,7 +295,7 @@ where
         framebuffer: impl Into<Framebuffer<F>>,
     ) -> DrawBuilderWithFramebuffer<U, V, F> {
         DrawBuilderWithFramebuffer {
-            inner: self.with_settings(DrawSettings::new()),
+            inner: self.with_params(DrawParams::new()),
             framebuffer: framebuffer.into(),
         }
     }
@@ -309,7 +309,7 @@ where
         &self,
         vertex_spec: VertexSpec<V>,
     ) -> Result<DrawBuilder<(), V, sl::Vec4>, DrawError> {
-        self.with_settings(DrawSettings::new()).draw(vertex_spec)
+        self.with_params(DrawParams::new()).draw(vertex_spec)
     }
 }
 

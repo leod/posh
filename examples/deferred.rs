@@ -36,12 +36,12 @@ pub struct SceneAttachments<D: FsInterfaceDom> {
 
 impl SceneAttachments<Gl> {
     fn as_scene_samplers(&self) -> SceneSamplers<Gl> {
-        let settings = gl::Sampler2dSettings::linear();
+        let params = gl::Sampler2dParams::linear();
 
         SceneSamplers {
-            albedo: self.albedo.as_color_sampler(settings),
-            world_normal: self.world_normal.as_color_sampler(settings),
-            world_pos: self.world_pos.as_color_sampler(settings),
+            albedo: self.albedo.as_color_sampler(params),
+            world_normal: self.world_normal.as_color_sampler(params),
+            world_pos: self.world_pos.as_color_sampler(params),
         }
     }
 }
@@ -224,8 +224,8 @@ impl Demo {
                     .as_depth_attachment()
                     .with_color(self.scene_attachments.clone()),
             )
-            .with_settings(
-                gl::DrawSettings::new()
+            .with_params(
+                gl::DrawParams::new()
                     .with_clear_color([0.0; 4])
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less),
