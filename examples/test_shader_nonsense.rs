@@ -58,7 +58,7 @@ fn vertex_shader(globals: Globals<Sl>, vertex: ColorVertex<Sl>) -> VsOutput<sl::
                 .get(globals.invert.as_u32() + 3)
                 .extend(1.0)
                 .extend(2.0),
-        clip_position: globals.projection * globals.camera * position.extend(1.0).extend(1.0),
+        clip_pos: globals.projection * globals.camera * position.extend(1.0).extend(1.0),
     }
 }
 
@@ -85,7 +85,7 @@ fn vertex_shader_2(mode: sl::U32, vertex: MyVertex<Sl>) -> sl::VsOutput<MyVertex
     let interpolant = sl::branch(mode.eq(42u32), vertex, complex_vertex);
 
     sl::VsOutput {
-        clip_position: vertex.position,
+        clip_pos: vertex.position,
         interpolant,
     }
 }

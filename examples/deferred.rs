@@ -2,9 +2,7 @@ mod utils;
 
 use instant::Instant;
 
-use posh::{
-    gl, sl, Block, BlockDom, FsInterface, FsInterfaceDom, Gl, Sl, Uniform, UniformDom,
-};
+use posh::{gl, sl, Block, BlockDom, FsInterface, FsInterfaceDom, Gl, Sl, Uniform, UniformDom};
 
 const WIDTH: u32 = 1024;
 const HEIGHT: u32 = 768;
@@ -116,7 +114,7 @@ mod scene_pass {
         let world_normal = CUBE_NORMALS.to_sl().get((vertex_id / 4) % 6);
 
         sl::VsOutput {
-            clip_position: screen_pos,
+            clip_pos: screen_pos,
             interpolant: SceneAttachments {
                 albedo: sl::vec3(1.0, 0.0, 0.0),
                 world_pos,
@@ -148,7 +146,7 @@ mod present_pass {
         let position = SQUARE_POSITIONS.to_sl().get(input.vertex_id);
 
         sl::VsOutput {
-            clip_position: position.extend(0.0).extend(1.0),
+            clip_pos: position.extend(0.0).extend(1.0),
             interpolant: (position + 1.0) / 2.0,
         }
     }

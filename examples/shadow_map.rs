@@ -65,7 +65,7 @@ mod flat_pass {
 
     pub fn vertex_shader(camera: Camera<Sl>, vertex: SceneVertex<Sl>) -> sl::VsOutput<sl::Vec3> {
         sl::VsOutput {
-            clip_position: camera.world_to_clip(vertex.world_pos),
+            clip_pos: camera.world_to_clip(vertex.world_pos),
             interpolant: vertex.color,
         }
     }
@@ -102,7 +102,7 @@ mod scene_pass {
         };
 
         sl::VsOutput {
-            clip_position: camera.world_to_clip(vertex.world_pos),
+            clip_pos: camera.world_to_clip(vertex.world_pos),
             interpolant: output,
         }
     }
@@ -149,7 +149,7 @@ mod debug_pass {
     pub fn vertex_shader(vertex: ScreenVertex<Sl>) -> sl::VsOutput<sl::Vec2> {
         sl::VsOutput {
             interpolant: vertex.tex_coords,
-            clip_position: vertex.pos.extend(0.0).extend(1.0),
+            clip_pos: vertex.pos.extend(0.0).extend(1.0),
         }
     }
 

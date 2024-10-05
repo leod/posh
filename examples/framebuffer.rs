@@ -37,7 +37,7 @@ mod scene_pass {
         let vertex = vertex - sl::vec2(0.5, 0.5);
 
         sl::VsOutput {
-            clip_position: vertex.extend(0.0).extend(1.0),
+            clip_pos: vertex.extend(0.0).extend(1.0),
             interpolant: vertex,
         }
     }
@@ -56,7 +56,7 @@ mod present_pass {
 
     pub fn vertex_shader(vertex: PresentVertex<Sl>) -> sl::VsOutput<sl::Vec2> {
         sl::VsOutput {
-            clip_position: vertex.pos.extend(0.0).extend(1.0),
+            clip_pos: vertex.pos.extend(0.0).extend(1.0),
             interpolant: vertex.tex_coords,
         }
     }

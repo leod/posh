@@ -108,7 +108,7 @@ where
                     (kind, name.clone(), expr.ty())
                 }),
             );
-        let exprs = once(("gl_Position", output.clip_position.expr()))
+        let exprs = once(("gl_Position", output.clip_pos.expr()))
             .chain(
                 varying_outputs
                     .iter()

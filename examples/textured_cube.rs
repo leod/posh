@@ -46,7 +46,7 @@ fn vertex_shader(uniforms: Uniforms<Sl>, vertex: Vertex<Sl>) -> sl::VsOutput<sl:
     let position = camera.view_to_screen * camera.world_to_view * zxy(vertex_pos).extend(1.0);
 
     sl::VsOutput {
-        clip_position: position,
+        clip_pos: position,
         interpolant: vertex.tex_coords,
     }
 }

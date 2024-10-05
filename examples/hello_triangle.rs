@@ -19,7 +19,7 @@ fn vertex_shader(globals: Globals<Sl>, vertex: sl::Vec2) -> sl::VsOutput<sl::Vec
     let position = sl::Vec2::from_angle(globals.time).rotate(vertex * globals.triangle_size);
 
     sl::VsOutput {
-        clip_position: sl::vec4(position.x, position.y, 0.0, 1.0),
+        clip_pos: sl::vec4(position.x, position.y, 0.0, 1.0),
         interpolant: vertex,
     }
 }

@@ -34,7 +34,7 @@ struct VsInput<D: VsInterfaceDom> {
 
 fn vertex_shader(camera: Camera<Sl>, vertex: VsInput<Sl>) -> sl::VsOutput<sl::Vec3> {
     sl::VsOutput {
-        clip_position: camera.view_to_screen
+        clip_pos: camera.view_to_screen
             * camera.world_to_view
             * vertex.instance.model_to_view
             * vertex.model_pos.extend(1.0),

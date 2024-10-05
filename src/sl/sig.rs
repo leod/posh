@@ -30,7 +30,7 @@ pub struct VsInput<V> {
 /// Per-vertex output computed by a vertex shader.
 #[derive(Debug, Copy, Clone)]
 pub struct FullVsOutput<W> {
-    pub clip_position: Vec4,
+    pub clip_pos: Vec4,
     pub interpolant: W,
     pub point_size: Option<F32>,
 }
@@ -38,7 +38,7 @@ pub struct FullVsOutput<W> {
 /// Per-vertex position and interpolant output computed by a vertex shader.
 #[derive(Debug, Copy, Clone)]
 pub struct VsOutput<W> {
-    pub clip_position: Vec4,
+    pub clip_pos: Vec4,
     pub interpolant: W,
 }
 
@@ -113,7 +113,7 @@ impl<V: Interpolant> IntoFullVsOutput for VsOutput<V> {
 
     fn into_full_vs_output(self) -> FullVsOutput<V> {
         FullVsOutput {
-            clip_position: self.clip_position,
+            clip_pos: self.clip_pos,
             interpolant: self.interpolant,
             point_size: None,
         }
@@ -125,7 +125,7 @@ impl IntoFullVsOutput for Vec4 {
 
     fn into_full_vs_output(self) -> FullVsOutput<()> {
         FullVsOutput {
-            clip_position: self,
+            clip_pos: self,
             interpolant: (),
             point_size: None,
         }
