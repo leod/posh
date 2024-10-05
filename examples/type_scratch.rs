@@ -1,7 +1,7 @@
 use posh::{
     gl::ColorSampler2d,
     sl::{self, Value},
-    Block, BlockDom, Sl, Uniform, UniformDom, VsInterface, VsInterfaceDom,
+    Block, BlockDom, Sl, Uniform, UniformDom, VsInterface, VsDom,
 };
 
 #[derive(Clone, Copy, Value)]
@@ -39,7 +39,7 @@ struct MyNestedVertex<D: BlockDom = Sl> {
 }
 
 #[derive(Copy, Clone, VsInterface)]
-struct MyVertexIface<D: VsInterfaceDom = Sl> {
+struct MyVertexIface<D: VsDom = Sl> {
     vertex: D::Block<MyVertex>,
     instance: D::Block<MyNestedVertex>,
 }

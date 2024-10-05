@@ -8,26 +8,26 @@ use super::{Block, BlockDom};
 ///
 /// See [`VsInterface`] for more details.
 #[sealed]
-pub trait VsInterfaceDom: BlockDom {
+pub trait VsDom: BlockDom {
     /// A vertex block field.
     type Block<B: Block<Sl>>: VertexField<Self>;
 }
 
 #[sealed]
-impl VsInterfaceDom for Gl {
+impl VsDom for Gl {
     type Block<B: Block<Sl>> = gl::VertexBufferBinding<B>;
 }
 
 #[sealed]
-impl VsInterfaceDom for Sl {
+impl VsDom for Sl {
     type Block<B: Block<Sl>> = B;
 }
 
-/// VsInterface shader input data.
+/// Vertex shader input data.
 ///
 /// Defines vertex data that can be passed to vertex shaders in draw calls.
 ///
-/// `VsInterface` declarations are generic in [`VsInterfaceDom`] and can be
+/// `VsInterface` declarations are generic in [`VsDom`] and can be
 /// instantiated as their [`Sl`] view or their [`Gl`] view. The views have the
 /// following purpose respectively:
 ///
@@ -51,7 +51,7 @@ impl VsInterfaceDom for Sl {
 /// vertex buffer.
 ///
 /// ```
-/// use posh::{gl, sl, Block, BlockDom, Sl, VsInterface, VsInterfaceDom};
+/// use posh::{gl, sl, Block, BlockDom, Sl, VsInterface, VsDom};
 ///
 /// #[derive(Clone, Copy, Block)]
 /// #[repr(C)]
@@ -61,7 +61,7 @@ impl VsInterfaceDom for Sl {
 /// }
 ///
 /// #[derive(Clone, Copy, VsInterface)]
-/// struct MyVertex<D: VsInterfaceDom> {
+/// struct MyVertex<D: VsDom> {
 ///     position: D::Block<sl::Vec3>,
 ///     material: D::Block<Material<Sl>>,
 /// }
@@ -81,7 +81,7 @@ impl VsInterfaceDom for Sl {
 /// # Safety
 ///
 /// TODO
-pub unsafe trait VsInterface<D: VsInterfaceDom>: Sized {
+pub unsafe trait VsInterface<D: VsDom>: Sized {
     /// The physical view of `Self`.
     ///
     /// This is the type through which the host provides vertex buffer bindings
@@ -124,7 +124,7 @@ unsafe impl<B: Block<Sl>> VsInterface<Sl> for B {
     }
 }
 
-unsafe impl<D: VsInterfaceDom> VsInterface<D> for () {
+unsafe impl<D: VsDom> VsInterface<D> for () {
     type Gl = ();
     type Sl = ();
 
@@ -173,7 +173,7 @@ where
 /// Types that are allowed to occur in types that implement [`VsInterface`].
 #[sealed]
 #[doc(hidden)]
-pub trait VertexField<D: VsInterfaceDom>: Sized {
+pub trait VertexField<D: VsDom>: Sized {
     fn shader_input(_path: &str) -> Self {
         unimplemented!()
     }
@@ -189,6 +189,6 @@ impl<B: Block<Sl>> VertexField<Sl> for B {
     }
 }
 
-pub trait VertexVisitor<'a, D: VsInterfaceDom> {
+pub trait VertexVisitor<'a, D: VsDom> {
     fn accept<B: Block<Sl>>(&mut self, path: &str, vertex: &'a D::Block<B>);
 }

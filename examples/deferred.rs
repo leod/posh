@@ -2,7 +2,7 @@ mod utils;
 
 use instant::Instant;
 
-use posh::{gl, sl, Block, BlockDom, FsInterface, FsInterfaceDom, Gl, Sl, Uniform, UniformDom};
+use posh::{gl, sl, Block, BlockDom, FsDom, FsInterface, Gl, Sl, Uniform, UniformDom};
 
 const WIDTH: u32 = 1024;
 const HEIGHT: u32 = 768;
@@ -25,7 +25,7 @@ pub struct SceneSamplers<D: UniformDom> {
 }
 
 #[derive(Clone, Copy, FsInterface)]
-pub struct SceneAttachments<D: FsInterfaceDom> {
+pub struct SceneAttachments<D: FsDom> {
     albedo: D::ColorAttachment<sl::Vec3>,
     world_normal: D::ColorAttachment<sl::Vec3>,
     world_pos: D::ColorAttachment<sl::Vec3>,

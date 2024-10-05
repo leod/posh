@@ -22,8 +22,8 @@ pub mod gl;
 pub mod sl;
 
 pub use interface::{
-    Block, BlockDom, FsInterface, FsInterfaceDom, Uniform, UniformDom,
-    UniformNonUnit, UniformUnion, VsInterface, VsInterfaceDom,
+    Block, BlockDom, FsInterface, FsDom, Uniform, UniformDom, UniformNonUnit,
+    UniformUnion, VsDom, VsInterface,
 };
 
 pub use posh_derive::{Block, FsInterface, Uniform, VsInterface};

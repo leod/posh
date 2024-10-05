@@ -32,7 +32,7 @@ pub fn derive_consts(input: TokenStream) -> TokenStream {
     .into()
 }
 
-/// Derives `FsInterface` for a struct that is generic in `FsInterfaceDom`.
+/// Derives `FsInterface` for a struct that is generic in `FsDom`.
 #[proc_macro_derive(FsInterface)]
 pub fn derive_fs_interface(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -76,7 +76,7 @@ pub fn derive_value(input: TokenStream) -> TokenStream {
     .into()
 }
 
-/// Derives `VsInterface` for a struct that is generic in `VsInterfaceDom`.
+/// Derives `VsInterface` for a struct that is generic in `VsDom`.
 #[proc_macro_derive(VsInterface, attributes(vertex))]
 pub fn derive_vs_interface(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);

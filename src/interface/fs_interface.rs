@@ -6,21 +6,21 @@ use crate::{gl, sl, Gl, Sl, ToSl};
 ///
 /// See [`FsInterface`] for more details.
 #[sealed]
-pub trait FsInterfaceDom: Copy {
+pub trait FsDom: Copy {
     type ColorAttachment<S: sl::ColorSample>: FsInterface<Self>;
 }
 
 #[sealed]
-impl FsInterfaceDom for Gl {
+impl FsDom for Gl {
     type ColorAttachment<S: sl::ColorSample> = gl::ColorAttachment<S>;
 }
 
 #[sealed]
-impl FsInterfaceDom for Sl {
+impl FsDom for Sl {
     type ColorAttachment<S: sl::ColorSample> = S;
 }
 
-/// FsInterface shader output data.
+/// Fragment shader output data.
 ///
 /// User-defined types should implement this trait with a [derive
 /// macro](`posh_derive::FsInterface`).
@@ -28,7 +28,7 @@ impl FsInterfaceDom for Sl {
 /// # Safety
 ///
 /// TODO
-pub unsafe trait FsInterface<D: FsInterfaceDom>: Clone {
+pub unsafe trait FsInterface<D: FsDom>: Clone {
     /// The physical view of `Self`.
     ///
     /// This is the type through which framebuffer attachments are provided on
@@ -44,7 +44,7 @@ pub unsafe trait FsInterface<D: FsInterfaceDom>: Clone {
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl FragmentVisitor<'a, D>);
 }
 
-unsafe impl<D: FsInterfaceDom> FsInterface<D> for () {
+unsafe impl<D: FsDom> FsInterface<D> for () {
     type Sl = ();
     type Gl = ();
 
@@ -72,6 +72,6 @@ unsafe impl<S: sl::ColorSample> FsInterface<Sl> for S {
 // TODO: Tuple implementations for `FsInterface`.
 
 #[doc(hidden)]
-pub trait FragmentVisitor<'a, D: FsInterfaceDom> {
+pub trait FragmentVisitor<'a, D: FsDom> {
     fn accept<S: sl::ColorSample>(&mut self, path: &str, attachment: &'a D::ColorAttachment<S>);
 }

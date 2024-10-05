@@ -3,7 +3,7 @@ use std::{
     io::{BufRead, BufReader},
 };
 
-use posh::{gl, sl, Block, BlockDom, Gl, Sl, VsInterface, VsInterfaceDom};
+use posh::{gl, sl, Block, BlockDom, Gl, Sl, VsInterface, VsDom};
 
 const WIDTH: u32 = 1024;
 const HEIGHT: u32 = 768;
@@ -25,7 +25,7 @@ struct Instance<D: BlockDom> {
 }
 
 #[derive(Copy, Clone, VsInterface)]
-struct VsInput<D: VsInterfaceDom> {
+struct VsInput<D: VsDom> {
     instance: D::Block<Instance<Sl>>,
     model_pos: D::Block<sl::Vec3>,
 }
