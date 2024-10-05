@@ -3,7 +3,7 @@ mod utils;
 use instant::Instant;
 use nanorand::{Rng, WyRand};
 
-use posh::{gl, sl, Block, BlockDom, Gl, Sl, UniformInterface, UniformInterfaceDom};
+use posh::{gl, sl, Block, BlockDom, Gl, Sl, Uniform, UniformDom};
 
 const SCREEN_WIDTH: u32 = 1920;
 const SCREEN_HEIGHT: u32 = 1080;
@@ -42,8 +42,8 @@ pub struct SceneVertex<D: BlockDom> {
     pub color: D::Vec3,
 }
 
-#[derive(Clone, UniformInterface)]
-pub struct SceneUniforms<D: UniformInterfaceDom> {
+#[derive(Clone, Uniform)]
+pub struct SceneUniforms<D: UniformDom> {
     pub camera: D::Block<Camera<Sl>>,
     pub light: D::Block<Light<Sl>>,
     pub light_depth_map: D::ComparisonSampler2d,
@@ -65,8 +65,8 @@ mod flat_pass {
 
     pub fn vertex_shader(camera: Camera<Sl>, vertex: SceneVertex<Sl>) -> sl::VsOutput<sl::Vec3> {
         sl::VsOutput {
-            clip_position: camera.world_to_clip(vertex.world_pos),
-            interpolant: vertex.color,
+            clip_pos: camera.world_to_clip(vertex.world_pos),
+            interp: vertex.color,
         }
     }
 
@@ -102,8 +102,8 @@ mod scene_pass {
         };
 
         sl::VsOutput {
-            clip_position: camera.world_to_clip(vertex.world_pos),
-            interpolant: output,
+            clip_pos: camera.world_to_clip(vertex.world_pos),
+            interp: output,
         }
     }
 
@@ -148,8 +148,8 @@ mod debug_pass {
 
     pub fn vertex_shader(vertex: ScreenVertex<Sl>) -> sl::VsOutput<sl::Vec2> {
         sl::VsOutput {
-            interpolant: vertex.tex_coords,
-            clip_position: vertex.pos.extend(0.0).extend(1.0),
+            interp: vertex.tex_coords,
+            clip_pos: vertex.pos.extend(0.0).extend(1.0),
         }
     }
 
@@ -231,8 +231,8 @@ impl Demo {
             )
             .with_uniforms(self.light_buffer.as_binding())
             .with_framebuffer(self.light_depth_map.as_depth_attachment())
-            .with_settings(
-                gl::DrawSettings::new()
+            .with_params(
+                gl::DrawParams::new()
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less)
                     .with_cull_face(gl::CullFace::Back),
@@ -246,10 +246,10 @@ impl Demo {
                 light: self.light_buffer.as_binding(),
                 light_depth_map: self
                     .light_depth_map
-                    .as_comparison_sampler(gl::Sampler2dSettings::linear(), gl::Comparison::Less),
+                    .as_comparison_sampler(gl::Sampler2dParams::linear(), gl::Comparison::Less),
             })
-            .with_settings(
-                gl::DrawSettings::new()
+            .with_params(
+                gl::DrawParams::new()
                     .with_clear_color(glam::Vec4::ONE.into())
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less)
@@ -260,8 +260,8 @@ impl Demo {
         self.gl
             .program(flat_pass::vertex_shader, flat_pass::fragment_shader)
             .with_uniforms(self.camera_buffer.as_binding())
-            .with_settings(
-                gl::DrawSettings::new()
+            .with_params(
+                gl::DrawParams::new()
                     .with_depth_test(gl::Comparison::Less)
                     .with_cull_face(gl::CullFace::Back),
             )
@@ -275,7 +275,7 @@ impl Demo {
             .program(debug_pass::vertex_shader, debug_pass::fragment_shader)
             .with_uniforms(
                 self.light_depth_map
-                    .as_color_sampler(gl::Sampler2dSettings::default()),
+                    .as_color_sampler(gl::Sampler2dParams::default()),
             )
             .draw(
                 self.debug_vertices

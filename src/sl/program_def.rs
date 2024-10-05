@@ -5,7 +5,7 @@
 
 use super::dag::{BuiltInType, SamplerType, Type};
 
-/// UniformInterface input definition.
+/// Uniform input definition.
 #[derive(Debug, Clone)]
 pub struct UniformBlockDef {
     /// The name of the uniform block.

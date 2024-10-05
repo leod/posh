@@ -6,7 +6,7 @@ use crate::{
     FsInterface, Gl, Sl,
 };
 
-use super::{raw, ColorSampler2d, Sampler2dSettings};
+use super::{raw, ColorSampler2d, Sampler2dParams};
 
 #[derive(Clone)]
 pub struct ColorAttachment<S = sl::Vec4> {
@@ -22,8 +22,17 @@ impl<S> ColorAttachment<S> {
         }
     }
 
-    pub fn as_color_sampler(&self, settings: Sampler2dSettings) -> ColorSampler2d<S> {
-        ColorSampler2d::from_raw(self.raw.sampler(settings, None))
+    pub fn as_color_sampler(&self, params: Sampler2dParams) -> ColorSampler2d<S> {
+        ColorSampler2d::from_raw(self.raw.sampler(params, None))
+    }
+}
+
+impl<S: ColorSample> ColorAttachment<S> {
+    pub fn with_depth(&self, depth: DepthAttachment) -> Framebuffer<S> {
+        Framebuffer(FramebufferInternal::ColorDepth {
+            color: self.clone(),
+            depth,
+        })
     }
 }
 
@@ -41,6 +50,13 @@ pub struct DepthAttachment {
 impl DepthAttachment {
     pub(super) fn from_raw(raw: raw::Attachment) -> Self {
         Self { raw }
+    }
+
+    pub fn with_color<F: FsInterface<Sl>>(&self, color: F::Gl) -> Framebuffer<F> {
+        Framebuffer(FramebufferInternal::ColorDepth {
+            color,
+            depth: self.clone(),
+        })
     }
 }
 
@@ -65,11 +81,11 @@ enum FramebufferInternal<F: FsInterface<Sl>> {
 pub struct Framebuffer<F: FsInterface<Sl> = sl::Vec4>(FramebufferInternal<F>);
 
 impl<F: FsInterface<Sl>> Framebuffer<F> {
-    pub fn color(color: F::Gl) -> Self {
+    pub fn new_color(color: F::Gl) -> Self {
         Framebuffer(FramebufferInternal::Color(color))
     }
 
-    pub fn color_depth(color: F::Gl, depth: DepthAttachment) -> Self {
+    pub fn new_color_depth(color: F::Gl, depth: DepthAttachment) -> Self {
         Framebuffer(FramebufferInternal::ColorDepth { color, depth })
     }
 
@@ -94,7 +110,7 @@ impl<F: FsInterface<Sl>> Framebuffer<F> {
 }
 
 impl Framebuffer<()> {
-    pub fn depth(depth: DepthAttachment) -> Self {
+    pub fn new_depth(depth: DepthAttachment) -> Self {
         Framebuffer(FramebufferInternal::Depth(depth))
     }
 }

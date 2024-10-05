@@ -121,9 +121,9 @@ pub fn associated_type_to_trait(ty: &str) -> Option<Path> {
     if block_tys.contains(&ty) {
         Some(parse_quote!(::posh::BlockDom))
     } else if vertex_tys.contains(&ty) {
-        Some(parse_quote!(::posh::VsInterfaceDom))
+        Some(parse_quote!(::posh::VsDom))
     } else if fragment_tys.contains(&ty) {
-        Some(parse_quote!(::posh::FsInterfaceDom))
+        Some(parse_quote!(::posh::FsDom))
     } else {
         None
     }

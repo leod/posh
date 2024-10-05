@@ -1,7 +1,7 @@
 use posh::{
     gl::ColorSampler2d,
     sl::{self, Value},
-    Block, BlockDom, Sl, UniformInterface, UniformInterfaceDom, VsInterface, VsInterfaceDom,
+    Block, BlockDom, Sl, Uniform, UniformDom, VsInterface, VsDom,
 };
 
 #[derive(Clone, Copy, Value)]
@@ -39,31 +39,31 @@ struct MyNestedVertex<D: BlockDom = Sl> {
 }
 
 #[derive(Copy, Clone, VsInterface)]
-struct MyVertexIface<D: VsInterfaceDom = Sl> {
+struct MyVertexIface<D: VsDom = Sl> {
     vertex: D::Block<MyVertex>,
     instance: D::Block<MyNestedVertex>,
 }
 
-#[derive(UniformInterface)]
-struct MyUniformIface<D: UniformInterfaceDom = Sl> {
+#[derive(Uniform)]
+struct MyUniformIface<D: UniformDom = Sl> {
     uniform: D::Block<MyUniform1>,
     samplers: [D::ColorSampler2d<sl::Vec4>; 3],
 }
 
-#[derive(UniformInterface)]
-struct MyUniformIface2<D: UniformInterfaceDom = Sl> {
+#[derive(Uniform)]
+struct MyUniformIface2<D: UniformDom = Sl> {
     uniformxy: D::Block<MyUniform1>,
     bla: MyUniformIface<D>,
     zzz: D::Block<MyUniform1>,
 }
 
-#[derive(UniformInterface)]
-struct GenericUniformIface<U, D: UniformInterfaceDom = Sl>
+#[derive(Uniform)]
+struct GenericUniformIface<U, D: UniformDom = Sl>
 where
-    U: UniformInterface<Sl>,
+    U: Uniform<Sl>,
 {
     uniformxy: D::Block<MyUniform1>,
-    x: D::UniformInterface<U>,
+    x: D::Uniform<U>,
 }
 
 #[derive(sl::Const)]

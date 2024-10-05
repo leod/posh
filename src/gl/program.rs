@@ -3,11 +3,11 @@ use std::{marker::PhantomData, rc::Rc};
 use crate::{
     interface::UniformVisitor,
     sl::{self, ColorSample},
-    Block, FsInterface, Gl, Sl, UniformInterface, VsInterface,
+    Block, FsInterface, Gl, Sl, Uniform, VsInterface,
 };
 
 use super::{
-    raw, ColorSampler2d, ComparisonSampler2d, DrawError, DrawSettings, Framebuffer,
+    raw, ColorSampler2d, ComparisonSampler2d, DrawError, DrawParams, Framebuffer,
     UniformBufferBinding, VertexSpec,
 };
 
@@ -15,24 +15,24 @@ type RawProgram = Result<Rc<raw::Program>, DrawError>;
 
 pub struct DrawBuilder<U, V, F>
 where
-    U: UniformInterface<Sl>,
+    U: Uniform<Sl>,
     V: VsInterface<Sl>,
     F: FsInterface<Sl>,
 {
     pub(crate) raw: RawProgram,
-    pub(crate) settings: DrawSettings,
+    pub(crate) params: DrawParams,
     pub(crate) _phantom: PhantomData<(U, V, F)>,
 }
 
 impl<U, V, F> DrawBuilder<U, V, F>
 where
-    U: UniformInterface<Sl>,
+    U: Uniform<Sl>,
     V: VsInterface<Sl>,
     F: FsInterface<Sl>,
 {
     #[must_use]
-    pub fn with_settings(mut self, settings: DrawSettings) -> Self {
-        self.settings = settings;
+    pub fn with_params(mut self, params: DrawParams) -> Self {
+        self.params = params;
         self
     }
 
@@ -75,7 +75,7 @@ where
 
 pub struct DrawBuilderWithUniforms<U, V, F>
 where
-    U: UniformInterface<Sl>,
+    U: Uniform<Sl>,
     V: VsInterface<Sl>,
     F: FsInterface<Sl>,
 {
@@ -85,13 +85,13 @@ where
 
 impl<U, V, F> DrawBuilderWithUniforms<U, V, F>
 where
-    U: UniformInterface<Sl>,
+    U: Uniform<Sl>,
     V: VsInterface<Sl>,
     F: FsInterface<Sl>,
 {
     #[must_use]
-    pub fn with_settings(mut self, settings: DrawSettings) -> Self {
-        self.inner.settings = settings;
+    pub fn with_params(mut self, params: DrawParams) -> Self {
+        self.inner.params = params;
         self
     }
 
@@ -116,7 +116,7 @@ where
 
 impl<U, V> DrawBuilderWithUniforms<U, V, sl::Vec4>
 where
-    U: UniformInterface<Sl>,
+    U: Uniform<Sl>,
     V: VsInterface<Sl>,
 {
     pub fn draw(self, vertex_spec: VertexSpec<V>) -> Result<Self, DrawError> {
@@ -135,7 +135,7 @@ where
 
 pub struct DrawBuilderWithFramebuffer<U, V, F>
 where
-    U: UniformInterface<Sl>,
+    U: Uniform<Sl>,
     V: VsInterface<Sl>,
     F: FsInterface<Sl>,
 {
@@ -145,13 +145,13 @@ where
 
 impl<U, V, F> DrawBuilderWithFramebuffer<U, V, F>
 where
-    U: UniformInterface<Sl>,
+    U: Uniform<Sl>,
     V: VsInterface<Sl>,
     F: FsInterface<Sl>,
 {
     #[must_use]
-    pub fn with_settings(mut self, settings: DrawSettings) -> Self {
-        self.inner.settings = settings;
+    pub fn with_params(mut self, params: DrawParams) -> Self {
+        self.inner.params = params;
         self
     }
 
@@ -192,7 +192,7 @@ where
 
 pub struct DrawBuilderWithUniformsAndFramebuffer<U, V, F>
 where
-    U: UniformInterface<Sl>,
+    U: Uniform<Sl>,
     V: VsInterface<Sl>,
     F: FsInterface<Sl>,
 {
@@ -203,13 +203,13 @@ where
 
 impl<U, V, F> DrawBuilderWithUniformsAndFramebuffer<U, V, F>
 where
-    U: UniformInterface<Sl>,
+    U: Uniform<Sl>,
     V: VsInterface<Sl>,
     F: FsInterface<Sl>,
 {
     #[must_use]
-    pub fn with_settings(mut self, settings: DrawSettings) -> Self {
-        self.inner.settings = settings;
+    pub fn with_params(mut self, params: DrawParams) -> Self {
+        self.inner.params = params;
         self
     }
 
@@ -242,7 +242,7 @@ where
                 &uniform_visitor.raw_samplers,
                 &vertex_spec.raw(),
                 &self.framebuffer.raw(),
-                &self.inner.settings,
+                &self.inner.params,
             )
         }?;
 
@@ -257,7 +257,7 @@ pub struct Program<U, V, F = sl::Vec4> {
 
 impl<U, V, F> Program<U, V, F>
 where
-    U: UniformInterface<Sl>,
+    U: Uniform<Sl>,
     V: VsInterface<Sl>,
     F: FsInterface<Sl>,
 {
@@ -273,10 +273,10 @@ where
     }
 
     #[must_use]
-    pub fn with_settings(&self, settings: DrawSettings) -> DrawBuilder<U, V, F> {
+    pub fn with_params(&self, params: DrawParams) -> DrawBuilder<U, V, F> {
         DrawBuilder {
             raw: Ok(self.raw.clone()),
-            settings,
+            params,
             _phantom: PhantomData,
         }
     }
@@ -284,7 +284,7 @@ where
     #[must_use]
     pub fn with_uniforms(&self, uniforms: U::Gl) -> DrawBuilderWithUniforms<U, V, F> {
         DrawBuilderWithUniforms {
-            inner: self.with_settings(DrawSettings::new()),
+            inner: self.with_params(DrawParams::new()),
             uniforms,
         }
     }
@@ -295,7 +295,7 @@ where
         framebuffer: impl Into<Framebuffer<F>>,
     ) -> DrawBuilderWithFramebuffer<U, V, F> {
         DrawBuilderWithFramebuffer {
-            inner: self.with_settings(DrawSettings::new()),
+            inner: self.with_params(DrawParams::new()),
             framebuffer: framebuffer.into(),
         }
     }
@@ -309,7 +309,7 @@ where
         &self,
         vertex_spec: VertexSpec<V>,
     ) -> Result<DrawBuilder<(), V, sl::Vec4>, DrawError> {
-        self.with_settings(DrawSettings::new()).draw(vertex_spec)
+        self.with_params(DrawParams::new()).draw(vertex_spec)
     }
 }
 

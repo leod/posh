@@ -2,7 +2,7 @@ use std::time::Instant;
 
 use image::{io::Reader as ImageReader, EncodableLayout};
 
-use posh::{gl, sl, Block, BlockDom, Gl, Sl, UniformInterface, UniformInterfaceDom};
+use posh::{gl, sl, Block, BlockDom, Gl, Sl, Uniform, UniformDom};
 
 const WIDTH: u32 = 1024;
 const HEIGHT: u32 = 768;
@@ -23,8 +23,8 @@ struct Vertex<D: BlockDom> {
     tex_coords: D::Vec2,
 }
 
-#[derive(UniformInterface)]
-struct Uniforms<D: UniformInterfaceDom> {
+#[derive(Uniform)]
+struct Uniforms<D: UniformDom> {
     camera: D::Block<Camera<Sl>>,
     time: D::Block<sl::F32>,
 }
@@ -46,8 +46,8 @@ fn vertex_shader(uniforms: Uniforms<Sl>, vertex: Vertex<Sl>) -> sl::VsOutput<sl:
     let position = camera.view_to_screen * camera.world_to_view * zxy(vertex_pos).extend(1.0);
 
     sl::VsOutput {
-        clip_position: position,
-        interpolant: vertex.tex_coords,
+        clip_pos: position,
+        interp: vertex.tex_coords,
     }
 }
 
@@ -101,11 +101,10 @@ impl Demo {
                     camera: self.camera.as_binding(),
                     time: self.time.as_binding(),
                 },
-                self.texture
-                    .as_color_sampler(gl::Sampler2dSettings::linear()),
+                self.texture.as_color_sampler(gl::Sampler2dParams::linear()),
             ))
-            .with_settings(
-                gl::DrawSettings::new()
+            .with_params(
+                gl::DrawParams::new()
                     .with_clear_color([0.1, 0.2, 0.3, 1.0])
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less),

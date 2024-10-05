@@ -2,7 +2,7 @@ mod block;
 mod r#const;
 mod fs_interface;
 mod interpolant;
-mod uniform_interface;
+mod uniform;
 mod utils;
 mod value;
 mod vs_interface;
@@ -32,7 +32,7 @@ pub fn derive_consts(input: TokenStream) -> TokenStream {
     .into()
 }
 
-/// Derives `FsInterface` for a struct that is generic in `FsInterfaceDom`.
+/// Derives `FsInterface` for a struct that is generic in `FsDom`.
 #[proc_macro_derive(FsInterface)]
 pub fn derive_fs_interface(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -45,7 +45,7 @@ pub fn derive_fs_interface(input: TokenStream) -> TokenStream {
 
 /// Derives `Interpolant` for a struct.
 #[proc_macro_derive(Interpolant)]
-pub fn derive_varying(input: TokenStream) -> TokenStream {
+pub fn derive_interpolant(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match interpolant::derive(input) {
         Ok(ts) => ts,
@@ -54,12 +54,11 @@ pub fn derive_varying(input: TokenStream) -> TokenStream {
     .into()
 }
 
-/// Derives `UniformInterface` for a struct that is generic in
-/// `UniformInterfaceDom`.
-#[proc_macro_derive(UniformInterface)]
+/// Derives `Uniform` for a struct that is generic in `UniformDom`.
+#[proc_macro_derive(Uniform)]
 pub fn derive_uniform_interface(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    match uniform_interface::derive(input) {
+    match uniform::derive(input) {
         Ok(ts) => ts,
         Err(e) => e.to_compile_error(),
     }
@@ -77,7 +76,7 @@ pub fn derive_value(input: TokenStream) -> TokenStream {
     .into()
 }
 
-/// Derives `VsInterface` for a struct that is generic in `VsInterfaceDom`.
+/// Derives `VsInterface` for a struct that is generic in `VsDom`.
 #[proc_macro_derive(VsInterface, attributes(vertex))]
 pub fn derive_vs_interface(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);

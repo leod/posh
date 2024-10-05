@@ -53,17 +53,17 @@ fn vertex_shader(globals: Globals<Sl>, vertex: ColorVertex<Sl>) -> VsOutput<sl::
     ]);
 
     VsOutput {
-        interpolant: sl::Vec4::splat(0.0)
+        interp: sl::Vec4::splat(0.0)
             + offsets
                 .get(globals.invert.as_u32() + 3)
                 .extend(1.0)
                 .extend(2.0),
-        clip_position: globals.projection * globals.camera * position.extend(1.0).extend(1.0),
+        clip_pos: globals.projection * globals.camera * position.extend(1.0).extend(1.0),
     }
 }
 
-fn fragment_shader(_: (), interpolant: sl::Vec4) -> sl::Vec4 {
-    interpolant * 3.0
+fn fragment_shader(_: (), interp: sl::Vec4) -> sl::Vec4 {
+    interp * 3.0
 }
 
 #[derive(Copy, Clone, Block)]
@@ -82,11 +82,11 @@ fn vertex_shader_2(mode: sl::U32, vertex: MyVertex<Sl>) -> sl::VsOutput<MyVertex
         color: sin_position,
     };
 
-    let interpolant = sl::branch(mode.eq(42u32), vertex, complex_vertex);
+    let interp = sl::branch(mode.eq(42u32), vertex, complex_vertex);
 
     sl::VsOutput {
-        clip_position: vertex.position,
-        interpolant,
+        clip_pos: vertex.position,
+        interp,
     }
 }
 

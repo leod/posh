@@ -19,13 +19,13 @@ fn vertex_shader(globals: Globals<Sl>, vertex: sl::Vec2) -> sl::VsOutput<sl::Vec
     let position = sl::Vec2::from_angle(globals.time).rotate(vertex * globals.triangle_size);
 
     sl::VsOutput {
-        clip_position: sl::vec4(position.x, position.y, 0.0, 1.0),
-        interpolant: vertex,
+        clip_pos: sl::vec4(position.x, position.y, 0.0, 1.0),
+        interp: vertex,
     }
 }
 
-fn fragment_shader(globals: Globals<Sl>, interpolant: sl::Vec2) -> sl::Vec4 {
-    let rg = (interpolant + globals.time).cos().powf(2.0);
+fn fragment_shader(globals: Globals<Sl>, interp: sl::Vec2) -> sl::Vec4 {
+    let rg = (interp + globals.time).cos().powf(2.0);
 
     sl::vec4(rg.x, rg.y, 0.5, 1.0)
 }
@@ -67,7 +67,7 @@ impl Demo {
 
         self.program
             .with_uniforms(self.globals.as_binding())
-            .with_settings(gl::DrawSettings::new().with_clear_color([0.1, 0.2, 0.3, 1.0]))
+            .with_params(gl::DrawParams::new().with_clear_color([0.1, 0.2, 0.3, 1.0]))
             .draw(self.vertices.as_vertex_spec(gl::PrimitiveMode::Triangles))?;
 
         Ok(())

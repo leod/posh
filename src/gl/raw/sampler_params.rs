@@ -26,7 +26,7 @@ pub enum SamplerWrap {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct Sampler2dSettings {
+pub struct Sampler2dParams {
     pub mag_filter: SamplerMagFilter,
     pub min_filter: SamplerMinFilter,
     pub wrap_s: SamplerWrap,
@@ -71,7 +71,7 @@ impl SamplerWrap {
     }
 }
 
-impl Default for Sampler2dSettings {
+impl Default for Sampler2dParams {
     fn default() -> Self {
         Self {
             mag_filter: SamplerMagFilter::Linear,
@@ -82,7 +82,7 @@ impl Default for Sampler2dSettings {
     }
 }
 
-impl Sampler2dSettings {
+impl Sampler2dParams {
     pub fn linear() -> Self {
         Self {
             mag_filter: SamplerMagFilter::Linear,
@@ -107,7 +107,7 @@ impl Sampler2dSettings {
         self
     }
 
-    pub(super) fn set_delta(&self, gl: &glow::Context, current: &Sampler2dSettings) {
+    pub(super) fn set_delta(&self, gl: &glow::Context, current: &Sampler2dParams) {
         if self.mag_filter != current.mag_filter {
             let mag_filter = self.mag_filter.to_gl() as i32;
 

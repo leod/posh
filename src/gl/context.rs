@@ -13,7 +13,7 @@ use crate::{
         transpile::{transpile_to_program_def, transpile_to_program_def_with_consts},
         ColorSample, FsFunc, FsSig, VsFunc, VsSig,
     },
-    Block, Gl, Sl, UniformInterface, UniformUnion,
+    Block, Gl, Sl, Uniform, UniformUnion,
 };
 
 use super::{
@@ -98,8 +98,8 @@ where
 {
     pub fn with_uniforms<U>(self, uniforms: U) -> DrawBuilderWithUniforms<U::Sl, VSig::V, FSig::F>
     where
-        U: UniformInterface<Gl>,
-        U::Sl: UniformUnion<VSig::U, FSig::U> + UniformInterface<Sl, Gl = U> + 'static,
+        U: Uniform<Gl>,
+        U::Sl: UniformUnion<VSig::U, FSig::U> + Uniform<Sl, Gl = U> + 'static,
     {
         let program = self
             .gl
@@ -115,14 +115,14 @@ where
             raw: program
                 .map(|program| program.raw().clone())
                 .map_err(|e| DrawError::Create(CreateError::Program(e))),
-            settings: Default::default(),
+            params: Default::default(),
             _phantom: PhantomData,
         };
 
         DrawBuilderWithUniforms { inner, uniforms }
     }
 
-    // TODO: Also needs `with_framebuffer` and `with_settings`.
+    // TODO: Also needs `with_framebuffer` and `with_params`.
 }
 
 /// The graphics context, which is used for creating GPU objects.

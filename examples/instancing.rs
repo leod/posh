@@ -3,7 +3,7 @@ use std::{
     io::{BufRead, BufReader},
 };
 
-use posh::{gl, sl, Block, BlockDom, Gl, Sl, VsInterface, VsInterfaceDom};
+use posh::{gl, sl, Block, BlockDom, Gl, Sl, VsInterface, VsDom};
 
 const WIDTH: u32 = 1024;
 const HEIGHT: u32 = 768;
@@ -25,7 +25,7 @@ struct Instance<D: BlockDom> {
 }
 
 #[derive(Copy, Clone, VsInterface)]
-struct VsInput<D: VsInterfaceDom> {
+struct VsInput<D: VsDom> {
     instance: D::Block<Instance<Sl>>,
     model_pos: D::Block<sl::Vec3>,
 }
@@ -34,11 +34,11 @@ struct VsInput<D: VsInterfaceDom> {
 
 fn vertex_shader(camera: Camera<Sl>, vertex: VsInput<Sl>) -> sl::VsOutput<sl::Vec3> {
     sl::VsOutput {
-        clip_position: camera.view_to_screen
+        clip_pos: camera.view_to_screen
             * camera.world_to_view
             * vertex.instance.model_to_view
             * vertex.model_pos.extend(1.0),
-        interpolant: vertex.instance.color,
+        interp: vertex.instance.color,
     }
 }
 
@@ -72,8 +72,8 @@ impl Demo {
     pub fn draw(&self) -> Result<(), gl::DrawError> {
         self.program
             .with_uniforms(self.camera.as_binding())
-            .with_settings(
-                gl::DrawSettings::new()
+            .with_params(
+                gl::DrawParams::new()
                     .with_clear_color([0.1, 0.2, 0.3, 1.0])
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less),

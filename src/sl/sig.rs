@@ -1,4 +1,4 @@
-use crate::{Block, FsInterface, Gl, Sl, UniformInterface, VsInterface};
+use crate::{Block, FsInterface, Gl, Sl, Uniform, VsInterface};
 
 use super::{dag::Expr, Bool, Interpolant, Value, Vec2, Vec4, F32, U32};
 
@@ -30,16 +30,16 @@ pub struct VsInput<V> {
 /// Per-vertex output computed by a vertex shader.
 #[derive(Debug, Copy, Clone)]
 pub struct FullVsOutput<W> {
-    pub clip_position: Vec4,
-    pub interpolant: W,
+    pub clip_pos: Vec4,
+    pub interp: W,
     pub point_size: Option<F32>,
 }
 
-/// Per-vertex position and interpolant output computed by a vertex shader.
+/// Per-vertex position and interp output computed by a vertex shader.
 #[derive(Debug, Copy, Clone)]
 pub struct VsOutput<W> {
-    pub clip_position: Vec4,
-    pub interpolant: W,
+    pub clip_pos: Vec4,
+    pub interp: W,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -48,7 +48,7 @@ pub struct Derivatives(pub(super) ());
 /// Per-fragment input given to a fragment shader.
 #[derive(Debug, Copy, Clone)]
 pub struct FsInput<W> {
-    pub interpolant: W,
+    pub interp: W,
     pub fragment_coord: Vec4,
     pub front_facing: Bool,
     pub point_coord: Vec2,
@@ -113,8 +113,8 @@ impl<V: Interpolant> IntoFullVsOutput for VsOutput<V> {
 
     fn into_full_vs_output(self) -> FullVsOutput<V> {
         FullVsOutput {
-            clip_position: self.clip_position,
-            interpolant: self.interpolant,
+            clip_pos: self.clip_pos,
+            interp: self.interp,
             point_size: None,
         }
     }
@@ -125,8 +125,8 @@ impl IntoFullVsOutput for Vec4 {
 
     fn into_full_vs_output(self) -> FullVsOutput<()> {
         FullVsOutput {
-            clip_position: self,
-            interpolant: (),
+            clip_pos: self,
+            interp: (),
             point_size: None,
         }
     }
@@ -151,7 +151,7 @@ impl<W: Interpolant> FromFsInput for W {
     type W = Self;
 
     fn from_fs_input(input: FsInput<Self>) -> Self {
-        input.interpolant
+        input.interp
     }
 }
 
@@ -183,7 +183,7 @@ impl<F: FsInterface<Sl>> IntoFullFsOutput for F {
 
 pub trait VsSig {
     type C: Const;
-    type U: UniformInterface<Sl>;
+    type U: Uniform<Sl>;
     type V: VsInterface<Sl>;
     type W: Interpolant;
 }
@@ -203,7 +203,7 @@ macro_rules! impl_vs_func {
         impl<C, U, $v, $w> VsSig for fn(&C, U, $v_in) -> $w_out
         where
             C: Const,
-            U: UniformInterface<Sl>,
+            U: Uniform<Sl>,
             V: VsInterface<Sl>,
             W: Interpolant,
         {
@@ -216,7 +216,7 @@ macro_rules! impl_vs_func {
         impl<C, U, $v, $w, Func> VsFunc<fn(&C, U, $v_in) -> $w_out> for Func
         where
             C: Const,
-            U: UniformInterface<Sl>,
+            U: Uniform<Sl>,
             V: VsInterface<Sl>,
             W: Interpolant,
             Func: Fn(&C, U, $v_in) -> $w_out + 'static,
@@ -228,7 +228,7 @@ macro_rules! impl_vs_func {
 
         impl<U, $v, $w> VsSig for fn(U, $v_in) -> $w_out
         where
-            U: UniformInterface<Sl>,
+            U: Uniform<Sl>,
             V: VsInterface<Sl>,
             W: Interpolant,
         {
@@ -240,7 +240,7 @@ macro_rules! impl_vs_func {
 
         impl<U, $v, $w, Func> VsFunc<fn(U, $v_in) -> $w_out> for Func
         where
-            U: UniformInterface<Sl>,
+            U: Uniform<Sl>,
             V: VsInterface<Sl>,
             W: Interpolant,
             Func: Fn(U, $v_in) -> $w_out + 'static,
@@ -276,7 +276,7 @@ macro_rules! impl_vs_func {
         impl<C, U, $v> VsSig for fn(&C, U, $v_in) -> Vec4
         where
             C: Const,
-            U: UniformInterface<Sl>,
+            U: Uniform<Sl>,
             V: VsInterface<Sl>,
         {
             type C = C;
@@ -288,7 +288,7 @@ macro_rules! impl_vs_func {
         impl<C, U, $v, Func> VsFunc<fn(&C, U, $v_in) -> Vec4> for Func
         where
             C: Const,
-            U: UniformInterface<Sl>,
+            U: Uniform<Sl>,
             V: VsInterface<Sl>,
             Func: Fn(&C, U, $v_in) -> Vec4 + 'static,
         {
@@ -299,7 +299,7 @@ macro_rules! impl_vs_func {
 
         impl<U, $v> VsSig for fn(U, $v_in) -> Vec4
         where
-            U: UniformInterface<Sl>,
+            U: Uniform<Sl>,
             V: VsInterface<Sl>,
         {
             type C = ();
@@ -310,7 +310,7 @@ macro_rules! impl_vs_func {
 
         impl<U, $v, Func> VsFunc<fn(U, $v_in) -> Vec4> for Func
         where
-            U: UniformInterface<Sl>,
+            U: Uniform<Sl>,
             V: VsInterface<Sl>,
             Func: Fn(U, $v_in) -> Vec4 + 'static,
         {
@@ -350,7 +350,7 @@ impl_vs_func!(V, VsInput<V>, W, FullVsOutput<W>);
 
 pub trait FsSig {
     type C: Const;
-    type U: UniformInterface<Sl>;
+    type U: Uniform<Sl>;
     type W: Interpolant;
     type F: FsInterface<Sl>;
 }
@@ -370,7 +370,7 @@ macro_rules! impl_fs_func {
         impl<C, U, $w, $f> FsSig for fn(&C, U, $w_in) -> $f_out
         where
             C: Const,
-            U: UniformInterface<Sl>,
+            U: Uniform<Sl>,
             W: Interpolant,
             F: FsInterface<Sl>,
         {
@@ -383,7 +383,7 @@ macro_rules! impl_fs_func {
         impl<C, U, $w, $f, Func> FsFunc<fn(&C, U, $w_in) -> $f_out> for Func
         where
             C: Const,
-            U: UniformInterface<Sl>,
+            U: Uniform<Sl>,
             W: Interpolant,
             F: FsInterface<Sl>,
             Func: Fn(&C, U, $w_in) -> $f_out + 'static,
@@ -395,7 +395,7 @@ macro_rules! impl_fs_func {
 
         impl<U, $w, $f> FsSig for fn(U, $w_in) -> $f_out
         where
-            U: UniformInterface<Sl>,
+            U: Uniform<Sl>,
             W: Interpolant,
             F: FsInterface<Sl>,
         {
@@ -407,7 +407,7 @@ macro_rules! impl_fs_func {
 
         impl<U, $w, $f, Func> FsFunc<fn(U, $w_in) -> $f_out> for Func
         where
-            U: UniformInterface<Sl>,
+            U: Uniform<Sl>,
             W: Interpolant,
             F: FsInterface<Sl>,
             Func: Fn(U, $w_in) -> $f_out + 'static,

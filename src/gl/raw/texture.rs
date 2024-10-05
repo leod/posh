@@ -5,8 +5,8 @@ use glow::HasContext;
 use crate::gl::{raw::error::check_gl_error, TextureError};
 
 use super::{
-    context::ContextShared, sampler_settings::set_comparison, Caps, Comparison, Image,
-    ImageInternalFormat, Sampler2dSettings,
+    context::ContextShared, sampler_params::set_comparison, Caps, Comparison, Image,
+    ImageInternalFormat, Sampler2dParams,
 };
 
 pub struct Texture2d {
@@ -15,7 +15,7 @@ pub struct Texture2d {
     size: [u32; 2],
     internal_format: ImageInternalFormat,
     levels: usize,
-    settings: Cell<Sampler2dSettings>,
+    params: Cell<Sampler2dParams>,
 }
 
 #[derive(Clone)]
@@ -26,7 +26,7 @@ pub enum Sampler {
 #[derive(Clone)]
 pub struct Sampler2d {
     pub texture: Rc<Texture2d>,
-    pub settings: Sampler2dSettings,
+    pub params: Sampler2dParams,
     pub comparison: Option<Comparison>,
 }
 
@@ -133,7 +133,7 @@ impl Texture2d {
             size: image.size,
             internal_format: image.internal_format,
             levels: levels as usize,
-            settings: Default::default(),
+            params: Default::default(),
         };
 
         // Check for errors *after* passing ownership of the texture to
@@ -229,18 +229,18 @@ impl Texture2d {
         Ok(())
     }
 
-    pub(super) fn set_settings(&self, new: Sampler2dSettings, comparison: Option<Comparison>) {
+    pub(super) fn set_params(&self, new: Sampler2dParams, comparison: Option<Comparison>) {
         let gl = &self.ctx.gl();
 
-        let current = self.settings.get();
+        let current = self.params.get();
         new.set_delta(gl, &current);
-        self.settings.set(new);
+        self.params.set(new);
 
         // FIXME: Check that comparison can be applied to the texture.
         set_comparison(gl, glow::TEXTURE_2D, comparison);
 
         #[cfg(debug_assertions)]
-        check_gl_error(gl, "after texture settings").unwrap();
+        check_gl_error(gl, "after texture params").unwrap();
     }
 }
 
@@ -267,7 +267,7 @@ impl Sampler {
         match self {
             Sampler::Sampler2d(Sampler2d {
                 texture,
-                settings,
+                params,
                 comparison,
             }) => {
                 let gl = texture.ctx.gl();
@@ -277,7 +277,7 @@ impl Sampler {
                     gl.bind_texture(glow::TEXTURE_2D, Some(id));
                 }
 
-                texture.set_settings(*settings, *comparison);
+                texture.set_params(*params, *comparison);
             }
         }
     }

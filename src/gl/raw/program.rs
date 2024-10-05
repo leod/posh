@@ -6,8 +6,7 @@ use crate::sl::program_def::{ProgramDef, UniformSamplerDef};
 
 use super::{
     context::ContextShared, error::check_gl_error, vertex_layout::VertexAttributeLayout, Buffer,
-    DrawError, DrawSettings, Framebuffer, ProgramError, ProgramValidationError, Sampler,
-    VertexSpec,
+    DrawError, DrawParams, Framebuffer, ProgramError, ProgramValidationError, Sampler, VertexSpec,
 };
 
 pub struct Program {
@@ -169,7 +168,7 @@ impl Program {
         samplers: &[Sampler],
         vertex_spec: &VertexSpec,
         framebuffer: &Framebuffer,
-        settings: &DrawSettings,
+        params: &DrawParams,
     ) -> Result<(), DrawError> {
         let ctx = &self.ctx;
         let gl = ctx.gl();
@@ -183,9 +182,9 @@ impl Program {
 
         let framebuffer_size = framebuffer.size(&self.ctx);
 
-        // `set_draw_settings` also clears the screen, so it must come after
+        // `set_draw_params` also clears the screen, so it must come after
         // binding the framebuffer.
-        ctx.set_draw_settings(settings, framebuffer_size);
+        ctx.set_draw_params(params, framebuffer_size);
 
         unsafe {
             gl.use_program(Some(self.id));

@@ -113,7 +113,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         const _: fn() = || {
             fn check_field<D, T>()
             where
-                D: ::posh::FsInterfaceDom,
+                D: ::posh::FsDom,
                 T: ::posh::FsInterface<D>,
             {}
 

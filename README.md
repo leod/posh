@@ -12,10 +12,10 @@ use posh::{gl, sl};
 // ... define custom shader interface types U, V, W, and F ...
 
 fn vertex_shader(uniform: U, vertex: V) -> sl::VsOutput<W> {
-    // ... compute `sl::VsOutput { clip_position, interpolant }` ...
+    // ... compute `sl::VsOutput { clip_pos, interp }` ...
 }
 
-fn fragment_shader(uniform: U, interpolant: W) -> F {
+fn fragment_shader(uniform: U, interp: W) -> F {
     // ... compute F ...
 }
 
@@ -27,7 +27,7 @@ let program: gl::Program<U, V, F> = gl.create_program(
 program
     .with_uniforms(/* uniform bindings matching U */)
     .with_framebuffer(/* framebuffer matching F */)
-    .with_settings(/* draw settings */)
+    .with_params(/* draw params */)
     .draw(/* vertex specification matching V */)?;
 ```
 

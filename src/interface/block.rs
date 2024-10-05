@@ -150,7 +150,7 @@ impl BlockDom for Sl {
 /// Plain-old vertex or uniform block data.
 ///
 /// Types that implement [`Block`] can be used as fields in types that implement
-/// [`VsInterface`] or [`UniformInterface`]. This allows them to be passed to
+/// [`VsInterface`] or [`Uniform`]. This allows them to be passed to
 /// shaders in draw calls.
 ///
 /// `Block` declarations are generic in [`BlockDom`] and can be instantiated as

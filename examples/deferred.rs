@@ -2,10 +2,7 @@ mod utils;
 
 use instant::Instant;
 
-use posh::{
-    gl, sl, Block, BlockDom, FsInterface, FsInterfaceDom, Gl, Sl, UniformInterface,
-    UniformInterfaceDom,
-};
+use posh::{gl, sl, Block, BlockDom, FsDom, FsInterface, Gl, Sl, Uniform, UniformDom};
 
 const WIDTH: u32 = 1024;
 const HEIGHT: u32 = 768;
@@ -20,15 +17,15 @@ pub struct Globals<D: BlockDom> {
     time: D::F32,
 }
 
-#[derive(Clone, Copy, UniformInterface)]
-pub struct SceneSamplers<D: UniformInterfaceDom> {
+#[derive(Clone, Copy, Uniform)]
+pub struct SceneSamplers<D: UniformDom> {
     albedo: D::ColorSampler2d<sl::Vec3>,
     world_normal: D::ColorSampler2d<sl::Vec3>,
     world_pos: D::ColorSampler2d<sl::Vec3>,
 }
 
 #[derive(Clone, Copy, FsInterface)]
-pub struct SceneAttachments<D: FsInterfaceDom> {
+pub struct SceneAttachments<D: FsDom> {
     albedo: D::ColorAttachment<sl::Vec3>,
     world_normal: D::ColorAttachment<sl::Vec3>,
     world_pos: D::ColorAttachment<sl::Vec3>,
@@ -36,12 +33,12 @@ pub struct SceneAttachments<D: FsInterfaceDom> {
 
 impl SceneAttachments<Gl> {
     fn as_scene_samplers(&self) -> SceneSamplers<Gl> {
-        let settings = gl::Sampler2dSettings::linear();
+        let params = gl::Sampler2dParams::linear();
 
         SceneSamplers {
-            albedo: self.albedo.as_color_sampler(settings),
-            world_normal: self.world_normal.as_color_sampler(settings),
-            world_pos: self.world_pos.as_color_sampler(settings),
+            albedo: self.albedo.as_color_sampler(params),
+            world_normal: self.world_normal.as_color_sampler(params),
+            world_pos: self.world_pos.as_color_sampler(params),
         }
     }
 }
@@ -117,8 +114,8 @@ mod scene_pass {
         let world_normal = CUBE_NORMALS.to_sl().get((vertex_id / 4) % 6);
 
         sl::VsOutput {
-            clip_position: screen_pos,
-            interpolant: SceneAttachments {
+            clip_pos: screen_pos,
+            interp: SceneAttachments {
                 albedo: sl::vec3(1.0, 0.0, 0.0),
                 world_pos,
                 world_normal,
@@ -126,8 +123,8 @@ mod scene_pass {
         }
     }
 
-    pub fn fragment_shader(_: (), interpolant: SceneAttachments<Sl>) -> SceneAttachments<Sl> {
-        interpolant
+    pub fn fragment_shader(_: (), interp: SceneAttachments<Sl>) -> SceneAttachments<Sl> {
+        interp
     }
 }
 
@@ -149,8 +146,8 @@ mod present_pass {
         let position = SQUARE_POSITIONS.to_sl().get(input.vertex_id);
 
         sl::VsOutput {
-            clip_position: position.extend(0.0).extend(1.0),
-            interpolant: (position + 1.0) / 2.0,
+            clip_pos: position.extend(0.0).extend(1.0),
+            interp: (position + 1.0) / 2.0,
         }
     }
 
@@ -219,12 +216,13 @@ impl Demo {
 
         self.scene_program
             .with_uniforms(self.globals.as_binding())
-            .with_framebuffer(gl::Framebuffer::color_depth(
-                self.scene_attachments.clone(),
-                self.depth_texture.as_depth_attachment(),
-            ))
-            .with_settings(
-                gl::DrawSettings::new()
+            .with_framebuffer(
+                self.depth_texture
+                    .as_depth_attachment()
+                    .with_color(self.scene_attachments.clone()),
+            )
+            .with_params(
+                gl::DrawParams::new()
                     .with_clear_color([0.0; 4])
                     .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less),
