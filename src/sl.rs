@@ -104,7 +104,7 @@ pub fn unique_struct_type<T: Struct>(ty: fn() -> StructType) -> Rc<StructType> {
     use std::{any::TypeId, cell::RefCell};
 
     std::thread_local! {
-        static MAP: RefCell<BTreeMap<TypeId, Rc<StructType>>> = RefCell::new(BTreeMap::new());
+        static MAP: RefCell<BTreeMap<TypeId, Rc<StructType>>> = const { RefCell::new(BTreeMap::new()) } ;
     }
 
     let key = TypeId::of::<T>();

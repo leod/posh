@@ -10,6 +10,10 @@ use super::{
 /// Data passed from a vertex shader to a fragment shader.
 ///
 /// The interface of this trait is a private implementation detail.
+///
+/// # Safety
+///
+/// TODO
 pub unsafe trait Interpolant: Value {
     #[doc(hidden)]
     fn shader_outputs(&self, path: &str) -> Vec<(String, InterpolationQualifier, Rc<Expr>)>;
@@ -82,6 +86,7 @@ macro_rules! tuple_impl {
             }
 
             #[allow(unused)]
+            #[allow(clippy::unused_unit)]
             fn shader_input(path: &str) -> Self {
                 (
                     $($name::shader_input(&join_ident_path(path, stringify!($name))),)*

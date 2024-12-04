@@ -206,12 +206,7 @@ impl ImageInternalFormat {
 
         // FIXME: This should rely on caps (maybe).
 
-        match self {
-            DepthU16 => true,
-            DepthF32 => true,
-            DepthU24StencilU8 => true,
-            _ => false,
-        }
+        matches!(self, DepthU16 | DepthF32 | DepthU24StencilU8)
     }
 
     pub fn is_stencil_renderable(&self) -> bool {
@@ -219,10 +214,7 @@ impl ImageInternalFormat {
 
         // FIXME: This should rely on caps (maybe).
 
-        match self {
-            DepthU24StencilU8 => true,
-            _ => false,
-        }
+        matches!(self, DepthU24StencilU8)
     }
 }
 

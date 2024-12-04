@@ -5,6 +5,10 @@ use super::{dag::Expr, Bool, Interpolant, Value, Vec2, Vec4, F32, U32};
 /// Constants that can be passed to a shader at shader build time.
 ///
 /// This trait is used to restrict the types that can be used as constants.
+///
+/// # Safety
+///
+/// TODO
 pub unsafe trait Const {}
 
 unsafe impl Const for () {}

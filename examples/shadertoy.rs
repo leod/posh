@@ -3,6 +3,8 @@
 
 mod utils;
 
+use std::f32::consts::TAU;
+
 use instant::Instant;
 
 use posh::{gl, sl, Block, BlockDom, Gl, Sl, ToSl};
@@ -40,7 +42,7 @@ fn palette(t: sl::F32) -> sl::Vec3 {
     let c = sl::vec3(1.0, 1.0, 1.0);
     let d = sl::vec3(0.263, 0.416, 0.557);
 
-    return a + b * (6.28318 * (c * t + d)).cos();
+    a + b * (TAU * (c * t + d)).cos()
 }
 
 fn fragment_shader(Globals { time, resolution }: Globals<Sl>, input: sl::FsInput<()>) -> sl::Vec4 {

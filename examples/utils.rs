@@ -73,7 +73,7 @@ pub fn run_demo<Demo: 'static>(
     let video = sdl.video().unwrap();
 
     let gl_attr = video.gl_attr();
-    gl_attr.set_context_profile(sdl2::video::GLProfile::GLES);
+    gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
     gl_attr.set_context_version(3, 0);
 
     let window = video
@@ -95,9 +95,8 @@ pub fn run_demo<Demo: 'static>(
         for event in event_loop.poll_iter() {
             use sdl2::event::Event::*;
 
-            match event {
-                Quit { .. } => return,
-                _ => {}
+            if let Quit { .. } = event {
+                return;
             }
         }
 
