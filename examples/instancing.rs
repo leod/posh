@@ -3,7 +3,7 @@ use std::{
     io::{BufRead, BufReader},
 };
 
-use posh::{gl, sl, Block, BlockDom, Gl, Sl, VsInterface, VsDom};
+use posh::{gl, sl, Block, BlockDom, Gl, Sl, VsDom, VsInterface};
 
 const WIDTH: u32 = 1024;
 const HEIGHT: u32 = 768;

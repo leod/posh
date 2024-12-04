@@ -1,7 +1,6 @@
 use posh::{
-    gl::ColorSampler2d,
     sl::{self, Value},
-    Block, BlockDom, Sl, Uniform, UniformDom, VsInterface, VsDom,
+    Block, BlockDom, Sl, Uniform, UniformDom, VsDom, VsInterface,
 };
 
 #[derive(Clone, Copy, Value)]

@@ -201,8 +201,8 @@ where
     type Sl = [U::Sl; N];
 
     fn visit<'a>(&'a self, path: &str, visitor: &mut impl UniformVisitor<'a, D>) {
-        for i in 0..N {
-            self[i].visit(&join_ident_path(path, &i.to_string()), visitor);
+        for (i, value) in self.iter().enumerate() {
+            value.visit(&join_ident_path(path, &i.to_string()), visitor);
         }
     }
 

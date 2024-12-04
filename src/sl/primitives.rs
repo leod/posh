@@ -151,34 +151,6 @@ where
     R::from_expr(expr)
 }
 
-pub(crate) fn built_in_4<U, V, W, X, R>(
-    name: &str,
-    u: impl ToSl<Output = U>,
-    v: impl ToSl<Output = V>,
-    w: impl ToSl<Output = W>,
-    x: impl ToSl<Output = X>,
-) -> R
-where
-    U: Object,
-    V: Object,
-    W: Object,
-    X: Object,
-    R: Value,
-{
-    let ty = R::ty();
-    let name = name.to_string();
-    let args = vec![
-        u.to_sl().expr(),
-        v.to_sl().expr(),
-        w.to_sl().expr(),
-        x.to_sl().expr(),
-    ];
-
-    let expr = Expr::CallBuiltIn { ty, name, args };
-
-    R::from_expr(expr)
-}
-
 #[doc(hidden)]
 pub fn field<R: Value>(base: Rc<Expr>, name: &'static str) -> R {
     let ty = R::ty();

@@ -4,8 +4,8 @@ use syn::{
     parse_quote,
     spanned::Spanned,
     visit_mut::{visit_type_mut, VisitMut},
-    Attribute, Data, Error, Field, Fields, GenericParam, Generics, Ident, Path, QSelf, Result,
-    Token, Type, TypePath,
+    Data, Error, Field, Fields, GenericParam, Generics, Ident, Path, QSelf, Result, Token, Type,
+    TypePath,
 };
 
 #[derive(Clone)]
@@ -50,13 +50,6 @@ impl StructFields {
         self.fields
             .iter()
             .map(|field| field.ident.as_ref().unwrap().to_string())
-            .collect()
-    }
-
-    pub fn attrs(&self) -> Vec<&[Attribute]> {
-        self.fields
-            .iter()
-            .map(|field| field.attrs.as_slice())
             .collect()
     }
 }
@@ -112,9 +105,9 @@ pub fn associated_type_to_trait(ty: &str) -> Option<Path> {
         "UVec4", "Mat2", "Mat3", "Mat4",
     ];
 
-    let vertex_tys = vec!["Block"];
+    let vertex_tys = ["Block"];
 
-    let fragment_tys = vec!["ColorAttachment"];
+    let fragment_tys = ["ColorAttachment"];
 
     // TODO: Update associated type list, or see if we can do without it by now.
 
