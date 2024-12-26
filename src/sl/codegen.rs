@@ -144,6 +144,25 @@ fn write_var(
             ty,
         } => {
             let ty_name = type_name(ctx.struct_registry, ty);
+            let yes_scope = ctx.scope_form.scope(*yes_id);
+            let no_scope = ctx.scope_form.scope(*no_id);
+
+            if yes_scope.vars.is_empty() && no_scope.vars.is_empty() && ty.built_in_type().is_some()
+            {
+                // If neither branch has variables, we can simplify the codegen
+                // to avoid generating an if/else statement and generate a
+                // ternary expression instead. Note that some GLSL versions do
+                // not allow ternary expressions for structs.
+                let yes_result = yes_scope.result.unwrap();
+                let no_result = no_scope.result.unwrap();
+
+                writeln!(
+                    f,
+                    "{indent}{ty_name} {var_id} = ({cond}) ? ({yes_result}) : ({no_result});"
+                )?;
+
+                return Ok(true);
+            }
 
             writeln!(f, "{indent}{ty_name} {var_id};")?;
             writeln!(f, "{indent}if ({cond}) {{")?;
@@ -152,7 +171,6 @@ fn write_var(
                 let ctx = ctx.nest();
                 let indent = ctx.indent();
 
-                let yes_scope = ctx.scope_form.scope(*yes_id);
                 let result = yes_scope.result.unwrap();
 
                 if write_scope(f, ctx, yes_scope)? {
@@ -166,7 +184,6 @@ fn write_var(
                 let ctx = ctx.nest();
                 let indent = ctx.indent();
 
-                let no_scope = ctx.scope_form.scope(*no_id);
                 let result = no_scope.result.unwrap();
 
                 if write_scope(f, ctx, no_scope)? {
