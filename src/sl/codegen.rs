@@ -72,7 +72,8 @@ pub fn write_shader_stage(
         depth: 1,
     };
 
-    writeln!(f, "#version 330")?;
+    // TODO: Specify appropriate GLSL version depending on the target.
+    writeln!(f, "#version 300 es")?;
     writeln!(f)?;
 
     // TODO: Make precision configurable.
