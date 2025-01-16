@@ -1,6 +1,6 @@
 use std::{
     any::{type_name, TypeId},
-    cell::RefCell,
+    cell::{Cell, RefCell},
     collections::hash_map,
     marker::PhantomData,
     rc::Rc,
@@ -39,6 +39,7 @@ impl ProgramCache {
         raw: &raw::Context,
         vertex_shader: VFunc,
         fragment_shader: FFunc,
+        log_sources: bool,
     ) -> Result<Program<U, VSig::V, FSig::F>, ProgramError>
     where
         U: UniformUnion<VSig::U, FSig::U> + 'static,
@@ -61,16 +62,18 @@ impl ProgramCache {
                     fragment_shader,
                 );
 
-                log::info!(
-                    "Caching vertex shader for `{}`:\n{}",
-                    type_name::<VFunc>(),
-                    program_def.vertex_shader_source
-                );
-                log::info!(
-                    "Caching fragment shader for `{}`:\n{}",
-                    type_name::<FFunc>(),
-                    program_def.fragment_shader_source
-                );
+                if log_sources {
+                    log::info!(
+                        "Caching vertex shader for `{}`:\n{}",
+                        type_name::<VFunc>(),
+                        program_def.vertex_shader_source
+                    );
+                    log::info!(
+                        "Caching fragment shader for `{}`:\n{}",
+                        type_name::<FFunc>(),
+                        program_def.fragment_shader_source
+                    );
+                }
 
                 let raw = raw.create_program(program_def)?;
 
@@ -109,6 +112,7 @@ where
                 &self.gl.raw,
                 self.vertex_shader,
                 self.fragment_shader,
+                self.gl.enable_program_source_logging.get(),
             );
 
         let inner = DrawBuilder {
@@ -130,6 +134,7 @@ where
 pub struct Context {
     raw: Rc<raw::Context>,
     program_cache: Rc<RefCell<ProgramCache>>,
+    enable_program_source_logging: Cell<bool>,
 }
 
 impl Context {
@@ -139,6 +144,7 @@ impl Context {
         Ok(Self {
             raw: Rc::new(raw),
             program_cache: Default::default(),
+            enable_program_source_logging: Cell::new(false),
         })
     }
 
@@ -233,8 +239,10 @@ impl Context {
         let program_def =
             transpile_to_program_def::<U, VSig, VFunc, FSig, FFunc>(vertex_shader, fragment_shader);
 
-        log::info!("Vertex shader:\n{}", program_def.vertex_shader_source);
-        log::info!("Fragment shader:\n{}", program_def.fragment_shader_source);
+        if self.enable_program_source_logging.get() {
+            log::info!("Vertex shader:\n{}", program_def.vertex_shader_source);
+            log::info!("Fragment shader:\n{}", program_def.fragment_shader_source);
+        }
 
         let raw = self.raw.create_program(program_def)?;
 
@@ -260,8 +268,10 @@ impl Context {
             fragment_shader,
         );
 
-        log::info!("Vertex shader:\n{}", program_def.vertex_shader_source);
-        log::info!("Fragment shader:\n{}", program_def.fragment_shader_source);
+        if self.enable_program_source_logging.get() {
+            log::info!("Vertex shader:\n{}", program_def.vertex_shader_source);
+            log::info!("Fragment shader:\n{}", program_def.fragment_shader_source);
+        }
 
         let raw = self.raw.create_program(program_def)?;
 
@@ -287,6 +297,10 @@ impl Context {
         }
     }
 
+    pub fn finish(&self) {
+        self.raw.finish();
+    }
+
     pub fn default_framebuffer_size(&self) -> [u32; 2] {
         self.raw.default_framebuffer_size()
     }
@@ -295,7 +309,7 @@ impl Context {
         self.raw.set_default_framebuffer_size(size);
     }
 
-    pub fn finish(&self) {
-        self.raw.finish();
+    pub fn set_enable_program_source_logging(&self, value: bool) {
+        self.enable_program_source_logging.set(value);
     }
 }
