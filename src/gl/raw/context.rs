@@ -181,8 +181,8 @@ impl ContextShared {
 
             match (format.is_depth_renderable(), format.is_stencil_renderable()) {
                 (true, true) => (glow::DEPTH_STENCIL_ATTACHMENT, attachment),
-                (true, false) => (glow::DEPTH_RENDERABLE, attachment),
-                _ => panic!("expected texture to be depth renderable"),
+                (true, false) => (glow::DEPTH_ATTACHMENT, attachment),
+                _ => panic!("expected texture to have a depth attachment"),
             }
         });
 
