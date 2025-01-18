@@ -6,15 +6,16 @@ edition = "2021"
 [dependencies]
 posh-derive = { path = "derive" }
 
-sealed = "0.4.0"
-log = "0.4.17"
-thiserror = "1.0.38"
 bytemuck = { git = "https://github.com/leod/bytemuck", branch = "specify_crate_in_derive", features = ["derive"] }
 crevice = { git = "https://github.com/leod/crevice", branch = "specify_crate_in_derive" }
-glow = "0.13.0"
-mint = { version = "0.5.9", optional = true }
-glam = { version = "0.27.0", optional = true }
 fxhash = "0.2"
+glam = { version = "0.27.0", optional = true }
+glow = "0.13.0"
+log = "0.4.17"
+mint = { version = "0.5.9", optional = true }
+sealed = "0.4.0"
+smallvec = "1.13.2"
+thiserror = "1.0.38"
 
 [workspace]
 members = ["derive", "run-wasm"]
@@ -26,24 +27,24 @@ default = ["glam", "mint"]
 [dev-dependencies]
 glam = "0.27.0"
 image = "0.24.5"
+instant = "0.1.12"
 nanorand = "0.7.0"
 simple_logger = "4.1.0"
-instant = "0.1.12"
 
 [target.'cfg(not(target_family = "wasm"))'.dev-dependencies]
 sdl2 = "0.35.2"
 
 [target.'cfg(target_family = "wasm")'.dev-dependencies]
 console_log = "1"
-winit = "0.28.6"
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4.37"
+winit = "0.28.6"
 
 [target.'cfg(target_family = "wasm")'.dev-dependencies.web-sys]
 version = "0.3.22"
 features = [
     'CanvasRenderingContext2d',
+    'OrientationLockType',
     'Screen',
     'ScreenOrientation',
-    'OrientationLockType',
 ]

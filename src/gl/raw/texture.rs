@@ -246,6 +246,8 @@ impl Texture2d {
 
 impl Drop for Texture2d {
     fn drop(&mut self) {
+        self.ctx.unbind_texture_if_bound(self.id);
+
         let gl = self.ctx.gl();
 
         unsafe {

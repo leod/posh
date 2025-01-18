@@ -95,16 +95,17 @@ impl<F: FsInterface<Sl>> Framebuffer<F> {
         match &self.0 {
             Default => raw::Framebuffer::Default,
             Depth(depth) => raw::Framebuffer::Attachments {
-                attachments: vec![depth.raw.clone()],
+                color_attachments: Vec::new(),
+                depth_attachment: Some(depth.raw.clone()),
             },
             Color(color) => raw::Framebuffer::Attachments {
-                attachments: raw_color_attachments(color),
+                color_attachments: raw_color_attachments(color),
+                depth_attachment: None,
             },
-            ColorDepth { color, depth } => {
-                let mut attachments = raw_color_attachments(color);
-                attachments.push(depth.raw.clone());
-                raw::Framebuffer::Attachments { attachments }
-            }
+            ColorDepth { color, depth } => raw::Framebuffer::Attachments {
+                color_attachments: raw_color_attachments(color),
+                depth_attachment: Some(depth.raw.clone()),
+            },
         }
     }
 }

@@ -172,7 +172,7 @@ impl Program {
         assert_eq!(samplers.len(), def.uniform_sampler_defs.len());
         assert!(vertex_spec.is_compatible(&self.def.vertex_block_defs));
 
-        framebuffer.bind(&self.ctx)?;
+        ctx.bind_framebuffer(framebuffer)?;
 
         let framebuffer_size = framebuffer.size(&self.ctx);
 
@@ -226,9 +226,6 @@ impl Program {
 
         // TODO: Remove overly conservative unbinding.
         gl.bind_buffer(glow::UNIFORM_BUFFER, None);
-
-        // TODO: Remove overly conservative unbinding.
-        framebuffer.unbind(&self.ctx);
 
         #[cfg(debug_assertions)]
         check_gl_error(gl, "after draw").map_err(DrawError::Error)?;

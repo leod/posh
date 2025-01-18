@@ -1,13 +1,20 @@
-use std::{cell::Cell, rc::Rc};
+use std::{
+    cell::{Cell, RefCell},
+    rc::Rc,
+};
 
 use glow::HasContext;
+use smallvec::SmallVec;
 
 use crate::{
     gl::{BufferError, BufferUsage, ProgramError},
     sl::program_def::ProgramDef,
 };
 
-use super::{Buffer, Caps, ContextError, DrawParams, Image, Program, Texture2d, TextureError};
+use super::{
+    Attachment, Buffer, Caps, ContextError, DrawParams, Framebuffer, FramebufferError, Image,
+    Program, Texture2d, TextureError,
+};
 
 pub(super) struct ContextShared {
     gl: glow::Context,
@@ -17,6 +24,9 @@ pub(super) struct ContextShared {
     draw_fbo: glow::Framebuffer,
     default_framebuffer_size: Cell<[u32; 2]>,
     bound_program_id: Cell<Option<glow::Program>>,
+    is_draw_fbo_bound: Cell<bool>,
+    bound_color_attachment_ids: RefCell<SmallVec<[glow::Texture; 16]>>,
+    bound_depth_attachment_id: Cell<Option<(u32, glow::Texture)>>,
 }
 
 pub struct Context {
@@ -44,10 +54,6 @@ impl ContextShared {
         self.draw_params.set(*new);
     }
 
-    pub(super) fn draw_fbo(&self) -> glow::Framebuffer {
-        self.draw_fbo
-    }
-
     pub(super) fn default_framebuffer_size(&self) -> [u32; 2] {
         self.default_framebuffer_size.get()
     }
@@ -66,6 +72,226 @@ impl ContextShared {
         if Some(id) == self.bound_program_id.get() {
             self.bind_program(None);
         }
+    }
+
+    pub(super) fn bind_color_attachments(
+        &self,
+        attachments: &[Attachment],
+    ) -> Result<(), FramebufferError> {
+        // OpenGL ES 3.0.6: 4.4.2.4 Attaching Texture Images to a Framebuffer
+        // > An `INVALID_OPERATION` is generated if `attachment` is
+        // > `COLOR_ATTACHMENTm` where `m` is greater than or equal to the value
+        // > of `MAX_COLOR_ATTACHMENTS`.
+        let num_attachments = attachments
+            .len()
+            .try_into()
+            .expect("number of attachments is out of u32 range");
+
+        if num_attachments > self.caps.max_color_attachments {
+            return Err(FramebufferError::TooManyColorAttachments {
+                requested: num_attachments,
+                max: self.caps.max_color_attachments,
+            });
+        }
+
+        if num_attachments > self.caps.max_draw_buffers {
+            return Err(FramebufferError::TooManyDrawBuffers {
+                requested: num_attachments,
+                max: self.caps.max_draw_buffers,
+            });
+        }
+
+        let mut bound_ids = self.bound_color_attachment_ids.borrow_mut();
+
+        for (idx, attachment) in attachments.iter().enumerate() {
+            if idx < bound_ids.len() && bound_ids[idx] == attachment.id() {
+                continue;
+            }
+
+            match attachment {
+                Attachment::Texture2d { texture, level } => {
+                    // OpenGL ES 3.0.6: 4.4.2.4 Attaching Texture Images to a
+                    // Framebuffer
+                    // > If `textarget` is `TEXTURE_2D`, `level` must be greater
+                    // > than or equal to zero and no larger than `log_2` of the
+                    // > value of `MAX_TEXTURE_SIZE`.
+
+                    assert!(texture.internal_format().is_color_renderable());
+
+                    let max_level = (self.caps.max_texture_size as f64).log2() as u32;
+
+                    if *level > max_level {
+                        return Err(FramebufferError::LevelTooLarge {
+                            requested: *level,
+                            max: max_level,
+                        });
+                    }
+
+                    let location = glow::COLOR_ATTACHMENT0 + idx as u32;
+                    let level: i32 = (*level).try_into().expect("level is out of i32 range");
+
+                    unsafe {
+                        self.gl.framebuffer_texture_2d(
+                            glow::FRAMEBUFFER,
+                            location,
+                            glow::TEXTURE_2D,
+                            Some(texture.id()),
+                            level,
+                        )
+                    };
+                }
+            };
+        }
+
+        if bound_ids.len() > attachments.len() {
+            for idx in attachments.len()..bound_ids.len() {
+                let location = glow::COLOR_ATTACHMENT0 + idx as u32;
+
+                unsafe {
+                    self.gl.framebuffer_texture_2d(
+                        glow::FRAMEBUFFER,
+                        location,
+                        glow::TEXTURE_2D,
+                        None,
+                        0,
+                    )
+                };
+            }
+        }
+
+        bound_ids.clear();
+        bound_ids.extend(attachments.iter().map(|attachment| attachment.id()));
+
+        // FIXME: Do we need to check for the presence of at least one
+        // attachment?
+
+        Ok(())
+    }
+
+    pub(super) fn bind_depth_attachment(&self, attachment: Option<&Attachment>) {
+        let attachment_id = attachment.map(|attachment| attachment.id());
+        let bound_id = self.bound_depth_attachment_id.get().map(|(_, id)| id);
+
+        if attachment_id == bound_id {
+            return;
+        }
+
+        let attachment = attachment.map(|attachment| {
+            let format = attachment.internal_format();
+
+            match (format.is_depth_renderable(), format.is_stencil_renderable()) {
+                (true, true) => (glow::DEPTH_STENCIL_ATTACHMENT, attachment),
+                (true, false) => (glow::DEPTH_RENDERABLE, attachment),
+                _ => panic!("expected texture to be depth renderable"),
+            }
+        });
+
+        let location = attachment.map(|(location, _)| location);
+        let bound_location = self
+            .bound_depth_attachment_id
+            .get()
+            .map(|(bound_location, _)| bound_location);
+
+        if let Some(bound_location) =
+            bound_location.filter(|bound_location| Some(*bound_location) != location)
+        {
+            // TODO: In the future, the existing binding could be a non-2D
+            // texture, but we are currently using the 2D unbinding function in
+            // all cases. Is this correct? Same in `unbind_texture_if_bound()`.
+            unsafe {
+                self.gl.framebuffer_texture_2d(
+                    glow::FRAMEBUFFER,
+                    bound_location,
+                    glow::TEXTURE_2D,
+                    None,
+                    0,
+                )
+            };
+        }
+
+        if let Some((location, attachment)) = attachment {
+            match attachment {
+                Attachment::Texture2d { level, texture } => {
+                    let level = (*level).try_into().expect("level is out of i32 range");
+
+                    unsafe {
+                        self.gl.framebuffer_texture_2d(
+                            glow::FRAMEBUFFER,
+                            location,
+                            glow::TEXTURE_2D,
+                            Some(texture.id()),
+                            level,
+                        )
+                    };
+                }
+            }
+        }
+
+        self.bound_depth_attachment_id
+            .set(attachment.map(|(location, attachment)| (location, attachment.id())));
+    }
+
+    pub(super) fn unbind_texture_if_bound(&self, id: glow::Texture) {
+        if let Some((location, _)) = self
+            .bound_depth_attachment_id
+            .get()
+            .filter(|(_, bound_id)| *bound_id == id)
+        {
+            unsafe {
+                self.gl.framebuffer_texture_2d(
+                    glow::FRAMEBUFFER,
+                    location,
+                    glow::TEXTURE_2D,
+                    None,
+                    0,
+                )
+            };
+
+            self.bound_depth_attachment_id.set(None);
+        }
+
+        if self
+            .bound_color_attachment_ids
+            .borrow()
+            .iter()
+            .any(|bound_id| *bound_id == id)
+        {
+            // TODO: We could be more efficient in how much we unbind here, but
+            // I expect that this would help only rarely.
+            self.bind_color_attachments(&[])
+                .expect("setting empty color attachments should always succeed");
+        }
+    }
+
+    pub(super) fn bind_framebuffer(
+        &self,
+        framebuffer: &Framebuffer,
+    ) -> Result<(), FramebufferError> {
+        match framebuffer {
+            Framebuffer::Default => {
+                if self.is_draw_fbo_bound.get() {
+                    unsafe { self.gl.bind_framebuffer(glow::FRAMEBUFFER, None) };
+                    self.is_draw_fbo_bound.set(false);
+                }
+            }
+            Framebuffer::Attachments {
+                color_attachments,
+                depth_attachment,
+            } => {
+                if !self.is_draw_fbo_bound.get() {
+                    unsafe {
+                        self.gl
+                            .bind_framebuffer(glow::FRAMEBUFFER, Some(self.draw_fbo))
+                    };
+                    self.is_draw_fbo_bound.set(true);
+                }
+
+                self.bind_color_attachments(color_attachments)?;
+                self.bind_depth_attachment(depth_attachment.as_ref());
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -102,7 +328,10 @@ impl Context {
             draw_vao,
             draw_fbo,
             default_framebuffer_size: Cell::new(default_framebuffer_size),
-            bound_program_id: Cell::new(None),
+            bound_program_id: Default::default(),
+            is_draw_fbo_bound: Default::default(),
+            bound_color_attachment_ids: Default::default(),
+            bound_depth_attachment_id: Default::default(),
         });
 
         Ok(Self { shared })
