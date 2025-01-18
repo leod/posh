@@ -12,6 +12,7 @@ use crate::{
 };
 
 use super::{
+    error::{check_framebuffer_completeness, check_gl_error},
     Attachment, Buffer, Caps, ContextError, DrawParams, Framebuffer, FramebufferError, Image,
     Program, Texture2d, TextureError,
 };
@@ -159,6 +160,14 @@ impl ContextShared {
             }
         }
 
+        if bound_ids.len() != attachments.len() {
+            let draw_buffers: SmallVec<[_; 8]> = (0..attachments.len())
+                .map(|idx| glow::COLOR_ATTACHMENT0 + idx as u32)
+                .collect();
+
+            unsafe { self.gl.draw_buffers(&draw_buffers) };
+        }
+
         bound_ids.clear();
         bound_ids.extend(attachments.iter().map(|attachment| attachment.id()));
 
@@ -288,6 +297,13 @@ impl ContextShared {
 
                 self.bind_color_attachments(color_attachments)?;
                 self.bind_depth_attachment(depth_attachment.as_ref());
+
+                #[cfg(debug_assertions)]
+                check_framebuffer_completeness(&self.gl).map_err(FramebufferError::Incomplete)?;
+
+                #[cfg(debug_assertions)]
+                check_gl_error(&self.gl, "after binding attachments")
+                    .map_err(FramebufferError::Unexpected)?;
             }
         }
 
