@@ -13,8 +13,10 @@ pub(super) struct ContextShared {
     gl: glow::Context,
     caps: Caps,
     draw_params: Cell<DrawParams>,
+    draw_vao: glow::VertexArray,
     draw_fbo: glow::Framebuffer,
     default_framebuffer_size: Cell<[u32; 2]>,
+    bound_program_id: Cell<Option<glow::Program>>,
 }
 
 pub struct Context {
@@ -49,6 +51,22 @@ impl ContextShared {
     pub(super) fn default_framebuffer_size(&self) -> [u32; 2] {
         self.default_framebuffer_size.get()
     }
+
+    pub(super) fn bind_program(&self, id: Option<glow::Program>) {
+        if id == self.bound_program_id.get() {
+            return;
+        }
+
+        unsafe { self.gl.use_program(id) };
+
+        self.bound_program_id.set(id);
+    }
+
+    pub(super) fn unbind_program_if_bound(&self, id: glow::Program) {
+        if Some(id) == self.bound_program_id.get() {
+            self.bind_program(None);
+        }
+    }
 }
 
 impl Context {
@@ -58,9 +76,9 @@ impl Context {
         // All vertex bindings are made through a single vertex array object
         // that is bound at the start. The vertex array object binding must not
         // be changed during the lifetime of a context.
-        let vao = unsafe { gl.create_vertex_array() }.map_err(ContextError::ObjectCreation)?;
+        let draw_vao = unsafe { gl.create_vertex_array() }.map_err(ContextError::ObjectCreation)?;
 
-        unsafe { gl.bind_vertex_array(Some(vao)) };
+        unsafe { gl.bind_vertex_array(Some(draw_vao)) };
 
         // All framebuffer attachments are made with a single framebuffer object
         // that is created at the start.
@@ -81,8 +99,10 @@ impl Context {
             gl,
             caps,
             draw_params: Cell::new(DrawParams::new()),
+            draw_vao,
             draw_fbo,
             default_framebuffer_size: Cell::new(default_framebuffer_size),
+            bound_program_id: Cell::new(None),
         });
 
         Ok(Self { shared })
@@ -123,5 +143,14 @@ impl Context {
 
     pub fn set_default_framebuffer_size(&self, size: [u32; 2]) {
         self.shared.default_framebuffer_size.set(size);
+    }
+}
+
+impl Drop for ContextShared {
+    fn drop(&mut self) {
+        unsafe {
+            self.gl.delete_vertex_array(self.draw_vao);
+            self.gl.delete_framebuffer(self.draw_fbo);
+        }
     }
 }

@@ -24,7 +24,7 @@ impl Program {
         check_gl_error(gl, "before creating program").map_err(ProgramError::Unexpected)?;
 
         let id = unsafe { gl.create_program() }.map_err(ProgramError::ProgramCreation)?;
-        let program = Program {
+        let program = Self {
             ctx: ctx.clone(),
             def,
             id,
@@ -104,9 +104,7 @@ impl Program {
         }
 
         // Set texture units.
-        unsafe {
-            gl.use_program(Some(program.id));
-        }
+        ctx.bind_program(Some(program.id));
 
         for sampler_def in &program.def.uniform_sampler_defs {
             let location = unsafe { gl.get_uniform_location(program.id, &sampler_def.name) };
@@ -123,10 +121,6 @@ impl Program {
         }
 
         check_gl_error(gl, "after setting texture units").map_err(ProgramError::Unexpected)?;
-
-        unsafe {
-            gl.use_program(None);
-        }
 
         // Set uniform block locations.
         for uniform_def in &program.def.uniform_block_defs {
@@ -186,9 +180,7 @@ impl Program {
         // binding the framebuffer.
         ctx.set_draw_params(params, framebuffer_size);
 
-        unsafe {
-            gl.use_program(Some(self.id));
-        }
+        ctx.bind_program(Some(self.id));
 
         for (buffer, block_def) in uniform_buffers.iter().zip(&def.uniform_block_defs) {
             assert!(buffer.context().ref_eq(ctx));
@@ -236,11 +228,6 @@ impl Program {
         gl.bind_buffer(glow::UNIFORM_BUFFER, None);
 
         // TODO: Remove overly conservative unbinding.
-        unsafe {
-            gl.use_program(None);
-        }
-
-        // TODO: Remove overly conservative unbinding.
         framebuffer.unbind(&self.ctx);
 
         #[cfg(debug_assertions)]
@@ -252,6 +239,8 @@ impl Program {
 
 impl Drop for Program {
     fn drop(&mut self) {
+        self.ctx.unbind_program_if_bound(self.id);
+
         let gl = self.ctx.gl();
 
         unsafe {
