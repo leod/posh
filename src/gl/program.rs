@@ -1,5 +1,7 @@
 use std::{marker::PhantomData, rc::Rc};
 
+use smallvec::SmallVec;
+
 use crate::{
     interface::UniformVisitor,
     sl::{self, ColorSample},
@@ -226,7 +228,6 @@ where
     }
 
     pub fn draw(self, vertex_spec: VertexSpec<V>) -> Result<Self, DrawError> {
-        // TODO: These allocations can be avoided once stable has allocators.
         // TODO: Remove hardcoded path names.
         let mut uniform_visitor = CollectUniforms::default();
         self.uniforms.visit("", &mut uniform_visitor);
@@ -245,6 +246,9 @@ where
                 &self.inner.params,
             )
         }?;
+
+        // Make borrow checker happy.
+        std::mem::drop(uniform_visitor);
 
         Ok(self)
     }
@@ -315,8 +319,8 @@ where
 
 #[derive(Default)]
 struct CollectUniforms<'a> {
-    raw_uniform_buffers: Vec<&'a raw::Buffer>,
-    raw_samplers: Vec<raw::Sampler>,
+    raw_uniform_buffers: SmallVec<[&'a raw::Buffer; 8]>,
+    raw_samplers: SmallVec<[raw::Sampler; 8]>,
 }
 
 impl<'a> UniformVisitor<'a, Gl> for CollectUniforms<'a> {

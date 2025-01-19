@@ -91,9 +91,8 @@ impl<V: VsInterface<Sl>> VertexSpec<V> {
     }
 }
 
-fn raw_vertices<V: VsInterface<Gl>>(vertices: &V) -> Vec<raw::VertexBufferBinding> {
-    // TODO: Reduce per-draw-call allocations.
-    struct Visitor(Vec<raw::VertexBufferBinding>);
+fn raw_vertices<V: VsInterface<Gl>>(vertices: &V) -> raw::VertexBufferBindingVec {
+    struct Visitor(raw::VertexBufferBindingVec);
 
     impl<'a> VertexVisitor<'a, Gl> for Visitor {
         fn accept<B: Block<Sl>>(&mut self, path: &str, binding: &'a VertexBufferBinding<B>) {
@@ -109,7 +108,7 @@ fn raw_vertices<V: VsInterface<Gl>>(vertices: &V) -> Vec<raw::VertexBufferBindin
     }
 
     // TODO: Remove hardcoded path names.
-    let mut visitor = Visitor(Vec::new());
+    let mut visitor = Visitor(Default::default());
     vertices.visit("vertex_input", &mut visitor);
 
     visitor.0

@@ -1,5 +1,7 @@
 use std::rc::Rc;
 
+use smallvec::SmallVec;
+
 use super::{
     context::ContextShared, Comparison, ImageInternalFormat, Sampler2d, Sampler2dParams, Texture2d,
 };
@@ -47,11 +49,13 @@ impl Attachment {
     }
 }
 
+pub type AttachmentVec = SmallVec<[Attachment; 8]>;
+
 #[derive(Clone)]
 pub enum Framebuffer {
     Default,
     Attachments {
-        color_attachments: Vec<Attachment>,
+        color_attachments: AttachmentVec,
         depth_attachment: Option<Attachment>,
     },
 }

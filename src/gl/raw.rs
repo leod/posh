@@ -19,7 +19,7 @@ pub use error::{
     BufferError, ContextError, CreateError, DrawError, FramebufferError, ProgramError,
     ProgramValidationError, TextureError, VertexArrayError,
 };
-pub use framebuffer::{Attachment, Framebuffer};
+pub use framebuffer::{Attachment, AttachmentVec, Framebuffer};
 pub use params::{
     BlendEquation, BlendFunc, Blending, Comparison, CullFace, DrawParams, Rect, StencilOp,
     StencilOps, StencilTest,
@@ -27,4 +27,6 @@ pub use params::{
 pub use program::Program;
 pub use sampler_params::{Sampler2dParams, SamplerMagFilter, SamplerMinFilter, SamplerWrap};
 pub use texture::{Sampler, Sampler2d, Texture2d};
-pub use vertex_spec::{ElementType, PrimitiveMode, VertexBufferBinding, VertexSpec};
+pub use vertex_spec::{
+    ElementType, PrimitiveMode, VertexBufferBinding, VertexBufferBindingVec, VertexSpec,
+};

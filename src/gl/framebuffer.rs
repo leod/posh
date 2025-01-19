@@ -1,12 +1,17 @@
 use std::marker::PhantomData;
 
+use smallvec::SmallVec;
+
 use crate::{
     interface::FragmentVisitor,
     sl::{self, ColorSample},
     FsInterface, Gl, Sl,
 };
 
-use super::{raw, ColorSampler2d, Sampler2dParams};
+use super::{
+    raw::{self},
+    ColorSampler2d, Sampler2dParams,
+};
 
 #[derive(Clone)]
 pub struct ColorAttachment<S = sl::Vec4> {
@@ -90,19 +95,17 @@ impl<F: FsInterface<Sl>> Framebuffer<F> {
     }
 
     pub fn raw(&self) -> raw::Framebuffer {
-        use FramebufferInternal::*;
-
         match &self.0 {
-            Default => raw::Framebuffer::Default,
-            Depth(depth) => raw::Framebuffer::Attachments {
-                color_attachments: Vec::new(),
+            FramebufferInternal::Default => raw::Framebuffer::Default,
+            FramebufferInternal::Depth(depth) => raw::Framebuffer::Attachments {
+                color_attachments: Default::default(),
                 depth_attachment: Some(depth.raw.clone()),
             },
-            Color(color) => raw::Framebuffer::Attachments {
+            FramebufferInternal::Color(color) => raw::Framebuffer::Attachments {
                 color_attachments: raw_color_attachments(color),
                 depth_attachment: None,
             },
-            ColorDepth { color, depth } => raw::Framebuffer::Attachments {
+            FramebufferInternal::ColorDepth { color, depth } => raw::Framebuffer::Attachments {
                 color_attachments: raw_color_attachments(color),
                 depth_attachment: Some(depth.raw.clone()),
             },
@@ -122,8 +125,8 @@ impl Default for Framebuffer<sl::Vec4> {
     }
 }
 
-fn raw_color_attachments<F: FsInterface<Gl>>(attachments: &F) -> Vec<raw::Attachment> {
-    struct Visitor(Vec<raw::Attachment>);
+fn raw_color_attachments<F: FsInterface<Gl>>(attachments: &F) -> raw::AttachmentVec {
+    struct Visitor(raw::AttachmentVec);
 
     impl<'a> FragmentVisitor<'a, Gl> for Visitor {
         fn accept<S: ColorSample>(&mut self, _: &str, attachment: &ColorAttachment<S>) {
@@ -132,7 +135,7 @@ fn raw_color_attachments<F: FsInterface<Gl>>(attachments: &F) -> Vec<raw::Attach
     }
 
     // TODO: Remove hardcoded path names.
-    let mut visitor = Visitor(Vec::new());
+    let mut visitor = Visitor(Default::default());
     attachments.visit("fragment_output", &mut visitor);
 
     visitor.0
