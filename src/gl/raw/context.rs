@@ -31,6 +31,7 @@ pub(super) struct ContextShared {
     bound_color_attachment_ids: RefCell<Vec<glow::Texture>>,
     bound_depth_attachment_id: Cell<Option<(u32, glow::Texture)>>,
     bound_uniform_buffer_ids: RefCell<Vec<Option<glow::Buffer>>>,
+    bound_texture_2d_ids: RefCell<Vec<Option<glow::Texture>>>,
 }
 
 pub struct Context {
@@ -243,7 +244,29 @@ impl ContextShared {
             .set(attachment.map(|(location, attachment)| (location, attachment.id())));
     }
 
-    pub(super) fn unbind_texture_if_bound(&self, id: glow::Texture) {
+    pub(super) fn bind_texture_2d(&self, unit: usize, id: Option<glow::Texture>) {
+        let mut bound_ids = self.bound_texture_2d_ids.borrow_mut();
+
+        if bound_ids.len() <= unit {
+            let diff = unit - bound_ids.len() + 1;
+            bound_ids.extend(std::iter::repeat(None).take(diff));
+        }
+
+        if bound_ids[unit] == id {
+            return;
+        }
+
+        let unit_gl = texture_unit_gl(unit);
+
+        unsafe {
+            self.gl.active_texture(unit_gl);
+            self.gl.bind_texture(glow::TEXTURE_2D, id);
+        }
+
+        bound_ids[unit] = id;
+    }
+
+    pub(super) fn unbind_texture_2d_if_bound(&self, id: glow::Texture) {
         if let Some((location, _)) = self
             .bound_depth_attachment_id
             .get()
@@ -272,6 +295,21 @@ impl ContextShared {
             // I expect that this would help only rarely.
             self.bind_color_attachments(&[])
                 .expect("setting empty color attachments should always succeed");
+        }
+
+        let mut bound_ids = self.bound_texture_2d_ids.borrow_mut();
+
+        for (unit, bound_id) in bound_ids.iter_mut().enumerate() {
+            if Some(id) == *bound_id {
+                let unit_gl = texture_unit_gl(unit);
+
+                unsafe {
+                    self.gl.active_texture(unit_gl);
+                    self.gl.bind_texture(glow::TEXTURE_2D, None);
+                }
+
+                *bound_id = None;
+            }
         }
     }
 
@@ -386,6 +424,7 @@ impl Context {
             bound_color_attachment_ids: Default::default(),
             bound_depth_attachment_id: Default::default(),
             bound_uniform_buffer_ids: Default::default(),
+            bound_texture_2d_ids: Default::default(),
         });
 
         Ok(Self { shared })
@@ -436,4 +475,11 @@ impl Drop for ContextShared {
             self.gl.delete_framebuffer(self.draw_fbo);
         }
     }
+}
+
+fn texture_unit_gl(unit: usize) -> u32 {
+    u32::try_from(unit)
+        .unwrap()
+        .checked_add(glow::TEXTURE0)
+        .unwrap()
 }

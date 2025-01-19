@@ -193,25 +193,10 @@ impl Program {
         for (sampler, sampler_def) in samplers.iter().zip(&def.uniform_sampler_defs) {
             assert!(sampler.context().ref_eq(ctx));
 
-            let unit = texture_unit_gl(sampler_def);
-            unsafe {
-                gl.active_texture(unit);
-            }
-            sampler.bind();
+            sampler.bind(sampler_def.texture_unit);
         }
 
         vertex_spec.draw(ctx);
-
-        // TODO: Remove overly conservative unbinding.
-        for (sampler, sampler_def) in samplers.iter().zip(&def.uniform_sampler_defs) {
-            let unit = texture_unit_gl(sampler_def);
-
-            unsafe {
-                gl.active_texture(unit);
-            }
-
-            sampler.unbind();
-        }
 
         #[cfg(debug_assertions)]
         check_gl_error(gl, "after draw").map_err(DrawError::Error)?;
@@ -339,11 +324,4 @@ fn validate_program_def(def: &ProgramDef) -> Result<(), ProgramValidationError> 
     // FIXME: Check that the number of fragment fields is <= MAX_DRAW_BUFFERS.
 
     Ok(())
-}
-
-fn texture_unit_gl(sampler_def: &UniformSamplerDef) -> u32 {
-    u32::try_from(sampler_def.texture_unit)
-        .unwrap()
-        .checked_add(glow::TEXTURE0)
-        .unwrap()
 }
