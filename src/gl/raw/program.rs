@@ -187,9 +187,7 @@ impl Program {
 
             let location = u32::try_from(block_def.location).unwrap();
 
-            unsafe {
-                gl.bind_buffer_base(glow::UNIFORM_BUFFER, location, Some(buffer.id()));
-            }
+            self.ctx.bind_uniform_buffer(location, Some(buffer.id()));
         }
 
         for (sampler, sampler_def) in samplers.iter().zip(&def.uniform_sampler_defs) {
@@ -214,18 +212,6 @@ impl Program {
 
             sampler.unbind();
         }
-
-        // TODO: Remove overly conservative unbinding.
-        for block_def in &def.uniform_block_defs {
-            let location = u32::try_from(block_def.location).unwrap();
-
-            unsafe {
-                gl.bind_buffer_base(glow::UNIFORM_BUFFER, location, None);
-            }
-        }
-
-        // TODO: Remove overly conservative unbinding.
-        gl.bind_buffer(glow::UNIFORM_BUFFER, None);
 
         #[cfg(debug_assertions)]
         check_gl_error(gl, "after draw").map_err(DrawError::Error)?;

@@ -102,6 +102,8 @@ impl Buffer {
 
 impl Drop for Buffer {
     fn drop(&mut self) {
+        self.ctx.unbind_buffer_if_bound(self.id);
+
         let gl = self.ctx.gl();
 
         unsafe {

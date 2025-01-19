@@ -24,10 +24,13 @@ pub(super) struct ContextShared {
     draw_vao: glow::VertexArray,
     draw_fbo: glow::Framebuffer,
     default_framebuffer_size: Cell<[u32; 2]>,
+    // TODO: Should probably combine all bound state into a separate struct and
+    // put that whole thing into a `RefCell`.
     bound_program_id: Cell<Option<glow::Program>>,
     is_draw_fbo_bound: Cell<bool>,
-    bound_color_attachment_ids: RefCell<SmallVec<[glow::Texture; 16]>>,
+    bound_color_attachment_ids: RefCell<Vec<glow::Texture>>,
     bound_depth_attachment_id: Cell<Option<(u32, glow::Texture)>>,
+    bound_uniform_buffer_ids: RefCell<Vec<Option<glow::Buffer>>>,
 }
 
 pub struct Context {
@@ -309,6 +312,40 @@ impl ContextShared {
 
         Ok(())
     }
+
+    pub(super) fn bind_uniform_buffer(&self, location: u32, id: Option<glow::Buffer>) {
+        let mut bound_ids = self.bound_uniform_buffer_ids.borrow_mut();
+
+        if bound_ids.len() <= location as usize {
+            let diff = location as usize - bound_ids.len() + 1;
+            bound_ids.extend(std::iter::repeat(None).take(diff));
+        }
+
+        if bound_ids[location as usize] == id {
+            return;
+        }
+
+        unsafe {
+            self.gl.bind_buffer_base(glow::UNIFORM_BUFFER, location, id);
+        }
+
+        bound_ids[location as usize] = id;
+    }
+
+    pub(super) fn unbind_buffer_if_bound(&self, id: glow::Buffer) {
+        let mut bound_ids = self.bound_uniform_buffer_ids.borrow_mut();
+
+        for (location, bound_id) in bound_ids.iter_mut().enumerate() {
+            if Some(id) == *bound_id {
+                unsafe {
+                    self.gl
+                        .bind_buffer_base(glow::UNIFORM_BUFFER, location as u32, None);
+                }
+
+                *bound_id = None;
+            }
+        }
+    }
 }
 
 impl Context {
@@ -348,6 +385,7 @@ impl Context {
             is_draw_fbo_bound: Default::default(),
             bound_color_attachment_ids: Default::default(),
             bound_depth_attachment_id: Default::default(),
+            bound_uniform_buffer_ids: Default::default(),
         });
 
         Ok(Self { shared })
