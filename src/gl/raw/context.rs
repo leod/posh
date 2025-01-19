@@ -210,7 +210,7 @@ impl ContextShared {
         {
             // TODO: In the future, the existing binding could be a non-2D
             // texture, but we are currently using the 2D unbinding function in
-            // all cases. Is this correct? Same in `unbind_texture_if_bound()`.
+            // all cases. Is this correct?
             unsafe {
                 self.gl.framebuffer_texture_2d(
                     glow::FRAMEBUFFER,
