@@ -16,6 +16,7 @@ pub struct Texture2d {
     internal_format: ImageInternalFormat,
     levels: usize,
     params: Cell<Sampler2dParams>,
+    comparison: Cell<Option<Comparison>>,
 }
 
 #[derive(Clone)]
@@ -134,6 +135,7 @@ impl Texture2d {
             internal_format: image.internal_format,
             levels: levels as usize,
             params: Default::default(),
+            comparison: Default::default(),
         };
 
         // Check for errors *after* passing ownership of the texture to
@@ -236,8 +238,12 @@ impl Texture2d {
         new.set_delta(gl, &current);
         self.params.set(new);
 
-        // FIXME: Check that comparison can be applied to the texture.
-        set_comparison(gl, glow::TEXTURE_2D, comparison);
+        if self.comparison.get() != comparison {
+            // FIXME: Check that comparison can be applied to the texture.
+            set_comparison(gl, glow::TEXTURE_2D, comparison);
+
+            self.comparison.set(comparison);
+        }
 
         #[cfg(debug_assertions)]
         check_gl_error(gl, "after texture params").unwrap();
