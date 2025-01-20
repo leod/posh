@@ -1,5 +1,12 @@
 use glow::HasContext;
 
+#[derive(Default, Debug, Copy, Clone)]
+pub struct ClearParams {
+    pub color: Option<[f32; 4]>,
+    pub depth: Option<f32>,
+    pub stencil: Option<u8>,
+}
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Rect {
     pub lower_left_corner: [u32; 2],
@@ -306,9 +313,6 @@ impl StencilOps {
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct DrawParams {
-    pub clear_stencil: Option<u8>,
-    pub clear_depth: Option<f32>,
-    pub clear_color: Option<[f32; 4]>,
     pub viewport: Option<Rect>,
     pub cull_face: Option<CullFace>,
     pub scissor: Option<Rect>,
@@ -327,9 +331,6 @@ pub struct DrawParams {
 impl Default for DrawParams {
     fn default() -> Self {
         Self {
-            clear_stencil: None,
-            clear_depth: None,
-            clear_color: None,
             viewport: None,
             cull_face: None,
             scissor: None,
@@ -370,30 +371,6 @@ impl DrawParams {
             } else {
                 unsafe { gl.disable(glow::SCISSOR_TEST) };
             }
-        }
-
-        let mut clear_mask = 0;
-
-        if let Some(c) = self.clear_stencil {
-            unsafe { gl.clear_stencil(c as i32) };
-
-            clear_mask |= glow::STENCIL_BUFFER_BIT;
-        }
-
-        if let Some(c) = self.clear_depth {
-            unsafe { gl.clear_depth_f32(c) };
-
-            clear_mask |= glow::DEPTH_BUFFER_BIT;
-        }
-
-        if let Some(c) = self.clear_color {
-            unsafe { gl.clear_color(c[0], c[1], c[2], c[3]) };
-
-            clear_mask |= glow::COLOR_BUFFER_BIT;
-        }
-
-        if clear_mask > 0 {
-            unsafe { gl.clear(clear_mask) };
         }
 
         {
@@ -508,21 +485,6 @@ impl DrawParams {
 
             unsafe { gl.color_mask(mask[0], mask[1], mask[2], mask[3]) };
         }
-    }
-
-    pub fn with_clear_stencil(mut self, clear_stencil: u8) -> Self {
-        self.clear_stencil = Some(clear_stencil);
-        self
-    }
-
-    pub fn with_clear_depth(mut self, clear_depth: f32) -> Self {
-        self.clear_depth = Some(clear_depth);
-        self
-    }
-
-    pub fn with_clear_color(mut self, clear_color: [f32; 4]) -> Self {
-        self.clear_color = Some(clear_color);
-        self
     }
 
     pub fn with_viewport(mut self, viewport: Rect) -> Self {

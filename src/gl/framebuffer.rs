@@ -1,7 +1,5 @@
 use std::marker::PhantomData;
 
-use smallvec::SmallVec;
-
 use crate::{
     interface::FragmentVisitor,
     sl::{self, ColorSample},

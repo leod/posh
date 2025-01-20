@@ -28,9 +28,9 @@ pub use program::{
     DrawBuilderWithUniformsAndFramebuffer, Program,
 };
 pub use raw::{
-    BlendEquation, BlendFunc, Blending, BufferError, BufferUsage, Caps, Comparison, ContextError,
-    CreateError, CullFace, DrawError, DrawParams, ElementType, FramebufferError, ImageFormat,
-    ImageInternalFormat, PrimitiveMode, ProgramError, ProgramValidationError, Rect,
+    BlendEquation, BlendFunc, Blending, BufferError, BufferUsage, Caps, ClearParams, Comparison,
+    ContextError, CreateError, CullFace, DrawError, DrawParams, ElementType, FramebufferError,
+    ImageFormat, ImageInternalFormat, PrimitiveMode, ProgramError, ProgramValidationError, Rect,
     Sampler2dParams, SamplerMagFilter, SamplerMinFilter, SamplerWrap, StencilOp, StencilOps,
     StencilTest, TextureError, VertexArrayError,
 };

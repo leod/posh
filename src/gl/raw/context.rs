@@ -13,6 +13,7 @@ use crate::{
 
 use super::{
     error::{check_framebuffer_completeness, check_gl_error},
+    params::ClearParams,
     Attachment, Buffer, Caps, ContextError, DrawParams, Framebuffer, FramebufferError, Image,
     Program, Texture2d, TextureError,
 };
@@ -465,6 +466,40 @@ impl Context {
 
     pub fn set_default_framebuffer_size(&self, size: [u32; 2]) {
         self.shared.default_framebuffer_size.set(size);
+    }
+
+    pub fn clear(
+        &self,
+        framebuffer: &Framebuffer,
+        params: ClearParams,
+    ) -> Result<(), FramebufferError> {
+        self.shared.bind_framebuffer(framebuffer)?;
+
+        let mut clear_mask = 0;
+
+        if let Some(c) = params.stencil {
+            unsafe { self.shared.gl.clear_stencil(c as i32) };
+
+            clear_mask |= glow::STENCIL_BUFFER_BIT;
+        }
+
+        if let Some(c) = params.depth {
+            unsafe { self.shared.gl.clear_depth_f32(c) };
+
+            clear_mask |= glow::DEPTH_BUFFER_BIT;
+        }
+
+        if let Some(c) = params.color {
+            unsafe { self.shared.gl.clear_color(c[0], c[1], c[2], c[3]) };
+
+            clear_mask |= glow::COLOR_BUFFER_BIT;
+        }
+
+        if clear_mask > 0 {
+            unsafe { self.shared.gl.clear(clear_mask) };
+        }
+
+        Ok(())
     }
 }
 

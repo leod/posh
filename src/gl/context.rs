@@ -13,14 +13,14 @@ use crate::{
         transpile::{transpile_to_program_def, transpile_to_program_def_with_consts},
         ColorSample, FsFunc, FsSig, VsFunc, VsSig,
     },
-    Block, Gl, Sl, Uniform, UniformUnion,
+    Block, FsInterface, Gl, Sl, Uniform, UniformUnion,
 };
 
 use super::{
     program::{DrawBuilder, DrawBuilderWithUniforms},
-    raw, BufferError, BufferUsage, Caps, ColorImage, ColorTexture2d, ContextError, CreateError,
-    DepthImage, DepthTexture2d, DrawError, Element, ElementBuffer, Program, ProgramError,
-    TextureError, UniformBuffer, VertexBuffer,
+    raw, BufferError, BufferUsage, Caps, ClearParams, ColorImage, ColorTexture2d, ContextError,
+    CreateError, DepthImage, DepthTexture2d, DrawError, Element, ElementBuffer, Framebuffer,
+    FramebufferError, Program, ProgramError, TextureError, UniformBuffer, VertexBuffer,
 };
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -311,5 +311,13 @@ impl Context {
 
     pub fn set_enable_program_source_logging(&self, value: bool) {
         *self.enable_program_source_logging.borrow_mut() = value;
+    }
+
+    pub fn clear<F: FsInterface<Sl>>(
+        &self,
+        framebuffer: impl Into<Framebuffer<F>>,
+        params: ClearParams,
+    ) -> Result<(), FramebufferError> {
+        self.raw.clear(&framebuffer.into().raw(), params)
     }
 }

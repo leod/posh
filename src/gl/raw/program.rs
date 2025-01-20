@@ -2,7 +2,7 @@ use std::{collections::BTreeSet, rc::Rc};
 
 use glow::HasContext;
 
-use crate::sl::program_def::{ProgramDef, UniformSamplerDef};
+use crate::sl::program_def::ProgramDef;
 
 use super::{
     context::ContextShared, error::check_gl_error, vertex_layout::VertexAttributeLayout, Buffer,

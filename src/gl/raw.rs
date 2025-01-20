@@ -21,8 +21,8 @@ pub use error::{
 };
 pub use framebuffer::{Attachment, AttachmentVec, Framebuffer};
 pub use params::{
-    BlendEquation, BlendFunc, Blending, Comparison, CullFace, DrawParams, Rect, StencilOp,
-    StencilOps, StencilTest,
+    BlendEquation, BlendFunc, Blending, ClearParams, Comparison, CullFace, DrawParams, Rect,
+    StencilOp, StencilOps, StencilTest,
 };
 pub use program::Program;
 pub use sampler_params::{Sampler2dParams, SamplerMagFilter, SamplerMinFilter, SamplerWrap};

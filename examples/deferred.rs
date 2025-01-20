@@ -171,6 +171,7 @@ mod present_pass {
 // Host code
 
 struct Demo {
+    gl: gl::Context,
     scene_program: gl::Program<Globals<Sl>, (), SceneAttachments<Sl>>,
     present_program: gl::Program<SceneSamplers<Sl>, ()>,
 
@@ -199,6 +200,7 @@ impl Demo {
         };
 
         Ok(Self {
+            gl: gl.clone(),
             scene_program: gl
                 .create_program(scene_pass::vertex_shader, scene_pass::fragment_shader)?,
             present_program: gl
@@ -214,6 +216,15 @@ impl Demo {
         let time = Instant::now().duration_since(self.start_time).as_secs_f32();
         self.globals.set(Globals::new(time));
 
+        self.gl.clear(
+            gl::Framebuffer::default(),
+            gl::ClearParams {
+                color: Some([0.0; 4]),
+                depth: Some(1.0),
+                ..Default::default()
+            },
+        )?;
+
         self.scene_program
             .with_uniforms(self.globals.as_binding())
             .with_framebuffer(
@@ -221,12 +232,7 @@ impl Demo {
                     .as_depth_attachment()
                     .with_color(self.scene_attachments.clone()),
             )
-            .with_params(
-                gl::DrawParams::new()
-                    .with_clear_color([0.0; 4])
-                    .with_clear_depth(1.0)
-                    .with_depth_test(gl::Comparison::Less),
-            )
+            .with_params(gl::DrawParams::new().with_depth_test(gl::Comparison::Less))
             .draw(gl::PrimitiveMode::Triangles.as_vertex_spec_with_range(0..36))?;
 
         self.present_program
