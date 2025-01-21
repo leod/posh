@@ -80,10 +80,7 @@ impl ContextShared {
         }
     }
 
-    pub(super) fn bind_color_attachments(
-        &self,
-        attachments: &[Attachment],
-    ) -> Result<(), FramebufferError> {
+    fn bind_color_attachments(&self, attachments: &[Attachment]) -> Result<(), FramebufferError> {
         // OpenGL ES 3.0.6: 4.4.2.4 Attaching Texture Images to a Framebuffer
         // > An `INVALID_OPERATION` is generated if `attachment` is
         // > `COLOR_ATTACHMENTm` where `m` is greater than or equal to the value
@@ -182,7 +179,7 @@ impl ContextShared {
         Ok(())
     }
 
-    pub(super) fn bind_depth_attachment(&self, attachment: Option<&Attachment>) {
+    fn bind_depth_attachment(&self, attachment: Option<&Attachment>) {
         let attachment_id = attachment.map(|attachment| attachment.id());
         let bound_id = self.bound_depth_attachment_id.get().map(|(_, id)| id);
 
@@ -273,6 +270,8 @@ impl ContextShared {
             .get()
             .filter(|(_, bound_id)| *bound_id == id)
         {
+            self.bind_draw_fbo(true);
+
             unsafe {
                 self.gl.framebuffer_texture_2d(
                     glow::FRAMEBUFFER,
@@ -292,6 +291,8 @@ impl ContextShared {
             .iter()
             .any(|bound_id| *bound_id == id)
         {
+            self.bind_draw_fbo(true);
+
             // TODO: We could be more efficient in how much we unbind here, but
             // I expect that this would help only rarely.
             self.bind_color_attachments(&[])
@@ -314,29 +315,29 @@ impl ContextShared {
         }
     }
 
+    fn bind_draw_fbo(&self, yes: bool) {
+        if yes != self.is_draw_fbo_bound.get() {
+            let fbo = Some(self.draw_fbo).filter(|_| yes);
+
+            unsafe { self.gl.bind_framebuffer(glow::FRAMEBUFFER, fbo) };
+
+            self.is_draw_fbo_bound.set(yes);
+        }
+    }
+
     pub(super) fn bind_framebuffer(
         &self,
         framebuffer: &Framebuffer,
     ) -> Result<(), FramebufferError> {
         match framebuffer {
             Framebuffer::Default => {
-                if self.is_draw_fbo_bound.get() {
-                    unsafe { self.gl.bind_framebuffer(glow::FRAMEBUFFER, None) };
-                    self.is_draw_fbo_bound.set(false);
-                }
+                self.bind_draw_fbo(false);
             }
             Framebuffer::Attachments {
                 color_attachments,
                 depth_attachment,
             } => {
-                if !self.is_draw_fbo_bound.get() {
-                    unsafe {
-                        self.gl
-                            .bind_framebuffer(glow::FRAMEBUFFER, Some(self.draw_fbo))
-                    };
-                    self.is_draw_fbo_bound.set(true);
-                }
-
+                self.bind_draw_fbo(true);
                 self.bind_color_attachments(color_attachments)?;
                 self.bind_depth_attachment(depth_attachment.as_ref());
 
