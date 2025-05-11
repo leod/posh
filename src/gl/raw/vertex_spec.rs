@@ -1,6 +1,7 @@
 use std::{ops::Range, rc::Rc};
 
 use glow::HasContext;
+use smallvec::SmallVec;
 
 use crate::{
     gl::raw::{
@@ -83,9 +84,11 @@ pub struct VertexBufferBinding {
     pub stride: usize,
 }
 
+pub type VertexBufferBindingVec = SmallVec<[VertexBufferBinding; 8]>;
+
 #[derive(Clone)]
 pub struct VertexSpec {
-    pub vertex_data: Vec<VertexBufferBinding>,
+    pub vertex_data: VertexBufferBindingVec,
     pub element_data: Option<(Rc<Buffer>, ElementType)>,
     pub mode: PrimitiveMode,
     pub index_range: Range<usize>,

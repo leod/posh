@@ -33,6 +33,7 @@ fn fragment_shader(globals: Globals<Sl>, interp: sl::Vec2) -> sl::Vec4 {
 // Host code
 
 struct Demo {
+    gl: gl::Context,
     program: gl::Program<Globals<Sl>, sl::Vec2>,
 
     globals: gl::UniformBuffer<Globals<Gl>>,
@@ -52,6 +53,7 @@ impl Demo {
         ];
 
         Ok(Self {
+            gl: gl.clone(),
             program: gl.create_program(vertex_shader, fragment_shader)?,
             globals: gl.create_uniform_buffer(Default::default(), StreamDraw)?,
             vertices: gl.create_vertex_buffer(&vertices, StaticDraw)?,
@@ -65,9 +67,16 @@ impl Demo {
             triangle_size: [1.0, 1.0].into(),
         });
 
+        self.gl.clear(
+            gl::Framebuffer::default(),
+            gl::ClearParams {
+                color: Some([0.1, 0.2, 0.3, 1.0]),
+                ..Default::default()
+            },
+        )?;
+
         self.program
             .with_uniforms(self.globals.as_binding())
-            .with_params(gl::DrawParams::new().with_clear_color([0.1, 0.2, 0.3, 1.0]))
             .draw(self.vertices.as_vertex_spec(gl::PrimitiveMode::Triangles))?;
 
         Ok(())

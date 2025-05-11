@@ -54,6 +54,7 @@ fn vertex_shader(uniforms: Uniforms<Sl>, vertex: Vertex<Sl>) -> sl::VsOutput<sl:
 // Host code
 
 struct Demo {
+    gl: gl::Context,
     program: gl::Program<(Uniforms<Sl>, sl::ColorSampler2d), Vertex<Sl>>,
 
     camera: gl::UniformBuffer<Camera<Gl>>,
@@ -81,6 +82,7 @@ impl Demo {
         );
 
         Ok(Self {
+            gl: gl.clone(),
             program: gl.create_program(vertex_shader, sl::ColorSampler2d::sample)?,
             camera: gl.create_uniform_buffer(Camera::default(), StaticDraw)?,
             time: gl.create_uniform_buffer(0.0, StreamDraw)?,
@@ -95,6 +97,15 @@ impl Demo {
         let time = Instant::now().duration_since(self.start_time).as_secs_f32();
         self.time.set(time);
 
+        self.gl.clear(
+            gl::Framebuffer::default(),
+            gl::ClearParams {
+                color: Some([0.1, 0.2, 0.3, 1.0]),
+                depth: Some(1.0),
+                ..Default::default()
+            },
+        )?;
+
         self.program
             .with_uniforms((
                 Uniforms {
@@ -103,12 +114,7 @@ impl Demo {
                 },
                 self.texture.as_color_sampler(gl::Sampler2dParams::linear()),
             ))
-            .with_params(
-                gl::DrawParams::new()
-                    .with_clear_color([0.1, 0.2, 0.3, 1.0])
-                    .with_clear_depth(1.0)
-                    .with_depth_test(gl::Comparison::Less),
-            )
+            .with_params(gl::DrawParams::new().with_depth_test(gl::Comparison::Less))
             .draw(
                 self.vertices
                     .as_vertex_spec(gl::PrimitiveMode::Triangles)

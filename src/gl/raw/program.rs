@@ -2,7 +2,7 @@ use std::{collections::BTreeSet, rc::Rc};
 
 use glow::HasContext;
 
-use crate::sl::program_def::{ProgramDef, UniformSamplerDef};
+use crate::sl::program_def::ProgramDef;
 
 use super::{
     context::ContextShared, error::check_gl_error, vertex_layout::VertexAttributeLayout, Buffer,
@@ -24,7 +24,7 @@ impl Program {
         check_gl_error(gl, "before creating program").map_err(ProgramError::Unexpected)?;
 
         let id = unsafe { gl.create_program() }.map_err(ProgramError::ProgramCreation)?;
-        let program = Program {
+        let program = Self {
             ctx: ctx.clone(),
             def,
             id,
@@ -104,9 +104,7 @@ impl Program {
         }
 
         // Set texture units.
-        unsafe {
-            gl.use_program(Some(program.id));
-        }
+        ctx.bind_program(Some(program.id));
 
         for sampler_def in &program.def.uniform_sampler_defs {
             let location = unsafe { gl.get_uniform_location(program.id, &sampler_def.name) };
@@ -123,10 +121,6 @@ impl Program {
         }
 
         check_gl_error(gl, "after setting texture units").map_err(ProgramError::Unexpected)?;
-
-        unsafe {
-            gl.use_program(None);
-        }
 
         // Set uniform block locations.
         for uniform_def in &program.def.uniform_block_defs {
@@ -178,7 +172,7 @@ impl Program {
         assert_eq!(samplers.len(), def.uniform_sampler_defs.len());
         assert!(vertex_spec.is_compatible(&self.def.vertex_block_defs));
 
-        framebuffer.bind(&self.ctx)?;
+        ctx.bind_framebuffer(framebuffer)?;
 
         let framebuffer_size = framebuffer.size(&self.ctx);
 
@@ -186,62 +180,23 @@ impl Program {
         // binding the framebuffer.
         ctx.set_draw_params(params, framebuffer_size);
 
-        unsafe {
-            gl.use_program(Some(self.id));
-        }
+        ctx.bind_program(Some(self.id));
 
         for (buffer, block_def) in uniform_buffers.iter().zip(&def.uniform_block_defs) {
             assert!(buffer.context().ref_eq(ctx));
 
             let location = u32::try_from(block_def.location).unwrap();
 
-            unsafe {
-                gl.bind_buffer_base(glow::UNIFORM_BUFFER, location, Some(buffer.id()));
-            }
+            self.ctx.bind_uniform_buffer(location, Some(buffer.id()));
         }
 
         for (sampler, sampler_def) in samplers.iter().zip(&def.uniform_sampler_defs) {
             assert!(sampler.context().ref_eq(ctx));
 
-            let unit = texture_unit_gl(sampler_def);
-            unsafe {
-                gl.active_texture(unit);
-            }
-            sampler.bind();
+            sampler.bind(sampler_def.texture_unit);
         }
 
         vertex_spec.draw(ctx);
-
-        // TODO: Remove overly conservative unbinding.
-        for (sampler, sampler_def) in samplers.iter().zip(&def.uniform_sampler_defs) {
-            let unit = texture_unit_gl(sampler_def);
-
-            unsafe {
-                gl.active_texture(unit);
-            }
-
-            sampler.unbind();
-        }
-
-        // TODO: Remove overly conservative unbinding.
-        for block_def in &def.uniform_block_defs {
-            let location = u32::try_from(block_def.location).unwrap();
-
-            unsafe {
-                gl.bind_buffer_base(glow::UNIFORM_BUFFER, location, None);
-            }
-        }
-
-        // TODO: Remove overly conservative unbinding.
-        gl.bind_buffer(glow::UNIFORM_BUFFER, None);
-
-        // TODO: Remove overly conservative unbinding.
-        unsafe {
-            gl.use_program(None);
-        }
-
-        // TODO: Remove overly conservative unbinding.
-        framebuffer.unbind(&self.ctx);
 
         #[cfg(debug_assertions)]
         check_gl_error(gl, "after draw").map_err(DrawError::Error)?;
@@ -252,6 +207,8 @@ impl Program {
 
 impl Drop for Program {
     fn drop(&mut self) {
+        self.ctx.unbind_program_if_bound(self.id);
+
         let gl = self.ctx.gl();
 
         unsafe {
@@ -367,11 +324,4 @@ fn validate_program_def(def: &ProgramDef) -> Result<(), ProgramValidationError> 
     // FIXME: Check that the number of fragment fields is <= MAX_DRAW_BUFFERS.
 
     Ok(())
-}
-
-fn texture_unit_gl(sampler_def: &UniformSamplerDef) -> u32 {
-    u32::try_from(sampler_def.texture_unit)
-        .unwrap()
-        .checked_add(glow::TEXTURE0)
-        .unwrap()
 }

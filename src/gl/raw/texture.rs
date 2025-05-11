@@ -16,6 +16,7 @@ pub struct Texture2d {
     internal_format: ImageInternalFormat,
     levels: usize,
     params: Cell<Sampler2dParams>,
+    comparison: Cell<Option<Comparison>>,
 }
 
 #[derive(Clone)]
@@ -102,7 +103,8 @@ impl Texture2d {
 
         let id = unsafe { gl.create_texture() }.map_err(TextureError::ObjectCreation)?;
 
-        unsafe { gl.bind_texture(glow::TEXTURE_2D, Some(id)) };
+        ctx.bind_texture_2d(0, Some(id));
+
         unsafe {
             gl.tex_storage_2d(
                 glow::TEXTURE_2D,
@@ -125,7 +127,6 @@ impl Texture2d {
                 glow::PixelUnpackData::Slice(slice),
             )
         };
-        unsafe { gl.bind_texture(glow::TEXTURE_2D, None) };
 
         let texture = Texture2d {
             ctx: ctx.clone(),
@@ -134,6 +135,7 @@ impl Texture2d {
             internal_format: image.internal_format,
             levels: levels as usize,
             params: Default::default(),
+            comparison: Default::default(),
         };
 
         // Check for errors *after* passing ownership of the texture to
@@ -161,12 +163,13 @@ impl Texture2d {
         let levels = (image.size[0].max(image.size[1]) as f64).log2() as usize + 1;
 
         let texture = Self::new_with_levels(ctx.clone(), image, levels)?;
+
+        ctx.bind_texture_2d(0, Some(texture.id));
+
         let gl = ctx.gl();
 
         unsafe {
-            gl.bind_texture(glow::TEXTURE_2D, Some(texture.id));
             gl.generate_mipmap(glow::TEXTURE_2D);
-            gl.bind_texture(glow::TEXTURE_2D, None);
         }
 
         check_gl_error(gl, "after new texture with mipmaps").map_err(TextureError::Unexpected)?;
@@ -206,7 +209,8 @@ impl Texture2d {
         let width = image.size[0].try_into().unwrap();
         let height = image.size[1].try_into().unwrap();
 
-        unsafe { gl.bind_texture(glow::TEXTURE_2D, Some(self.id)) };
+        self.ctx.bind_texture_2d(0, Some(self.id));
+
         unsafe {
             gl.tex_sub_image_2d(
                 glow::TEXTURE_2D,
@@ -220,7 +224,6 @@ impl Texture2d {
                 glow::PixelUnpackData::Slice(slice),
             )
         };
-        unsafe { gl.bind_texture(glow::TEXTURE_2D, None) };
 
         // This might be triggered if `rect` is outside of the texture image
         // bounds.
@@ -236,8 +239,12 @@ impl Texture2d {
         new.set_delta(gl, &current);
         self.params.set(new);
 
-        // FIXME: Check that comparison can be applied to the texture.
-        set_comparison(gl, glow::TEXTURE_2D, comparison);
+        if self.comparison.get() != comparison {
+            // FIXME: Check that comparison can be applied to the texture.
+            set_comparison(gl, glow::TEXTURE_2D, comparison);
+
+            self.comparison.set(comparison);
+        }
 
         #[cfg(debug_assertions)]
         check_gl_error(gl, "after texture params").unwrap();
@@ -246,6 +253,8 @@ impl Texture2d {
 
 impl Drop for Texture2d {
     fn drop(&mut self) {
+        self.ctx.unbind_texture_2d_if_bound(self.id);
+
         let gl = self.ctx.gl();
 
         unsafe {
@@ -263,35 +272,17 @@ impl Sampler {
         }
     }
 
-    pub(super) fn bind(&self) {
+    pub(super) fn bind(&self, unit: usize) {
         match self {
             Sampler::Sampler2d(Sampler2d {
                 texture,
                 params,
                 comparison,
             }) => {
-                let gl = texture.ctx.gl();
                 let id = texture.id;
 
-                unsafe {
-                    gl.bind_texture(glow::TEXTURE_2D, Some(id));
-                }
-
+                texture.ctx.bind_texture_2d(unit, Some(id));
                 texture.set_params(*params, *comparison);
-            }
-        }
-    }
-
-    pub(super) fn unbind(&self) {
-        use Sampler::*;
-
-        match self {
-            Sampler2d(sampler) => {
-                let gl = sampler.texture.ctx.gl();
-
-                unsafe {
-                    gl.bind_texture(glow::TEXTURE_2D, None);
-                }
             }
         }
     }

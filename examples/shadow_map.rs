@@ -222,6 +222,14 @@ impl Demo {
             .as_vertex_spec(gl::PrimitiveMode::Triangles)
             .with_element_data(self.scene_elements.as_binding());
 
+        self.gl.clear(
+            self.light_depth_map.as_depth_attachment(),
+            gl::ClearParams {
+                depth: Some(1.0),
+                ..Default::default()
+            },
+        )?;
+
         self.gl
             .program(
                 |light: Light<Sl>, vertex: SceneVertex<Sl>| {
@@ -233,11 +241,19 @@ impl Demo {
             .with_framebuffer(self.light_depth_map.as_depth_attachment())
             .with_params(
                 gl::DrawParams::new()
-                    .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less)
                     .with_cull_face(gl::CullFace::Back),
             )
             .draw(scene_vertex_spec.clone())?;
+
+        self.gl.clear(
+            gl::Framebuffer::default(),
+            gl::ClearParams {
+                color: Some(glam::Vec4::ONE.into()),
+                depth: Some(1.0),
+                ..Default::default()
+            },
+        )?;
 
         self.gl
             .program(scene_pass::vertex_shader, scene_pass::fragment_shader)
@@ -250,8 +266,6 @@ impl Demo {
             })
             .with_params(
                 gl::DrawParams::new()
-                    .with_clear_color(glam::Vec4::ONE.into())
-                    .with_clear_depth(1.0)
                     .with_depth_test(gl::Comparison::Less)
                     .with_cull_face(gl::CullFace::Back),
             )

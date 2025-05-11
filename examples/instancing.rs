@@ -49,6 +49,7 @@ fn fragment_shader(color: sl::Vec3) -> sl::Vec4 {
 // Host code
 
 struct Demo {
+    gl: gl::Context,
     program: gl::Program<Camera<Sl>, VsInput<Sl>>,
 
     camera: gl::UniformBuffer<Camera<Gl>>,
@@ -62,6 +63,7 @@ impl Demo {
         use gl::BufferUsage::*;
 
         Ok(Self {
+            gl: gl.clone(),
             program: gl.create_program(vertex_shader, fragment_shader)?,
             camera: gl.create_uniform_buffer(Camera::default(), StaticDraw)?,
             instances: gl.create_vertex_buffer(&instances(0.0), StaticDraw)?,
@@ -70,14 +72,18 @@ impl Demo {
     }
 
     pub fn draw(&self) -> Result<(), gl::DrawError> {
+        self.gl.clear(
+            gl::Framebuffer::default(),
+            gl::ClearParams {
+                color: Some([0.1, 0.2, 0.3, 1.0]),
+                depth: Some(1.0),
+                ..Default::default()
+            },
+        )?;
+
         self.program
             .with_uniforms(self.camera.as_binding())
-            .with_params(
-                gl::DrawParams::new()
-                    .with_clear_color([0.1, 0.2, 0.3, 1.0])
-                    .with_clear_depth(1.0)
-                    .with_depth_test(gl::Comparison::Less),
-            )
+            .with_params(gl::DrawParams::new().with_depth_test(gl::Comparison::Less))
             .draw(
                 gl::VertexSpec::new(gl::PrimitiveMode::Triangles).with_vertex_data(VsInput {
                     instance: self.instances.as_binding().with_instancing(),
