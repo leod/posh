@@ -10,7 +10,7 @@ bytemuck = { git = "https://github.com/leod/bytemuck", branch = "specify_crate_i
 crevice = { git = "https://github.com/leod/crevice", branch = "specify_crate_in_derive" }
 fxhash = "0.2"
 glam = { version = "0.27.0", optional = true }
-glow = "0.13.0"
+glow = { git = "https://github.com/grovesNL/glow", rev = "aa4238a60d17076b917eaa1ec662e5080df42b0a" }
 log = "0.4.17"
 mint = { version = "0.5.9", optional = true }
 sealed = "0.4.0"

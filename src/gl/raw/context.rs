@@ -14,8 +14,9 @@ use crate::{
 use super::{
     error::{check_framebuffer_completeness, check_gl_error},
     params::ClearParams,
-    Attachment, Buffer, Caps, ContextError, DrawParams, Framebuffer, FramebufferError, Image,
-    Program, Texture2d, TextureError,
+    tracing::Tracing,
+    Attachment, Buffer, Caps, ContextError, DrawParams, FrameTrace, Framebuffer, FramebufferError,
+    Image, Program, Texture2d, TextureError, TracingConfig,
 };
 
 pub(super) struct ContextShared {
@@ -25,6 +26,7 @@ pub(super) struct ContextShared {
     draw_vao: glow::VertexArray,
     draw_fbo: glow::Framebuffer,
     default_framebuffer_size: Cell<[u32; 2]>,
+    tracing: RefCell<Option<Tracing>>,
     // TODO: Should probably combine all bound state into a separate struct and
     // put that whole thing into a `RefCell`.
     bound_program_id: Cell<Option<glow::Program>>,
@@ -421,6 +423,7 @@ impl Context {
             draw_vao,
             draw_fbo,
             default_framebuffer_size: Cell::new(default_framebuffer_size),
+            tracing: Default::default(),
             bound_program_id: Default::default(),
             is_draw_fbo_bound: Default::default(),
             bound_color_attachment_ids: Default::default(),
@@ -501,6 +504,28 @@ impl Context {
         }
 
         Ok(())
+    }
+
+    pub fn set_tracing_config(&self, config: Option<TracingConfig>) {
+        *self.shared.tracing.borrow_mut() = config.map(Tracing::new);
+    }
+
+    pub fn tracing_start_frame(&self) -> Option<FrameTrace> {
+        let mut tracing = self.shared.tracing.borrow_mut();
+
+        let result = tracing
+            .as_mut()
+            .and_then(move |tracing| tracing.start_frame(&self.shared));
+
+        result
+    }
+
+    pub fn tracing_stop_frame(&self) {
+        let mut tracing = self.shared.tracing.borrow_mut();
+
+        if let Some(tracing) = tracing.as_mut() {
+            tracing.stop_frame(&self.shared);
+        }
     }
 }
 

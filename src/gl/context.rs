@@ -19,8 +19,9 @@ use crate::{
 use super::{
     program::{DrawBuilder, DrawBuilderWithUniforms},
     raw, BufferError, BufferUsage, Caps, ClearParams, ColorImage, ColorTexture2d, ContextError,
-    CreateError, DepthImage, DepthTexture2d, DrawError, Element, ElementBuffer, Framebuffer,
-    FramebufferError, Program, ProgramError, TextureError, UniformBuffer, VertexBuffer,
+    CreateError, DepthImage, DepthTexture2d, DrawError, Element, ElementBuffer, FrameTrace,
+    Framebuffer, FramebufferError, Program, ProgramError, TextureError, TracingConfig,
+    UniformBuffer, VertexBuffer,
 };
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -319,5 +320,17 @@ impl Context {
         params: ClearParams,
     ) -> Result<(), FramebufferError> {
         self.raw.clear(&framebuffer.into().raw(), params)
+    }
+
+    pub fn set_tracing_config(&self, config: Option<TracingConfig>) {
+        self.raw.set_tracing_config(config);
+    }
+
+    pub fn tracing_start_frame(&self) -> Option<FrameTrace> {
+        self.raw.tracing_start_frame()
+    }
+
+    pub fn tracing_stop_frame(&self) {
+        self.raw.tracing_stop_frame()
     }
 }
