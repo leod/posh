@@ -1,6 +1,6 @@
 use std::{
     any::{type_name, TypeId},
-    cell::RefCell,
+    cell::{Cell, RefCell},
     collections::hash_map,
     marker::PhantomData,
     rc::Rc,
@@ -19,8 +19,9 @@ use crate::{
 use super::{
     program::{DrawBuilder, DrawBuilderWithUniforms},
     raw, BufferError, BufferUsage, Caps, ClearParams, ColorImage, ColorTexture2d, ContextError,
-    CreateError, DepthImage, DepthTexture2d, DrawError, Element, ElementBuffer, Framebuffer,
-    FramebufferError, Program, ProgramError, TextureError, UniformBuffer, VertexBuffer,
+    CreateError, DepthImage, DepthTexture2d, DrawError, Element, ElementBuffer, FrameTrace,
+    Framebuffer, FramebufferError, Program, ProgramError, TextureError, TracingConfig,
+    UniformBuffer, VertexBuffer,
 };
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -112,7 +113,7 @@ where
                 &self.gl.raw,
                 self.vertex_shader,
                 self.fragment_shader,
-                *self.gl.enable_program_source_logging.borrow(),
+                self.gl.enable_program_source_logging.get(),
             );
 
         let inner = DrawBuilder {
@@ -134,7 +135,7 @@ where
 pub struct Context {
     raw: Rc<raw::Context>,
     program_cache: Rc<RefCell<ProgramCache>>,
-    enable_program_source_logging: Rc<RefCell<bool>>,
+    enable_program_source_logging: Rc<Cell<bool>>,
 }
 
 impl Context {
@@ -239,7 +240,7 @@ impl Context {
         let program_def =
             transpile_to_program_def::<U, VSig, VFunc, FSig, FFunc>(vertex_shader, fragment_shader);
 
-        if *self.enable_program_source_logging.borrow() {
+        if self.enable_program_source_logging.get() {
             log::info!("Vertex shader:\n{}", program_def.vertex_shader_source);
             log::info!("Fragment shader:\n{}", program_def.fragment_shader_source);
         }
@@ -268,7 +269,7 @@ impl Context {
             fragment_shader,
         );
 
-        if *self.enable_program_source_logging.borrow() {
+        if self.enable_program_source_logging.get() {
             log::info!("Vertex shader:\n{}", program_def.vertex_shader_source);
             log::info!("Fragment shader:\n{}", program_def.fragment_shader_source);
         }
@@ -310,7 +311,7 @@ impl Context {
     }
 
     pub fn set_enable_program_source_logging(&self, value: bool) {
-        *self.enable_program_source_logging.borrow_mut() = value;
+        self.enable_program_source_logging.set(value);
     }
 
     pub fn clear<F: FsInterface<Sl>>(
@@ -319,5 +320,17 @@ impl Context {
         params: ClearParams,
     ) -> Result<(), FramebufferError> {
         self.raw.clear(&framebuffer.into().raw(), params)
+    }
+
+    pub fn set_tracing_config(&self, config: Option<TracingConfig>) {
+        self.raw.set_tracing_config(config);
+    }
+
+    pub fn tracing_start_frame(&self) -> Option<FrameTrace> {
+        self.raw.tracing_start_frame()
+    }
+
+    pub fn tracing_stop_frame(&self) {
+        self.raw.tracing_stop_frame()
     }
 }

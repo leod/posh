@@ -5,6 +5,7 @@ pub struct Caps {
     pub max_texture_size: u32,
     pub max_color_attachments: u32,
     pub max_draw_buffers: u32,
+    pub disjoint_timer_query_webgl2: bool,
 }
 
 impl Caps {
@@ -21,6 +22,9 @@ impl Caps {
             max_texture_size: max_texture_size.try_into().unwrap(),
             max_color_attachments: max_color_attachments.try_into().unwrap(),
             max_draw_buffers: max_draw_buffers.try_into().unwrap(),
+            disjoint_timer_query_webgl2: gl
+                .supported_extensions()
+                .contains("EXT_disjoint_timer_query_webgl2"),
         }
     }
 }

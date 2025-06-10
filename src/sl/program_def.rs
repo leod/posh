@@ -29,7 +29,7 @@ pub struct UniformSamplerDef {
     pub texture_unit: usize,
 }
 
-/// VsInterface attribute definition.
+/// Vertex attribute definition.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VertexAttributeDef {
     pub name: String,
@@ -61,7 +61,7 @@ impl InterpolationQualifier {
     }
 }
 
-/// VsInterface input definition.
+/// Vertex input definition.
 #[derive(Debug, Clone)]
 pub struct VertexBlockDef {
     pub attributes: Vec<VertexAttributeDef>,
@@ -80,12 +80,12 @@ pub struct ProgramDef {
     /// Samplers that the program needs.
     pub uniform_sampler_defs: Vec<UniformSamplerDef>,
 
-    /// VsInterface blocks that the program needs.
+    /// Vertex blocks that the program needs.
     pub vertex_block_defs: Vec<VertexBlockDef>,
 
-    /// VsInterface shader source code.
+    /// Vertex shader source code.
     pub vertex_shader_source: String,
 
-    /// FsInterface shader source code.
+    /// Fragment shader source code.
     pub fragment_shader_source: String,
 }

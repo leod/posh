@@ -76,6 +76,19 @@ pub enum VertexArrayError {
     Unexpected(String),
 }
 
+/// An error that occurred while creating a query.
+#[derive(Debug, Clone, Error)]
+pub enum QueryError {
+    #[error("could not create query object: {0}")]
+    ObjectCreation(String),
+
+    #[error("unsupported")]
+    Unsupported,
+
+    #[error("unexpected error while creating query: {0}")]
+    Unexpected(String),
+}
+
 /// An error that was detected by framebuffer completeness checks.
 #[derive(Debug, Clone, Error)]
 pub enum FramebufferIncompleteError {

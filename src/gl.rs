@@ -18,10 +18,10 @@ use crevice::std140::AsStd140;
 
 use crate::{sl, ToSl};
 
-pub use self::image::{ColorImage, DepthImage};
 pub use context::{CacheDrawBuilder, Context};
 pub use element_buffer::{Element, ElementBuffer, ElementBufferBinding};
 pub use framebuffer::{ColorAttachment, DepthAttachment, Framebuffer};
+pub use image::{ColorImage, DepthImage};
 pub use mat::{Mat2, Mat3, Mat4};
 pub use program::{
     DrawBuilder, DrawBuilderWithFramebuffer, DrawBuilderWithUniforms,
@@ -29,10 +29,10 @@ pub use program::{
 };
 pub use raw::{
     BlendEquation, BlendFunc, Blending, BufferError, BufferUsage, Caps, ClearParams, Comparison,
-    ContextError, CreateError, CullFace, DrawError, DrawParams, ElementType, FramebufferError,
-    ImageFormat, ImageInternalFormat, PrimitiveMode, ProgramError, ProgramValidationError, Rect,
-    Sampler2dParams, SamplerMagFilter, SamplerMinFilter, SamplerWrap, StencilOp, StencilOps,
-    StencilTest, TextureError, VertexArrayError,
+    ContextError, CreateError, CullFace, DrawError, DrawParams, ElementType, FrameTrace,
+    FramebufferError, ImageFormat, ImageInternalFormat, PrimitiveMode, ProgramError,
+    ProgramValidationError, Rect, Sampler2dParams, SamplerMagFilter, SamplerMinFilter, SamplerWrap,
+    StencilOp, StencilOps, StencilTest, TextureError, TracingConfig, VertexArrayError,
 };
 pub use texture::{ColorSampler2d, ColorTexture2d, ComparisonSampler2d, DepthTexture2d};
 pub use uniform_buffer::{UniformBuffer, UniformBufferBinding};
