@@ -249,7 +249,7 @@ impl ContextShared {
 
         if bound_ids.len() <= unit {
             let diff = unit - bound_ids.len() + 1;
-            bound_ids.extend(std::iter::repeat(None).take(diff));
+            bound_ids.extend(std::iter::repeat_n(None, diff));
         }
 
         if bound_ids[unit] == id {
@@ -287,12 +287,7 @@ impl ContextShared {
             self.bound_depth_attachment_id.set(None);
         }
 
-        if self
-            .bound_color_attachment_ids
-            .borrow()
-            .iter()
-            .any(|bound_id| *bound_id == id)
-        {
+        if self.bound_color_attachment_ids.borrow().contains(&id) {
             self.bind_draw_fbo(true);
 
             // TODO: We could be more efficient in how much we unbind here, but
@@ -360,7 +355,7 @@ impl ContextShared {
 
         if bound_ids.len() <= location as usize {
             let diff = location as usize - bound_ids.len() + 1;
-            bound_ids.extend(std::iter::repeat(None).take(diff));
+            bound_ids.extend(std::iter::repeat_n(None, diff));
         }
 
         if bound_ids[location as usize] == id {
