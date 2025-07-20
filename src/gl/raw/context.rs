@@ -334,6 +334,7 @@ impl ContextShared {
                 color_attachments,
                 depth_attachment,
             } => {
+                // FIXME: Check that all attachments have the same size.
                 self.bind_draw_fbo(true);
                 self.bind_color_attachments(color_attachments)?;
                 self.bind_depth_attachment(depth_attachment.as_ref());

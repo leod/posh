@@ -3,6 +3,9 @@ mod simplified_expr;
 mod struct_registry;
 mod var_form;
 
+#[cfg(test)]
+mod tests;
+
 use std::{
     fmt::{self, Display, Formatter, Write},
     rc::Rc,

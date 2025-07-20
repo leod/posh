@@ -21,10 +21,12 @@ thiserror = "1.0.38"
 members = ["derive", "run-wasm"]
 
 [features]
-# FIXME: These features are enabled by default only for testing.
+# FIXME: These features are enabled by default only for examples.
+# We should clean this up.
 default = ["glam", "mint"]
 
 [dev-dependencies]
+expect-test = "1.5.1"
 glam = "0.27.0"
 image = "0.24.5"
 instant = "0.1.12"
