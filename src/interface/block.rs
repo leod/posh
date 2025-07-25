@@ -28,12 +28,7 @@ pub trait BlockDom: Copy {
     /// Has [`u32`] as its physical view and [`sl::U32`] as its logical view.
     type U32: Block<Self> + ToSl<Output = sl::U32> + Default;
 
-    /// A boolean value.
-    ///
-    /// Has [`gl::Bool`](crate::gl::Bool) as its physical view and [`sl::Bool`] as its
-    /// logical view.
-    ///
-    /// TODO: Bool in `Block`. Need to special case vertex attributes.
+    // TODO: Add `Bool` to `Block`. Need to special case vertex attributes.
     //type Bool: Block<Self> + ToSl<Output = sl::Bool>;
 
     /// A two-crate::dimensional floating-point vector.

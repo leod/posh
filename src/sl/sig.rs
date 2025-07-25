@@ -24,11 +24,11 @@ unsafe impl<T: Const, const N: usize> Const for [T; N] {}
 
 /// Per-vertex input given to a vertex shader.
 #[derive(Debug, Copy, Clone)]
+#[non_exhaustive]
 pub struct VsInput<V> {
     pub vertex: V,
     pub vertex_id: U32,
     pub instance_id: U32,
-    pub(crate) _private: (),
 }
 
 /// Per-vertex output computed by a vertex shader.

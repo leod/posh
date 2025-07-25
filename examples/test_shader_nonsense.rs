@@ -28,6 +28,7 @@ struct ColorVertex<D: BlockDom> {
     flag: D::I32,
 }
 
+#[allow(unused)]
 fn vertex_shader(globals: Globals<Sl>, vertex: ColorVertex<Sl>) -> VsOutput<sl::Vec4> {
     let shift = globals.offset * globals.time;
     let shift = sl::branch(
@@ -38,7 +39,7 @@ fn vertex_shader(globals: Globals<Sl>, vertex: ColorVertex<Sl>) -> VsOutput<sl::
 
     let shift2 = sl::branch(globals.invert.eq(3), shift, {
         let x = shift * 5.0;
-        let y = !(x.as_ivec2() << 3) & 1 % sl::ivec2(1, 1);
+        let y = (!(x.as_ivec2() << 3) & 1) % sl::ivec2(1, 1);
 
         sl::branch(false, x * -1.0, y.as_vec2() * -2.0)
     });
@@ -62,6 +63,7 @@ fn vertex_shader(globals: Globals<Sl>, vertex: ColorVertex<Sl>) -> VsOutput<sl::
     }
 }
 
+#[allow(unused)]
 fn fragment_shader(_: (), interp: sl::Vec4) -> sl::Vec4 {
     interp * 3.0
 }

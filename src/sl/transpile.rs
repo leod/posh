@@ -75,7 +75,6 @@ where
             vertex: <VSig as VsSig>::V::shader_input("vertex_input"),
             vertex_id: value_arg::<I32>("gl_VertexID").as_u32(),
             instance_id: value_arg::<I32>("gl_InstanceID").as_u32(),
-            _private: (),
         };
         let output = vertex_shader
             .call(consts, uniforms.lhs(), FromVsInput::from_vs_input(input()))

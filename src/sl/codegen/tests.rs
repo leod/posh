@@ -93,8 +93,8 @@ fn test_array() {
     check_expr(
         arr_1.to_sl().get(0u32),
         expect![[r#"
-        float[1] var_0 = float[1](100.0);
-        var_0[0u]"#]],
+            float[1] var_0 = float[1](100.0);
+            var_0[0u]"#]],
     );
     check_expr(
         arr_1.to_sl().get(i),
@@ -129,15 +129,15 @@ fn test_array() {
     check_expr(
         cond.then(arr_1).otherwise(arr_2).get(i),
         expect![[r#"
-        float[1] var_2;
-        if (cond) {
-            float[1] var_0 = float[1](100.0);
-            var_2 = var_0;
-        } else {
-            float[1] var_1 = float[1](200.0);
-            var_2 = var_1;
-        }
-        var_2[i]"#]],
+            float[1] var_2;
+            if (cond) {
+                float[1] var_0 = float[1](100.0);
+                var_2 = var_0;
+            } else {
+                float[1] var_1 = float[1](200.0);
+                var_2 = var_1;
+            }
+            var_2[i]"#]],
     )
 }
 
