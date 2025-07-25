@@ -160,7 +160,9 @@ pub fn field<R: Value>(base: Rc<Expr>, name: &'static str) -> R {
     R::from_expr(expr)
 }
 
+// TODO: Bring back function definitions in `sl`.
 #[doc(hidden)]
+#[allow(unused)]
 pub fn call_func_def<R: Value>(def: FuncDef, args: Vec<Rc<Expr>>) -> R {
     assert!(def.params.len() == args.len());
 

@@ -78,10 +78,6 @@ impl Buffer {
         self.len.get()
     }
 
-    pub fn is_empty(&self) -> bool {
-        self.len() != 0
-    }
-
     pub fn set(&self, data: &[u8]) {
         let gl = self.ctx.gl();
 

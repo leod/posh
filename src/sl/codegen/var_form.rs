@@ -78,7 +78,7 @@ impl VarForm {
                 ty: Type::Struct(ty),
             },
             Expr::ArrayLiteral { args, ty } => SimplifiedExpr::CallFunc {
-                name: format!("{}", ty),
+                name: format!("{ty}"),
                 args: args.into_iter().map(map_succ).collect(),
                 ty: Type::Array(ty),
             },

@@ -69,6 +69,7 @@ where
 pub struct Consts {}
 
 #[derive(sl::Const)]
+#[allow(unused)]
 pub struct Const<T: sl::Const> {
     x: T,
     y: Vec<T>,

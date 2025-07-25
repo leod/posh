@@ -66,6 +66,8 @@ impl Framebuffer {
 
         match self {
             Default => ctx.default_framebuffer_size(),
+            // FIXME: Taking the maximum attachment size does not make sense, since
+            // all attachments must have the same size anyway.
             Attachments {
                 color_attachments,
                 depth_attachment,
