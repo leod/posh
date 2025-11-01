@@ -30,7 +30,7 @@ expect-test = "1.5.1"
 glam = "0.27.0"
 image = "0.24.5"
 instant = "0.1.12"
-nanorand = "0.7.0"
+nanorand = { version = "0.7.0", features = ["getrandom"] }
 simple_logger = "4.1.0"
 
 [target.'cfg(not(target_family = "wasm"))'.dev-dependencies]
