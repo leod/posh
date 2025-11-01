@@ -6,7 +6,7 @@ thread_local! {
     static REGISTRY: RefCell<Registry> = RefCell::new(Registry::default());
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Copy, Clone, Hash)]
 pub enum Trace {
     Id(usize),
     Const(fn() -> Rc<Expr>),
