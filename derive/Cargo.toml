@@ -10,6 +10,4 @@ proc-macro = true
 proc-macro2 = "1.0"
 quote = "1.0"
 
-# Using the same version of `syn` as `bytemuck` to fix some dependency
-# resolution problem that I am too lazy to investigate.
-syn = { version = "2.0.1", features = ["full", "visit-mut", "extra-traits"] }
+syn = { version = "2.0.108", features = ["full", "visit-mut", "extra-traits"] }
