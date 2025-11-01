@@ -114,6 +114,7 @@ pub enum FramebufferIncompleteError {
     Unknown(u32),
 }
 
+#[allow(unused)]
 pub(super) fn check_framebuffer_completeness(
     gl: &glow::Context,
 ) -> Result<(), FramebufferIncompleteError> {

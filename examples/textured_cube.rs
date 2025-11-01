@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use image::{io::Reader as ImageReader, EncodableLayout};
+use image::{EncodableLayout, ImageReader};
 
 use posh::{gl, sl, Block, BlockDom, Gl, Sl, Uniform, UniformDom};
 

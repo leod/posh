@@ -165,7 +165,6 @@ impl Program {
         params: &DrawParams,
     ) -> Result<(), DrawError> {
         let ctx = &self.ctx;
-        let gl = ctx.gl();
         let def = &self.def;
 
         assert_eq!(uniform_buffers.len(), def.uniform_block_defs.len());
@@ -199,7 +198,7 @@ impl Program {
         vertex_spec.draw(ctx);
 
         #[cfg(debug_assertions)]
-        check_gl_error(gl, "after draw").map_err(DrawError::Error)?;
+        check_gl_error(ctx.gl(), "after draw").map_err(DrawError::Error)?;
 
         Ok(())
     }

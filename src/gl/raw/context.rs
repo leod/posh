@@ -12,11 +12,9 @@ use crate::{
 };
 
 use super::{
-    error::{check_framebuffer_completeness, check_gl_error},
-    params::ClearParams,
-    tracing::Tracing,
-    Attachment, Buffer, Caps, ContextError, DrawParams, FrameTrace, Framebuffer, FramebufferError,
-    Image, Program, Texture2d, TextureError, TracingConfig,
+    params::ClearParams, tracing::Tracing, Attachment, Buffer, Caps, ContextError, DrawParams,
+    FrameTrace, Framebuffer, FramebufferError, Image, Program, Texture2d, TextureError,
+    TracingConfig,
 };
 
 pub(super) struct ContextShared {
@@ -340,10 +338,11 @@ impl ContextShared {
                 self.bind_depth_attachment(depth_attachment.as_ref());
 
                 #[cfg(debug_assertions)]
-                check_framebuffer_completeness(&self.gl).map_err(FramebufferError::Incomplete)?;
+                super::error::check_framebuffer_completeness(&self.gl)
+                    .map_err(FramebufferError::Incomplete)?;
 
                 #[cfg(debug_assertions)]
-                check_gl_error(&self.gl, "after binding attachments")
+                super::error::check_gl_error(&self.gl, "after binding attachments")
                     .map_err(FramebufferError::Unexpected)?;
             }
         }

@@ -6,16 +6,16 @@ edition = "2021"
 [dependencies]
 posh-derive = { path = "derive" }
 
-bytemuck = { git = "https://github.com/leod/bytemuck", branch = "specify_crate_in_derive", features = ["derive"] }
+bytemuck = { version = "1.24", features = ["derive"] }
 crevice = { git = "https://github.com/leod/crevice", branch = "specify_crate_in_derive" }
 fxhash = "0.2"
-glam = { version = "0.27.0", optional = true }
+glam = { version = "0.30.9", optional = true }
 glow = { git = "https://github.com/grovesNL/glow", rev = "aa4238a60d17076b917eaa1ec662e5080df42b0a" }
-log = "0.4.17"
+log = "0.4.28"
 mint = { version = "0.5.9", optional = true }
-sealed = "0.4.0"
-smallvec = "1.13.2"
-thiserror = "1.0.38"
+sealed = "0.6.0"
+smallvec = "1.15.1"
+thiserror = "1.0.69"
 
 [workspace]
 members = ["derive", "run-wasm"]
@@ -27,23 +27,23 @@ default = ["glam", "mint"]
 
 [dev-dependencies]
 expect-test = "1.5.1"
-glam = "0.27.0"
-image = "0.24.5"
-instant = "0.1.12"
-nanorand = "0.7.0"
-simple_logger = "4.1.0"
+glam = "0.30.9"
+image = "0.25.8"
+instant = "0.1.13"
+nanorand = { version = "0.8.0", features = ["getrandom"] }
+simple_logger = "5.1.0"
 
 [target.'cfg(not(target_family = "wasm"))'.dev-dependencies]
-sdl2 = "0.35.2"
+sdl2 = "0.38.0"
 
 [target.'cfg(target_family = "wasm")'.dev-dependencies]
 console_log = "1"
 wasm-bindgen = "0.2"
-wasm-bindgen-futures = "0.4.37"
-winit = "0.28.6"
+wasm-bindgen-futures = "0.4.55"
+winit = "0.28.7"
 
 [target.'cfg(target_family = "wasm")'.dev-dependencies.web-sys]
-version = "0.3.22"
+version = "0.3.82"
 features = [
     'CanvasRenderingContext2d',
     'OrientationLockType',
