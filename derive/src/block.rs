@@ -87,7 +87,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
             ::posh::bytemuck::Pod,
             ::posh::crevice::std140::AsStd140,
         )]
-        #[bytemuck_crate(::posh::bytemuck)]
+        #[bytemuck(crate = "::posh::bytemuck")]
         #[crevice_crate(::posh::crevice)]
         #(#attrs)*
         #visibility struct #helper_ident {
