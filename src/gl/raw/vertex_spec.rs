@@ -4,10 +4,7 @@ use glow::HasContext;
 use smallvec::SmallVec;
 
 use crate::{
-    gl::raw::{
-        error::check_gl_error,
-        vertex_layout::{VertexAttributeLayout, VertexAttributeType},
-    },
+    gl::raw::vertex_layout::{VertexAttributeLayout, VertexAttributeType},
     sl::program_def::{VertexBlockDef, VertexInputRate},
 };
 
@@ -175,7 +172,7 @@ impl VertexSpec {
         }
 
         #[cfg(debug_assertions)]
-        check_gl_error(gl, "").expect("OpenGL error after VertexSpec::bind()");
+        super::error::check_gl_error(gl, "").expect("OpenGL error after VertexSpec::bind()");
     }
 
     fn unbind(&self, ctx: &ContextShared) {
@@ -205,7 +202,7 @@ impl VertexSpec {
         }
 
         #[cfg(debug_assertions)]
-        check_gl_error(gl, "").expect("OpenGL error after VertexSpec::unbind()");
+        super::error::check_gl_error(gl, "").expect("OpenGL error after VertexSpec::unbind()");
     }
 
     pub(super) fn draw(&self, ctx: &ContextShared) {
@@ -302,7 +299,7 @@ impl VertexSpec {
         }
 
         #[cfg(debug_assertions)]
-        check_gl_error(gl, "").expect("OpenGL error in VertexStream::draw()");
+        super::error::check_gl_error(gl, "").expect("OpenGL error in VertexStream::draw()");
 
         // TODO: Remove overly conservative unbinding.
         self.unbind(ctx);

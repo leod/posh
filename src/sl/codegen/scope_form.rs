@@ -121,11 +121,11 @@ impl<'a> ScopeForm<'a> {
         scope_form
     }
 
-    pub fn scope(&self, scope_id: ScopeId) -> &Scope {
+    pub fn scope(&self, scope_id: ScopeId) -> &Scope<'_> {
         &self.scopes[&scope_id]
     }
 
-    pub fn root_scope(&self) -> &Scope {
+    pub fn root_scope(&self) -> &Scope<'_> {
         self.scope(self.root_scope_id)
     }
 

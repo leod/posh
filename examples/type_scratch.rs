@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use posh::{
     sl::{self, Value},
     Block, BlockDom, Sl, Uniform, UniformDom, VsDom, VsInterface,
