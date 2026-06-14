@@ -6,7 +6,7 @@ use crate::{Block, Sl, ToSl};
 
 use super::{
     dag::{BuiltInType, Expr, SamplerType, Trace, Type},
-    primitives::built_in_2,
+    primitives::{built_in_2, built_in_3},
     IVec2, IVec3, IVec4, Interpolant, Object, UVec2, UVec3, UVec4, Value, Vec2, Vec3, Vec4, F32,
     I32, U32,
 };
@@ -104,6 +104,12 @@ impl<S: ColorSample> ColorSampler2d<S> {
 
     pub fn sample(self, tex_coords: Vec2) -> S {
         let sample = built_in_2("texture", self, tex_coords);
+
+        S::from_vec4(sample)
+    }
+
+    pub fn fetch(self, pixel_coords: IVec2, level: impl ToSl<Output = I32>) -> S {
+        let sample = built_in_3("texelFetch", self, pixel_coords, level.to_sl());
 
         S::from_vec4(sample)
     }
