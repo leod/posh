@@ -250,14 +250,17 @@ impl ContextShared {
             bound_ids.extend(std::iter::repeat_n(None, diff));
         }
 
-        if bound_ids[unit] == id {
-            return;
-        }
-
         let unit_gl = texture_unit_gl(unit);
 
         unsafe {
             self.gl.active_texture(unit_gl);
+        }
+
+        if bound_ids[unit] == id {
+            return;
+        }
+
+        unsafe {
             self.gl.bind_texture(glow::TEXTURE_2D, id);
         }
 
